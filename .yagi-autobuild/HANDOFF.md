@@ -1,6 +1,6 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-22 (Phase 2.0 진행 중 — G0/G1.5/G2 완료, G1 verify pending, G3+ 대기)
+> **갱신:** 2026-04-22 (Phase 2.0 진행 중 — G0/G1.5/G2/G3/G4 완료, G1 verify pending, G5-G7 대기)
 > **목적:** Phase 2.0 기술 부채 정리 phase 진행 중. 새 기능 0개. 7개 group 순차 처리.
 
 ---
@@ -13,8 +13,8 @@
 | G1 — notify-dispatch ops | ⚠️ Setup 완료 / verify pending | Resend domain (yagiworkshop.xyz) DNS records 가비아 입력 완료. DNS 전파 대기 중 (5min~1hr). 자동 verify 완료 시 next cron tick에서 email 도착 — 야기가 inbox 확인 시 G1 closeout |
 | G1.5 — Pre-commit secret hook | ✅ 완료 | Husky + 시크릿 패턴 검사 hook (commit `e56c364`) |
 | G2 — Migration baseline squash | ✅ **완료 with imperfect baseline** | Single baseline `20260422120000_phase_2_0_baseline.sql` (160KB) replaces 23 historical migrations. **Caveat:** Docker 부재로 raw `pg_dump v18` 사용 + 수동 supplement (5 extensions, 10 storage buckets, 3 realtime publications). Codex K-05 verdict CLEAN. 상세: `.yagi-autobuild/phase-2-0/BASELINE_LIMITATIONS.md` |
-| G3 — POPBILL flip docs | 대기 | |
-| G4 — Cross-phase deferred | 대기 | |
+| G3 — POPBILL flip docs | ✅ 완료 | `.yagi-autobuild/phase-2-0/POPBILL_LIVE_FLIP.md` (mock→test→production 3-step flip, code locations, blockers). `.env.local.example` POPBILL_* expanded with inline comments. CLAUDE.md note 추가. **Blocker 명시:** `client.ts:97-106` `issueTaxInvoice()` test/production NOT_IMPLEMENTED — 실 발행은 future Phase에서 popbill SDK 통합 필요 |
+| G4 — Cross-phase deferred | ✅ 완료 (atomic 10 commits) | Triage (`G4_TRIAGE.md`) → 10 FIX_NOW / 15 DEFER_TO_2_1 / 0 WONT_FIX. Cluster A (#6 createBoard authz, #10 ref-actions `..`, #2 thread-actions admin fan-out leak, #4 sendMessage `..`) + Cluster B (#1 unsubscribe atomic claim, #3 timezone IANA allowlist, #5 markChannelSeen surface errors) + Cluster C (#7 journal locale toggle fallback, #8 Google Calendar requestId dedup, #9 invoice print draft guard). 각 fix 전 `pnpm tsc --noEmit` EXIT:0 통과. Workflow rule: atomic commit per fix (crash safety net). **Full build check (`pnpm build`) deferred until G4 end — run before G5 start.** |
 | G5 — Phase 1.9 MEDIUM | 대기 — 추가 항목 발견 | G2 baseline review 중 발견된 pre-existing 이슈 7건 추가: `recalc_invoice_totals` SECURITY DEFINER missing search_path, 6 UPDATE policies missing WITH CHECK (meetings_update / showcase_media_update / team_channels_update / storage avatars_update / showcase-media update / showcase-og update) |
 | G6 — Phase 1.9 LOW + i18n | 대기 — 추가 항목 | **L5 (new):** `showcase/[slug]` not-found layout chain broken on Next 15.5 ("Missing `<html>` and `<body>` tags in root layout" runtime error on `/showcase/does-not-exist`). Pre-existing Phase 1.9 regression. Fix 후보: (a) Next 15.6+ upgrade 시도, 실패 시 (b) `not-found.tsx` 에 inline `<html>/<body>` 추가, (c) `force-static` |
 | G7 — Cross-phase contracts | 대기 | |
