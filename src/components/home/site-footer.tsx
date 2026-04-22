@@ -15,6 +15,12 @@ export async function SiteFooter({ locale, pathname }: Props) {
   // Normalize pathname (routing Link expects the locale-free path).
   const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
 
+  // Phase 2.0 G4 #7 (Phase 1.6 M4) — journal articles have locale-specific
+  // slugs and no guaranteed cross-locale twin, so point the locale toggle at
+  // the journal index instead of the current slug to avoid a 404.
+  const isJournalArticle = /^\/journal\/./.test(normalizedPath);
+  const toggleHref = isJournalArticle ? "/journal" : normalizedPath;
+
   return (
     <footer
       aria-labelledby="site-footer-title"
@@ -98,7 +104,7 @@ export async function SiteFooter({ locale, pathname }: Props) {
             {t("footer_rights")}
           </p>
           <Link
-            href={normalizedPath}
+            href={toggleHref}
             locale={otherLocale}
             className="label-caps tabular-nums underline-offset-4 hover:underline"
           >
