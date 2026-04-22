@@ -1,0 +1,1815 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      brands: {
+        Row: {
+          brand_guide: Json
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          brand_guide?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          brand_guide?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_line_items: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          invoice_id: string
+          item_name: string
+          note: string | null
+          quantity: number
+          source_id: string | null
+          source_type: string | null
+          specification: string | null
+          supply_krw: number
+          unit_price_krw: number
+          vat_krw: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          invoice_id: string
+          item_name: string
+          note?: string | null
+          quantity?: number
+          source_id?: string | null
+          source_type?: string | null
+          specification?: string | null
+          supply_krw: number
+          unit_price_krw: number
+          vat_krw: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          invoice_id?: string
+          item_name?: string
+          note?: string | null
+          quantity?: number
+          source_id?: string | null
+          source_type?: string | null
+          specification?: string | null
+          supply_krw?: number
+          unit_price_krw?: number
+          vat_krw?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string
+          due_date: string | null
+          filed_at: string | null
+          id: string
+          invoice_number: string | null
+          is_mock: boolean
+          issue_date: string | null
+          memo: string | null
+          nts_approval_number: string | null
+          paid_at: string | null
+          popbill_mgt_key: string | null
+          popbill_response: Json | null
+          project_id: string
+          status: string
+          subtotal_krw: number
+          supplier_id: string
+          supply_date: string
+          total_krw: number
+          updated_at: string
+          vat_krw: number
+          void_at: string | null
+          void_reason: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          due_date?: string | null
+          filed_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          is_mock?: boolean
+          issue_date?: string | null
+          memo?: string | null
+          nts_approval_number?: string | null
+          paid_at?: string | null
+          popbill_mgt_key?: string | null
+          popbill_response?: Json | null
+          project_id: string
+          status?: string
+          subtotal_krw?: number
+          supplier_id: string
+          supply_date: string
+          total_krw?: number
+          updated_at?: string
+          vat_krw?: number
+          void_at?: string | null
+          void_reason?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          due_date?: string | null
+          filed_at?: string | null
+          id?: string
+          invoice_number?: string | null
+          is_mock?: boolean
+          issue_date?: string | null
+          memo?: string | null
+          nts_approval_number?: string | null
+          paid_at?: string | null
+          popbill_mgt_key?: string | null
+          popbill_response?: Json | null
+          project_id?: string
+          status?: string
+          subtotal_krw?: number
+          supplier_id?: string
+          supply_date?: string
+          total_krw?: number
+          updated_at?: string
+          vat_krw?: number
+          void_at?: string | null
+          void_reason?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_attendees: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+          is_organizer: boolean | null
+          meeting_id: string
+          response_status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id?: string
+          is_organizer?: boolean | null
+          meeting_id: string
+          response_status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+          is_organizer?: boolean | null
+          meeting_id?: string
+          response_status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          calendar_sync_error: string | null
+          calendar_sync_status: string
+          cancelled_at: string | null
+          cancelled_reason: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          google_event_id: string | null
+          id: string
+          meet_link: string | null
+          project_id: string
+          scheduled_at: string
+          status: string
+          summary_md: string | null
+          summary_sent_at: string | null
+          title: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          calendar_sync_error?: string | null
+          calendar_sync_status?: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          google_event_id?: string | null
+          id?: string
+          meet_link?: string | null
+          project_id: string
+          scheduled_at: string
+          status?: string
+          summary_md?: string | null
+          summary_sent_at?: string | null
+          title: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          calendar_sync_error?: string | null
+          calendar_sync_status?: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          google_event_id?: string | null
+          id?: string
+          meet_link?: string | null
+          project_id?: string
+          scheduled_at?: string
+          status?: string
+          summary_md?: string | null
+          summary_sent_at?: string | null
+          title?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_events: {
+        Row: {
+          body: string | null
+          created_at: string
+          email_batch_id: string | null
+          email_sent_at: string | null
+          id: string
+          in_app_seen_at: string | null
+          kind: string
+          payload: Json | null
+          project_id: string | null
+          severity: string
+          title: string
+          url_path: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          email_batch_id?: string | null
+          email_sent_at?: string | null
+          id?: string
+          in_app_seen_at?: string | null
+          kind: string
+          payload?: Json | null
+          project_id?: string | null
+          severity: string
+          title: string
+          url_path?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          email_batch_id?: string | null
+          email_sent_at?: string | null
+          id?: string
+          in_app_seen_at?: string | null
+          kind?: string
+          payload?: Json | null
+          project_id?: string | null
+          severity?: string
+          title?: string
+          url_path?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          digest_time_local: string
+          email_digest_enabled: boolean
+          email_immediate_enabled: boolean
+          quiet_hours_end: string
+          quiet_hours_start: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          digest_time_local?: string
+          email_digest_enabled?: boolean
+          email_immediate_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          digest_time_local?: string
+          email_digest_enabled?: boolean
+          email_immediate_enabled?: boolean
+          quiet_hours_end?: string
+          quiet_hours_start?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_unsubscribe_tokens: {
+        Row: {
+          created_at: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      preprod_boards: {
+        Row: {
+          approved_at: string | null
+          approved_by_email: string | null
+          cover_frame_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          project_id: string
+          share_enabled: boolean
+          share_password_hash: string | null
+          share_token: string | null
+          status: string
+          title: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_email?: string | null
+          cover_frame_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          project_id: string
+          share_enabled?: boolean
+          share_password_hash?: string | null
+          share_token?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_email?: string | null
+          cover_frame_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          project_id?: string
+          share_enabled?: boolean
+          share_password_hash?: string | null
+          share_token?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preprod_boards_cover_frame_fk"
+            columns: ["cover_frame_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_frames"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preprod_boards_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preprod_boards_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preprod_frame_comments: {
+        Row: {
+          author_display_name: string
+          author_email: string | null
+          author_user_id: string | null
+          board_id: string
+          body: string
+          created_at: string
+          frame_id: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          author_display_name: string
+          author_email?: string | null
+          author_user_id?: string | null
+          board_id: string
+          body: string
+          created_at?: string
+          frame_id: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          author_display_name?: string
+          author_email?: string | null
+          author_user_id?: string | null
+          board_id?: string
+          body?: string
+          created_at?: string
+          frame_id?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preprod_frame_comments_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preprod_frame_comments_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_frames"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preprod_frame_reactions: {
+        Row: {
+          board_id: string
+          created_at: string
+          frame_id: string
+          id: string
+          reaction: string
+          reactor_email: string
+          reactor_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          frame_id: string
+          id?: string
+          reaction: string
+          reactor_email: string
+          reactor_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          frame_id?: string
+          id?: string
+          reaction?: string
+          reactor_email?: string
+          reactor_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preprod_frame_reactions_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preprod_frame_reactions_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_frames"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preprod_frames: {
+        Row: {
+          board_id: string
+          caption: string | null
+          created_at: string
+          director_note: string | null
+          frame_order: number
+          id: string
+          is_current_revision: boolean
+          media_embed_provider: string | null
+          media_external_url: string | null
+          media_storage_path: string | null
+          media_type: string
+          reference_ids: string[]
+          revision: number
+          revision_group: string
+          thumbnail_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          board_id: string
+          caption?: string | null
+          created_at?: string
+          director_note?: string | null
+          frame_order: number
+          id?: string
+          is_current_revision?: boolean
+          media_embed_provider?: string | null
+          media_external_url?: string | null
+          media_storage_path?: string | null
+          media_type: string
+          reference_ids?: string[]
+          revision?: number
+          revision_group: string
+          thumbnail_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          board_id?: string
+          caption?: string | null
+          created_at?: string
+          director_note?: string | null
+          frame_order?: number
+          id?: string
+          is_current_revision?: boolean
+          media_embed_provider?: string | null
+          media_external_url?: string | null
+          media_storage_path?: string | null
+          media_type?: string
+          reference_ids?: string[]
+          revision?: number
+          revision_group?: string
+          thumbnail_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preprod_frames_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          handle: string
+          id: string
+          locale: string
+          team_chat_last_seen: Json
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          handle: string
+          id: string
+          locale?: string
+          team_chat_last_seen?: Json
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          handle?: string
+          id?: string
+          locale?: string
+          team_chat_last_seen?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_deliverables: {
+        Row: {
+          created_at: string
+          external_urls: string[]
+          id: string
+          note: string | null
+          project_id: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_paths: string[]
+          submitted_by: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          external_urls?: string[]
+          id?: string
+          note?: string | null
+          project_id: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_paths?: string[]
+          submitted_by: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          external_urls?: string[]
+          id?: string
+          note?: string | null
+          project_id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_paths?: string[]
+          submitted_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_deliverables_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_deliverables_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_deliverables_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_milestones: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_at: string | null
+          id: string
+          position: number
+          project_id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          position?: number
+          project_id: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          position?: number
+          project_id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_references: {
+        Row: {
+          added_by: string
+          caption: string | null
+          created_at: string
+          duration_seconds: number | null
+          embed_provider: string | null
+          external_url: string | null
+          id: string
+          media_type: string
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
+          page_count: number | null
+          project_id: string
+          storage_path: string | null
+          tags: string[] | null
+          thumbnail_path: string | null
+        }
+        Insert: {
+          added_by: string
+          caption?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          embed_provider?: string | null
+          external_url?: string | null
+          id?: string
+          media_type?: string
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          page_count?: number | null
+          project_id: string
+          storage_path?: string | null
+          tags?: string[] | null
+          thumbnail_path?: string | null
+        }
+        Update: {
+          added_by?: string
+          caption?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          embed_provider?: string | null
+          external_url?: string | null
+          id?: string
+          media_type?: string
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          page_count?: number | null
+          project_id?: string
+          storage_path?: string | null
+          tags?: string[] | null
+          thumbnail_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_references_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_references_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_threads: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          project_id: string
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          project_id: string
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          project_id?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_threads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_threads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          brand_id: string | null
+          brief: string | null
+          created_at: string
+          created_by: string
+          deliverable_types: string[]
+          estimated_budget_range: string | null
+          id: string
+          intake_mode: string
+          project_type: string
+          proposal_audience: string | null
+          proposal_budget_range: string | null
+          proposal_goal: string | null
+          proposal_timeline: string | null
+          status: string
+          target_delivery_at: string | null
+          title: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          brand_id?: string | null
+          brief?: string | null
+          created_at?: string
+          created_by: string
+          deliverable_types?: string[]
+          estimated_budget_range?: string | null
+          id?: string
+          intake_mode?: string
+          project_type?: string
+          proposal_audience?: string | null
+          proposal_budget_range?: string | null
+          proposal_goal?: string | null
+          proposal_timeline?: string | null
+          status?: string
+          target_delivery_at?: string | null
+          title: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          brand_id?: string | null
+          brief?: string | null
+          created_at?: string
+          created_by?: string
+          deliverable_types?: string[]
+          estimated_budget_range?: string | null
+          id?: string
+          intake_mode?: string
+          project_type?: string
+          proposal_audience?: string | null
+          proposal_budget_range?: string | null
+          proposal_goal?: string | null
+          proposal_timeline?: string | null
+          status?: string
+          target_delivery_at?: string | null
+          title?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showcase_media: {
+        Row: {
+          caption: string | null
+          created_at: string
+          embed_provider: string | null
+          external_url: string | null
+          id: string
+          media_type: string
+          showcase_id: string
+          sort_order: number
+          storage_path: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          embed_provider?: string | null
+          external_url?: string | null
+          id?: string
+          media_type: string
+          showcase_id: string
+          sort_order: number
+          storage_path?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          embed_provider?: string | null
+          external_url?: string | null
+          id?: string
+          media_type?: string
+          showcase_id?: string
+          sort_order?: number
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcase_media_showcase_id_fkey"
+            columns: ["showcase_id"]
+            isOneToOne: false
+            referencedRelation: "showcases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showcases: {
+        Row: {
+          badge_removal_approved_at: string | null
+          badge_removal_approved_by: string | null
+          badge_removal_requested: boolean
+          board_id: string | null
+          client_name_public: string | null
+          cover_media_external_url: string | null
+          cover_media_storage_path: string | null
+          cover_media_type: string | null
+          created_at: string
+          created_by: string
+          credits_md: string | null
+          id: string
+          is_password_protected: boolean
+          made_with_yagi: boolean
+          narrative_md: string | null
+          og_image_path: string | null
+          og_image_regenerated_at: string | null
+          password_hash: string | null
+          project_id: string
+          published_at: string | null
+          slug: string
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          badge_removal_approved_at?: string | null
+          badge_removal_approved_by?: string | null
+          badge_removal_requested?: boolean
+          board_id?: string | null
+          client_name_public?: string | null
+          cover_media_external_url?: string | null
+          cover_media_storage_path?: string | null
+          cover_media_type?: string | null
+          created_at?: string
+          created_by: string
+          credits_md?: string | null
+          id?: string
+          is_password_protected?: boolean
+          made_with_yagi?: boolean
+          narrative_md?: string | null
+          og_image_path?: string | null
+          og_image_regenerated_at?: string | null
+          password_hash?: string | null
+          project_id: string
+          published_at?: string | null
+          slug: string
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          badge_removal_approved_at?: string | null
+          badge_removal_approved_by?: string | null
+          badge_removal_requested?: boolean
+          board_id?: string | null
+          client_name_public?: string | null
+          cover_media_external_url?: string | null
+          cover_media_storage_path?: string | null
+          cover_media_type?: string | null
+          created_at?: string
+          created_by?: string
+          credits_md?: string | null
+          id?: string
+          is_password_protected?: boolean
+          made_with_yagi?: boolean
+          narrative_md?: string | null
+          og_image_path?: string | null
+          og_image_regenerated_at?: string | null
+          password_hash?: string | null
+          project_id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcases_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "preprod_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_profile: {
+        Row: {
+          address: string
+          business_item: string | null
+          business_registration_number: string
+          business_type: string | null
+          contact_email: string
+          contact_phone: string | null
+          corporate_name: string
+          created_at: string
+          default_rates: Json
+          id: string
+          representative_name: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          business_item?: string | null
+          business_registration_number: string
+          business_type?: string | null
+          contact_email: string
+          contact_phone?: string | null
+          corporate_name: string
+          created_at?: string
+          default_rates?: Json
+          id?: string
+          representative_name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          business_item?: string | null
+          business_registration_number?: string
+          business_type?: string | null
+          contact_email?: string
+          contact_phone?: string | null
+          corporate_name?: string
+          created_at?: string
+          default_rates?: Json
+          id?: string
+          representative_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_channel_message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          message_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          thumbnail_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          kind: string
+          message_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          thumbnail_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          message_id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+          thumbnail_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_channel_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "team_channel_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_channel_messages: {
+        Row: {
+          author_id: string
+          body: string
+          channel_id: string
+          created_at: string
+          edited_at: string | null
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          channel_id: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          channel_id?: string
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_channel_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "team_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_channels: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_archived: boolean
+          name: string
+          slug: string
+          topic: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_archived?: boolean
+          name: string
+          slug: string
+          topic?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_archived?: boolean
+          name?: string
+          slug?: string
+          topic?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_channels_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thread_message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          message_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          thumbnail_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          kind: string
+          message_id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+          thumbnail_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          message_id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+          thumbnail_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "thread_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      thread_messages: {
+        Row: {
+          attachments: Json
+          author_id: string
+          body: string | null
+          created_at: string
+          edited_at: string | null
+          id: string
+          parent_message_id: string | null
+          thread_id: string
+          visibility: string
+        }
+        Insert: {
+          attachments?: Json
+          author_id: string
+          body?: string | null
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          parent_message_id?: string | null
+          thread_id: string
+          visibility?: string
+        }
+        Update: {
+          attachments?: Json
+          author_id?: string
+          body?: string | null
+          created_at?: string
+          edited_at?: string | null
+          id?: string
+          parent_message_id?: string | null
+          thread_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "thread_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "project_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: string
+          token: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role: string
+          token: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          token?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_invitations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          joined_at: string | null
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_members_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          brand_guide: Json
+          business_address: string | null
+          business_item: string | null
+          business_registration_number: string | null
+          business_type: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          plan: string
+          representative_name: string | null
+          slug: string
+          tax_id: string | null
+          tax_invoice_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_guide?: Json
+          business_address?: string | null
+          business_item?: string | null
+          business_registration_number?: string | null
+          business_type?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          plan?: string
+          representative_name?: string | null
+          slug: string
+          tax_id?: string | null
+          tax_invoice_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_guide?: Json
+          business_address?: string | null
+          business_item?: string | null
+          business_registration_number?: string | null
+          business_type?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          plan?: string
+          representative_name?: string | null
+          slug?: string
+          tax_id?: string | null
+          tax_invoice_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      bootstrap_workspace: {
+        Args: { p_logo_url?: string; p_name: string; p_slug: string }
+        Returns: string
+      }
+      increment_showcase_view: { Args: { sid: string }; Returns: number }
+      is_ws_admin: { Args: { uid: string; wsid: string }; Returns: boolean }
+      is_ws_member: { Args: { uid: string; wsid: string }; Returns: boolean }
+      is_yagi_admin: { Args: { uid: string }; Returns: boolean }
+      is_yagi_internal_ws: { Args: { ws_id: string }; Returns: boolean }
+      resolve_user_ids_by_emails: {
+        Args: { p_emails: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
