@@ -63,3 +63,14 @@ ALTER POLICY team_channels_update ON public.team_channels
       OR public.is_yagi_admin(auth.uid())
     )
   );
+
+-- #5 — storage.objects.avatars_update FOR UPDATE missing WITH CHECK.
+-- The policy authorizes owners to UPDATE their own avatar bucket objects,
+-- but without WITH CHECK an owner could swap owner or bucket_id to escape
+-- the avatars scope (e.g. flip bucket_id to a private bucket whose write
+-- policy would have denied a direct INSERT). Mirror USING into WITH CHECK.
+ALTER POLICY avatars_update ON storage.objects
+  WITH CHECK (
+    bucket_id = 'avatars'::text
+    AND owner = auth.uid()
+  );
