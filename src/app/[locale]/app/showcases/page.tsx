@@ -104,7 +104,6 @@ export default async function ShowcasesListPage({ params }: Props) {
     if (wsIds.length === 0) {
       // Admin of zero workspaces — empty list.
       return renderEmpty({
-        locale,
         t,
         boards: [],
         isYagiAdmin: false,
@@ -117,7 +116,6 @@ export default async function ShowcasesListPage({ params }: Props) {
     const projectIds = (projectRows ?? []).map((p) => p.id);
     if (projectIds.length === 0) {
       return renderEmpty({
-        locale,
         t,
         boards: [],
         isYagiAdmin: false,
@@ -198,7 +196,7 @@ export default async function ShowcasesListPage({ params }: Props) {
   });
 
   if (showcases.length === 0) {
-    return renderEmpty({ locale, t, boards, isYagiAdmin });
+    return renderEmpty({ t, boards, isYagiAdmin });
   }
 
   return (
@@ -345,7 +343,6 @@ function renderEmpty({
   boards,
   isYagiAdmin,
 }: {
-  locale: string;
   t: Awaited<ReturnType<typeof getTranslations>>;
   boards: BoardCandidate[];
   isYagiAdmin: boolean;
