@@ -9,6 +9,12 @@ export type CreateEventArgs = {
   attendeeEmails: string[]
   organizerEmail: string // YAGI account — informational only; the API uses the OAuth identity
   timezone?: string // default 'Asia/Seoul'
+  // Phase 2.0 G4 #8 (Phase 1.3 M3) — stable conference requestId for
+  // idempotent retries. Callers should pass a value that is constant across
+  // retries of the SAME logical meeting (e.g. the meeting row's UUID) so
+  // Google dedups the conference instead of creating a duplicate Meet link.
+  // If omitted, falls back to a fresh randomUUID and loses retry safety.
+  requestId?: string
 }
 
 export type CreateEventResult =
@@ -95,7 +101,7 @@ export async function createCalendarEvent(args: CreateEventArgs): Promise<Create
     attendees: args.attendeeEmails.map((email) => ({ email })),
     conferenceData: {
       createRequest: {
-        requestId: randomUUID(),
+        requestId: args.requestId ?? randomUUID(),
         conferenceSolutionKey: { type: 'hangoutsMeet' },
       },
     },

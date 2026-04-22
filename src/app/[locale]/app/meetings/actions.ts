@@ -230,6 +230,8 @@ export async function createMeeting(
     attendeeEmails,
     organizerEmail,
     timezone: "Asia/Seoul",
+    // Stable requestId across retries (G4 #8 / 1.3 M3) — reuse meeting UUID.
+    requestId: meetingId,
   });
 
   if (calResult.ok) {
@@ -841,6 +843,10 @@ export async function retryCalendarSync(
     attendeeEmails,
     organizerEmail,
     timezone: "Asia/Seoul",
+    // Stable requestId across retries (G4 #8 / 1.3 M3) — reuse meeting UUID
+    // so a retry that races a previous successful call dedups on Google's
+    // side instead of creating a duplicate Meet link.
+    requestId: meetingId,
   });
 
   if (calResult.ok) {
