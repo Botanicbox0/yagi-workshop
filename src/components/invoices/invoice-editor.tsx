@@ -656,11 +656,17 @@ function ActionFooter({ invoice, buyerRegistrationMissing }: ActionFooterProps) 
           "missing_fields" in result && result.missing_fields
             ? result.missing_fields.join(", ")
             : undefined;
-        toast.error(t("issue_failed"), {
-          description: missing
-            ? `${t("missing_fields_title")}: ${missing}`
-            : result.error,
-        });
+        // Phase 2.1 G4 — i18n-render known error codes; fall back to
+        // the raw code string for unknown ones so ops can still diagnose.
+        let description: string;
+        if (missing) {
+          description = `${t("missing_fields_title")}: ${missing}`;
+        } else if (result.error === "popbill_not_implemented") {
+          description = t("error_popbill_not_implemented");
+        } else {
+          description = result.error;
+        }
+        toast.error(t("issue_failed"), { description });
         return;
       }
       toast.success(t("issue_success"));

@@ -101,6 +101,18 @@ export async function issueInvoice(
     taxinvoice: buildResult.taxinvoice,
   });
   if (!popbillResult.ok) {
+    // Phase 2.1 G4 — differentiate "deferred to Phase 2.2" from generic
+    // 팝빌 API failures. NOT_IMPLEMENTED carries a `details` payload
+    // identifying the phase the real impl lands in and the intended
+    // operation; log it structurally and surface a dedicated error code
+    // the client can i18n-render into a bilingual toast body.
+    if (popbillResult.error_code === "NOT_IMPLEMENTED") {
+      console.error(
+        "[invoices] issueInvoice guarded — popbill path deferred",
+        popbillResult.details,
+      );
+      return { ok: false, error: "popbill_not_implemented" };
+    }
     console.error("[invoices] issueInvoice popbill failed", popbillResult);
     return { ok: false, error: popbillResult.error_code };
   }

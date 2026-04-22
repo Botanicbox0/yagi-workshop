@@ -315,7 +315,7 @@ Trigger function:
 - Phase 1.3 `meetings` — completed meetings surface as line-item suggestions.
 - Phase 1.4 `preprod_boards`, `preprod_frames` — approved boards surface as line-item suggestions.
 - Phase 1.1 `workspaces` (buyer BRN, business address).
-- External: Popbill SDK (`POPBILL_MODE=mock|test|production`, default `test`; currently set to `test` in `.env.local`). Test and production paths still have `issueTaxInvoice` NOT_IMPLEMENTED — only the `mock` path is end-to-end. Production-safety guard in `src/lib/popbill/client.ts:9` throws at module load when `POPBILL_MODE=mock && NEXT_PUBLIC_VERCEL_ENV === 'production'`. See `.yagi-autobuild/phase-2-0/POPBILL_LIVE_FLIP.md` for the flip procedure.
+- External: Popbill SDK (`POPBILL_MODE=mock|test|production`, default `test`; currently set to `test` in `.env.local`). Test and production paths are guarded: `issueTaxInvoice()` returns a structured `{error_code: "NOT_IMPLEMENTED", details: {phase: "2.2", mode, intent: "issueTaxInvoice"}}` result (not a bare error), which the `issueInvoice` server action maps to a dedicated `popbill_not_implemented` return code, and the UI renders via the bilingual `invoices.error_popbill_not_implemented` i18n key. Only the `mock` path is end-to-end until Phase 2.2 wires the real SDK. Production-safety guard in `src/lib/popbill/client.ts:9` throws at module load when `POPBILL_MODE=mock && NEXT_PUBLIC_VERCEL_ENV === 'production'`. See `.yagi-autobuild/phase-2-0/POPBILL_LIVE_FLIP.md` for the flip procedure and `.yagi-autobuild/phase-2-1/G4_POPBILL_GUARDED.md` for the guard-hardening diff summary.
 
 **Publishes:**
 - `invoices` + `invoice_line_items` + `recalc_invoice_totals` trigger — canonical billing state.

@@ -583,6 +583,7 @@
     "issue_in_progress": "발행 중...",
     "issue_success": "송장이 발행되었습니다",
     "issue_failed": "발행에 실패했습니다",
+    "error_popbill_not_implemented": "팝빌 실발행 경로는 아직 연결되지 않았습니다. Phase 2.2에서 SDK 통합 후 사용 가능합니다. 현재 mock 모드에서만 발행 가능.",
     "void_button": "취소",
     "void_confirm_title": "이 송장을 취소하시겠습니까?",
     "void_reason_label": "취소 사유",

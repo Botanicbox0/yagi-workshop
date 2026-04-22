@@ -69,6 +69,15 @@ export type IssueArgs = {
   memo?: string;
 };
 
+// Phase 2.1 G4 — structured guard metadata for non-implemented Popbill paths.
+// Allows the caller's log + UI layers to differentiate "deferred, awaiting
+// SDK" from generic 팝빌 API errors without string-matching on error_code.
+export type PopbillErrorDetails = {
+  phase: string;        // Phase the real path is deferred to (e.g. "2.2").
+  mode: PopbillMode;    // Mode at the time of the attempt.
+  intent: string;       // The operation that would have been performed.
+};
+
 export type IssueResult =
   | {
       ok: true;
@@ -77,7 +86,13 @@ export type IssueResult =
       mode: PopbillMode;
       raw_response: Record<string, unknown>;
     }
-  | { ok: false; error_code: string; error_message: string; mode: PopbillMode };
+  | {
+      ok: false;
+      error_code: string;
+      error_message: string;
+      mode: PopbillMode;
+      details?: PopbillErrorDetails;
+    };
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -96,12 +111,22 @@ export function isPopbillConfigured(): boolean {
 
 export async function issueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
   if (mode === "mock") return mockIssueTaxInvoice(args);
-  // Real SDK paths not implemented yet — popbill credentials pending.
+  // Phase 2.1 G4 — real SDK paths are deferred to Phase 2.2. Return a
+  // structured NOT_IMPLEMENTED result rather than a bare error; callers
+  // differentiate on error_code === "NOT_IMPLEMENTED" + the `details`
+  // payload to give operators + UI a user-friendly, locale-renderable
+  // message and to avoid silent 500s when the invoice issue path is
+  // exercised in a non-mock deployment.
   return {
     ok: false,
     error_code: "NOT_IMPLEMENTED",
-    error_message: `POPBILL_MODE=${mode} requires the popbill SDK (not yet installed).`,
+    error_message: `POPBILL_MODE=${mode} calls to issueTaxInvoice are deferred to Phase 2.2 (real SDK integration pending).`,
     mode,
+    details: {
+      phase: "2.2",
+      mode,
+      intent: "issueTaxInvoice",
+    },
   };
 }
 

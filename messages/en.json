@@ -583,6 +583,7 @@
     "issue_in_progress": "Issuing...",
     "issue_success": "Invoice issued",
     "issue_failed": "Failed to issue invoice",
+    "error_popbill_not_implemented": "The live Popbill issuance path isn't wired up yet. SDK integration lands in Phase 2.2; issuance currently only works in mock mode.",
     "void_button": "Void",
     "void_confirm_title": "Void this invoice?",
     "void_reason_label": "Reason for voiding",
