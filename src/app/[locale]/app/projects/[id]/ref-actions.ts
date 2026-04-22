@@ -29,14 +29,16 @@ const addSchema = z
 
 /**
  * Ensures a supplied storage path is scoped to the given project.
- * Prevents a client from passing `otherProjectId/file.jpg`.
+ * Prevents `otherProjectId/file.jpg` AND `${projectId}/../escape.jpg`
+ * — Phase 2.0 G4 #10 hardened the prefix check against `..` traversal.
  */
 function pathBelongsToProject(
   path: string | null | undefined,
   projectId: string
 ): boolean {
   if (!path) return true;
-  return path.startsWith(`${projectId}/`);
+  if (!path.startsWith(`${projectId}/`)) return false;
+  return !path.split("/").includes("..");
 }
 
 export async function addReference(input: unknown) {
