@@ -84,3 +84,14 @@ ALTER POLICY "showcase-media update" ON storage.objects
     bucket_id = 'showcase-media'::text
     AND public.is_yagi_admin(auth.uid())
   );
+
+-- #7 — storage.objects."showcase-og update" FOR UPDATE missing WITH CHECK.
+-- Last of the 6 UPDATE-policy gaps. The showcase-og bucket is public-read,
+-- so a cross-bucket flip here is lower impact than #6, but the WITH CHECK
+-- gap is the same shape and leaving it open is inconsistent with the rest
+-- of this migration. Mirror USING into WITH CHECK.
+ALTER POLICY "showcase-og update" ON storage.objects
+  WITH CHECK (
+    bucket_id = 'showcase-og'::text
+    AND public.is_yagi_admin(auth.uid())
+  );
