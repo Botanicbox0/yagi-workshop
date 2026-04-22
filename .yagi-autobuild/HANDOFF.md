@@ -65,9 +65,6 @@ Supabase CLI / SQL Editor 작업 시작 전 항상 확인:
 
 ## 🚨 남은 TODO (우선순위 순)
 
-### P0 — 이번 주 내
-1. **Git init + Phase별 커밋 + push** — 워킹 트리 전체 미커밋 상태. 리모트 `https://github.com/Botanicbox0/yagi-workshop.git` 빈 상태 확인됨. `.gitignore` 최종 상태 OK (.env.local 제외, .env.local.example 포함, .yagi-autobuild/ runtime 파일만 제외).
-
 ### P1 — Phase 2.0 시작 시 같이 처리
 2. **마이그레이션 히스토리 불일치 정리 (deferred)**
    - Remote DB `schema_migrations` 에는 23건 기록됨
@@ -88,20 +85,58 @@ Supabase CLI / SQL Editor 작업 시작 전 항상 확인:
 
 ---
 
+## 🐙 Git 상태
+
+- **리모트:** https://github.com/Botanicbox0/yagi-workshop (push 완료 2026-04-22)
+- **브랜치:** `main`
+- **커밋 구조 (3개):**
+  1. `7dd3f48` — chore: initial project scaffolding + ops scripts
+  2. `e9cba13` — docs: B-O-E autobuild methodology + phase 1.0-1.9 specs
+  3. `a914cc6` — feat: phases 1.0-1.9 complete
+- **Git identity:** local repo scope로 설정됨 (global 아님)
+
+### 주의할 점 (다음 push 시)
+- `public/assets/other/` 안에 15~42MB PNG 5개 있음. GitHub 50MB warning 임계 근접.
+- Phase 2.0 때 Git LFS 도입 검토 (대용량 이미지 / 비디오 자산 늘어날 예정이면 필수)
+
+---
+
+## 🔐 보안 인시던트 기록 (2026-04-22)
+
+### 인시던트 1: 잘못된 Supabase 프로젝트에 설치
+- 2026-04-22 오전 `YAGI STUDIO` (vvsyqcbplxjiqomxrrew, 레거시) 에 secrets/Edge Function/cron 설치
+- `yagi-workshop` (jvamvbpxnztynsccvcmr, 정답 프로젝트) 로 이주 완료
+- **원인:** `.env.local` 의 `SUPABASE_URL` 과 스크립트 `$projectRef` 상수 대조 안 함
+- **예방:** 이후 모든 스크립트 상단에 `jvamvbpxnztynsccvcmr` 하드코딩, 주석으로 이유 명시
+
+### 인시던트 2: `docs/google-oauth-setup.md` 에 Google OAuth Client Secret 평문 커밋
+- GitHub push protection 이 첫 push 시점에 차단 ✅
+- 리모트 노출은 없었음
+- 로컬 파일 + 이전 commit 트리에만 존재 → `git reset --soft HEAD~2` 로 재작성
+- **예방:** `.env.local.example` 에만 placeholder 남기고 문서에는 실제 값 절대 쓰지 않음
+- **후속:** Google OAuth Client Secret 회전 권장 (Google Cloud Console → Credentials → yagi-studio → Reset Secret). Testing 모드 + 7일 refresh token 만료로 실제 위험도는 낮지만 이상적으로는 회전 후 `.env.local` 갱신.
+
+### 인시던트 3: `summary-phase-1-8.md` 에 Resend API key 평문
+- Builder 가 summary 에 example 명령어 그대로 기록
+- 전수 스캔 후 placeholder 로 교체
+- **예방:** Phase spec / summary 에는 `re_<your-key>` 형태의 placeholder 만 사용
+
+---
+
 ## 📦 2026-04-22 세션 요약
 
 이 세션에서 일어난 일:
 1. Phase 1.3 spec 마무리 (E-05 email rendering, parallelism plan, kill-switch 테이블, Codex review prompt)
 2. Google OAuth Client 생성 + Calendar API 활성화 + Playground로 refresh token 발급
-3. `.env.local` 정리 + `docs/google-oauth-setup.md` 생성
+3. `.env.local` 정리 + `docs/google-oauth-setup.md` 생성 (후속 보안 인시던트 #2)
 4. Codex CLI 세팅 (`gpt-5.4` + high reasoning)
 5. Autopilot 프롬프트 던짐 → Phase 1.2 → 1.9 전체 완주
 6. Phase 1.5 mock 모드 진입 명령 (spec에 ADDENDUM 추가)
-7. **Supabase 세팅 실수** — YAGI STUDIO (vvsyqcbplxjiqomxrrew) 에 secrets/Edge Function/cron 설치함
-8. **복구** — cleanup 스크립트로 YAGI STUDIO 청소 → yagi-workshop (jvamvbpxnztynsccvcmr) 에 재설치 → cron Step D-4 검증 통과
-9. Popbill 승인 나서 `.env.local` POPBILL_MODE=test 로 전환
-10. Cron 10분 간격 실행 + notify-dispatch end-to-end 검증 완료
+7. Supabase 세팅 실수 + 복구 (인시던트 #1)
+8. Popbill 승인 나서 `.env.local` POPBILL_MODE=test 로 전환
+9. Cron 10분 간격 실행 + notify-dispatch end-to-end 검증 완료
+10. Git init → 3커밋 → push (인시던트 #2, #3 발견 + 수정 + 재push)
 
 ---
 
-**HANDOFF 최종. Phase 1 완주. 다음은 git 커밋 + Phase 2.0 계획. 🚀**
+**HANDOFF 최종. Phase 1 완주 + Git 동기화 완료. 다음은 Phase 2.0 계획. 🚀**
