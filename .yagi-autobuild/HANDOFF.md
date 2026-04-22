@@ -1,11 +1,11 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-22 (Phase 2.0 진행 중 — G0/G1.5/G2/G3/G4 완료, G1 verify pending, G5-G7 대기)
-> **목적:** Phase 2.0 기술 부채 정리 phase 진행 중. 새 기능 0개. 7개 group 순차 처리.
+> **갱신:** 2026-04-23 (Phase 2.0 **SHIPPED** — G0/G1.5/G2/G3/G4/G5/G6/G7 완료, G1 verify pending only)
+> **목적:** Phase 2.0 기술 부채 정리 phase 완료. 새 기능 0개. 7개 group 순차 처리 전부 완주.
 
 ---
 
-## 🚧 Phase 2.0 진행 상태 (2026-04-22)
+## 🚧 Phase 2.0 진행 상태 (2026-04-23 — SHIPPED)
 
 | Group | 상태 | 비고 |
 |-------|------|------|
@@ -15,9 +15,9 @@
 | G2 — Migration baseline squash | ✅ **완료 with imperfect baseline** | Single baseline `20260422120000_phase_2_0_baseline.sql` (160KB) replaces 23 historical migrations. **Caveat:** Docker 부재로 raw `pg_dump v18` 사용 + 수동 supplement (5 extensions, 10 storage buckets, 3 realtime publications). Codex K-05 verdict CLEAN. 상세: `.yagi-autobuild/phase-2-0/BASELINE_LIMITATIONS.md` |
 | G3 — POPBILL flip docs | ✅ 완료 | `.yagi-autobuild/phase-2-0/POPBILL_LIVE_FLIP.md` (mock→test→production 3-step flip, code locations, blockers). `.env.local.example` POPBILL_* expanded with inline comments. CLAUDE.md note 추가. **Blocker 명시:** `client.ts:97-106` `issueTaxInvoice()` test/production NOT_IMPLEMENTED — 실 발행은 future Phase에서 popbill SDK 통합 필요 |
 | G4 — Cross-phase deferred | ✅ 완료 (atomic 10 commits) | Triage (`G4_TRIAGE.md`) → 10 FIX_NOW / 15 DEFER_TO_2_1 / 0 WONT_FIX. Cluster A (#6 createBoard authz, #10 ref-actions `..`, #2 thread-actions admin fan-out leak, #4 sendMessage `..`) + Cluster B (#1 unsubscribe atomic claim, #3 timezone IANA allowlist, #5 markChannelSeen surface errors) + Cluster C (#7 journal locale toggle fallback, #8 Google Calendar requestId dedup, #9 invoice print draft guard). 각 fix 전 `pnpm tsc --noEmit` EXIT:0 통과. Workflow rule: atomic commit per fix (crash safety net). **Full build check (`pnpm build`) deferred until G4 end — run before G5 start.** |
-| G5 — Phase 1.9 MEDIUM | 대기 — 추가 항목 발견 | G2 baseline review 중 발견된 pre-existing 이슈 7건 추가: `recalc_invoice_totals` SECURITY DEFINER missing search_path, 6 UPDATE policies missing WITH CHECK (meetings_update / showcase_media_update / team_channels_update / storage avatars_update / showcase-media update / showcase-og update) |
-| G6 — Phase 1.9 LOW + i18n | 대기 — 추가 항목 | **L5 (new):** `showcase/[slug]` not-found layout chain broken on Next 15.5 ("Missing `<html>` and `<body>` tags in root layout" runtime error on `/showcase/does-not-exist`). Pre-existing Phase 1.9 regression. Fix 후보: (a) Next 15.6+ upgrade 시도, 실패 시 (b) `not-found.tsx` 에 inline `<html>/<body>` 추가, (c) `force-static` |
-| G7 — Cross-phase contracts | 대기 | |
+| G5 — Phase 1.9 MEDIUM | ✅ 완료 (atomic 7 commits) | Single migration `20260422130000_phase_1_9_medium_fixes.sql` built incrementally — each commit appends one ALTER. #1 `recalc_invoice_totals` `SET search_path = public, pg_temp`; #2-4 public UPDATE WITH CHECK on `meetings_update` / `showcase_media_update` / `team_channels_update`; #5-7 storage UPDATE WITH CHECK on `avatars_update` / `"showcase-media update"` / `"showcase-og update"`. Migration NOT yet pushed to live DB — apply with `supabase db push` before Phase 2.5 starts. **Post-G4 `pnpm build` verified clean (15.7s, 11 static pages) before entering G5.** |
+| G6 — Phase 1.9 LOW + i18n | ✅ 완료 (atomic 6 commits) | L1 `createShowcaseFromBoard` retry-on-23505 for draft slug collision. L2 `requestBadgeRemoval` rationale comment (Vercel log drain acceptable). L3 `renderEmpty` drop unused `locale` param. L4 `buildEmbedUrl` YouTube Shorts `/shorts/` → `/embed/` rewrite. L5 `showcase/[slug]/not-found.tsx` self-contained html/body shell (Next 15.5 dynamic-segment not-found layout-chain bug workaround — revert when upgrading to ≥15.6). i18n: 4 dead keys × 2 locales removed (`team_chat.message_load_more`, `team_chat.error_load_failed`, `team_chat.nav_label`, `showcase.nav_label`). |
+| G7 — Cross-phase contracts | ✅ 완료 with 1 deferred investigation | `.yagi-autobuild/contracts.md` (per-phase, 1.1→1.9, ~550 lines). CLAUDE.md pointer + update-policy added. Codex K-05 initial pass: 2 HIGH / 8 MEDIUM / 1 LOW. Option B closeout: all MEDIUM + LOW + H2 (thread_messages RLS wording) fixed in-doc; **H1 (preprod_frame_reactions/comments publication membership vs. UI subscription)** filed as `.yagi-autobuild/phase-2-1/INVESTIGATION-H1-realtime-live.md` with two hypotheses + verification SQL. Codex re-review: all 11 substantive items RESOLVED; one cosmetic label taxonomy finding on the Known-gaps section addressed in final patch. Known external prerequisite documented: `workspaces.slug='yagi-internal'` row is not seeded by any authoritative migration — manual INSERT required on clean-clone before preprod / team-chat paths work. |
 
 **G1 verify 임시 가정 진행 결정:** DNS 전파 대기로 G1.5/G2 등 후속 group이 막히는 게 비효율적. G1 setup은 완료됐고 (secrets/cron/Edge function 모두 active), domain verify만 외부 DNS 의존. G2+ group은 G1 verify와 독립적이라 병렬 진행. G1 closeout는 별도 처리.
 

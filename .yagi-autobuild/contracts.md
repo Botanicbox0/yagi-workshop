@@ -34,8 +34,8 @@ Plus:
 | `workspaces` | Brand definition (name, slug, logo_url, plan) + tax fields (BRN, representative, address, tax_invoice_email) | Write: `bootstrap_workspace` RPC, Settings `updateWorkspace`. Read: workspace switcher, settings, every workspace-scoped query |
 | `brands` | Design identity per workspace (typographic + palette overrides) | Write: Settings `updateBrand`. Read: brand selector, theme provider |
 | `workspace_members` | Membership + role (`admin`/`member`) | Write: `bootstrap_workspace`, Settings invitation flow. Read: team panel, every RLS predicate |
-| `workspace_invitations` | Email-based invite (token + status) | Write: Settings `inviteTeamMember`, `cancelInvitation`. Read: invite landing, onboarding |
-| `user_roles` | Global `yagi_admin` role (workspace_id IS NULL) | Write: manually / seed. Read: admin gates, nav filters |
+| `workspace_invitations` | Email-based invite (token + status) | Write: Settings `inviteMember`, onboarding `sendInvitationsAction`. Read: invite landing, onboarding, Phase 1.3 meetings/new attendee email fallback |
+| `user_roles` | Role grants. Values: `creator` / `workspace_admin` / `workspace_member` (workspace-scoped) and `yagi_admin` (global, `workspace_id IS NULL`) | Write: `bootstrap_workspace`, manual / seed. Read: admin gates, nav filters |
 
 ### RPCs
 
@@ -45,7 +45,7 @@ Plus:
 | `is_ws_admin(uid, wsid)` | Predicate: user is admin in workspace | RLS policies + app-side authorization checks | SECURITY DEFINER, STABLE |
 | `is_ws_member(uid, wsid)` | Predicate: user is any member in workspace | RLS policies + app-side checks | SECURITY DEFINER, STABLE |
 | `is_yagi_admin(uid)` | Predicate: user holds yagi_admin role | Admin gates, nav filters, cross-workspace ops | SECURITY DEFINER, STABLE |
-| `is_yagi_internal_ws(wsid)` | Predicate: workspace is the reserved yagi-internal workspace | RLS for team_channels and other yagi-only surfaces | STABLE |
+| `is_yagi_internal_ws(wsid)` | Predicate: workspace is the reserved yagi-internal workspace | RLS for team_channels and other yagi-only surfaces | SECURITY DEFINER, STABLE |
 
 ### Notification events emitted
 
@@ -61,11 +61,12 @@ Plus:
 |--------|---------|---------------------|
 | `avatars` | private | Write: Settings profile photo. Read: profile cards via signed URLs |
 | `workspace-logos` | public | Write: Settings workspace logo. Read: workspace switcher, brand card (unsigned public URLs) |
+| `brand-logos` | public | Write: onboarding `createBrandAction`, Settings brand logo. Read: brand selector, theme provider (unsigned public URLs) |
 
 ### Server Actions (public API)
 
-- `src/app/[locale]/app/settings/actions.ts` — `updateProfile`, `updateWorkspace`, `updateBrand`, `inviteTeamMember`, `updateMemberRole`, `cancelInvitation`, `acceptInvitation`
-- Onboarding flow actions under `src/app/[locale]/onboarding/**/actions.ts`
+- `src/app/[locale]/app/settings/actions.ts` — `updateProfile`, `updateAvatarUrl`, `updateWorkspace`, `inviteMember`, `removeMember`
+- `src/lib/onboarding/actions.ts` — `createProfileAction`, `createWorkspaceAction`, `createBrandAction`, `sendInvitationsAction`
 
 ### Cross-phase dependencies
 
@@ -85,10 +86,12 @@ Plus:
 
 | Table | Purpose | Owners (read/write) |
 |-------|---------|---------------------|
-| `projects` | Client commission (workspace_id, brand_id, title, brief, status enum, intake_mode, proposal fields) | Write: `createProject`, `transitionStatus`, `updateProject`. Read: project list/detail, admin view, every phase that scopes to a project |
-| `project_references` | Media intake (URLs, OG metadata, `media_type`, `duration_seconds`, `page_count`, `thumbnail_path`, `embed_provider`) | Write: `addReference`, `addReferenceFromUrl`, `deleteReference`. Read: reference grid + detail |
-| `project_threads` | Conversation container per project (`is_internal` visibility toggle) | Write: `getOrCreateThread`. Read: thread panel |
-| `thread_messages` | Messages (body nullable when attachments-only; `visibility='internal'` restricted to yagi_admin after Phase 1.2.5 tightening) | Write: `sendMessage`, `sendMessageWithAttachments`. Read: thread panel + Phase 1.8 retrofit emit |
+| `projects` | Client commission (workspace_id, brand_id, title, brief, status enum, intake_mode, proposal fields) | Write: `createProject`, `transitionStatus`. Read: project list/detail, admin view, every phase that scopes to a project |
+| `project_milestones` | Timeline markers (project_id, title, description, due_at, status enum: pending/in_progress/completed/skipped, position) | Write: project detail milestones editor. Read: project detail timeline view |
+| `project_deliverables` | Submitted deliverables (project_id, version, submitted_by, storage_paths text[], external_urls text[], note, status enum: submitted/changes_requested/approved, reviewed_by, review_note) | Write: project deliverables form. Read: project detail deliverables tab, admin review |
+| `project_references` | Media intake (URLs, OG metadata, `media_type`, `duration_seconds`, `page_count`, `thumbnail_path`, `embed_provider`) | Write: `addReference`, `addReferenceFromUrl`, `removeReference`. Read: reference grid + detail |
+| `project_threads` | Conversation container per project (id, project_id, title, created_by, created_at) | Write: thread-actions on first message. Read: thread panel |
+| `thread_messages` | Messages (body nullable when attachments-only; `visibility` enum `shared`/`internal`; a RESTRICTIVE SELECT policy hides `internal` from non-authors who are not `yagi_admin`) | Write: `sendMessage`, `sendMessageWithAttachments`. Read: thread panel + Phase 1.8 retrofit emit |
 | `thread_message_attachments` | File storage metadata (file_name, size_bytes, kind, storage_path, thumbnail_path) | Write: `sendMessageWithAttachments`. Read: thread panel + signed URL generation |
 
 ### RPCs
@@ -108,13 +111,14 @@ Plus:
 | Bucket | Public? | Owners (read/write) |
 |--------|---------|---------------------|
 | `project-references` | private | Write: `addReference`, `addReferenceFromUrl`. Read: RSC reference grid via signed URLs |
+| `project-deliverables` | private | Write: deliverables form (`deliverables_insert` storage policy authenticates writers). Read: project detail deliverables tab via `deliverables_read` (joins `project_deliverables` → `projects` → workspace membership) |
 | `thread-attachments` | private | Write: `sendMessageWithAttachments`. Read: thread panel server-fetch with signed URLs |
 
 ### Server Actions (public API)
 
 - `src/app/[locale]/app/projects/new/actions.ts` — `createProject`
-- `src/app/[locale]/app/projects/[id]/actions.ts` — `transitionStatus`, `updateProject`
-- `src/app/[locale]/app/projects/[id]/ref-actions.ts` — `addReference`, `addReferenceFromUrl`, `deleteReference`
+- `src/app/[locale]/app/projects/[id]/actions.ts` — `transitionStatus`
+- `src/app/[locale]/app/projects/[id]/ref-actions.ts` — `addReference`, `addReferenceFromUrl`, `removeReference`
 - `src/app/[locale]/app/projects/[id]/thread-actions.ts` — `sendMessage`, `sendMessageWithAttachments`
 
 ### Cross-phase dependencies
@@ -140,7 +144,7 @@ Columns added:
 - `projects`: `intake_mode` enum, `proposal_request`, `proposal_brief`, `proposal_timeline`, `proposal_deliverables`
 
 Policies tightened:
-- `thread_messages.visibility='internal'` — SELECT restricted to `is_yagi_admin(auth.uid())`.
+- `thread_messages.visibility='internal'` — RESTRICTIVE SELECT policy `thread_msgs_hide_internal_from_clients` hides internal messages from non-privileged workspace members. Specifically: reads are allowed when `visibility='shared' OR is_yagi_admin(auth.uid()) OR author_id = auth.uid()`. Authors can still read their own internal drafts; other workspace members cannot.
 
 ### RPCs
 
@@ -208,6 +212,7 @@ Triggers added:
 **Reads:**
 - Phase 1.2 `projects` — meeting scoped to a project.
 - Phase 1.1 `profiles` — attendee name resolution.
+- Phase 1.1 `workspace_invitations` — `meetings/new/page.tsx` reads accepted-invite rows as an email fallback when a workspace member has no profile email exposed via RLS.
 - External: Google OAuth (`GOOGLE_OAUTH_*` env), Resend (ICS email fallback).
 
 **Publishes:**
@@ -238,10 +243,12 @@ Triggers added:
 
 ### Realtime publication
 
-| Table | Since |
-|-------|-------|
-| `preprod_frame_reactions` | Phase 1.4 |
-| `preprod_frame_comments` | Phase 1.4 |
+The UI (`src/components/preprod/board-editor.tsx`) subscribes via Supabase Realtime `postgres_changes` to both `preprod_frame_reactions` and `preprod_frame_comments`. **Publication membership for these tables is unverified in the Phase 2.0 G2 baseline dump** — the dump only explicitly adds `notification_events`, `team_channel_messages`, and `team_channel_message_attachments` to `supabase_realtime`. This is filed as an open investigation at `.yagi-autobuild/phase-2-1/INVESTIGATION-H1-realtime-live.md`. Depending on resolution, either the baseline is incomplete (safe — just backfill the supplement) or preprod feedback realtime is silently broken in production (needs a migration to add the tables to the publication).
+
+| Table | Status |
+|-------|--------|
+| `preprod_frame_reactions` | UI subscribes; publication membership UNVERIFIED — see investigation file |
+| `preprod_frame_comments` | UI subscribes; publication membership UNVERIFIED — see investigation file |
 
 ### Storage buckets
 
@@ -259,7 +266,7 @@ Triggers added:
 
 **Reads:**
 - Phase 1.2 `projects` + `project_references` (embedded in share page).
-- Phase 1.1 `is_yagi_admin` for board creation; seed-data-created `yagi-internal` workspace for trigger-locked workspace_id.
+- Phase 1.1 `is_yagi_admin` for board creation; the `preprod_boards_set_workspace_id` trigger assumes a row exists in `workspaces` with `slug='yagi-internal'`. **This row is an external prerequisite — it is NOT seeded by any authoritative migration in the Phase 2.0 baseline.** In the live `jvamvbpxnztynsccvcmr` project it was manually inserted during Phase 1.1 bootstrap. A clean-clone `supabase db reset` will leave the trigger raising `yagi-internal workspace not found` until someone runs `INSERT INTO workspaces (slug, name, plan) VALUES ('yagi-internal', 'YAGI Internal', 'custom')` by hand. Formalizing this as a seed migration is out of Phase 2.0 scope.
 
 **Publishes:**
 - `preprod_boards`, `preprod_frames` — read by 1.5 `suggestLineItems` (approved boards) and by 1.9 `createShowcaseFromBoard`.
@@ -275,7 +282,7 @@ Triggers added:
 | Table | Purpose | Owners (read/write) |
 |-------|---------|---------------------|
 | `invoices` | Tax invoice header (workspace_id, project_id nullable, supplier_id, status enum: draft/issued/paid/void, subtotal_krw / vat_krw / total_krw via `recalc_invoice_totals` trigger, popbill_mgt_key UNIQUE, popbill_response jsonb, is_mock, nts_approval_number, invoice_number, issue_date, supply_date, memo) | Write: `createInvoice`, `issueInvoice`, `markPaid`, `voidInvoice`. Read: invoice list/detail, admin dashboard, print page |
-| `invoice_line_items` | Rows (invoice_id, item_name, specification, quantity, unit_price_krw, supply_krw, vat_krw, display_order, source_type enum: meeting/board/manual, source_id) | Write: `addLineItem`, `updateLineItem`, `deleteLineItem`, `reorderLineItems`, `bulkAddFromSuggestions`. Read: invoice editor, suggest dialog, print page |
+| `invoice_line_items` | Rows (invoice_id, item_name, specification, quantity, unit_price_krw, supply_krw, vat_krw, display_order, source_type enum: `manual`/`meeting`/`storyboard`/`deliverable`, source_id) | Write: `addLineItem`, `updateLineItem`, `deleteLineItem`, `reorderLineItems`, `bulkAddFromSuggestions`. Read: invoice editor, suggest dialog, print page |
 | `supplier_profile` | Single-row YAGI org metadata (BRN, corporate_name, representative_name, address, business_type, business_item, tax_invoice_email) | Seeded at migration. Read: invoice issuance + print page |
 
 ### RPCs
@@ -308,7 +315,7 @@ Trigger function:
 - Phase 1.3 `meetings` — completed meetings surface as line-item suggestions.
 - Phase 1.4 `preprod_boards`, `preprod_frames` — approved boards surface as line-item suggestions.
 - Phase 1.1 `workspaces` (buyer BRN, business address).
-- External: Popbill SDK (`POPBILL_MODE=mock|test|production` — currently `mock` end-to-end; test/production paths wired but `issueTaxInvoice` NOT_IMPLEMENTED, see `.yagi-autobuild/phase-2-0/POPBILL_LIVE_FLIP.md`).
+- External: Popbill SDK (`POPBILL_MODE=mock|test|production`, default `test`; currently set to `test` in `.env.local`). Test and production paths still have `issueTaxInvoice` NOT_IMPLEMENTED — only the `mock` path is end-to-end. Production-safety guard in `src/lib/popbill/client.ts:9` throws at module load when `POPBILL_MODE=mock && NEXT_PUBLIC_VERCEL_ENV === 'production'`. See `.yagi-autobuild/phase-2-0/POPBILL_LIVE_FLIP.md` for the flip procedure.
 
 **Publishes:**
 - `invoices` + `invoice_line_items` + `recalc_invoice_totals` trigger — canonical billing state.
@@ -409,7 +416,7 @@ Trigger function:
 
 | Table | Purpose | Owners (read/write) |
 |-------|---------|---------------------|
-| `notification_events` | Event log (kind enum, severity enum: high/medium/low, user_id, workspace_id, project_id nullable, payload jsonb, url_path, read_at, email_batch_id nullable, email_sent_at nullable, created_at) | Write: `emitNotification`, `emitDebouncedNotification` (service-role). Read: bell panel (per-user Realtime), Edge Function `notify-dispatch`, admin |
+| `notification_events` | Event log. Columns: `id`, `user_id`, `project_id` (nullable), `workspace_id` (nullable), `kind` text, `severity` enum check (`high`/`medium`/`low`), `title` text, `body` text nullable, `url_path` text nullable, `payload` jsonb nullable, `email_sent_at` timestamptz nullable, `email_batch_id` uuid nullable, `in_app_seen_at` timestamptz nullable, `created_at`. | Write: `emitNotification`, `emitDebouncedNotification` (service-role). Read: bell panel (per-user Realtime + mark-seen sets `in_app_seen_at`), Edge Function `notify-dispatch` (stamps `email_sent_at`), admin |
 | `notification_preferences` | User settings (user_id, email_immediate_enabled, email_digest_enabled, digest_time_local, quiet_hours_start/end, timezone CHECK against `src/lib/notifications/timezones.ts` allowlist after Phase 2.0 G4 #3) | Write: `updateNotificationPreferences`. Read: Edge Function path selection |
 | `notification_unsubscribe_tokens` | One-time unsubscribe links (token UNIQUE, user_id, used_at, created_at) | Write: generated at `emitNotification`; `confirmUnsubscribe` atomic-claims via `used_at IS NULL` guard (Phase 2.0 G4 #1). Read: `/unsubscribe/[token]` service-role page |
 
@@ -423,19 +430,21 @@ Trigger function:
 
 Phase 1.8 defines the event types; individual `emitNotification(...)` call sites are distributed across every prior feature phase.
 
-| Kind | Severity | Triggered by | Subscribers |
-|------|----------|--------------|-------------|
-| `meeting_scheduled` | high | Phase 1.3 `createMeeting` | Attendees resolved to YAGI user_ids (email + in-app bell) |
-| `meeting_summary_sent` | medium | Phase 1.3 `sendMeetingSummary` | Attendees |
-| `board_shared` | medium | Phase 1.4 `shareBoard` | Project workspace_members |
-| `board_approved` | high | Phase 1.4 `approveBoard` | Project workspace_members |
-| `revision_uploaded` | medium | Phase 1.4 `createFrameRevision` | Board feedback recipients |
-| `frame_uploaded_batch` (debounced) | low | Phase 1.4 `addFrame` / `addFrameFromUrl` | Board feedback recipients |
-| `feedback_received` (debounced) | medium | Phase 1.4 `/api/share/[token]/reactions` + `/comments` | Board owner |
+Severity values below come from `src/lib/notifications/kinds.ts:22-34` (authoritative `SEVERITY_BY_KIND` registry); fan-out comes from the `_emit*Notifications` helpers next to each emitter.
+
+| Kind | Severity | Triggered by | Fan-out (subscribers) |
+|------|----------|--------------|-----------------------|
+| `meeting_scheduled` | high | Phase 1.3 `createMeeting` | Attendees resolved via `resolve_user_ids_by_emails` (email + in-app bell) |
+| `meeting_summary_sent` | high | Phase 1.3 `sendMeetingSummary` | Attendees resolved via `resolve_user_ids_by_emails` |
+| `board_shared` | high | Phase 1.4 `shareBoard` | `workspace_members` of the board's workspace |
+| `board_approved` | high | Phase 1.4 `approveBoard` | Global `yagi_admin`s (NOT workspace_members — approval is a YAGI-internal milestone) |
+| `revision_uploaded` | medium | Phase 1.4 `createFrameRevision` | Board feedback recipients (share-token reviewers) |
+| `frame_uploaded_batch` (debounced) | medium | Phase 1.4 `addFrame` / `addFrameFromUrl` | Board feedback recipients |
+| `feedback_received` (debounced) | medium | Phase 1.4 `/api/share/[token]/reactions` + `/comments` | All `yagi_admin`s (debounced per user × board × 10 min window) |
 | `invoice_issued` | high | Phase 1.5 `issueInvoice` | Project workspace admins |
-| `thread_message_new` | medium | Phase 1.2 `sendMessage` (retrofit in `thread-actions.ts`; Phase 2.0 G4 #2 removed cross-workspace yagi-admin fan-out) | `workspace_members` of the project's workspace |
-| `team_channel_mention` | high | Phase 1.7 `sendMessage` when `@name` detected (workspace-scoped via yagi-internal `workspace_members` intersection) | Mentioned YAGI-internal members (email + in-app) |
-| `showcase_published` | medium | Phase 1.9 `publishShowcase` | Project workspace_members |
+| `thread_message_new` | low | Phase 1.2 `sendMessage` (retrofit in `thread-actions.ts`; Phase 2.0 G4 #2 removed cross-workspace yagi-admin fan-out) | `workspace_members` of the project's workspace |
+| `team_channel_mention` | low | Phase 1.7 `sendMessage` when `@name` detected (workspace-scoped via yagi-internal `workspace_members` intersection) | Mentioned YAGI-internal members (email + in-app) |
+| `showcase_published` | high | Phase 1.9 `publishShowcase` | `workspace_members` of the project's workspace |
 
 ### Realtime publication
 
@@ -481,7 +490,7 @@ Phase 1.8 defines the event types; individual `emitNotification(...)` call sites
 | Table | Purpose | Owners (read/write) |
 |-------|---------|---------------------|
 | `showcases` | Portfolio piece (project_id, workspace_id, slug UNIQUE, title, narrative_md, cover_media_type/path/external_url, status enum: draft/published/archived, made_with_yagi boolean, view_count, password_hash bcrypt, badge_removal_requested/approved_at/by/denied_at/reason, og_image_path / og_image_regenerated_at, published_at) | Write: `createShowcaseFromBoard` (Phase 2.0 G6 L1 now retries on 23505 slug collisions), `publishShowcase`, `unpublishShowcase`, `updateShowcase`, `setShowcaseCover`, `setShowcasePassword`, `requestBadgeRemoval`, `approveBadgeRemoval`, `denyBadgeRemoval`. Read: admin list + editor, public viewer, OG endpoint |
-| `showcase_media` | Frames or uploaded media (showcase_id, media_type enum: image/video/video_embed, storage_path for image/video, external_url + embed_provider for video_embed, thumbnail_path, caption, sort_order UNIQUE per showcase) | Write: `addShowcaseMedia`, `removeShowcaseMedia`, `reorderShowcaseMedia`, `requestShowcaseUploadUrls`. Read: admin editor, public viewer, OG image render |
+| `showcase_media` | Frames or uploaded media (showcase_id, media_type enum: `image`/`video_upload`/`video_embed`, storage_path for image/video_upload, external_url + embed_provider for video_embed, thumbnail_path, caption, sort_order UNIQUE per showcase) | Write: `addShowcaseMedia`, `removeShowcaseMedia`, `reorderShowcaseMedia`, `requestShowcaseUploadUrls`. Read: admin editor, public viewer, OG image render |
 
 ### RPCs
 
@@ -525,25 +534,27 @@ Phase 1.8 defines the event types; individual `emitNotification(...)` call sites
 
 ---
 
-## Open verification questions (for Codex K-05)
+## Known gaps and P2.1 investigations
 
-Items surfaced during contracts authoring that could not be verified inside this session. Flagged here so Codex's independent audit validates or files a finding:
+Resolutions from Phase 2.0 G7 Codex K-05 independent audit, plus items explicitly deferred to Phase 2.1. The 8 open questions that were authored into the initial draft have all been resolved against the baseline + code; the record below is their terminal state.
 
-1. **Phase 1.1 `workspace_admin` role materialization.** `is_ws_admin(uid, wsid)` — does it consult `user_roles` (role='workspace_admin', workspace_id=wsid) or only `workspace_members.role='admin'`? Confirm which one the baseline function body actually checks.
+### Resolved (in-doc)
 
-2. **Phase 1.2 / 1.2.5 `thread_messages` visibility RLS.** Confirm the tightening ("`visibility='internal'` SELECT requires `is_yagi_admin`") is applied in the baseline via a RESTRICTIVE policy, not just claimed in the summary.
+1. **`is_ws_admin` source.** CONFIRMED — checks only `workspace_members.role='admin'`, not `user_roles`. The `workspace_admin` value in `user_roles` is separately materialized but not consulted by this predicate. (baseline.sql:158-160)
+2. **`thread_messages` internal visibility.** CORRECTED — policy `thread_msgs_hide_internal_from_clients` allows `visibility='shared' OR is_yagi_admin OR author_id=auth.uid()`. Message authors can read their own internal messages. Documented above in Phase 1.2 / 1.2.5 sections.
+3. **`meetings_sync_workspace_id` trigger body.** CONFIRMED — trigger selects `p.workspace_id` from `public.projects p WHERE p.id = NEW.project_id` and assigns to `NEW.workspace_id`. TOCTOU-safe by design.
+4. **Phase 1.3 `workspace_invitations` read dependency.** CORRECTED — added to Phase 1.3 reads section.
+5. **Popbill module-load guard.** CORRECTED — the guard checks `NEXT_PUBLIC_VERCEL_ENV`, not `VERCEL_ENV`. Documented in Phase 1.5 cross-phase dependencies.
+6. **`thread_message_new` retrofit fan-out.** CONFIRMED — post-G4 emitter fans to `workspace_members` of the project's workspace only; no cross-workspace yagi-admin leak. Documented in Phase 1.8 notification matrix.
+7. **`increment_showcase_view` predicate.** CONFIRMED — RPC body filters `WHERE id = sid AND status = 'published'`. Draft showcases cannot accumulate views.
 
-3. **Phase 1.3 `meetings_sync_workspace_id` trigger body.** Confirm the BEFORE INSERT/UPDATE trigger actually copies `workspace_id` from the parent `projects` row (not from `NEW.workspace_id`). Important for the HIGH #3 TOCTOU fix claim.
+### Deferred to Phase 2.1 (investigation files)
 
-4. **Phase 1.4 yagi-internal workspace seed.** Confirm the baseline contains an INSERT / DO-block that creates `workspaces (slug='yagi-internal')` — the preprod board trigger depends on this row existing.
+8. **Preprod feedback realtime publication membership.** DEFERRED — unverified in this session. The UI subscribes via `postgres_changes` to `preprod_frame_reactions` and `preprod_frame_comments`, but the G2 baseline dump does not add either table to `supabase_realtime`. Two hypotheses (live DB missing publication rows vs. baseline capture gap) are recorded in `.yagi-autobuild/phase-2-1/INVESTIGATION-H1-realtime-live.md` with a verification SQL query and fix paths for each outcome. This is the only Codex HIGH finding carried forward.
 
-5. **Phase 1.5 popbill mock-mode production safety guard.** Confirm `src/lib/popbill/client.ts` actually throws at module load (not just at `issueTaxInvoice` call) when `POPBILL_MODE=mock && VERCEL_ENV='production'`. Phase 2.0 G3 CLAUDE.md note claims this; verify.
+### External prerequisites (not seeded by authoritative migrations)
 
-6. **Phase 1.8 realtime publication members.** Confirm the baseline `alter publication supabase_realtime add table` block includes all three of `notification_events`, `team_channel_messages`, `team_channel_message_attachments` (plus Phase 1.4's reactions/comments). G2 summary says these are in the "manual supplement" section.
-
-7. **Phase 1.8 `thread_message_new` retrofit site.** Confirm `src/app/[locale]/app/projects/[id]/thread-actions.ts` actually calls `emitNotification({ kind: 'thread_message_new', ... })` — Phase 2.0 G4 #2 removed the cross-workspace fan-out, so the remaining fan-out should be workspace_members only.
-
-8. **Phase 1.9 `increment_showcase_view` predicate.** Confirm the RPC body includes `WHERE id = sid AND status = 'published'` (not just `WHERE id = sid`). Draft showcases must not be able to accumulate views.
+- **`workspaces` row with `slug='yagi-internal'`.** Required by the `preprod_boards_set_workspace_id` trigger and by every team-chat RLS predicate through `is_yagi_internal_ws`. Exists in the live `jvamvbpxnztynsccvcmr` project via manual bootstrap; NOT present in any committed migration. A clean-clone `supabase db reset` will need a manual `INSERT` before preprod / team-chat paths work. Formalizing this as a seed migration is out of Phase 2.0 scope; tracked as a follow-up for whichever phase next touches either surface.
 
 ---
 
