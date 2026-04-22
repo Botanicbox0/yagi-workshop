@@ -308,23 +308,26 @@ const markChannelSeenSchema = z.object({
   channelId: z.string().uuid(),
 });
 
-export type MarkChannelSeenResult = { ok: true } | { ok: false };
+export type MarkChannelSeenResult =
+  | { ok: true }
+  | { ok: false; error: "auth_required" | "validation" | "db" };
 
 /**
- * Idempotent best-effort last-seen write. Never throws, never reports
- * failures back to the UI — if the merge fails we simply leave the
- * existing timestamp in place and the unread dot re-appears on next reload.
+ * Idempotent last-seen write. Never throws. Callers are free to ignore the
+ * result (the UI treats this as best-effort), but real failures — auth loss,
+ * validation, DB errors — are surfaced via `{ ok: false, error }` so they can
+ * be logged instead of masquerading as success. Phase 2.0 G4 #5 (Phase 1.7 M3).
  */
 export async function markChannelSeen(input: unknown): Promise<MarkChannelSeenResult> {
   try {
     const parsed = markChannelSeenSchema.safeParse(input);
-    if (!parsed.success) return { ok: true };
+    if (!parsed.success) return { ok: false, error: "validation" };
 
     const supabase = await createSupabaseServer();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return { ok: true };
+    if (!user) return { ok: false, error: "auth_required" };
 
     // Fetch existing blob then merge. We can't do a true JSONB `||` from the
     // PostgREST client here, so do a read-modify-write. Concurrent updates are
@@ -350,14 +353,15 @@ export async function markChannelSeen(input: unknown): Promise<MarkChannelSeenRe
       [parsed.data.channelId]: new Date().toISOString(),
     };
 
-    await supabase
+    const { error: updErr } = await supabase
       .from("profiles")
       .update({ team_chat_last_seen: next as Json })
       .eq("id", user.id);
+    if (updErr) return { ok: false, error: "db" };
 
     return { ok: true };
   } catch {
-    return { ok: true };
+    return { ok: false, error: "db" };
   }
 }
 
