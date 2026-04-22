@@ -33,3 +33,18 @@ ALTER POLICY meetings_update ON public.meetings
     public.is_ws_admin(auth.uid(), workspace_id)
     OR public.is_yagi_admin(auth.uid())
   );
+
+-- #3 — public.showcase_media.showcase_media_update FOR UPDATE missing WITH CHECK.
+-- Same shape as #2: USING limits WHICH rows a yagi_admin can UPDATE, but
+-- without WITH CHECK an admin could rewrite showcase_id to point at a
+-- showcase that no longer satisfies the EXISTS subselect (e.g. a deleted or
+-- foreign showcase row). Mirror the USING into WITH CHECK.
+ALTER POLICY showcase_media_update ON public.showcase_media
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.showcases s
+      WHERE s.id = showcase_media.showcase_id
+        AND public.is_yagi_admin(auth.uid())
+    )
+  );
