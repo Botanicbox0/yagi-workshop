@@ -266,7 +266,7 @@ The UI (`src/components/preprod/board-editor.tsx`) subscribes via Supabase Realt
 
 **Reads:**
 - Phase 1.2 `projects` + `project_references` (embedded in share page).
-- Phase 1.1 `is_yagi_admin` for board creation; the `preprod_boards_set_workspace_id` trigger assumes a row exists in `workspaces` with `slug='yagi-internal'`. **This row is an external prerequisite — it is NOT seeded by any authoritative migration in the Phase 2.0 baseline.** In the live `jvamvbpxnztynsccvcmr` project it was manually inserted during Phase 1.1 bootstrap. A clean-clone `supabase db reset` will leave the trigger raising `yagi-internal workspace not found` until someone runs `INSERT INTO workspaces (slug, name, plan) VALUES ('yagi-internal', 'YAGI Internal', 'custom')` by hand. Formalizing this as a seed migration is out of Phase 2.0 scope.
+- Phase 1.1 `is_yagi_admin` for board creation; the `preprod_boards_set_workspace_id` trigger looks up `workspaces` by `slug='yagi-internal'`. That row is seeded by migration `20260423020100_seed_yagi_internal_workspace` (Phase 2.1 G3) — `id='320c1564-b0e7-481a-871c-be8d9bb605a8'`, `name='YAGI Internal'`, `plan='custom'`, `brand_guide={}`. Insert is idempotent (`ON CONFLICT DO NOTHING`) so clean-clone `supabase db reset` creates the row; live DB (where the row already existed from a Phase 1.1 manual bootstrap) silently no-ops.
 
 **Publishes:**
 - `preprod_boards`, `preprod_frames` — read by 1.5 `suggestLineItems` (approved boards) and by 1.9 `createShowcaseFromBoard`.
@@ -554,7 +554,7 @@ Resolutions from Phase 2.0 G7 Codex K-05 independent audit, plus items explicitl
 
 ### External prerequisites (not seeded by authoritative migrations)
 
-- **`workspaces` row with `slug='yagi-internal'`.** Required by the `preprod_boards_set_workspace_id` trigger and by every team-chat RLS predicate through `is_yagi_internal_ws`. Exists in the live `jvamvbpxnztynsccvcmr` project via manual bootstrap; NOT present in any committed migration. A clean-clone `supabase db reset` will need a manual `INSERT` before preprod / team-chat paths work. Formalizing this as a seed migration is out of Phase 2.0 scope; tracked as a follow-up for whichever phase next touches either surface.
+- **(resolved 2026-04-23 Phase 2.1 G3)** ~~`workspaces` row with `slug='yagi-internal'`.~~ Now seeded by `supabase/migrations/20260423020100_seed_yagi_internal_workspace.sql` with the exact id (`320c1564-b0e7-481a-871c-be8d9bb605a8`) and values captured from the live row, idempotent via `ON CONFLICT DO NOTHING`. Clean-clone `supabase db reset` now bootstraps preprod and team-chat paths without manual operator intervention. See Phase 1.4 "Reads" above for the new canonical description.
 
 ---
 
