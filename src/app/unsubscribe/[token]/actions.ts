@@ -60,11 +60,15 @@ export async function confirmUnsubscribe(formData: FormData): Promise<void> {
     redirect(`/unsubscribe/${token}?error=1`);
   }
 
-  // Mark the token used so it can't be replayed.
+  // Mark the token used so it can't be replayed. The `used_at IS NULL` guard
+  // makes this an atomic claim — a concurrent confirm whose UPDATE races with
+  // ours affects 0 rows instead of silently consuming the token twice.
+  // Phase 2.0 G4 #1 (Phase 1.8 M1).
   const { error: tokErr } = await admin
     .from("notification_unsubscribe_tokens")
     .update({ used_at: new Date().toISOString() })
-    .eq("token", token);
+    .eq("token", token)
+    .is("used_at", null);
   if (tokErr) {
     console.error("[unsubscribe/confirm] token mark-used failed:", tokErr);
     // The preferences update did succeed, so we still show the success page.
