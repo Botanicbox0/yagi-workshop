@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { updateNotificationPreferences } from "./actions";
+import { TIMEZONES } from "@/lib/notifications/timezones";
 
 const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -22,23 +23,10 @@ const schema = z.object({
   digest_time_local: z.string().regex(timeRegex),
   quiet_hours_start: z.string().regex(timeRegex),
   quiet_hours_end: z.string().regex(timeRegex),
-  timezone: z.string().trim().min(1).max(64),
+  timezone: z.enum(TIMEZONES),
 });
 
 type FormData = z.infer<typeof schema>;
-
-const TIMEZONES = [
-  "Asia/Seoul",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Singapore",
-  "Asia/Bangkok",
-  "Europe/London",
-  "Europe/Paris",
-  "America/New_York",
-  "America/Los_Angeles",
-  "UTC",
-];
 
 type Props = {
   defaultValues: FormData;

@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { TIMEZONES } from "@/lib/notifications/timezones";
 
 // HH:MM (24h). Accepts HH:MM or HH:MM:SS from <input type="time">.
 const timeRegex = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
@@ -15,7 +16,7 @@ const prefsSchema = z.object({
   digest_time_local: z.string().regex(timeRegex),
   quiet_hours_start: z.string().regex(timeRegex),
   quiet_hours_end: z.string().regex(timeRegex),
-  timezone: z.string().trim().min(1).max(64),
+  timezone: z.enum(TIMEZONES),
 });
 
 export type NotificationPrefsInput = z.infer<typeof prefsSchema>;

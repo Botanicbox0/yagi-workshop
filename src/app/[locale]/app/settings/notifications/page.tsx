@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { PrefsForm } from "./prefs-form";
+import { TIMEZONES, type Timezone } from "@/lib/notifications/timezones";
 
 // Schema defaults mirror the migration so new users see the right values even
 // without a notification_preferences row yet.
@@ -12,12 +13,22 @@ const DEFAULTS = {
   quiet_hours_start: "22:00",
   quiet_hours_end: "08:00",
   timezone: "Asia/Seoul",
-} as const;
+} as const satisfies { timezone: Timezone } & Record<string, unknown>;
 
 // The DB `time` column comes back as "HH:MM:SS"; trim to HH:MM for <input type="time">.
 function toHHMM(v: string | null | undefined, fallback: string): string {
   if (!v) return fallback;
   return v.slice(0, 5);
+}
+
+// Coerce a DB-stored timezone back to the allowlist. Legacy rows predating
+// Phase 2.0 G4 #3 may hold arbitrary IANA strings — fall back to the default
+// rather than crash the form.
+function toAllowedTimezone(v: string | null | undefined): Timezone {
+  if (v && (TIMEZONES as readonly string[]).includes(v)) {
+    return v as Timezone;
+  }
+  return DEFAULTS.timezone;
 }
 
 export default async function NotificationPreferencesPage() {
@@ -52,7 +63,7 @@ export default async function NotificationPreferencesPage() {
       DEFAULTS.quiet_hours_start,
     ),
     quiet_hours_end: toHHMM(prefs?.quiet_hours_end, DEFAULTS.quiet_hours_end),
-    timezone: prefs?.timezone ?? DEFAULTS.timezone,
+    timezone: toAllowedTimezone(prefs?.timezone),
   };
 
   return (
