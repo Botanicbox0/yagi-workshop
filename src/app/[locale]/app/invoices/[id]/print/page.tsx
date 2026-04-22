@@ -67,6 +67,13 @@ export default async function InvoicePrintPage({ params }: Props) {
     notFound();
   }
 
+  // Phase 2.0 G4 #9 (Phase 1.5 M1) — drafts are never printable. RLS already
+  // blocks this for unprivileged callers, but defense-in-depth: if a policy
+  // regression ever widened SELECT, the print route itself still refuses.
+  if (invoice.status === "draft") {
+    notFound();
+  }
+
   // Parallel loads for the related rows (RLS-scoped).
   const [projectRes, buyerRes, supplierRes, lineItemsRes] = await Promise.all([
     supabase
