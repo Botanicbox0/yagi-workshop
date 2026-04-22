@@ -22,6 +22,16 @@ export async function createBoard(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "unauthorized" };
 
+  // Phase 2.0 G4 #6 — Verify the caller can see this project before
+  // creating a board against it. RLS on `projects` gates the SELECT,
+  // so a hidden / nonexistent / cross-workspace project returns null.
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", parsed.data.projectId)
+    .maybeSingle();
+  if (!project) return { ok: false, error: "project_not_found" };
+
   // Look up yagi-internal workspace id
   const { data: yagiWs } = await supabase
     .from("workspaces")
