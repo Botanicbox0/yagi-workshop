@@ -146,8 +146,12 @@ function buildEmbedUrl(
   if (!provider) return null;
   const p = provider.toLowerCase();
   if (p === "youtube") {
+    // Phase 2.0 G6 #L4 (Phase 1.9 L4) — map /shorts/{id} to /embed/{id}.
+    // Shorts URLs render a standalone mobile-first player that refuses to
+    // embed as-is; the /embed/ variant works with the same video id.
     return externalUrl
       .replace("watch?v=", "embed/")
+      .replace(/\/shorts\//, "/embed/")
       .replace("youtu.be/", "www.youtube.com/embed/");
   }
   if (p === "vimeo") {
