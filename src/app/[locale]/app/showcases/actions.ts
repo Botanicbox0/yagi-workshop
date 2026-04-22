@@ -175,26 +175,39 @@ export async function createShowcaseFromBoard(
 
   // Generate a draft-safe slug (satisfies NOT NULL + CHECK constraint) —
   // Publish will overwrite with a title-derived slug.
-  const draftSlug = `draft-${crypto.randomUUID().slice(0, 8)}`;
-
-  const { data: inserted, error: insertErr } = await svc
-    .from("showcases")
-    .insert({
-      project_id: board.project_id,
-      board_id: board.id,
-      slug: draftSlug,
-      title: board.title,
-      status: "draft",
-      created_by: user.id,
-    })
-    .select("id")
-    .single();
-  if (insertErr || !inserted) {
-    console.error("[showcase] create insert", insertErr?.message);
+  //
+  // Phase 2.0 G6 #1 (Phase 1.9 L1) — 8 hex chars ≈ 4 billion values, so
+  // collisions are astronomically rare but not impossible. Retry up to 3
+  // times on 23505 with a fresh UUID before surfacing insert_failed, so a
+  // single unlucky collision doesn't fail a user's create action.
+  let showcaseId: string | null = null;
+  let lastInsertErr: { code?: string; message?: string } | null = null;
+  for (let attempt = 0; attempt < 3 && !showcaseId; attempt++) {
+    const draftSlug = `draft-${crypto.randomUUID().slice(0, 8)}`;
+    const { data: inserted, error: insertErr } = await svc
+      .from("showcases")
+      .insert({
+        project_id: board.project_id,
+        board_id: board.id,
+        slug: draftSlug,
+        title: board.title,
+        status: "draft",
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
+    if (inserted) {
+      showcaseId = inserted.id;
+      break;
+    }
+    lastInsertErr = insertErr;
+    // Anything other than a unique-violation is a real failure — don't retry.
+    if (insertErr?.code !== "23505") break;
+  }
+  if (!showcaseId) {
+    console.error("[showcase] create insert", lastInsertErr?.message);
     return { ok: false, error: "insert_failed" };
   }
-
-  const showcaseId = inserted.id;
 
   // Copy frames → showcase_media. Storage paths are copied by reference
   // (same bytes, no re-upload). 1-indexed sort order matches the unique idx.
