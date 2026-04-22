@@ -1,7 +1,25 @@
-# YAGI Workshop — Handoff (최종)
+# YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-22 (Phase 1.9 완주 + ops 복구 완료)
-> **목적:** Phase 1 전체 시리즈 shipped. 운영 블로커 해제. Phase 2.0 계획 단계 진입 가능.
+> **갱신:** 2026-04-22 (Phase 2.0 진행 중 — G0/G1 완료, G1.5 진행 중)
+> **목적:** Phase 2.0 기술 부채 정리 phase 진행 중. 새 기능 0개. 7개 group 순차 처리.
+
+---
+
+## 🚧 Phase 2.0 진행 상태 (2026-04-22)
+
+| Group | 상태 | 비고 |
+|-------|------|------|
+| G0 — Snapshot backup | ✅ 완료 | 5 snapshot files + ROLLBACK.md + tag pushed |
+| G1 — notify-dispatch ops | ⚠️ Setup 완료 / verify pending | Resend domain (yagiworkshop.xyz) DNS records 가비아 입력 완료. DNS 전파 대기 중 (5min~1hr). 자동 verify 완료 시 next cron tick에서 email 도착 — 야기가 inbox 확인 시 G1 closeout |
+| G1.5 — Pre-commit secret hook | 🟡 진행 중 | Husky + 시크릿 패턴 검사 hook |
+| G2 — Migration baseline squash | 대기 | G1.5 끝난 후 verbal go |
+| G3 — POPBILL flip docs | 대기 | |
+| G4 — Cross-phase deferred | 대기 | |
+| G5 — Phase 1.9 MEDIUM | 대기 | |
+| G6 — Phase 1.9 LOW + i18n | 대기 | |
+| G7 — Cross-phase contracts | 대기 | |
+
+**G1 verify 임시 가정 진행 결정:** DNS 전파 대기로 G1.5/G2 등 후속 group이 막히는 게 비효율적. G1 setup은 완료됐고 (secrets/cron/Edge function 모두 active), domain verify만 외부 DNS 의존. G2+ group은 G1 verify와 독립적이라 병렬 진행. G1 closeout는 별도 처리.
 
 ---
 

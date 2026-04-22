@@ -45,6 +45,9 @@ Domain: studio.yagiworkshop.xyz. Deployment: Vercel.
 - `.env.local` changes require `pnpm dev` restart
 - Next.js 15: all page props are async (`params: Promise<{...}>`)
 - shadcn components go to `src/components/ui/`
+- Pre-commit secret scanner: `.husky/pre-commit` scans staged diffs for known credential patterns (Google OAuth client secret prefix, Resend key prefix, Anthropic API key prefix, JWT base64 header, specific leaked Telegram bot/chat ids). It rejects commits that match. Add new patterns by editing that file (the exact regex is inline there). Self/spec docs are excluded via `:(exclude)` pathspecs so pattern documentation does not false-positive. Do NOT bypass with `--no-verify` — redact to a placeholder and re-stage.
+- New phase specs MUST start from `.yagi-autobuild/spec-template.md` (includes mandatory "Secret hygiene" header).
+- Cross-phase env info lives in `.env.local.example` (placeholders + inline comments) and `.yagi-autobuild/HANDOFF.md` (current ops state). Real secret values only in `.env.local` (gitignored) or Supabase Vault.
 
 ## What's built (as of 2026-04-21)
 - Phase 1.0: bootstrap

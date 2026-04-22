@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+# Scan staged diff for known secret patterns; reject commit if any match.
+# Source: .yagi-autobuild/phase-2-0/SPEC.md G1.5.
+# Excluded paths: files that legitimately contain the pattern strings as
+# documentation (the hook itself, spec/template docs). Add new patterns by
+# editing this file (and update CLAUDE.md "Known gotchas").
+
+PATTERNS='GOCSPX-|re_[a-zA-Z0-9]{20,}|sk-ant-api03|eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9|8649256889:|QhJkgjv4X0T'
+
+MATCHES=$(git diff --cached --diff-filter=ACM -- \
+  ':(exclude).husky/pre-commit' \
+  ':(exclude).yagi-autobuild/phase-2-0/SPEC.md' \
+  ':(exclude).yagi-autobuild/spec-template.md' \
+  | grep -nE '^\+' | grep -vE '^\+\+\+ ' | grep -E "$PATTERNS" || true)
+
+if [ -n "$MATCHES" ]; then
+  echo ""
+  echo "🚨 Pre-commit: secret pattern detected in staged diff."
+  echo ""
+  echo "$MATCHES"
+  echo ""
+  echo "Redact the value (use a placeholder like <your-secret>) and re-stage."
+  echo "Do NOT bypass with --no-verify."
+  exit 1
+fi

@@ -93,6 +93,8 @@ Each group has explicit entry criteria, deliverables, exit criteria, and a manua
 
 ### G1 — Phase 1.8 ops unblocking (operational)
 
+> **Status (2026-04-22):** Setup complete (secrets registered, cron `*/10 * * * *` active, vault `service_role_key` in place, Edge function ACTIVE v8 invoking correctly — cron run_id 34 returned `users:1, events:1`). **Pending Resend domain verification** (DNS records added at 가비아, propagation 5–30min). **Closeout deferred** until verify confirmed: next cron tick after verification will populate `email_sent_at` on the G1 test row `41251b54-a4ad-47f7-b834-bbdf766375dd` and deliver the email. No impact on subsequent groups (G1.5/G2/etc. independent).
+
 **Why:** notify-dispatch deployed but no email ever sent because (a) `RESEND_API_KEY` not in Edge runtime, (b) cron not scheduled. Until both done, all Phase 1.8 immediate + digest email paths silently no-op.
 
 **Tasks:**
