@@ -48,3 +48,18 @@ ALTER POLICY showcase_media_update ON public.showcase_media
         AND public.is_yagi_admin(auth.uid())
     )
   );
+
+-- #4 — public.team_channels.team_channels_update FOR UPDATE missing WITH CHECK.
+-- Specifically dangerous here because the USING clause enforces BOTH
+-- is_yagi_internal_ws(workspace_id) AND admin — without WITH CHECK a channel
+-- could be UPDATE'd out of the yagi-internal workspace (workspace_id flipped
+-- to a client workspace) while still satisfying the pre-image check. Mirror
+-- the USING expression into WITH CHECK.
+ALTER POLICY team_channels_update ON public.team_channels
+  WITH CHECK (
+    public.is_yagi_internal_ws(workspace_id)
+    AND (
+      public.is_ws_admin(auth.uid(), workspace_id)
+      OR public.is_yagi_admin(auth.uid())
+    )
+  );
