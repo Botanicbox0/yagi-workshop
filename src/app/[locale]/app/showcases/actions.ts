@@ -474,8 +474,14 @@ export async function requestBadgeRemoval(
     return { ok: false, error: "update_failed" };
   }
 
-  // Reason is not persisted yet (no side table in the schema). Log for now;
-  // a later subtask may add a badge_removal_requests audit table.
+  // Phase 2.0 G6 #L2 (Phase 1.9 L2) — intentionally unpersisted.
+  // The reason is captured via console.info → Vercel log drain, whose
+  // retention is acceptable for this surface (infrequent yagi_admin /
+  // ws_admin action; audit value is "who asked and why", not strict
+  // compliance). When retention requirements tighten, add a
+  // badge_removal_requests audit table and swap this console.info for a
+  // row insert. Do NOT silently drop the reason in the meantime — keep
+  // the log line so the intent stays re-discoverable from production logs.
   console.info(
     "[showcase] badge removal requested",
     parsed.data.showcaseId,
