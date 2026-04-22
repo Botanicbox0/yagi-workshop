@@ -54,6 +54,35 @@ All three items above block on a shared decision: **which rate-limit primitive d
 
 ---
 
+## Infra seed migrations (missing from baseline)
+
+Pattern: resources live in production DB but have no authoritative SQL migration.
+Breaks `supabase db reset` reproducibility.
+
+### Items
+
+**1. pg_cron job `notify-dispatch`**
+- State: live only. Schedule `*/10 * * * *`, calls Edge Function notify-dispatch.
+- Impact on clean clone: job absent → notifications never dispatched in fresh env.
+- Fix shape: migration with `SELECT cron.schedule('notify-dispatch', '*/10 * * * *', $$...$$);`
+  after pg_cron CREATE EXTENSION in baseline.
+- Discovered: Phase 2.1 G1 investigation (2026-04-23)
+
+**2. workspaces.slug='yagi-internal' seed**
+- State: resolved in Phase 2.1 G3.
+- Listed here for pattern documentation only.
+
+### Phase 2.2 scope proposal (tentative)
+"Infra seed consolidation" mini-phase. Audit all live DB state vs migrations.
+Candidates to check:
+- pg_cron jobs (done above, 1 found)
+- Vault secrets (service_role reference in cron auth — is it seeded?)
+- Storage buckets + policies
+- Auth email templates
+- RLS policy drift vs migration files
+
+---
+
 ## Housekeeping when Phase 2.2 kicks off
 
 1. Re-sort by that phase's scope themes (feature work vs. backlog burndown).
