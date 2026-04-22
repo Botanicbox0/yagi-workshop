@@ -1,76 +1,106 @@
-# Gate 1 — CEO Approval (Phase 2.5)
+# Phase 2.5 — CEO_APPROVED (Gate 1+2 combined per ADR-005)
 
-**Protocol**: ADR-005 Expedited
-**Phase**: 2.5 — Challenge MVP
-**Date**: 2026-04-23 (activates when Phase 2.1 SHIPPED)
-
----
-
-## Decisions requiring CEO confirmation
-
-### D1. Phase framing — hypothesis test, not full product
-We ship **one public challenge page + submission capture + admin view** in 1 day. Everything else (voting, payouts, creator accounts, distribution automation) is Phase 2.6+. If this phase ships and a brand runs a real challenge, that's the validation signal to expand.
-
-### D2. Submitter identity — email-only, no account
-Submitters give email + URL + caption. Verification email confirms ownership. No password, no signup, no OAuth. Rationale: lowest friction for a 1-day test. Account system is a Phase 2.6 debate.
-
-### D3. Media — URL only, no upload
-Creators host their media on Instagram / TikTok / YouTube / X / Vimeo / Imgur and paste the URL. We whitelist hosts. No direct upload to YAGI storage — that's a Phase 2.6 decision (storage quota, moderation pipeline, thumbnail extraction).
-
-### D4. Challenge creation — SQL, not CMS
-First challenge is seeded via migration or admin SQL. No create-challenge UI in 2.5. Rationale: we will create 1–2 challenges manually before paying the cost of a CMS.
-
-### D5. Abuse mitigation — minimum three layers
-Rate limit (IP-hashed, 5/h) + honeypot + verification email. No Turnstile/captcha in 2.5. If abuse materializes on first real challenge, add in 2.6.
-
-### D6. Branding — brand name + logo URL fields, no custom theme
-Each challenge shows brand name + logo but uses YAGI's design system unchanged. No per-brand theming or custom colors. Rationale: §3 ADR-005 condition would otherwise fail; custom theming belongs in Phase 3.0+.
-
-### D7. Gates skipped per ADR-005
-Gate 2 (Design Consultation), Gate 3 (Plan Design Review), Gate 5 (Design Review). §6 trigger audit in SPEC shows zero new primitives required. If an audit fails mid-build (new primitive surfaces), halt.
-
-### D8. Admin view — reuse existing admin shell, minimum actions
-Status filter + approve/reject + CSV export. No email-on-approval, no bulk actions, no comments. All are Phase 2.6.
-
-### D9. i18n — ko and en at launch
-Challenge content has per-locale columns. UI copy in existing locale files. Brand-provided content may be ko-only initially — SPEC allows `title_en`, `brief_en`, etc. to be null; renderer falls back to ko.
-
-### D10. Not shipping in 2.5
-- Creator accounts or login
-- Voting, leaderboard, likes, comments
-- Payout workflow
-- Slack/Discord/Telegram webhooks for submissions
-- Per-challenge OG image generation (static OG from brand logo + title)
-- Analytics dashboard
-- Multi-admin review workflow with sign-off
+**Status:** PENDING YAGI APPROVAL
+**Date drafted:** 2026-04-23
+**Approval method:** Inline decisions D1-D10 pre-filled; Yagi signs off by
+posting "APPROVED" or requests edits.
 
 ---
 
-## CEO Response
+## Decisions accepted
 
-```
-APPROVED — 야기 — 2026-04-23
-```
+**D1 — Challenge host model**
+YAGI Admin only creates challenges. Client companies request challenges
+via external channel (email/Slack/meeting) and YAGI Admin co-designs via
+ping-pong before internal creation. Self-serve deferred to Phase 3.
 
-All 10 decisions (D1–D10) accepted as pre-filled. No edits requested.
-Approval recorded per ADR-005 pre-filled pattern.
-Activation conditional on Phase 2.1 SHIPPED.
+**D2 — Submission authentication**
+Full signup required. No anonymous submission. Instagram handle mandatory
+at signup.
+
+**D3 — User roles (3)**
+AI Creator / AI Studio / Observer. Role selection at signup, mutable with
+audit log. Observer cannot submit but can vote/comment. One role per user
+at a time.
+
+**D4 — Submission format**
+Hybrid YAGI-first. Native upload: video (mp4, 60s, 500MB), images (up to
+5, jpg/png, 10MB each), PDF (1 file, 20MB). YouTube URL accepted as
+supplementary (not replacement for native media). Text description
+required, 50-2000 chars. Per-challenge JSONB configuration declares which
+of native_video / image / pdf / youtube_url are required vs optional.
+
+**D5 — Judging mode per challenge**
+Admin selects at challenge creation: admin_only / public_vote / hybrid.
+MVP implements all three. UI adapts per challenge config.
+
+**D6 — Visibility**
+Full public. Challenge list, detail, gallery, winner surfaces all
+accessible without authentication.
+
+**D7 — Scope out**
+Statistics/analytics, self-serve challenge creation, multilingual
+support, automated prize disbursement, comment threads, follow systems —
+all deferred.
+
+**D8 — Creator profile included (minimal)**
+`/u/<handle>` with role badge, bio (200 chars), Instagram + 3 links,
+avatar, submissions grid. Full portfolio editor is Phase 2.6.
+
+**D9 — Positioning**
+Challenge as showcase vehicle. Winner submissions auto-pin to existing
+YAGI Showcase surface (preserved in Phase 2.1 G6 middleware fix).
+
+**D10 — First challenge seeding**
+Platform launch only. No seed challenge in SPEC. First challenge created
+manually by Yagi post-launch with full control over timing and content.
 
 ---
 
-## Pre-conditions
+## Business context verified
 
-- Phase 2.1 SHIPPED (yagi-internal seeded, H1 resolved, POPBILL guard hardened).
-- ADR-005 Accepted.
-- Supabase MCP reachable against `jvamvbpxnztynsccvcmr`.
-- Resend templates accessible.
-- Design system (PRINCIPLES / UI_FRAMES / TYPOGRAPHY_SPEC / COMPONENT_CONTRACTS v1.1 / INTERACTION_SPEC / ANTI_PATTERNS) committed.
+- Target users: AI creators/studios attracted via existing YAGI Instagram
+  (AI idol channel, ~10K followers) and B2B client network (11 client
+  companies)
+- Strategic value: (a) creator pool formation, (b) Studio role = potential
+  B2B client pipeline, (c) SEO content via challenge pages, (d) Showcase
+  surface gets a continuous content supply
+- Revenue connection: indirect (pipeline building); direct revenue model
+  deferred to Phase 3
+
+## Cost estimate
+
+- Build: 20-25 engineering hours (per gate estimates)
+- Operational: +$10/month R2 storage (trivial)
+- Ongoing admin work: ~2-4 hours per challenge lifecycle (create, judge,
+  announce)
+
+## Risk assessment
+
+- LOW: DB schema (extends existing patterns; Phase 2.1 G2 learnings applied)
+- MEDIUM: R2 direct-upload flow (new surface, CORS + signed-URL patterns
+  not previously used in repo)
+- LOW: RLS policy correctness (pattern-matched against preprod_frame_*)
+- MEDIUM: Submission edit race conditions (two submissions from same user
+  within 1s → rate limit enforcement)
+- LOW-MEDIUM: Handle claim squatting (mitigate with 90-day lock + reserved
+  list)
+
+Mitigations integrated into SPEC §G1-G8 via stop points and acceptance
+criteria.
+
+## Phase 2.6 readiness
+
+After Phase 2.5 CLOSEOUT, Phase 2.6 scope (Creator profile full editor,
+brand polish, analytics foundation) can start with clean foundation.
 
 ---
 
-## On approval, Builder will
+## Approval signature
 
-1. Commit this file as `gates/phase-2-5/CEO_APPROVED.md`.
-2. Apply G1 migration via Supabase MCP.
-3. Telegram: "Phase 2.5 Gate 1 approved, build starting."
-4. Open an atomic commit stream G1 → G8.
+_Awaiting Yagi approval._
+
+Sign with: **"APPROVED"** in chat or via commit message on this file.
+
+Any requested modifications: list section + proposed change, Web Claude
+revises draft, re-submits.
