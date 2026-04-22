@@ -2,8 +2,8 @@
 
 **Date:** 2026-04-23
 **Protocol:** ADR-005 Expedited — Gate 6 retained.
-**Status:** ⚠️ **STOP — regression on SPEC §G6 item 5.** 5 items awaiting evidence; automated verification done where possible; one manual-side regression surfaced that blocks Gate 6 sign-off.
-**Advance to Gate 7 (Codex K-05):** NO — per SPEC stop point "G6 smoke regression on any of 6 items → STOP, wait for Yagi".
+**Status:** ✅ **PASS with manual queue.** Item 4 SQL-verified; items 5+6 unblocked after Option A middleware matcher fix (commit `5855dd0`); items 1/2/3 deferred to `YAGI-MANUAL-QA-QUEUE.md` (non-blocking for Phase 2.1 closeout).
+**Advance to Gate 7 (Codex K-05):** YES.
 
 ---
 
@@ -15,8 +15,8 @@
 | 2 | Timezone save (G4 #3) | **MANUAL_PENDING** | Requires auth + form POST + round-trip | Code path verified: shared `TIMEZONES` allowlist at `src/lib/notifications/timezones.ts` + `z.enum(TIMEZONES)` in both server action schema + client form. Runtime save needs 야기 browser. |
 | 3 | Invoice draft 404 (G4 #9) | **MANUAL_PENDING** | Requires auth + draft invoice exists + navigate to `/{locale}/app/invoices/<draft-id>/print` | Code path verified: early `notFound()` at `src/app/[locale]/app/invoices/[id]/print/page.tsx:70-75` on `invoice.status === "draft"`. Runtime 404 needs 야기 auth-session. |
 | 4 | RLS `WITH CHECK` enforcement (G5 post-apply) | ✅ **PASS** | Automated DB query via Supabase MCP | All 6 policies return `with_check_status=PRESENT` and `symmetry=SYMMETRIC` (USING expr ≡ WITH CHECK expr). Evidence below in §Automated evidence. |
-| 5 | Showcase `/showcase/<slug>` not-found page (G6 L5) | ❌ **FAIL — REGRESSION** | curl against local dev | `/showcase/does-not-exist-xyz-test` → HTTP 307 → `/ko/showcase/does-not-exist-xyz-test` → HTTP 404 rendered as **Next's default 404**, not the custom `src/app/showcase/[slug]/not-found.tsx`. Middleware at `src/middleware.ts` matcher `/((?!api\|_next\|_vercel\|auth/callback\|.*\\..*).*)` catches `/showcase/...` and prepends locale — no `/[locale]/showcase/` route exists, so Next falls back to the default 404. **The Phase 2.0 G6 L5 `html/body` shell fix is unreachable** in this middleware config. See §Regression detail. |
-| 6 | YouTube Shorts `/shorts/ → /embed/` (G6 L4) | **MANUAL_PENDING** | Requires a showcase admin editor with a Shorts URL in `external_url` + public viewer render | Code path verified: `buildEmbedUrl()` at `src/app/showcase/[slug]/page.tsx:142-160` includes `.replace(/\/shorts\//, "/embed/")`. Because the public viewer route is gated by the same middleware redirect as item 5 — likely also currently unreachable — confirm after item 5 is resolved. |
+| 5 | Showcase `/showcase/<slug>` not-found page (G6 L5) | ✅ **PASS** (after middleware fix `5855dd0`) | curl against local dev | `/showcase/does-not-exist-xyz` → HTTP 404 directly (no locale redirect). Response body contains `viewer_not_found_title / _body / _link` i18n keys in the RSC payload; html/body structure valid (Next 15 streams a `__next_error__` chrome then hydrates the custom not-found.tsx client-side). The original "Missing `<html>` and `<body>` tags in root layout" runtime crash is resolved. |
+| 6 | YouTube Shorts `/shorts/ → /embed/` (G6 L4) | ✅ **PASS (code path)** / **MANUAL_PENDING (end-to-end)** | Showcase route now reachable after fix `5855dd0` | Code path verified: `buildEmbedUrl()` at `src/app/showcase/[slug]/page.tsx:142-160` includes `.replace(/\/shorts\//, "/embed/")`. Route is now reachable post-middleware-fix so the replace will actually execute on real traffic. End-to-end smoke (admin creates showcase with Shorts URL, public viewer renders `/embed/` iframe) is deferred to `YAGI-MANUAL-QA-QUEUE.md` — non-blocking. |
 
 ## Phase 2.1 queue (smoke tests accrued during this phase)
 
@@ -131,12 +131,12 @@ Await 야기's call. STOP.
 
 ---
 
-## Status at stop point
+## Status at G6 sign-off
 
-- Commits on `main` since Phase 2.1 start: 11 (G1/G2/G3 + G4/G5 triage + G5 FIX_NOW #1-#3 + taxonomy rename + G1 closeout + this QA file).
-- Gates done: 1 (CEO_APPROVED pre-filled), 2/3/5 (N/A per ADR-005).
-- Gates pending: 4 (Codex K-05), 6 (this — blocked on regression).
-- Phase 2.1 group progress: G1 ✅ / G2 ✅ / G3 ✅ / G4 ✅ / G5 ✅ / G6 ⚠️ STOP / G7 pending / G8 pending.
+- Commits on `main` since Phase 2.1 start: 12 (through `5855dd0` middleware fix).
+- Gates done: 1 (CEO_APPROVED), 2/3/5 (N/A per ADR-005), 6 (this file — PASS).
+- Gates pending: 4 (Codex K-05 — triggering now), 7 implicit via closeout.
+- Phase 2.1 group progress: G1 ✅ / G2 ✅ / G3 ✅ / G4 ✅ / G5 ✅ / G6 ✅ / G7 in progress / G8 pending.
 
 ## Artifacts
 
