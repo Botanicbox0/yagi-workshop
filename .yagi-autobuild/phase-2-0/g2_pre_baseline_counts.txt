@@ -1,0 +1,21 @@
+# G2 pre-baseline counts — captured 2026-04-22 via Supabase SQL Editor
+# Source: live DB jvamvbpxnztynsccvcmr, Phase 1.9 shipped state (tag: phase-1.9-shipped)
+# Purpose: authoritative reference for G2 baseline dump fidelity check (SPEC v3.2 Step 2a)
+
+kind                   n
+---------------------- ---
+functions              12
+indexes                91
+policies               81
+realtime_pub_tables    3
+storage_buckets        10
+storage_policies       27
+tables                 30
+triggers               17
+
+# Sanity notes (from Yagi):
+# - realtime_pub_tables=3 → baseline must include 3x "alter publication supabase_realtime add table"
+# - storage_buckets=10 → avatars, project-references, thread-attachments, thread-attachments-internal,
+#   video-intake, pdf-intake, preprod-frames, team-chat-attachments, showcase-media, showcase-og
+# - storage_policies=27 → storage schema RLS all required
+# - functions=12 → SECURITY DEFINER functions must have search_path locked down

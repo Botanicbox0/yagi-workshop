@@ -1,0 +1,16 @@
+# G2 post-baseline counts — captured 2026-04-22 via Supabase SQL Editor
+# Source: live DB jvamvbpxnztynsccvcmr, immediately after pg_dump completion
+# Purpose: detect concurrent DDL drift during dump (SPEC v3.2 Step 2c, Docker-free path)
+
+kind                   n
+---------------------- ---
+functions              12
+indexes                91
+policies               81
+realtime_pub_tables    3
+storage_buckets        10
+storage_policies       27
+tables                 30
+triggers               17
+
+# Diff vs g2_pre_baseline_counts.txt: ZERO (no DDL drift during dump)

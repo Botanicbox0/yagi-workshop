@@ -182,17 +182,80 @@ Each group has explicit entry criteria, deliverables, exit criteria, and a manua
 - Move all 12 disk migrations there (preserve filenames + timestamps)
 - For the 11 missing-from-disk migrations, document their existence in `.yagi-autobuild/archive/migrations-pre-2-0/MISSING.md` listing each `version` from `supabase_migrations.schema_migrations` and a one-line note about what the migration likely contained (cross-reference Phase summaries)
 
-**2. Generate baseline.**
+**2. Generate baseline + automated count verification.**
+
+**2a. BEFORE dump — capture authoritative counts from live DB.**
+
+Run in Supabase SQL Editor against `jvamvbpxnztynsccvcmr` and save output to `.yagi-autobuild/phase-2-0/g2_pre_baseline_counts.txt`:
+
+```sql
+select 'tables' as kind, count(*)::int as n
+from pg_tables where schemaname = 'public'
+union all
+select 'policies', count(*)::int
+from pg_policies where schemaname = 'public'
+union all
+select 'functions', count(*)::int
+from pg_proc
+where pronamespace = 'public'::regnamespace
+union all
+select 'triggers', count(*)::int
+from pg_trigger t
+join pg_class c on c.oid = t.tgrelid
+where c.relnamespace = 'public'::regnamespace
+  and not t.tgisinternal
+union all
+select 'indexes', count(*)::int
+from pg_indexes where schemaname = 'public'
+union all
+select 'realtime_pub_tables', count(*)::int
+from pg_publication_tables where pubname = 'supabase_realtime'
+union all
+select 'storage_buckets', count(*)::int
+from storage.buckets
+union all
+select 'storage_policies', count(*)::int
+from pg_policies where schemaname = 'storage'
+order by kind;
+```
+
+Expected approximate counts (Phase 1.9 shipped state — exact numbers go in the txt file):
+- tables: ~30 (workspaces, projects, threads, messages, meetings, preprod_*, invoices, team_channels, notification_*, showcases, showcase_media, etc.)
+- policies: 50+ (RLS heavy)
+- functions: 10+ (is_yagi_admin, is_ws_member, is_ws_admin, resolve_user_ids_by_emails, increment_showcase_view, tg_*, etc.)
+- triggers: 10+ (updated_at, notif_prefs, etc.)
+- realtime_pub_tables: ≥3 (notification_events, team_channel_messages, team_channel_message_attachments)
+- storage_buckets: ≥4 (avatars, project-references, showcase-media, showcase-og — plus private-attachments if exists)
+
+**2b. Generate the baseline dump.**
 - Run `supabase db dump --schema public --data-only=false --schema-only > supabase/migrations/20260422120000_phase_2_0_baseline.sql`
-- Manually verify the dump includes:
-  - All tables (workspaces, projects, references, threads, messages, settings, meetings, preprod_boards, preprod_frames, preprod_frame_revisions, invoices, invoice_line_items, journal_entries (or content collections), team_channels, team_channel_messages, team_channel_message_attachments, notification_events, notification_preferences, notification_unsubscribe_tokens, showcases, showcase_media, …)
-  - All RLS policies (use `is_yagi_admin(uid)` / `is_ws_member(uid, wsid)` / `is_ws_admin(uid, wsid)` explicit form per Phase 1.7 lessons)
-  - All RPCs (resolve_user_ids_by_emails, increment_showcase_view, is_yagi_admin, is_ws_member, is_ws_admin, etc.)
-  - All triggers (tg_set_updated_at, tg_set_notif_prefs_updated_at, etc.)
-  - All indexes (including partial unique on debounce)
-  - Realtime publication membership (notification_events, team_channel_messages, team_channel_message_attachments, etc.)
-  - Storage bucket creation + storage RLS policies (for *-attachments, showcase-media, showcase-og)
-  - Extensions (pg_cron, pg_net, pgcrypto, plpgsql)
+- Verify file is non-empty and >50KB (sentinel: should contain `create table public.showcases`, `create table public.notification_events`).
+
+**2c. AFTER dump — verify live DB state didn't drift during dump (Docker-free path).**
+
+Rather than apply the baseline to a clean local DB (requires Docker, out-of-scope per Yagi env), re-run the same count SQL against **live DB** immediately after dump completes → save to `.yagi-autobuild/phase-2-0/g2_post_baseline_counts.txt`.
+
+**Rationale:** This catches one failure mode — if anyone modified the DB during the dump (DDL change, policy change, function add/drop), pre and post counts will diverge → dump is inconsistent → retry. It does NOT verify that the dump *correctly captures* what was counted (that's Codex review's job in Step 5 + smoke test in Step 4).
+
+**2d. Diff the two count files — must be identical.**
+
+```bash
+diff .yagi-autobuild/phase-2-0/g2_pre_baseline_counts.txt .yagi-autobuild/phase-2-0/g2_post_baseline_counts.txt
+```
+
+- **If empty diff** → live DB stable during dump. Proceed.
+- **If any divergence** → STOP. Someone touched the DB mid-dump (rare but possible). Re-run from Step 2a (re-measure pre-counts → re-dump → re-measure post-counts). Don't proceed with a dump taken under inconsistent conditions.
+
+**Critical limitation acknowledged:** Without Docker, we cannot independently verify that the baseline.sql, when applied to a fresh DB, reproduces the live state. **Steps 4 (smoke test 5 routes) + 5 (Codex review) are the actual reproducibility gate** in this Docker-free path. They are non-optional under Option 1.
+
+**2e. Manual spot-check (final sanity).** Open the generated SQL file and confirm presence of:
+  - All tables listed in pre-counts
+  - RLS policies use explicit `auth.uid()` form per Phase 1.7 lessons
+  - RPCs `is_yagi_admin`, `is_ws_member`, `is_ws_admin`, `resolve_user_ids_by_emails`, `increment_showcase_view`
+  - Triggers `tg_set_updated_at`, `tg_set_notif_prefs_updated_at`
+  - Storage bucket creation + storage RLS policies
+  - Extensions: pg_cron, pg_net, pgcrypto, plpgsql
+  - Realtime publication membership statements
 
 **3. Register baseline entry in remote schema_migrations (no truncate).**
 - Remote `schema_migrations` keeps all 22 historical entries as inert records (preserved for forensics).
@@ -204,15 +267,36 @@ Each group has explicit entry criteria, deliverables, exit criteria, and a manua
 - Verify: `supabase db diff --linked` returns empty (or only trivial whitespace).
 - Expected: `supabase migration list --linked` will show 22 entries marked "missing locally" + the new baseline marked applied locally + remote. This cosmetic mismatch is intentional per Option C and is documented in CLAUDE.md (next task).
 
-**4. Verify reproducibility.**
-- On a clean checkout (or after `supabase db reset --local`), run `supabase migration up`
-- Run `pnpm tsc --noEmit` against regenerated `database.types.ts` (regenerate first via `supabase gen types typescript --linked`)
-- All 11 routes must still build (`pnpm build`)
+**4. Verify reproducibility (limited, Docker-free) + smoke test 5 critical routes.**
 
-**5. Codex review (REQUIRED for G2).**
-- Spawn Codex K-05 fresh-context review of the baseline SQL
-- Focus: RLS completeness (no table missing a policy), explicit `auth.uid()` form, WITH CHECK on UPDATE policies, realtime publication membership, RPC SECURITY DEFINER + search_path lockdown
-- Any HIGH/CRITICAL → fix before moving on
+**Important:** Without `supabase db reset --local` (Docker dependency), we cannot fully prove reproducibility against a fresh DB in this G2. The smoke test below is the substitute — it confirms the *running* app still works against live DB after the migration archive + baseline insert. Full clean-clone reproducibility is verified asynchronously when a second dev / CI environment ever exists (deferred to that future moment).
+
+- Run `supabase gen types typescript --linked > src/lib/supabase/database.types.ts` → regenerate types (no schema change expected)
+- Run `pnpm tsc --noEmit` → must exit 0 (catches drift between live schema and code's assumed types)
+- Run `pnpm build` → must exit 0 (all 11 routes compile)
+- **Manual smoke test 5 routes** (RLS dependency + Realtime dependency = highest risk):
+  1. `/[locale]/app/projects/[id]` — read project, see threads (RLS read)
+  2. `/[locale]/app/meetings` — list meetings (RLS scoped)
+  3. `/[locale]/app/preprod/[id]` — board view + frame display (RLS + storage)
+  4. `/[locale]/app/team/[slug]` — send a test message → realtime broadcast back (Realtime publication test)
+  5. `/showcase/[some-published-slug]` — public viewer (RLS restrictive policy + service-role bypass)
+- If any route 500s or shows empty when it shouldn't → the *baseline* is fine (live DB unchanged), but the issue is elsewhere (likely types regen or build cache). Investigate before proceeding.
+
+**5. Codex K-05 mandatory — baseline.sql full read + cross-reference (PROMOTED to primary verification gate).**
+
+**Why elevated importance under Option 1:** Without Docker-based clean-room reproducibility test, Codex K-05 becomes the strongest independent check that baseline.sql correctly captures live DB state. Treat any Codex finding more strictly than usual — even MEDIUM findings about "missing X" or "X not in dump" should be treated as HIGH and verified against live DB before dismissal.
+
+- Spawn Codex K-05 fresh-context review of `supabase/migrations/20260422120000_phase_2_0_baseline.sql`
+- Provide Codex with the pre-count file (`g2_pre_baseline_counts.txt`) so it can verify counts match what the SQL would produce
+- **Focus areas (expanded):**
+  - **Completeness:** Every table in pre-counts has a CREATE TABLE. Every policy count matches. Every function/trigger count matches.
+  - **RLS correctness:** Explicit `auth.uid()` form per Phase 1.7 lessons. WITH CHECK on all UPDATE policies. Restrictive policies for client-hidden data (showcases, invoices is_mock).
+  - **Realtime publication membership:** `alter publication supabase_realtime add table ...` statements present for `notification_events`, `team_channel_messages`, `team_channel_message_attachments`.
+  - **RPC security:** `SECURITY DEFINER` functions have `set search_path = public, pg_temp` (or equivalent lockdown).
+  - **Storage:** Bucket creation + storage schema RLS policies present.
+  - **Extensions:** `pg_cron`, `pg_net`, `pgcrypto`, `plpgsql` declared.
+- Any HIGH/CRITICAL → fix baseline.sql + re-run Step 4 (regen types + build + smoke test) before proceeding.
+- Any MEDIUM about completeness (missing policy/realtime/RPC) → promote to HIGH under Option 1, fix immediately.
 
 **6. Document the cosmetic mismatch in CLAUDE.md.**
 - Add to CLAUDE.md "Known gotchas" (or new "Migrations" section):
@@ -442,6 +526,7 @@ After each group's exit criteria pass:
 - No new dependencies (security hook uses husky which is dev-only)
 - No CI setup (G1.5 mentions GitHub Actions as "defer if no CI exists yet" — not in scope)
 - **No R2 / external storage offload.** Supabase Free Storage is 1 GB. When showcase media + team-chat attachments push past ~700 MB, a dedicated Phase 2.x mini-phase will introduce Cloudflare R2 (or equivalent) for media offload. Out of scope here — addressed when usage actually approaches the limit.
+- **No Docker / clean-room reproducibility test.** Yagi's env has no Docker, no pg_dump (Option 1 installs pg_dump only). G2 substitutes pg_dump for full schema export but skips `supabase db reset --local` (requires Docker). Reproducibility against a fresh DB is verified asynchronously — next time a CI environment or second dev machine exists, that's when the baseline gets its first true clean-room test. Codex K-05 + smoke test 5 routes are the substitute gate.
 
 ---
 

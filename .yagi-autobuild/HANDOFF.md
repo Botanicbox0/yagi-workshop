@@ -1,6 +1,6 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-22 (Phase 2.0 진행 중 — G0/G1 완료, G1.5 진행 중)
+> **갱신:** 2026-04-22 (Phase 2.0 진행 중 — G0/G1.5/G2 완료, G1 verify pending, G3+ 대기)
 > **목적:** Phase 2.0 기술 부채 정리 phase 진행 중. 새 기능 0개. 7개 group 순차 처리.
 
 ---
@@ -11,12 +11,12 @@
 |-------|------|------|
 | G0 — Snapshot backup | ✅ 완료 | 5 snapshot files + ROLLBACK.md + tag pushed |
 | G1 — notify-dispatch ops | ⚠️ Setup 완료 / verify pending | Resend domain (yagiworkshop.xyz) DNS records 가비아 입력 완료. DNS 전파 대기 중 (5min~1hr). 자동 verify 완료 시 next cron tick에서 email 도착 — 야기가 inbox 확인 시 G1 closeout |
-| G1.5 — Pre-commit secret hook | 🟡 진행 중 | Husky + 시크릿 패턴 검사 hook |
-| G2 — Migration baseline squash | 대기 | G1.5 끝난 후 verbal go |
+| G1.5 — Pre-commit secret hook | ✅ 완료 | Husky + 시크릿 패턴 검사 hook (commit `e56c364`) |
+| G2 — Migration baseline squash | ✅ **완료 with imperfect baseline** | Single baseline `20260422120000_phase_2_0_baseline.sql` (160KB) replaces 23 historical migrations. **Caveat:** Docker 부재로 raw `pg_dump v18` 사용 + 수동 supplement (5 extensions, 10 storage buckets, 3 realtime publications). Codex K-05 verdict CLEAN. 상세: `.yagi-autobuild/phase-2-0/BASELINE_LIMITATIONS.md` |
 | G3 — POPBILL flip docs | 대기 | |
 | G4 — Cross-phase deferred | 대기 | |
-| G5 — Phase 1.9 MEDIUM | 대기 | |
-| G6 — Phase 1.9 LOW + i18n | 대기 | |
+| G5 — Phase 1.9 MEDIUM | 대기 — 추가 항목 발견 | G2 baseline review 중 발견된 pre-existing 이슈 7건 추가: `recalc_invoice_totals` SECURITY DEFINER missing search_path, 6 UPDATE policies missing WITH CHECK (meetings_update / showcase_media_update / team_channels_update / storage avatars_update / showcase-media update / showcase-og update) |
+| G6 — Phase 1.9 LOW + i18n | 대기 — 추가 항목 | **L5 (new):** `showcase/[slug]` not-found layout chain broken on Next 15.5 ("Missing `<html>` and `<body>` tags in root layout" runtime error on `/showcase/does-not-exist`). Pre-existing Phase 1.9 regression. Fix 후보: (a) Next 15.6+ upgrade 시도, 실패 시 (b) `not-found.tsx` 에 inline `<html>/<body>` 추가, (c) `force-static` |
 | G7 — Cross-phase contracts | 대기 | |
 
 **G1 verify 임시 가정 진행 결정:** DNS 전파 대기로 G1.5/G2 등 후속 group이 막히는 게 비효율적. G1 setup은 완료됐고 (secrets/cron/Edge function 모두 active), domain verify만 외부 DNS 의존. G2+ group은 G1 verify와 독립적이라 병렬 진행. G1 closeout는 별도 처리.
@@ -84,12 +84,7 @@ Supabase CLI / SQL Editor 작업 시작 전 항상 확인:
 ## 🚨 남은 TODO (우선순위 순)
 
 ### P1 — Phase 2.0 시작 시 같이 처리
-2. **마이그레이션 히스토리 불일치 정리 (deferred)**
-   - Remote DB `schema_migrations` 에는 23건 기록됨
-   - 로컬 `supabase/migrations/` 에는 12개 파일만 존재 (11개 누락)
-   - 누락 목록: `bootstrap_workspace_rpc`, `phase1_1_workspace_bootstrap_rpc`, `storage_policy_hardening_20260421`, `projects_update_rls_hardening_20260422`, `phase_1_2_5_video_pdf_intake_attachments_20260422`, `thread_attachments_storage_rls_20260422`, `phase_1_2_5_align_with_spec_20260422`, `phase_1_2_5_thread_attachments_storage_internal_hide_20260422`, `phase_1_3_meetings_20260422`, `phase_1_3_meetings_workspace_derived_20260422`, `phase_1_4_preprod_board_20260422`
-   - `supabase db pull --linked` 시도 결과: Supabase가 `migration repair` 명령 제안했으나 **실행 위험** (누락 11개를 reverted 로 마킹하면 반영된 스키마와 불일치)
-   - **안전한 해결책 (Phase 2.0 시작 시):** `db dump` 로 현재 스키마 스냅샷 뜬 후 baseline 재설정. 당장은 remote DB가 ground truth 로 정상 동작하니 긴급하지 않음.
+2. ~~**마이그레이션 히스토리 불일치 정리 (deferred)**~~ → ✅ **G2 (2026-04-22) 해결**: 23 historical entries archived to `.yagi-autobuild/archive/migrations-pre-2-0/` (with `MISSING.md` reconciliation), single baseline `20260422120000_phase_2_0_baseline.sql` recorded as 24번째 entry in remote `schema_migrations`. `supabase migration list --linked` cosmetic mismatch (23건 "missing locally") is intentional per Option C — see CLAUDE.md "Migration list cosmetic mismatch" note + `.yagi-autobuild/phase-2-0/BASELINE_LIMITATIONS.md`.
 
 ### P1 — Popbill 관련
 3. **사업자등록번호 `POPBILL_CORP_NUM` 입력** — 없으면 세금계산서 발행 불가
