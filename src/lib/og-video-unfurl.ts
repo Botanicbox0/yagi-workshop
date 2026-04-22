@@ -115,19 +115,50 @@ function detectProvider(hostname: string): VideoProvider | null {
   return null;
 }
 
-// ---------------- Fetch with cap + timeout ----------------
+// ---------------- Fetch with per-hop SSRF revalidation (walker) ----------------
+//
+// Phase 2.1 G5 FIX_NOW #1 — previously fetchJson() used redirect:"follow",
+// which silently trusted Location headers returned by oEmbed endpoints.
+// A redirect chain could reach a private IP through DNS-rebinding windows
+// or attacker-influenced provider behavior without ever re-validating the
+// destination. Port the manual-walk pattern from og-unfurl.ts so every hop
+// is re-checked against the private-IP blocklist before the next fetch.
+//
+// Mirrors og-unfurl.ts walker — keep in sync.
 
-async function fetchJson(url: string, signal: AbortSignal): Promise<unknown> {
+const MAX_REDIRECTS = 5;
+
+async function fetchJsonOneHop(
+  url: string,
+  signal: AbortSignal,
+): Promise<
+  | { kind: "redirect"; location: string }
+  | { kind: "ok"; body: unknown }
+  | { kind: "skip" }
+> {
   const res = await fetch(url, {
     signal,
     headers: { "User-Agent": "YagiWorkshop/1.0", Accept: "application/json" },
-    redirect: "follow",
+    redirect: "manual",
   });
-  if (!res.ok) return null;
-  const ctype = (res.headers.get("content-type") || "").toLowerCase();
-  if (!ctype.includes("json")) return null;
 
-  if (!res.body) return null;
+  // 3xx with Location → caller re-validates and recurses.
+  if (res.status >= 300 && res.status < 400) {
+    const location = res.headers.get("location");
+    if (!location) return { kind: "skip" };
+    try {
+      const next = new URL(location, url).href;
+      return { kind: "redirect", location: next };
+    } catch {
+      return { kind: "skip" };
+    }
+  }
+
+  if (!res.ok) return { kind: "skip" };
+  const ctype = (res.headers.get("content-type") || "").toLowerCase();
+  if (!ctype.includes("json")) return { kind: "skip" };
+
+  if (!res.body) return { kind: "skip" };
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
   let received = 0;
@@ -157,10 +188,26 @@ async function fetchJson(url: string, signal: AbortSignal): Promise<unknown> {
   }
   const text = new TextDecoder("utf-8", { fatal: false }).decode(merged);
   try {
-    return JSON.parse(text);
+    return { kind: "ok", body: JSON.parse(text) };
   } catch {
-    return null;
+    return { kind: "skip" };
   }
+}
+
+async function fetchJson(url: string, signal: AbortSignal): Promise<unknown> {
+  let current = url;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const validated = await validateHost(current);
+    if (!validated) return null;
+    const result = await fetchJsonOneHop(validated.href, signal);
+    if (result.kind === "skip") return null;
+    if (result.kind === "redirect") {
+      current = result.location;
+      continue;
+    }
+    return result.body;
+  }
+  return null;
 }
 
 function asRecord(x: unknown): Record<string, unknown> | null {
