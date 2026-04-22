@@ -74,3 +74,13 @@ ALTER POLICY avatars_update ON storage.objects
     bucket_id = 'avatars'::text
     AND owner = auth.uid()
   );
+
+-- #6 — storage.objects."showcase-media update" FOR UPDATE missing WITH CHECK.
+-- Same class of gap: a yagi_admin authorized to UPDATE a showcase-media
+-- object could rewrite bucket_id onto another bucket whose own write/update
+-- policy would have rejected the object directly. Mirror USING into WITH CHECK.
+ALTER POLICY "showcase-media update" ON storage.objects
+  WITH CHECK (
+    bucket_id = 'showcase-media'::text
+    AND public.is_yagi_admin(auth.uid())
+  );
