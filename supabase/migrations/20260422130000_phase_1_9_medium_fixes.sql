@@ -21,3 +21,15 @@
 -- in the function body are already fully qualified, so this is the minimal
 -- safe value.
 ALTER FUNCTION public.recalc_invoice_totals() SET search_path = public, pg_temp;
+
+-- #2 — public.meetings.meetings_update FOR UPDATE missing WITH CHECK.
+-- Phase 1.9 MEDIUM M2 extension. A policy with only USING lets a privileged
+-- caller UPDATE a row they already qualify to see, but does NOT re-check the
+-- resulting row. That means an admin could, e.g., swap workspace_id to a
+-- workspace they don't admin and still land the write. Mirror the USING
+-- expression into WITH CHECK so the post-image is re-validated.
+ALTER POLICY meetings_update ON public.meetings
+  WITH CHECK (
+    public.is_ws_admin(auth.uid(), workspace_id)
+    OR public.is_yagi_admin(auth.uid())
+  );
