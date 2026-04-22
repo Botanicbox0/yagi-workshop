@@ -1,0 +1,23 @@
+-- Phase 2.0 G5 — Phase 1.9 MEDIUM + G2-review findings.
+--
+-- Incrementally built: each commit appends one fix. Intermediate states are
+-- valid runnable migrations — every ALTER below is independently idempotent
+-- against the baseline state captured in 20260422120000_phase_2_0_baseline.sql.
+--
+-- Contents (in order applied):
+--   #1  public.recalc_invoice_totals()        SECURITY DEFINER: SET search_path
+--   #2  public.meetings.meetings_update               UPDATE: add WITH CHECK
+--   #3  public.showcase_media.showcase_media_update   UPDATE: add WITH CHECK
+--   #4  public.team_channels.team_channels_update     UPDATE: add WITH CHECK
+--   #5  storage.objects.avatars_update                UPDATE: add WITH CHECK
+--   #6  storage.objects."showcase-media update"       UPDATE: add WITH CHECK
+--   #7  storage.objects."showcase-og update"          UPDATE: add WITH CHECK
+
+-- #1 — recalc_invoice_totals SECURITY DEFINER missing search_path.
+-- Found during G2 baseline review (Codex K-05 oversight). A SECURITY DEFINER
+-- trigger function without an explicit search_path is vulnerable to schema
+-- hijacking if a caller is able to prepend a malicious schema to search_path
+-- before the trigger fires. Pin to `public, pg_temp` — all object references
+-- in the function body are already fully qualified, so this is the minimal
+-- safe value.
+ALTER FUNCTION public.recalc_invoice_totals() SET search_path = public, pg_temp;
