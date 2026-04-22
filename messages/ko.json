@@ -698,7 +698,6 @@
     "message_delete_action": "삭제",
     "message_delete_cancel": "취소",
     "message_delete_failed": "메시지 삭제에 실패했습니다",
-    "message_load_more": "이전 메시지 더 보기",
     "message_empty_state": "아직 메시지가 없습니다. 대화를 시작해 보세요.",
     "message_today": "오늘",
     "message_yesterday": "어제",
@@ -735,13 +734,11 @@
     "members_dialog_intro": "모든 YAGI 내부 워크스페이스 멤버가 이 채널을 보고 게시할 수 있습니다.",
     "members_dialog_joined_at": "참여일 {date}",
     "error_send_failed": "메시지 보내기에 실패했습니다",
-    "error_load_failed": "메시지를 불러오지 못했습니다",
     "success_channel_created": "채널이 생성되었습니다",
     "success_channel_archived": "채널이 보관되었습니다",
     "success_message_deleted": "메시지가 삭제되었습니다",
     "realtime_reconnecting": "재연결 중…",
-    "realtime_disconnected": "연결이 끊겼습니다. 재연결 시도 중.",
-    "nav_label": "팀 채팅"
+    "realtime_disconnected": "연결이 끊겼습니다. 재연결 시도 중."
   },
   "notifications": {
     "bell_aria_label": "알림",
@@ -828,7 +825,6 @@
     }
   },
   "showcase": {
-    "nav_label": "쇼케이스",
     "list_title": "쇼케이스",
     "list_intro": "승인된 보드를 공개용 쇼케이스로 변환해 클라이언트 결과물을 관리하세요.",
     "list_empty_title": "아직 등록된 쇼케이스가 없어요",

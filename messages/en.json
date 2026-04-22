@@ -698,7 +698,6 @@
     "message_delete_action": "Delete",
     "message_delete_cancel": "Cancel",
     "message_delete_failed": "Failed to delete message",
-    "message_load_more": "Load earlier messages",
     "message_empty_state": "No messages yet. Start the conversation.",
     "message_today": "Today",
     "message_yesterday": "Yesterday",
@@ -735,13 +734,11 @@
     "members_dialog_intro": "All YAGI internal workspace members can see and post in this channel.",
     "members_dialog_joined_at": "Joined {date}",
     "error_send_failed": "Failed to send message",
-    "error_load_failed": "Failed to load messages",
     "success_channel_created": "Channel created",
     "success_channel_archived": "Channel archived",
     "success_message_deleted": "Message deleted",
     "realtime_reconnecting": "Reconnecting…",
-    "realtime_disconnected": "Disconnected. Trying to reconnect.",
-    "nav_label": "Team chat"
+    "realtime_disconnected": "Disconnected. Trying to reconnect."
   },
   "notifications": {
     "bell_aria_label": "Notifications",
@@ -828,7 +825,6 @@
     }
   },
   "showcase": {
-    "nav_label": "Showcases",
     "list_title": "Showcases",
     "list_intro": "Turn approved boards into public showcases to manage client deliverables.",
     "list_empty_title": "No showcases yet",
