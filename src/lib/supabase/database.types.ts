@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       brands: {
@@ -1694,6 +1669,19 @@ export type Database = {
         Args: { p_logo_url?: string; p_name: string; p_slug: string }
         Returns: string
       }
+      create_meeting_with_attendees: {
+        Args: {
+          p_attendees: Json
+          p_created_by: string
+          p_description?: string
+          p_duration_minutes: number
+          p_project_id: string
+          p_scheduled_at: string
+          p_title: string
+          p_workspace_id: string
+        }
+        Returns: string
+      }
       increment_showcase_view: { Args: { sid: string }; Returns: number }
       is_ws_admin: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_ws_member: { Args: { uid: string; wsid: string }; Returns: boolean }
@@ -1834,9 +1822,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

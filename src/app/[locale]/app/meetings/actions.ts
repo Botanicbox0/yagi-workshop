@@ -144,49 +144,48 @@ export async function createMeeting(
     return { ok: false, error: "forbidden" };
   }
 
-  // 5. Insert meeting row
-  const { data: meeting, error: meetingInsertError } = await supabase
-    .from("meetings")
-    .insert({
-      project_id: projectId,
-      workspace_id: workspaceId,
-      title,
-      description: description ?? null,
-      scheduled_at: parsedDate.toISOString(),
-      duration_minutes: durationMinutes,
-      created_by: uid,
-      status: "scheduled",
-      calendar_sync_status: "pending",
-    })
-    .select("id")
-    .single();
+  // 5. Atomic meeting + attendees insert via RPC
+  //
+  // Phase 2.1 G5 FIX_NOW #2 (Phase 1.3 M1) — previously the meeting row
+  // was inserted, then attendees were bulk-inserted; an attendee-insert
+  // failure left an orphan meeting with zero invitees. The RPC
+  // create_meeting_with_attendees wraps both inserts in a single plpgsql
+  // function body (implicit transaction), so either both succeed or
+  // neither persists. SECURITY INVOKER — RLS on both tables still applies
+  // to the caller.
+  const attendeesPayload = attendeeEmails.map((email, idx) => ({
+    email,
+    display_name: attendeeDisplayNames?.[idx] ?? null,
+  }));
 
-  if (meetingInsertError || !meeting) {
+  const { data: rpcMeetingId, error: rpcError } = await supabase.rpc(
+    "create_meeting_with_attendees",
+    {
+      p_project_id: projectId,
+      p_workspace_id: workspaceId,
+      p_title: title,
+      p_scheduled_at: parsedDate.toISOString(),
+      p_duration_minutes: durationMinutes,
+      p_created_by: uid,
+      p_attendees: attendeesPayload,
+      // Omit when caller didn't supply description — PG DEFAULT NULL fires.
+      p_description: description ?? undefined,
+    }
+  );
+
+  if (rpcError || !rpcMeetingId) {
     console.error(
-      "[createMeeting] meeting insert error:",
-      meetingInsertError?.message
+      "[createMeeting] atomic insert failed:",
+      rpcError?.message
     );
     return {
       ok: false,
       error: "db",
-      detail: meetingInsertError?.message ?? "insert failed",
+      detail: rpcError?.message ?? "insert failed",
     };
   }
 
-  const meetingId = meeting.id;
-
-  // 6. Insert attendee rows
-  const attendeeRows = attendeeEmails.map((email, idx) => ({
-    meeting_id: meetingId,
-    email,
-    display_name: attendeeDisplayNames?.[idx] ?? null,
-    user_id: null,
-    is_organizer: false,
-  }));
-
-  const { error: attendeeInsertError } = await supabase
-    .from("meeting_attendees")
-    .insert(attendeeRows);
+  const meetingId = rpcMeetingId;
 
   // Phase 1.8 — notify each attendee who has a YAGI account. Wrapped in
   // try/catch so notification failures NEVER fail the parent meeting action.
@@ -202,20 +201,6 @@ export async function createMeeting(
     });
   } catch (err) {
     console.error("[createMeeting] notif emit failed:", err);
-  }
-
-  if (attendeeInsertError) {
-    console.error(
-      "[createMeeting] attendee insert error:",
-      attendeeInsertError.message
-    );
-    // Meeting row exists — still ok:true, but calendar sync is skipped
-    return {
-      ok: true,
-      meetingId,
-      syncStatus: "failed",
-      meetLink: null,
-    };
   }
 
   // 7. Try Google Calendar
