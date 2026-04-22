@@ -1,0 +1,13 @@
+# Subtask 01 evaluation
+verdict: pass
+checks:
+  - 1 (CLAUDE.md verbatim): pass — 2891 bytes, single trailing 0x0a newline, all lines match spec exactly including UTF-8 → (U+2192) arrow characters and backtick-quoted commands; no deviations found.
+  - 2 (SKILL.md exists): pass
+  - 3 (frontmatter exact): pass — `name: yagi-nextjs-conventions` and `description: >-` block both match spec verbatim; all five auto-trigger contexts present (Next.js file creation, Supabase query writing, form building, i18n key addition, RLS policy authoring).
+  - 4 (10 sections present): pass — all 10 sections present: 1) Load order, 2) Supabase access pattern, 3) Server Action template, 4) RHF + Zod + shadcn form, 5) i18n rules, 6) Next.js 15 async props, 7) Error handling taxonomy, 8) Styling tokens (Phase 1.0.6), 9) Anti-patterns, 10) Self-improving footer.
+  - 5 (code fences in 2/3/4/6): pass — section 2 has two fenced blocks (server + client patterns), section 3 has one, section 4 has one, section 6 has one.
+  - 6 (correct import paths, no inline Supabase): pass — uses `@/lib/supabase/server`, `@/lib/supabase/client`, `@/components/ui/button`, `@/components/ui/input`, `@/components/ui/label`; no inline `createClient()` or `createBrowserClient()` calls anywhere.
+  - 7 (UTF-8 no BOM): pass — CLAUDE.md first bytes: 23 20 59 41 (`# YA`); SKILL.md first bytes: 2d 2d 2d 0a (`---\n`). Neither file starts with EF BB BF.
+  - 8 (no extra files): pass — project root and .claude/ contain only pre-existing files plus the two newly created artefacts; no additional files introduced.
+  - 9 (anti-pattern + styling + i18n constraints stated): pass — section 9 explicitly forbids `pnpm dlx shadcn@latest` and inline Supabase clients; section 8 explicitly forbids warm tones (cognac, bone, amber backgrounds); section 5 explicitly requires both `messages/ko.json` and `messages/en.json` to have identical key structures.
+notes: Both artefacts are clean and accurate. One minor observation worth noting: `@/i18n/routing` does not appear in any code example in SKILL.md (the spec listed it as a project-correct import path to use), though the spec only mandates it be a valid path — not that it must appear in an example. Section 5's i18n code examples reference `src/messages/ko.json` and `src/messages/en.json` with the `src/` prefix rather than the bare `messages/` prefix used in CLAUDE.md rule 4; this is cosmetically inconsistent but not functionally incorrect for the skill document. Section 6's async-props example calls `getTranslations(...)` without awaiting it (line `const t = getTranslations(...)` — missing `await`), which is a minor code-quality issue in an illustrative example but does not affect the conventions document's correctness. No blocking issues found.
