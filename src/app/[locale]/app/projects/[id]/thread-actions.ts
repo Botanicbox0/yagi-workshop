@@ -292,30 +292,26 @@ async function _emitThreadMessageNotifications(args: {
     .maybeSingle();
   if (!project) return;
 
-  const [{ data: members }, { data: yagiAdmins }, { data: actorProfile }] =
-    await Promise.all([
-      svc
-        .from("workspace_members")
-        .select("user_id")
-        .eq("workspace_id", project.workspace_id),
-      svc
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "yagi_admin")
-        .is("workspace_id", null),
-      svc
-        .from("profiles")
-        .select("display_name")
-        .eq("id", args.actorUserId)
-        .maybeSingle(),
-    ]);
+  // Phase 2.0 G4 #2 — drop the global yagi_admin fan-out. Previously every
+  // yagi_admin received notifications for every workspace's thread messages,
+  // which leaked client metadata across workspace boundaries. Yagi staff who
+  // need notifications for a given workspace must be added as workspace_members
+  // explicitly.
+  const [{ data: members }, { data: actorProfile }] = await Promise.all([
+    svc
+      .from("workspace_members")
+      .select("user_id")
+      .eq("workspace_id", project.workspace_id),
+    svc
+      .from("profiles")
+      .select("display_name")
+      .eq("id", args.actorUserId)
+      .maybeSingle(),
+  ]);
 
   const recipients = new Set<string>();
   for (const m of members ?? []) {
     if (m.user_id && m.user_id !== args.actorUserId) recipients.add(m.user_id);
-  }
-  for (const r of yagiAdmins ?? []) {
-    if (r.user_id && r.user_id !== args.actorUserId) recipients.add(r.user_id);
   }
 
   const actorName = actorProfile?.display_name ?? "YAGI";
