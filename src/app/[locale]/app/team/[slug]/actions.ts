@@ -98,13 +98,18 @@ export async function sendMessage(input: unknown): Promise<SendMessageResult> {
 
     // Path-safety guard: every attachment path must live under
     // {workspace_id}/{channel_id}/{messageId}/... (messageId is client-generated
-    // and is what storage RLS will see; we verify here too).
+    // and is what storage RLS will see; we verify here too). Reject `..` segments
+    // so a startsWith match cannot escape upward — Phase 2.0 G4 #4.
     const prefix = `${channel.workspace_id}/${data.channelId}/${data.messageId}/`;
+    const hasTraversal = (p: string) => p.split("/").includes("..");
     for (const att of data.attachmentRecords) {
-      if (!att.storage_path.startsWith(prefix)) {
+      if (!att.storage_path.startsWith(prefix) || hasTraversal(att.storage_path)) {
         return { ok: false, error: "validation" };
       }
-      if (att.thumbnail_path && !att.thumbnail_path.startsWith(prefix)) {
+      if (
+        att.thumbnail_path &&
+        (!att.thumbnail_path.startsWith(prefix) || hasTraversal(att.thumbnail_path))
+      ) {
         return { ok: false, error: "validation" };
       }
     }
