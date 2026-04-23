@@ -254,7 +254,11 @@ Acceptance:
   `profiles` columns default to NULL (existing rows survive with NULL role,
   NULL handle, etc.); new `notification_preferences.challenge_updates_enabled`
   defaults to TRUE so existing users are opted-in to challenge notifications
-  by default (matches Task 4 ALTER body). Existing rows survive.
+  by default (matches Task 4 ALTER body). Existing rows survive. **This
+  column governs transactional notifications only (joined-challenge
+  progress). Marketing notifications (new challenge announcements) require
+  a separate opt-in flag to be added at G7 per Korean 정보통신망법 §50
+  compliance. See `.yagi-autobuild/phase-2-5/FOLLOWUPS.md` §FU-1.**
 
 ### G2 — Auth flow + role selection
 **Duration target:** 3-4 hours  

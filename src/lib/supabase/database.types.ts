@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -11,6 +12,31 @@ export type Database = {
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -57,6 +83,225 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_judgments: {
+        Row: {
+          admin_id: string
+          challenge_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          score: number | null
+          submission_id: string
+        }
+        Insert: {
+          admin_id: string
+          challenge_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          submission_id: string
+        }
+        Update: {
+          admin_id?: string
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_judgments_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_judgments_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_submissions: {
+        Row: {
+          challenge_id: string
+          content: Json
+          created_at: string
+          id: string
+          status: string
+          submitter_id: string
+          updated_at: string
+        }
+        Insert: {
+          challenge_id: string
+          content?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          submitter_id: string
+          updated_at?: string
+        }
+        Update: {
+          challenge_id?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          submitter_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_submissions_submitter_id_fkey"
+            columns: ["submitter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_votes: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          id: string
+          submission_id: string
+          voter_id: string
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          id?: string
+          submission_id: string
+          voter_id: string
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          submission_id?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_votes_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_votes_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_votes_voter_id_fkey"
+            columns: ["voter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          announce_at: string | null
+          close_at: string | null
+          created_at: string
+          created_by: string
+          description_md: string | null
+          hero_media_url: string | null
+          id: string
+          judging_config: Json
+          open_at: string | null
+          reminder_sent_at: string | null
+          slug: string
+          state: string
+          submission_requirements: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          announce_at?: string | null
+          close_at?: string | null
+          created_at?: string
+          created_by: string
+          description_md?: string | null
+          hero_media_url?: string | null
+          id?: string
+          judging_config?: Json
+          open_at?: string | null
+          reminder_sent_at?: string | null
+          slug: string
+          state?: string
+          submission_requirements?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          announce_at?: string | null
+          close_at?: string | null
+          created_at?: string
+          created_by?: string
+          description_md?: string | null
+          hero_media_url?: string | null
+          id?: string
+          judging_config?: Json
+          open_at?: string | null
+          reminder_sent_at?: string | null
+          slug?: string
+          state?: string
+          submission_requirements?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      creators: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creators_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -410,6 +655,7 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          challenge_updates_enabled: boolean
           digest_time_local: string
           email_digest_enabled: boolean
           email_immediate_enabled: boolean
@@ -420,6 +666,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          challenge_updates_enabled?: boolean
           digest_time_local?: string
           email_digest_enabled?: boolean
           email_immediate_enabled?: boolean
@@ -430,6 +677,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          challenge_updates_enabled?: boolean
           digest_time_local?: string
           email_digest_enabled?: boolean
           email_immediate_enabled?: boolean
@@ -712,8 +960,12 @@ export type Database = {
           created_at: string
           display_name: string
           handle: string
+          handle_changed_at: string | null
           id: string
+          instagram_handle: string | null
           locale: string
+          role: string | null
+          role_switched_at: string | null
           team_chat_last_seen: Json
           updated_at: string
         }
@@ -723,8 +975,12 @@ export type Database = {
           created_at?: string
           display_name: string
           handle: string
+          handle_changed_at?: string | null
           id: string
+          instagram_handle?: string | null
           locale?: string
+          role?: string | null
+          role_switched_at?: string | null
           team_chat_last_seen?: Json
           updated_at?: string
         }
@@ -734,8 +990,12 @@ export type Database = {
           created_at?: string
           display_name?: string
           handle?: string
+          handle_changed_at?: string | null
           id?: string
+          instagram_handle?: string | null
           locale?: string
+          role?: string | null
+          role_switched_at?: string | null
           team_chat_last_seen?: Json
           updated_at?: string
         }
@@ -1045,6 +1305,55 @@ export type Database = {
           },
         ]
       }
+      showcase_challenge_winners: {
+        Row: {
+          announced_at: string
+          announced_by: string
+          challenge_id: string
+          rank: number
+          showcase_id: string | null
+          submission_id: string
+        }
+        Insert: {
+          announced_at?: string
+          announced_by: string
+          challenge_id: string
+          rank?: number
+          showcase_id?: string | null
+          submission_id: string
+        }
+        Update: {
+          announced_at?: string
+          announced_by?: string
+          challenge_id?: string
+          rank?: number
+          showcase_id?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcase_challenge_winners_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_challenge_winners_showcase_id_fkey"
+            columns: ["showcase_id"]
+            isOneToOne: false
+            referencedRelation: "showcases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_challenge_winners_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: true
+            referencedRelation: "challenge_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       showcase_media: {
         Row: {
           caption: string | null
@@ -1187,6 +1496,41 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studios: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          id: string
+          member_count: string | null
+          studio_name: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          id: string
+          member_count?: string | null
+          studio_name: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          member_count?: string | null
+          studio_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studios_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1822,6 +2166,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
