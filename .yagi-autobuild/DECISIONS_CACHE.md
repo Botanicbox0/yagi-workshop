@@ -190,6 +190,100 @@ Inline rewrite는 git history 지저분해지므로 피할 것.
 
 ---
 
+### Q-014: Web Claude session standing order — 속도 우선 + 외부 관점 지속 검토
+
+**Asked context:** Post-G2 세션 (2026-04-23) — 내가 gstack README만 읽고 추측으로 문서 쓰려다 야기가 catch함
+**Question:** Web Claude가 야기와 협업할 때 default mindset은?
+**Answer:**
+- **속도 최우선** — PARALLEL_WORKTREES 같은 병렬 인프라가 #1 speed lever. Redundancy 제거가 #2. 느림 유발 문서/프로세스는 삭제 대상.
+- **gstack / Karpathy 관점 지속 검토** — 내 제안이 Garry Tan식 / Karpathy식으로 평가받았을 때 sound한지 주기적 자가 점검.
+- **추측 금지** — repo 실제 파일 안 보고 "대략 이럴 것" 가정한 문서 작성은 redundancy 생성의 주범. 쓰기 전에 Filesystem MCP / web_fetch로 실제 확인.
+- **공식 docs 1차 source** — 3rd party 블로그 > web_search 검증됨 수준. docs.anthropic.com 등 공식 우선.
+**Applies when:** Web Claude가 새 세션 시작할 때, 새 인프라 문서 쓸 때, "이거 정말 필요한가" 판단할 때. 야기가 "제대로 확인하고 하는 거 맞지?"로 질문하면 이 원칙 재확인 신호.
+**Confidence:** HIGH
+**Registered:** 2026-04-23 (post-G2 web Claude standing order)
+
+---
+
+### Q-015: Parallel execution infrastructure — Agent Teams + in-process mode
+
+**Asked context:** Post-G2 parallelism 설계 세션 (2026-04-23)
+**Question:** 야기 Windows 11 + WSL2 + Warp 환경에서 병렬 agent 실행 표준?
+**Answer:** **Claude Code Agent Teams, in-process mode 강제**. 근거:
+- Conductor / cmux / Superset 전부 macOS only → 배제
+- tmux split-pane mode는 Warp Windows / Windows Terminal / VS Code integrated terminal / Ghostty에서 **공식 미지원** (docs.anthropic.com/agent-teams limitations)
+- In-process mode는 아무 terminal에서 작동, Shift+Down으로 teammate 순환
+- settings.json `env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 형식 필수 (top-level 키는 env var export 안 됨, 2026-04-23 smoke test로 확인)
+- 3-5 teammates per team이 sweet spot (공식 best practice)
+- task_plan.md는 `parallel_group` 필드 필수 (동일 letter = parallel, 다른 letter = sequential barrier)
+상세: `PARALLEL_WORKTREES.md`, `yagi-agent/orchestrator/CLAUDE.md` v2.0.
+**Applies when:** 모든 Gate build step, 모든 multi-task 설계. 병렬 가능한지 먼저 판단 → 가능하면 parallel_group으로 분할.
+**Confidence:** HIGH
+**Registered:** 2026-04-23 (Agent Teams smoke test PASS)
+
+---
+
+### Q-016: Redundant document removal policy
+
+**Asked context:** ARCHITECTURE.md v2.0 rewrite 결정 (2026-04-23)
+**Question:** 기존 문서에 aspirational (계획됐지만 구현 안 됨) 섹션이 있을 때?
+**Answer:** **삭제 + Version bump + "What changed" 섹션 명시**. 근거:
+- Stale 섹션 그대로 두면 새 contributor/agent가 "있는 기능"으로 오해 → redundant 구현 시도
+- "언젠가 만들 거면 일단 둔다"는 anti-pattern (결국 안 만들고 누적)
+- 제거 시 version bump 1.0 → 2.0 (major), 변경 이유 §0에 명시. ADR 따로 필요 없음 (문서 내재 변경 이력)
+ARCHITECTURE.md v2.0 실례: L2 token-sync pipeline (src/design-tokens/*.ts 자동 생성), `skills/` 디렉토리 전체 (존재 안 함), 일부 review skill 파일 삭제.
+**Applies when:** 문서 audit 시 aspirational 섹션 발견. 단, "현재 구현 안 됐지만 로드맵 명확"은 `## Open questions` 섹션으로 이동 (삭제 아님).
+**Confidence:** HIGH
+**Registered:** 2026-04-23 (ARCHITECTURE.md v2.0)
+
+---
+
+### Q-017: SECURITY DEFINER 엄격도 톤 다운
+
+**Asked context:** Post-G2 retrospective (2026-04-23)
+**Question:** Codex K-05가 SECURITY DEFINER 관련 HIGH-B/C 잡을 때 전부 고쳐야?
+**Answer:** **Exploitable today만 fix, theoretical defense-in-depth는 Phase 2.6 dedicated security sweep로 defer**. 근거:
+- 야기 pre-revenue + pre-compliance-audit stage
+- Ship speed > defense-in-depth 현 시점
+- Phase 2.6에 FU-13 (FORCE RLS), FU-8 (auth.uid 최적화) 등 묶어서 전수 sweep 예정
+- `search_path = public, pg_temp` 같은 기본 hardening은 여전히 mandatory (Q-006)
+구분 기준: "공격자가 현재 prod에서 exploit 가능?" → YES면 fix, NO (추가 조건/권한 필요)면 defer.
+**Applies when:** 모든 Codex K-05 SECURITY DEFINER 관련 HIGH-B / HIGH-C 판정. CODEX_TRIAGE.md taxonomy와 함께 사용.
+**Confidence:** HIGH (Phase 2.5 한정. Phase 2.6 진입 후 revisit.)
+**Registered:** 2026-04-23 (post-G2 yagi decision)
+
+---
+
+### Q-018: 추측으로 문서 작성 금지 — 실제 repo 확인 의무
+
+**Asked context:** Post-G2 web Claude가 gstack README만 읽고 PARALLEL_WORKTREES.md 추측 작성 시도 → 야기가 catch (2026-04-23)
+**Question:** 외부 framework (gstack 등) 참조하는 문서 쓸 때 준비 수준?
+**Answer:** **최소 다음 3개 확인 후 작성:**
+1. 해당 repo 실제 파일 구조 (AGENTS.md / CLAUDE.md / SKILL.md 최소 1개 fetch)
+2. 공식 docs에서 primitive 검증 (`--worktree` flag, Agent Teams env var 등 추측 금지)
+3. 야기 환경 호환성 확인 (Windows/WSL/Warp 제약에 맞는지)
+근거: README는 marketing surface, 실제 구현 detail은 source file에만 있음. README만 보고 쓴 문서는 "원칙상 맞지만 실전 잘못된" 가이드 생성.
+**Applies when:** 외부 tool/framework 참조하는 모든 문서. 특히 claim "X가 Y 기능을 제공한다" 쓰기 전 source 확인.
+**Confidence:** HIGH
+**Registered:** 2026-04-23 (web Claude self-correction after yagi catch)
+
+---
+
+### Q-019: ROADMAP staleness 패턴 — 다문서 cross-reference 의무
+
+**Asked context:** Agent Teams smoke test — teammate가 HANDOFF (2026-04-23) vs ROADMAP (2026-04-21) 날짜 차이 + Phase 숫자 차이 cross-check하여 staleness 발견 (2026-04-23)
+**Question:** Agent teammate / Builder가 여러 문서 읽을 때 staleness 판단 기준?
+**Answer:** **Date-based cross-reference 의무화**. 근거:
+- 단일 문서 읽고 그 내용 신뢰 = staleness에 취약
+- Timeline 문서 (HANDOFF, ROADMAP, PHASE_SUMMARY) 여럿 읽을 때 → **last-modified date 비교 + phase/gate number 비교 + contradiction 있으면 flag**
+- 발견 시 발견자가 FU로 등록 (FU-14 실례: ROADMAP stale)
+실전 패턴: teammate / agent가 multi-doc input 받으면 synthesis 시 "Reconciliation note" 섹션 자동 추가 (smoke test teammate가 자발적으로 함 — 이 pattern을 norm으로 채택).
+**Applies when:** Agent Team lead 가 여러 문서 synthesis할 때, Builder 가 Gate entry 시 여러 reference 문서 읽을 때, web Claude가 handoff 준비할 때.
+**Confidence:** HIGH
+**Registered:** 2026-04-23 (Agent Teams smoke test teammate emergent behavior)
+
+---
+
 ## Cache maintenance
 
 ### Append workflow

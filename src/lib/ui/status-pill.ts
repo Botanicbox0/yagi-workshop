@@ -18,7 +18,8 @@ export type StatusKind =
   | "invoice"
   | "meeting"
   | "challenge"
-  | "showcase";
+  | "showcase"
+  | "submission";  // Phase 2.5 G3 §F.2 — creator's view of own challenge_submissions
 
 export type StatusTone =
   | "neutral"   // grey / muted — idle/archived
@@ -74,6 +75,14 @@ const KIND_TONE: Record<StatusKind, Record<string, StatusTone>> = {
     draft:     "neutral",
     published: "emphasis",
     archived:  "neutral",
+  },
+  // Phase 2.5 challenge_submissions — creator's view of own work. Public
+  // gallery surfaces `ready` only via RLS; creator sees full lifecycle.
+  submission: {
+    created:    "info",       // 올렸어요 — just submitted
+    processing: "warning",    // 확인 중 — media processing / admin review
+    ready:      "emphasis",   // 공개됨 — visible in gallery
+    rejected:   "neutral",    // 확인 필요 — soft framing per G3 DP §F.2
   },
 };
 

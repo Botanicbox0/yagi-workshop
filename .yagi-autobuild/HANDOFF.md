@@ -1,7 +1,74 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-23 (Phase 2.0 + 2.1 **SHIPPED** — Phase 2.5 entry ready, launchpad in progress)
-> **목적:** Phase 2.1 operational tail (expedited per ADR-005) 완료. Phase 2.5 Challenge MVP build 다음.
+> **갱신:** 2026-04-23 저녁 (Phase 2.5 G1/G2 **SHIPPED**, G3 entry 진행 중 — infra v2.0 완료, Agent Teams 실전 대기)
+> **목적:** Phase 2.5 G3 (공개 /challenges/* routes + realtime gallery) 진입. G2 retro에서 도출된 병렬화 infra 전면 도입.
+
+---
+
+## 🎯 현재 활성 작업 — Phase 2.5 G3 (2026-04-23 저녁)
+
+**Worktree:** `.claude/worktrees/g3-challenges/` (branch `worktree-g3-challenges`)
+**Execution model:** Agent Teams + in-process mode (첫 실전)
+
+### 완료된 것 (이 세션)
+
+- ✅ Agent Teams smoke test PASS (5/5: parallel spawn, mailbox, shutdown, cleanup, synthesis with emergent reconciliation)
+- ✅ `~/.claude/settings.json` env wrap 수정 (top-level 키는 env var export 안 됨 — 공식 형식 `{"env": {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"}}`)
+- ✅ 인프라 문서 3종 신규/개정 완료:
+  - `.yagi-autobuild/PARALLEL_WORKTREES.md` (신규, 14.7KB) — Warp Windows + in-process mode 표준
+  - `yagi-agent/orchestrator/CLAUDE.md` v2.0 — task_plan `parallel_group` 필드, Agent Team primary spawn path
+  - `.yagi-autobuild/ARCHITECTURE.md` v2.0 — stale L2 token-sync pipeline 제거, "gate"→"review step" 용어 정리, §7 parallel 추가, SECURITY DEFINER 톤 다운
+- ✅ `DECISIONS_CACHE.md` Q-014~Q-019 append (총 19 entry)
+- ✅ Builder triage Green light — §A-§J 중 AUTO 8건 / PROPOSE-DEFAULT 2건 / NEEDS YAGI 11건 / 기타 분류. 브랜드 voice 클러스터 하나의 ADOPT로 copy-derived 9개 항목 cascade 해소 구조 식별.
+
+### 대기 중 (야기 입력 필요)
+
+Builder가 batched yagi question set 작성 후 텔레그램 전송 예정. 예상 질문 수: 최대 12개 (brand voice cluster 1 + UX 5 + product 1 이내).
+
+### 포팅 필요 (Builder 첫 mechanical task)
+
+현재 g3-challenges worktree에는 없고 main worktree에만 있는 pre-G3 infra:
+- `react-markdown@10.1.0` + `rehype-sanitize@6.0.0` (audit finding #5)
+- `src/lib/ui/status-labels.ts`
+- `src/components/challenges/markdown-renderer.tsx`
+- Extended `status-pill.ts`
+- DP 파일 자체 (`.yagi-autobuild/phase-2-5/G3-ENTRY-DECISION-PACKAGE.md`)
+
+Builder가 G3 task_plan.md 작성 전에 포팅 실행 예정.
+
+### G3 Deliverable (SPEC 기준)
+
+- 3 public routes: `/challenges` (list), `/challenges/[slug]` (detail), `/challenges/[slug]/gallery` (gallery)
+- Locale-free routes (middleware matcher 제외 이미 완료 — Phase 2.1 G6)
+- First realtime subscriber (gallery INSERT → RSC refresh, 5s SLA)
+- Markdown rendering with XSS sanitization
+- `status-pill` + `submission-status` helper 공통화
+- Stop point: 야기 visual review at `/challenges` + `/challenges/[slug]` 이후 gallery realtime 작업
+
+### FU-14 (2026-04-23 신규 등록)
+
+ROADMAP.md stale (Phase 1.x chain still queued despite Phase 2.x shipped). Phase 2.5 closeout 시 업데이트. Owner: Builder. Status: deferred.
+
+---
+
+## 🚀 Phase 2.5 G1/G2 — SHIPPED (2026-04-23 낮)
+
+G1 (schema) commit `2fcfad4`. G2 (auth + role + handle) with hardening v1 (composite apply, anon grant revoke + structured error contracts) SHIPPED. G2 retro commit `1bef429`.
+
+**Key hardening decisions cached** (DECISIONS_CACHE.md Q-001~Q-013):
+- Reserved handles = code-level list (Q-001)
+- Role stale data = soft-delete pattern (Q-002)
+- Admin audit binding = INSERT only, not UPDATE/DELETE (Q-003)
+- Slug regex with citext = `::text` cast 필수 (Q-004)
+- RLS public SELECT default rules (Q-005)
+- SECURITY DEFINER = `SET search_path = public, pg_temp` always (Q-006)
+- RPC NULL input = explicit RAISE with structured ERRCODE (Q-007)
+- Migration chain style = composite vs post-apply 분기 (Q-008)
+- FORCE RLS = Phase 2.6로 defer (Q-009, FU-13)
+- ERRCODE 22023 vs 23514 구분 (Q-010)
+- Marketing consent = G7 dispatch layer (Q-011)
+- Route structure = `/[locale]/app/*` not group (Q-012)
+- Pre-apply stop 완전 제거 — Codex K-05 CLEAN = auto-apply (Q-013)
 
 ---
 
