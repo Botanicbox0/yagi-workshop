@@ -47,3 +47,15 @@ No DB writes. No Codex K-05 pre-apply (per ADR-005). Phase 2.5 G8 runs single co
 - Barrier: tsc/lint/build EXIT=0, §J + DS clean
 - DECISIONS_CACHE: Q-020 through Q-025 appended
 - Detail: `.yagi-autobuild/phase-2-5/G5_CLOSEOUT.md`
+
+---
+
+## G6 — SHIPPED (2026-04-24)
+
+- G0 pre-work (scopes.ts + use-user-scopes.tsx + layout wrap) inline by lead. `.ts` → `.tsx` for JSX Provider.
+- /u/[handle] public profile + middleware patch + queries lib (A1)
+- /settings/profile extension + updateProfileExtendedAction + i18n keys (A2)
+- react-image-crop avatar upload (A3)
+- external_links deferred → FU-19 (Phase 2.6) per ULTRA-CHAIN D rule (no DB migrations outside G7)
+- Barrier: tsc/lint/build EXIT=0, §J + DS clean
+- Detail: `.yagi-autobuild/phase-2-5/G6_CLOSEOUT.md`

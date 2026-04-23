@@ -317,3 +317,20 @@ Proceeding to G6 main tasks.
 
 **Registered:** 2026-04-24 (Phase 2.6 v3.1 SPEC authoring)
 **Status:** open (blocker until G6 entry)
+
+---
+
+## FU-19 — profiles.external_links column + UI
+
+**Trigger**: Phase 2.6 (bundled with sidebar IA refactor if schema work needed anyway).
+**Risk**: LOW — cosmetic/profile-richness. No user-blocking impact.
+**Background**: G6 DP §F specified `external_links jsonb` on profiles. Column was missing at G6 entry. Per ULTRA-CHAIN D rule (only G7 pg_cron migration allowed in overnight autopilot), migration was deferred instead of landing mid-chain.
+**Action**: 
+1. Migration: `ALTER TABLE public.profiles ADD COLUMN external_links jsonb DEFAULT '[]'::jsonb;` with CHECK `(jsonb_typeof(external_links) = 'array' AND jsonb_array_length(external_links) <= 3)`.
+2. Regenerate `src/lib/supabase/database.types.ts`.
+3. UI: extend `settings/profile-form.tsx` with external-links dynamic array (RHF useFieldArray, max 3 rows, label max 30, url Zod .url()).
+4. Server: extend `updateProfileExtendedAction` to accept/validate/UPDATE external_links.
+5. Display: extend `src/app/u/[handle]/page.tsx` Meta section to render external_links below Instagram.
+**Owner**: Phase 2.6 author.
+**Status**: open
+**Registered**: G6 Group A closeout (2026-04-24, overnight autopilot)

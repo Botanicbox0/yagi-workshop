@@ -3,6 +3,8 @@ import { fetchAppContext } from "@/lib/app/context";
 import { Sidebar } from "@/components/app/sidebar";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getUserScopes } from "@/lib/app/scopes";
+import { UserScopesProvider } from "@/lib/app/use-user-scopes";
 
 export default async function AppLayout({
   children,
@@ -42,18 +44,22 @@ export default async function AppLayout({
 
   const bellLocale: "ko" | "en" = locale === "en" ? "en" : "ko";
 
+  const scopes = getUserScopes(ctx);
+
   return (
-    <div className="min-h-dvh flex">
-      <Sidebar context={ctx} />
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="flex items-center justify-end h-12 px-4 border-b border-border">
-          <NotificationBell
-            initialUnreadCount={initialUnreadCount ?? 0}
-            locale={bellLocale}
-          />
-        </header>
-        <main className="flex-1 min-w-0">{children}</main>
+    <UserScopesProvider value={scopes}>
+      <div className="min-h-dvh flex">
+        <Sidebar context={ctx} />
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="flex items-center justify-end h-12 px-4 border-b border-border">
+            <NotificationBell
+              initialUnreadCount={initialUnreadCount ?? 0}
+              locale={bellLocale}
+            />
+          </header>
+          <main className="flex-1 min-w-0">{children}</main>
+        </div>
       </div>
-    </div>
+    </UserScopesProvider>
   );
 }

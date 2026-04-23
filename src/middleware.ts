@@ -22,6 +22,6 @@ export const config = {
     // `/{defaultLocale}/showcase/<slug>` which matched no route, falling
     // back to Next's default 404 and making the custom not-found.tsx
     // unreachable (and the Phase 2.0 G6 L5 html/body shell fix inert).
-    "/((?!api|_next|_vercel|auth/callback|showcase|challenges|.*\\..*).*)",
+    "/((?!api|_next|_vercel|auth/callback|showcase|challenges|u|.*\\..*).*)",
   ],
 };

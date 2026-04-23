@@ -11,6 +11,7 @@ import { Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { updateProfile, updateAvatarUrl } from "./actions";
 import {
@@ -18,6 +19,7 @@ import {
   HANDLE_MIN_LENGTH,
   HANDLE_MAX_LENGTH,
 } from "@/lib/handles/validate";
+import { canChangeHandle } from "@/lib/handles/change";
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(1).max(80),
@@ -32,6 +34,19 @@ const profileSchema = z.object({
       if (err) ctx.addIssue({ code: "custom", message: err });
     }),
   locale: z.enum(["ko", "en"]),
+  bio: z
+    .string()
+    .trim()
+    .max(200, "200자 이내로 입력해주세요.")
+    .optional()
+    .or(z.literal("")),
+  instagram_handle: z
+    .string()
+    .trim()
+    .max(50)
+    .regex(/^[a-zA-Z0-9._]*$/, "영문/숫자/./_ 만 사용 가능")
+    .optional()
+    .or(z.literal("")),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -46,9 +61,12 @@ interface ProfileFormProps {
   };
   avatarSignedUrl: string | null;
   userId: string;
+  bio: string | null;
+  instagramHandle: string | null;
+  handleChangedAt: string | null;
 }
 
-export function ProfileForm({ profile, avatarSignedUrl, userId }: ProfileFormProps) {
+export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHandle, handleChangedAt }: ProfileFormProps) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   const tOnboarding = useTranslations("onboarding");
@@ -61,6 +79,7 @@ export function ProfileForm({ profile, avatarSignedUrl, userId }: ProfileFormPro
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -68,8 +87,23 @@ export function ProfileForm({ profile, avatarSignedUrl, userId }: ProfileFormPro
       display_name: profile.display_name,
       handle: profile.handle,
       locale: profile.locale,
+      bio: bio ?? "",
+      instagram_handle: instagramHandle ?? "",
     },
   });
+
+  const handleLock = canChangeHandle(
+    handleChangedAt ? new Date(handleChangedAt) : null,
+  );
+  const handleLocked = !handleLock.allowed;
+  const handleUnlockAtLabel = handleLock.unlockAt
+    ? new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(handleLock.unlockAt)
+    : null;
+  const bioValue = watch("bio") ?? "";
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -182,9 +216,52 @@ export function ProfileForm({ profile, avatarSignedUrl, userId }: ProfileFormPro
 
         <div className="space-y-1.5">
           <Label htmlFor="handle">{tOnboarding("handle")}</Label>
-          <Input id="handle" {...register("handle")} />
+          <Input
+            id="handle"
+            {...register("handle")}
+            disabled={handleLocked}
+            aria-describedby={handleLocked ? "handle-lock-note" : undefined}
+          />
+          {handleLocked && handleUnlockAtLabel && (
+            <p
+              id="handle-lock-note"
+              className="text-xs text-muted-foreground"
+              title="핸들은 90일에 한 번 변경할 수 있어요."
+            >
+              핸들은 90일에 한 번 변경할 수 있어요. 다음 변경 가능: {handleUnlockAtLabel}
+            </p>
+          )}
           {errors.handle && (
             <p className="text-xs text-destructive">{errors.handle.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="bio">소개 (최대 200자)</Label>
+          <Textarea
+            id="bio"
+            rows={3}
+            maxLength={200}
+            placeholder="자기소개를 적어보세요"
+            {...register("bio")}
+          />
+          <p className="text-xs text-muted-foreground text-right tabular-nums">
+            {bioValue.length}/200자
+          </p>
+          {errors.bio && (
+            <p className="text-xs text-destructive">{errors.bio.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="instagram_handle">인스타그램 핸들 (선택)</Label>
+          <Input
+            id="instagram_handle"
+            placeholder="yagiworkshop"
+            {...register("instagram_handle")}
+          />
+          {errors.instagram_handle && (
+            <p className="text-xs text-destructive">{errors.instagram_handle.message}</p>
           )}
         </div>
 

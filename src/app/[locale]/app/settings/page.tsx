@@ -27,11 +27,20 @@ export default async function SettingsPage({
         .createSignedUrl(ctx!.profile.avatar_url, 3600);
       avatarSignedUrl = data?.signedUrl ?? null;
     }
+    // G6: fetch extended profile fields (bio, instagram_handle, handle_changed_at)
+    const { data: extended } = await supabase
+      .from("profiles")
+      .select("bio, instagram_handle, handle_changed_at")
+      .eq("id", ctx!.userId)
+      .maybeSingle();
     return (
       <ProfileForm
         profile={ctx!.profile}
         avatarSignedUrl={avatarSignedUrl}
         userId={ctx!.userId}
+        bio={extended?.bio ?? null}
+        instagramHandle={extended?.instagram_handle ?? null}
+        handleChangedAt={extended?.handle_changed_at ?? null}
       />
     );
   }
