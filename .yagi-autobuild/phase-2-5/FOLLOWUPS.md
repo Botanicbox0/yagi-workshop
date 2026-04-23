@@ -271,54 +271,49 @@ RETURN NOT (
 **Registered**: G2 hardening v1 Codex K-05 M2 finding (2026-04-23)
 **Status**: open
 
----
-
-## FU-16 — header-cta-resolver literals → useTranslations
-
-**Trigger**: Post-G3 (before G8 closeout preferred; acceptable to slip to Phase 2.6 polish batch).
-**Risk**: LOW — purely cosmetic/maintainability. Strings match Q2-1 B copy exactly; no user-visible bug. Cost of drift if copy changes later: 4 literal touches in one file vs 4 key updates in `messages/ko.json`.
-**Action**: In `src/components/challenges/header-cta-resolver.tsx`, replace 4 hardcoded literals with `useTranslations("challenges.header_cta")` lookups:
-- `"참여 시작하기"` → `t("no_auth")`
-- `"작품 올리기"` → `t("creator_studio")`
-- `"창작자로 참여하기"` → `t("observer")`  (Q2-1 B value)
-- `"새 챌린지"` → `t("admin")`
-
-Remove the TODO comment block flagged by chrome-author at Group A closeout.
-Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0; re-smoke `/challenges` header in all 4 auth/role states.
-**Owner**: G3 Builder (next session) or Phase 2.6 author.
-**Status**: open
-**Registered**: G3 Group A closeout (2026-04-24)
-**Scope reduction 2026-04-24**: Observer `?next=` path-preservation was folded into Group B closeout (lead inline fix, not deferred). FU-16 now covers *only* the 4 literal→`useTranslations` swaps. File content unchanged apart from the observer branch href update.
 
 ---
 
-## FU-17 — B1 list inline empty-state → consolidate with `<EmptyState>`
+## FU-SCOPES-1 — G0 pre-work: useUserScopes hook + scope resolver (⚠️ BLOCKER for G6 entry)
 
-**Trigger**: Post-G3 (before G8 closeout ideal; acceptable to slip to Phase 2.6).
-**Risk**: LOW — maintainability only. Duplication is one Korean string + a wrapper `<div>`; no runtime bug, no user-visible drift.
-**Background**: In G3 Group B, B1 (list-author) and B2 (detail-author) ran in parallel. B2 authored `src/components/challenges/empty-state.tsx` as the canonical empty-state component. B1 needed an empty state for the "all three sections empty" edge case but could not import B2's component without a cross-group barrier, so B1 inlined a minimal version. yagi approved the duplication in exchange for parallelism (Group B entry decision, 2026-04-24).
-**Action**: In `src/app/challenges/page.tsx`, replace the inline empty block with `<EmptyState variant="no_open" />` imported from `src/components/challenges/empty-state.tsx`. Delete the inline copy. Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0 and the list page still renders the empty branch correctly when all three arrays are empty.
-**Owner**: G3 Builder (next session) or Phase 2.6 author.
-**Status**: open
-**Registered**: G3 Group B entry (2026-04-24)
+**Trigger:** Phase 2.6 G0 pre-work. See `.yagi-autobuild/phase-2-6/SPEC.md` §8 fragility guard.
 
----
+**Status:** ⚠️ BLOCKER — G6 entry verification required.
 
-## FU-18 — Submit form inline toast map → useTranslations
+**Problem:** Phase 2.6 G2 (scope selector) and Phase 2.5 G6 (`/u/[handle]` edit affordance) both need to consume role-gated scope information via a shared hook. If Phase 2.5 G6 ships first with ad-hoc role checks, Phase 2.6 requires retrofitting (3-4h cost).
 
-**Trigger**: Post-G4 or Phase 2.6 polish batch.
-**Risk**: LOW — purely cosmetic/maintainability. Strings are already Korean-only per SPEC §0; no user-visible bug. Cost of drift: 6 literals in one file vs 6 keys in ko.json.
-**Background**: G4 B2 submission-form.tsx used an inline Korean toast map for 6 error codes (unauthenticated / wrong_role / not_open / already_submitted / validation_failed / upload_missing) to avoid adding ko.json keys mid-parallel-spawn. Per-teammate brief explicitly permitted this as TODO.
-**Action**: In `src/components/challenges/submission-form.tsx`:
-- Replace the inline toast map with `const t = useTranslations("challenges.submit.toast")` calls.
-- Add 6 new keys to `messages/ko.json` under `challenges.submit.toast.*`:
-  - `unauthenticated`: "로그인이 필요해요. 다시 시도해주세요."
-  - `wrong_role`: "창작자 계정으로 전환해주세요."
-  - `not_open`: "챌린지가 마감됐어요."
-  - `already_submitted`: "이미 이 챌린지에 작품을 올렸어요."
-  - `validation_failed`: "입력을 확인해주세요."
-  - `upload_missing`: "업로드가 완료되지 않았어요. 다시 시도해주세요."
-- Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0.
-**Owner**: G4 Builder (next session) or Phase 2.6 author.
-**Status**: open
-**Registered**: G4 Group C closeout (2026-04-24)
+**Solution:** Land `useUserScopes` hook + `getUserScopes` server resolver BEFORE G6 first commit. Full spec inline in `.yagi-autobuild/phase-2-5/G6-ENTRY-DECISION-PACKAGE.md` §0.
+
+**Action at G6 entry (Builder):**
+
+```bash
+# Verification step (run FIRST, before any G6 work)
+test -f src/lib/app/scopes.ts && \
+  grep -q "export function getUserScopes" src/lib/app/scopes.ts && \
+  test -f src/lib/app/use-user-scopes.ts && \
+  grep -q "export function useUserScopes" src/lib/app/use-user-scopes.ts
+```
+
+- **EXIT 0** → skip to G6 main tasks.
+- **EXIT non-zero** → execute G0 spec from G6-ENTRY-DECISION-PACKAGE.md §0 FIRST, then G6.
+
+**Telegram on G0 completion:**
+```
+✅ Phase 2.5 G0 (FU-SCOPES-1) SHIPPED — useUserScopes hook + scope resolver landed.
+Proceeding to G6 main tasks.
+```
+
+**Files created by G0:**
+- `src/lib/app/scopes.ts`
+- `src/lib/app/use-user-scopes.ts`
+- `src/app/[locale]/app/layout.tsx` (wrapped with `<UserScopesProvider>`)
+
+**Duration:** 1-1.5h (mini-gate inside Phase 2.5 G5↔G6 window).
+
+**Cross-refs:**
+- Phase 2.6 SPEC.md §8 fragility guard (3-layer)
+- Phase 2.5 G6-ENTRY-DECISION-PACKAGE.md §0 inline spec
+- Phase 2.6 Success Criterion #15 (`useUserScopes` shared across 2.5 G6 + 2.6 G2)
+
+**Registered:** 2026-04-24 (Phase 2.6 v3.1 SPEC authoring)
+**Status:** open (blocker until G6 entry)

@@ -15,7 +15,12 @@ export type NotificationKind =
   | "revision_uploaded"
   | "feedback_received"
   | "thread_message_new"
-  | "team_channel_mention";
+  | "team_channel_mention"
+  // Phase 2.5 G5/G7 — challenge lifecycle notifications
+  | "challenge_submission_confirmed"
+  | "challenge_closing_soon"
+  | "challenge_announced_winner"
+  | "challenge_announced_participant";
 
 export type NotificationSeverity = "high" | "medium" | "low";
 
@@ -31,6 +36,11 @@ export const SEVERITY_BY_KIND: Record<NotificationKind, NotificationSeverity> = 
   feedback_received: "medium",
   thread_message_new: "low",
   team_channel_mention: "low",
+  // Phase 2.5 G5/G7
+  challenge_submission_confirmed: "medium",
+  challenge_closing_soon: "high",
+  challenge_announced_winner: "high",
+  challenge_announced_participant: "medium",
 };
 
 export function severityOf(kind: NotificationKind): NotificationSeverity {

@@ -331,3 +331,244 @@ Cache hit 후 야기가 "이 답변 이 상황엔 적용 안 됨" 피드백을 �
 - 새 pattern 등장 (3+ gate에서 동일 결정 반복) → entry 통합 검토
 
 **Owner:** Builder (append 주체) + 야기 (review 주체) + Web Claude (정합성 검토)
+
+
+---
+
+## 2026-04-24 overnight batch — Phase 2.5 G5~G8 entry packages + Phase 2.6 v3.1 SPEC
+
+Entry packages pre-authored by web Claude. These decisions map 1:1 to the Q-G{N}-{n} questions in each entry package's "Decisions needed" section. Builder applies these on cache HIT at Step 5.
+
+### Q-020: G5 — static submission-requirements form UX
+
+**Asked context:** Phase 2.5 G5 entry package §D, §K Q-G5-1
+**Question:** Adopt static layout per submission type with fold/unfold checkbox, NOT a generic JSONB schema editor?
+**Answer:** YES. Static layout with checkboxes for each type (native_video / image / pdf / youtube_url / text_description), sub-config rendering only when checked. Zod schema validates form → JSONB before INSERT.
+**Applies when:** Any future JSONB-building admin form. Static-with-fold pattern is default, not generic editor.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-021: G5 — judging_config form UX
+
+**Asked context:** G5 entry package §E, §K Q-G5-2
+**Question:** Radio selector (admin_only / public_vote / hybrid) with conditional weight slider (default 70% admin for hybrid)?
+**Answer:** YES. Hybrid default weight 70% admin / 30% public. Slider 0-100, public weight auto-derived.
+**Applies when:** G5 only. New judging modes in Phase 3+ → new decision.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-022: G5 — synchronous fan-out on announce
+
+**Asked context:** G5 entry package §F, §K Q-G5-3
+**Question:** Synchronous notification_events INSERT fan-out (100 rows in one transaction) for winner announce — acceptable at current scale?
+**Answer:** YES. notify-dispatch existing batching handles Resend rate limits. At <500 emails/day peak (current scale), no infra upgrade needed. Phase 2.6+ monitor; queue-based dispatcher if volume >1k/day.
+**Applies when:** All synchronous fan-out patterns at current YAGI scale. Re-evaluate in Phase 3+.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-023: G5 — slug lock after draft
+
+**Asked context:** G5 entry package §C, §K Q-G5-4
+**Question:** Slug editable ONLY while `challenges.state = 'draft'`, read-only after?
+**Answer:** YES. Prevents URL breakage from slug rename after gallery has submissions / social shares. Server Action rejects slug change if state != 'draft'.
+**Applies when:** Any resource with public slug + state machine. Pattern: lock after first non-draft transition.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-024: G5 — state machine reopen transition
+
+**Asked context:** G5 entry package §B, §K Q-G5-5
+**Question:** Allow `closed_judging → open` reopen transition (admin corrective path)?
+**Answer:** YES. Allowed transitions: draft→open, open→closed_judging, closed_judging→{closed_announced, open}, closed_announced→archived. Reopen is rare admin use for corrective actions.
+**Applies when:** G5 only. Additional transitions require new ADR.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-025: G5 — score scale default
+
+**Asked context:** G5 entry package §K Q-G5-6
+**Question:** Per-judgment score scale — 0-10 or 0-100?
+**Answer:** 0-10 for MVP simplicity. Stored in `challenge_judgments.score numeric`. If future challenges need finer granularity, judging_config JSONB can extend with `score_scale` field.
+**Applies when:** G5 only. Score scale expansion in Phase 3+ via judging_config extension.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-026: G6 — G0 pre-work inline execution
+
+**Asked context:** G6 entry package §0, §K Q-G6-1
+**Question:** If Builder finds `src/lib/app/use-user-scopes.ts` missing at G6 entry, execute inline G0 spec automatically?
+**Answer:** YES. Verification + auto-execute + Telegram on G0 ship is the BLOCKER path per GATE_AUTOPILOT G6-specific amendment (2026-04-24). See FU-SCOPES-1.
+**Applies when:** G6 entry specifically. Other gates don't have this pattern.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-027: G6 — locale-free /u/[handle] route
+
+**Asked context:** G6 entry package §B, §K Q-G6-2
+**Question:** `/u/[handle]` NOT under `[locale]`, mirroring `/showcase/[slug]` pattern?
+**Answer:** YES. Handles are global identifiers, not locale-scoped. Middleware matcher excludes `u` from locale redirect.
+**Applies when:** Any future globally-scoped public surface (e.g., share links). Locale-free routes require middleware exclusion.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-028: G6 — Observer profile role badge
+
+**Asked context:** G6 entry package §C, §K Q-G6-3
+**Question:** Render role badge for Observer profile?
+**Answer:** NO. Observer profile is minimal by design — no public role display. Creator / Studio get badges; Observer bare.
+**Applies when:** Profile display for ProfileRole = observer. Consistent across any profile-display surface.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-029: G6 — no handle_holds table for squatter protection
+
+**Asked context:** G6 entry package §D, §K Q-G6-4
+**Question:** Skip `handle_holds` table? 90-day self-lock (profiles.handle_changed_at) sufficient?
+**Answer:** YES. At current user scale, squatting isn't a real risk. 90-day self-lock prevents impulsive changes. Phase 3+ revisit if squatting observed.
+**Applies when:** Handle lifecycle decisions. Hold-table is premature optimization at current scale.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-030: G6 — react-image-crop dependency
+
+**Asked context:** G6 entry package §E, §K Q-G6-5
+**Question:** Add `react-image-crop` dep (~30KB gzip) for avatar crop UI?
+**Answer:** YES. Hand-rolling canvas crop UI with drag handles is non-trivial. `react-image-crop` is small, maintained, accessible.
+**Applies when:** Avatar crop + any future image crop needs (e.g., hero upload).
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-031: G6 — external links as {label, url} objects
+
+**Asked context:** G6 entry package §F, §K Q-G6-6
+**Question:** Store `profiles.external_links jsonb` as `[{label, url}]` objects vs plain URL array?
+**Answer:** YES ({label, url}). Labels improve UX — users can annotate "Portfolio" / "Instagram" / "YouTube" without visitors parsing domain names.
+**Applies when:** Any user-configurable external link field. Same shape convention.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-032: G6 — role switch UI deferred
+
+**Asked context:** G6 entry package §I, §K Q-G6-7
+**Question:** Defer role switch UI (Observer → Creator/Studio upgrade, Creator ↔ Studio) to Phase 2.6+ BACKLOG?
+**Answer:** YES. Role switch has cascading effects (RLS, UI surface). Separate page to avoid accidental-click. MVP: manual SQL Editor by 야기.
+**Applies when:** Role switch decisions. Not G6 scope.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-033: G7 — 4 new notification kinds + severity
+
+**Asked context:** G7 entry package §A, §J Q-G7-1
+**Question:** Auto-adopt `challenge_submission_confirmed` (medium), `challenge_closing_soon` (high), `challenge_announced_winner` (high), `challenge_announced_participant` (medium)?
+**Answer:** YES. Mirrors Phase 2.5 SPEC §3 G7 Task 1 literal. High severity bypasses digest batching (fires immediately per Phase 1.8 behavior).
+**Applies when:** G7 kinds registration.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-034: G7 — Korean + English notification copy
+
+**Asked context:** G7 entry package §B, §J Q-G7-2
+**Question:** Adopt bilingual notification copy per G3 tone rules (no "제출", use "작품", "주인공" for winner)?
+**Answer:** YES. Copy follows G3 tone principle (creator-centric, action-driven, emotional). Korean primary, English parity.
+**Applies when:** All new notification kinds going forward.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-035: G7 — inline email templates in notify-dispatch (log as debt)
+
+**Asked context:** G7 entry package §C, §J Q-G7-3
+**Question:** Add inline template strings in notify-dispatch/index.ts (not React Email pipeline), log as tech debt FU?
+**Answer:** YES. Deno runtime constraint makes React Email pipeline infeasible without larger refactor (Phase 3+). Log tech debt for future unification.
+**Applies when:** All new notification kinds until React Email / Deno pipeline unified.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-036: G7 — pg_cron migration path
+
+**Asked context:** G7 entry package §D, §J Q-G7-4
+**Question:** Attempt `cron.schedule()` via Supabase CLI migration, fallback to manual SQL Editor if migration fails?
+**Answer:** YES. First try migration (first cron.schedule in codebase). If fails → manual dashboard SQL Editor + document in CLOSEOUT. Log as FU candidate for migration-compatible cron pattern.
+**Applies when:** New pg_cron jobs going forward.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-037: G7 — locale-aware body rendering in notify-dispatch
+
+**Asked context:** G7 entry package §D, §J Q-G7-5
+**Question:** Cron INSERT blank title/body, notify-dispatch reads profile.locale and renders localized? Cleaner than hardcoding Korean in cron.
+**Answer:** YES. notify-dispatch is the single rendering layer. Cron inserts structural data (kind, payload, url_path), dispatch renders per locale.
+**Applies when:** All pg_cron-emitted notifications going forward.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-038: G7 — challenge_updates_enabled gates email only
+
+**Asked context:** G7 entry package §E, §J Q-G7-6
+**Question:** Preference flag `challenge_updates_enabled=false` suppresses email dispatch only, in-app row still inserted?
+**Answer:** YES. Preserves notification bell visibility for users who want in-app but not email. Consistent with Phase 1.8 existing pattern.
+**Applies when:** All notification preferences gates. In-app always inserted; email/push gated.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-039: G7 — 2-browser realtime smoke as manual QA
+
+**Asked context:** G7 entry package §G, §J Q-G7-7
+**Question:** Document 2-browser realtime smoke in YAGI-MANUAL-QA-QUEUE.md, not blocking G7 ship?
+**Answer:** YES. Manual QA runs async. Not a Builder-automatable test. Queue entry documents procedure + expected behavior.
+**Applies when:** Any realtime subscription smoke test at Builder level. Delegate to manual QA queue.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-040: G8 — Codex K-05 focus areas
+
+**Asked context:** G8 entry package §A, §K Q-G8-1
+**Question:** Run Codex K-05 with focus prompt: "RLS enforcement, JSONB validation, state-machine bypass, realtime fan-out correctness, cron idempotency, notification rate-limiting, avatar upload security"?
+**Answer:** YES. Focus list matches SPEC §2 success criteria + major new infra. Codex decides severity per findings.
+**Applies when:** G8 Codex invocation.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-041: G8 — HIGH-B/C auto-defer to Phase 2.6
+
+**Asked context:** G8 entry package §A triage, §K Q-G8-2
+**Question:** Auto-defer HIGH-B/C findings (theoretical defense-in-depth) to Phase 2.6 security sweep (FU-8/9/11/13), not inline fix?
+**Answer:** YES. Per CODEX_TRIAGE + existing Phase 2.6 FU plan. HIGH-A (exploitable today) still halts; HIGH-B/C batched to sweep.
+**Applies when:** All G8 Codex triage decisions. HIGH-A = inline, HIGH-B/C = defer.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-042: G8 — bulk contracts.md update acceptable
+
+**Asked context:** G8 entry package §D, §K Q-G8-3
+**Question:** Accept bulk Phase 2.5 section addition to contracts.md at G8 (drift remediation), file FU-PROCESS-1 for pre-commit hook enforcement going forward?
+**Answer:** YES. Bulk update + process-level fix (pre-commit hook in Phase 2.6+) prevents future drift.
+**Applies when:** Any cross-phase contract drift remediation.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-043: G8 — first-admin seed backfill migration
+
+**Asked context:** G8 entry package §E, §K Q-G8-4
+**Question:** File backfill seed migration for yagi_admin role (idempotent, no-op if already seeded manually)?
+**Answer:** YES. ON CONFLICT DO NOTHING makes it safe. Formalized for fresh-DB-reset reproducibility.
+**Applies when:** Any role seed decisions.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-044: G8 — fast-forward worktree merge to main
+
+**Asked context:** G8 entry package §F, §K Q-G8-5
+**Question:** Merge worktree branch → main via fast-forward (linear history), else merge commit?
+**Answer:** YES. FF if possible. No parallel main writes during Phase 2.5 should make FF feasible. Fallback: merge commit if conflict.
+**Applies when:** All worktree → main merge decisions.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch
+
+### Q-045: G8 — file ADR-010 at G8 cross-phase tidy
+
+**Asked context:** G8 entry package §J, §K Q-G8-6
+**Question:** File ADR-010 (Sidebar IA grouping) in docs/design/DECISIONS.md during G8?
+**Answer:** Already filed by web Claude 2026-04-24 (pre-G8). G8 Builder just verifies existence, no action needed. If missing, Builder writes.
+**Applies when:** Cross-phase ADR landing decisions. Web Claude can pre-author ADRs during SPEC phase.
+**Confidence:** HIGH
+**Registered:** 2026-04-24 overnight batch

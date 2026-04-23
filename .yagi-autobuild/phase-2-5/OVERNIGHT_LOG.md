@@ -16,5 +16,34 @@
 - R2 CORS + Lifecycle applied via Cloudflare HTTP API, verified via GET.
 - Follow-ups: FU-18 (toast i18n) + Q-G4-C1 (manual QA 400MB upload).
 - Detail: `.yagi-autobuild/phase-2-5/G4_CLOSEOUT.md`
+- Telegram: msg #56 sent.
 
 ---
+
+## G5 — IN PROGRESS (entry 2026-04-24 ~03:00 KST)
+
+Batch decisions applied: Q1-5=yes, Q6=0-10 → DECISIONS_CACHE Q-020 through Q-025 appended.
+
+Task partitioning (6 teammates across 2 groups):
+
+**Group A (3 parallel):**
+- A1: `src/lib/challenges/state-machine.ts` (Haiku) — transition table + isValidTransition
+- A2: `src/app/[locale]/app/admin/challenges/page.tsx` (Haiku) — list + state filter
+- A3: `src/components/admin/challenges/submission-requirements-builder.tsx` + `judging-config-builder.tsx` (Sonnet) — form composers
+
+**Group B (3 parallel, depends on A):**
+- B1: `new/page.tsx` + `[slug]/edit/page.tsx` + `actions.ts` create/update (Sonnet)
+- B2: `[slug]/judge/page.tsx` + judgment action (Sonnet)
+- B3: `[slug]/announce/page.tsx` + announce action + notification fan-out (Sonnet)
+
+No DB writes. No Codex K-05 pre-apply (per ADR-005). Phase 2.5 G8 runs single consolidated K-05.
+
+---
+
+## G5 — SHIPPED (2026-04-24)
+
+- 5 admin routes + 4 Server Actions + 2 form builders + state machine + 4 notification kinds preregistered
+- 6 teammates across A/B groups. Lead fixes: A2 false-completion recovery + §J sweep (3 admin files, 7 strings)
+- Barrier: tsc/lint/build EXIT=0, §J + DS clean
+- DECISIONS_CACHE: Q-020 through Q-025 appended
+- Detail: `.yagi-autobuild/phase-2-5/G5_CLOSEOUT.md`
