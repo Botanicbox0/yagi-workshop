@@ -84,3 +84,35 @@ After Yagi picks A/B/C:
 ## Suggested first action
 
 > `GO C` — proceed to Phase 2.5 G1 kickoff per SPEC v2. Builder runs G1 (DB migration) autonomously with MCP apply_migration, commits atomically, reports at G1 exit criterion check (supabase db reset equivalent + RLS spot-test). Estimated time-to-G1-complete: ~2-3h.
+
+---
+
+## UPDATE — Codex K-05 GO-B verification (HARD STOP #4)
+
+**Date:** 2026-04-23 (same session, post-GO-A request)
+
+野기's `GO A` request ran Codex on the 5 Phase 2.5 revision commits. Verdict: **HIGH.** Details in `.yagi-autobuild/phase-2-5/G0_CODEX_REVIEW.md`.
+
+### Findings summary
+
+- **HIGH-1** — `src/app/s/[token]/page.tsx` retoken incomplete. 11 active hardcodes remain (`bg-white`/`text-black`/`bg-green-100`/`text-green-700`). My initial regex caught `bg-black`/`text-white` but missed inverse patterns + file-local status badge. Same file, same work, 15 min to close.
+- **MED-1** — 3 anchors on `s/[token]/page.tsx` missing `focus-visible:ring-ring` trio. 5 min.
+- **MED-2** — SPEC v2 internal: §624 references `profiles.handle_changed_at` but G1 Task 1 ALTER didn't add the column. 2-line SPEC edit + matching G1 column.
+
+### What passed
+
+- Status-pill helper: **CLEAN** (exemplar adoption solid, `challenge` kind matches SPEC exactly, Tailwind + globals correctly wired).
+- Share components retoken: clean (regex audit 3 of 4 returned zero hits — only color-scale audit found the 11 residuals on the page.tsx file, not the components).
+- SPEC v2 C1/C2/C3/C4 + H7/H8/H9: all aligned correctly with G1-G7.
+
+### Per kickoff rule: STOP
+
+야기's kickoff explicitly: "Codex HIGH → STOP + Telegram + WIP commit." No autonomous fix attempt.
+
+### Resume options
+
+- **GO fix-all** (~25 min including Codex re-verify) — Builder recommendation. Closes HIGH-1 + MED-1 + MED-2 and re-runs Codex. On CLEAN → G1.
+- **GO fix-HIGH-only** (~15 min) — close HIGH-1 only; MED-1/MED-2 roll to Phase 2.5 G8 Codex pass.
+- **GO G1-anyway** — overrule Codex. Risk: G3 Precondition formally unmet; residual hardcodes clean up when G3 starts.
+
+Pushed: `665b065..<new>` (this brief update + `G0_CODEX_REVIEW.md`). Working tree otherwise clean.
