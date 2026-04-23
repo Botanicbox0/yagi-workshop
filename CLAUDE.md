@@ -33,6 +33,102 @@ Domain: studio.yagiworkshop.xyz. Deployment: Vercel.
 9. RLS: write policies assuming malicious users. Test each policy with anon query.
 10. Styling: Phase 1.0.6 design tokens. White bg, black text, pill CTAs, Fraunces italic for emphasis. Keep-all for Korean. NEVER use warm tones (no cognac, no bone).
 
+## Database write protocol (non-negotiable)
+
+Applies to any operation that writes to the linked Supabase project
+(`supabase db push --linked`, `mcp apply_migration`, or manual SQL against
+the live DB).
+
+**Core principle:** Dual-model review (Claude Code + Codex K-05) is the
+safety layer, not a manual kill-switch. Builder executes the full
+migration lifecycle autonomously when Codex returns CLEAN. yagi
+intervention is reserved for cases where the taxonomy in
+`.yagi-autobuild/CODEX_TRIAGE.md` does not cleanly resolve the finding.
+
+### 1. Codex K-05 adversarial review is mandatory before every prod DB write
+
+Before the first `supabase db push --linked` or `mcp apply_migration`
+call on any new migration/RPC/policy, Builder MUST:
+
+- [ ] Run `/codex:adversarial-review --base main --background <prompt>`.
+- [ ] Prompt follows `.yagi-autobuild/CODEX_PROMPT_TEMPLATE.md` format
+      (Focus Areas by Gate Type + Already-deferred block mandatory).
+- [ ] Triage every finding per `.yagi-autobuild/CODEX_TRIAGE.md`.
+
+No exceptions. RLS/grants/SECURITY DEFINER changes are never small, and
+Codex is the only systemic reviewer that is not Claude Code. Skipping
+Codex is the single largest regression risk in this stack.
+
+### 2. Composite review when main + hardening are unapplied
+
+If main migration is local-only (not yet pushed to prod) and hardening
+is being authored in response to prior Codex findings:
+
+- Treat main + hardening as a single composite migration state.
+- Run Codex K-05 once on the composite, not separately.
+- Push all files together in one `supabase db push` batch. Migration
+  chain stays linear, no revert needed.
+
+This is G2's pattern. G1's `apply → hardening v1 apply → hardening v2
+apply` three-stage chain was necessary because main was already in prod
+when findings surfaced; don't default to that chain if you can avoid it.
+
+### 3. Verdict → action (fully autonomous)
+
+Builder decides apply/hold/escalate based on Codex verdict alone, per
+CODEX_TRIAGE.md. Quick reference:
+
+| Verdict | Action |
+|---|---|
+| **CLEAN** | Apply immediately. Then verify (§5). Then commit + push + Telegram. |
+| **MEDIUM_ONLY**, all findings in {MED-A, MED-B} | Builder fixes or defers per category, re-runs Codex, applies on CLEAN. |
+| **Any HIGH-A / MED-A / LOW-A** (auto-fixable) | Fix inline, re-run Codex. Max 2 auto-fix cycles. |
+| **Any HIGH-B, HIGH-C, MED-C, LOW-C** (non-auto) | STOP + Telegram yagi with finding + proposed fix. |
+| **Taxonomy mismatch** (finding doesn't fit any category) | STOP + Telegram yagi + web Claude. |
+| **2nd consecutive auto-fix cycle fails** | STOP + Telegram yagi. The finding is structurally deeper than the pattern. |
+
+yagi Telegram escalation is the exception path, not the default path.
+The goal of this protocol is that Builder completes `migration authored
+→ Codex → apply → verify → commit → push → Telegram summary` without
+yagi intervention when the taxonomy resolves cleanly.
+
+### 4. SPEC drift halt (separate from Codex)
+
+If, while authoring a migration, Builder discovers that a field/table/
+policy conflicts with an already-written downstream SPEC clause
+(cross-gate or cross-phase), halt and escalate regardless of Codex
+status. SPEC drift is not a Codex concern — it is a product/scope
+concern. Amend SPEC first, then resume migration.
+
+### 5. Post-apply verification
+
+After successful apply:
+
+- [ ] `mcp get_advisors(security)` — no new warnings
+- [ ] `mcp get_advisors(performance)` — no regressions
+- [ ] Smoke-test new RPCs via a live query (at minimum: auth NULL path,
+      happy path, primary error path)
+- [ ] Commit migration file(s) + any related app-layer changes
+- [ ] Push to origin/main
+- [ ] Telegram yagi with verdict summary, apply ID, deferred FU numbers
+
+Deferred findings (MED-B, LOW-C) get appended to the phase's
+`FOLLOWUPS.md` with `Trigger / Risk / Action / Owner / Status / Registered`
+fields before Telegram dispatch.
+
+### 6. yagi-initiated halt
+
+yagi retains the ability to halt the chain at any point via Telegram
+`abort` or `hold`. This is always respected. If received during an
+in-flight Codex review, Builder finishes Codex (cheap to complete) but
+does not apply. If received post-apply, Builder does not revert
+automatically — yagi decides revert vs forward-fix.
+
+Supporting docs: `.yagi-autobuild/CODEX_TRIAGE.md`,
+`.yagi-autobuild/CODEX_PROMPT_TEMPLATE.md`,
+`.yagi-autobuild/codex-review-protocol.md`,
+`.yagi-autobuild/GATE_AUTOPILOT.md`.
+
 ## File conventions
 - Component files: kebab-case (`workspace-switcher.tsx`)
 - Server Actions: in `src/app/**/actions.ts`
