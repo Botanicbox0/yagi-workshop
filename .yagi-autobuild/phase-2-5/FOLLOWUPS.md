@@ -197,6 +197,32 @@ Grant SELECT to `anon` + `authenticated`. G3/G6 Server Actions + RSC queries que
 
 ---
 
+## FU-12 — service-role backfill path (future historical import)
+
+**Trigger**: Any future migration that needs to backfill historical `challenge_submissions` rows with a non-`now()` `created_at` (e.g., M&A imports, data recovery, cross-env replication).
+**Risk**: Phase 2.5 G1 hardening v2 §2 moved `created_at` immutability enforcement to the head of the `tg_challenge_submissions_guard_self_mutation` trigger, applying to ALL roles. Triggers are NOT RLS-bypassable, so service_role INSERTs with arbitrary `created_at` will be silently swallowed by the trigger on any subsequent UPDATE, and backfills that rely on UPDATE paths will be blocked.
+
+**Action required at backfill design time**: Use the standard PostgreSQL pattern to scope trigger suspension to the migration:
+
+```sql
+-- Option A (surgical, per-table)
+ALTER TABLE public.challenge_submissions DISABLE TRIGGER tg_challenge_submissions_guard_self_mutation;
+-- ... backfill UPDATE statements ...
+ALTER TABLE public.challenge_submissions ENABLE TRIGGER tg_challenge_submissions_guard_self_mutation;
+
+-- Option B (session-scoped, bypass all user triggers)
+SET session_replication_role = replica;
+-- ... backfill statements ...
+SET session_replication_role = origin;
+```
+
+Document the exact pattern + review scope at backfill design time. INSERT paths with explicit `created_at` at row-creation time are unaffected — the trigger only fires on UPDATE.
+
+**Owner**: deferred (no backfill scenario in Phase 2.5 launch scope)
+**Status**: open
+
+---
+
 ## FU-7 — Cron job seed migration (Phase 2.2 or 2.6)
 
 **Trigger**: First Phase 2.x infra-consolidation sprint
