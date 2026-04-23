@@ -1,9 +1,11 @@
 # Phase 2.1 G7 — Codex K-05 Adversarial Review
 
-**Date:** 2026-04-23 (overnight autopilot)
+**Date:** 2026-04-23 (overnight autopilot → 2nd pass post-wake)
 **Reviewer:** Codex K-05 (gpt-5.4-mini, high reasoning) via codex:codex-rescue subagent
-**Commit range reviewed:** `4bf7591..8d34210` (12 commits; middleware fix `5855dd0` included)
-**Verdict:** ❌ **HIGH** — Phase 2.1 NOT safe to close out until H1 resolved.
+**Pass 1 commit range:** `4bf7591..8d34210` (12 commits; middleware fix `5855dd0` included)
+**Pass 2 focused diff:** `638ad43` (H1 + M1 patches)
+**Pass 1 verdict:** ❌ HIGH (H1 + M1 + L1).
+**Pass 2 verdict:** ❌ **HIGH (PARTIAL)** — M1 RESOLVED, H1 PARTIAL_RESOLUTION. Phase 2.1 still NOT safe to close out.
 
 ---
 
@@ -146,3 +148,79 @@ Accept H1 remediation as the first task of a fresh session; Phase 2.5 entry read
 - `supabase/migrations/20260423020000_h1_preprod_realtime_publication.sql` (idempotency wrapper)
 
 No new migrations; no RPC re-apply; no types regen.
+
+---
+
+## Pass 2 — applied + re-reviewed (commit `638ad43`)
+
+Applied per Pass 1 §H1 fix sketch + 야기 additional requirement (normalize
+`0:0:0:0:0:ffff:` full-form prefix before regex match). M1 idempotency wrapper
+also applied.
+
+### Pass 2 verdict: ❌ HIGH (PARTIAL_RESOLUTION)
+
+Codex summary: "M1 resolved and can be signed off. H1 remains PARTIAL: the
+patch correctly handles the two originally flagged forms (compressed
+`::ffff:` and the exact `0:0:0:0:0:ffff:` full-form), but mixed-compression
+and zero-padded IPv4-mapped representations remain unguarded, constituting a
+concrete exploitable bypass path."
+
+### Pass 2 [H1] residual gap
+
+Text-regex normalization in `isPrivateIPv6()` catches exactly two textual
+prefixes (`::ffff:` and `0:0:0:0:0:ffff:`) but MISSES:
+
+- Mixed-compression: `0:0:0:0::ffff:7f00:1` (same address as
+  `::ffff:7f00:1`, different text).
+- Zero-padded full form: `0000:0000:0000:0000:0000:ffff:7f00:1`.
+- Various other RFC 5952 compression-permitted variants.
+
+Reachability — real vs theoretical:
+- `new URL("http://[...]").hostname` canonicalizes IPv6 per WHATWG spec
+  → in practice, non-canonical forms are normalized to compressed
+  form BEFORE reaching `isPrivateIPv6()`. Our regex then matches.
+- `dns.lookup()` return values come from libc and are usually canonical
+  on modern resolvers, but NOT guaranteed across all OS + config combos.
+
+Codex grades it HIGH on defense-in-depth grounds — "text-regex can
+always miss a variant" is a category-level design flaw.
+
+### Pass 2 [L1] sync-comment asymmetry
+
+`og-unfurl.ts` has the inline "keep in sync" comment inside the function
+body; `og-video-unfurl.ts` only has the file-header banner. Minor.
+
+### Pass 2 [M1] verification — FULLY RESOLVED
+
+Both DO blocks correctly gate their `ALTER PUBLICATION ... ADD TABLE` with
+a `pg_publication_tables` existence check. Re-apply is a no-op; clean-clone
+applies both tables on first run. No SQL-level bugs in the DO scope.
+
+## Current state → awaiting 야기 decision
+
+Phase 2.1 still **cannot close out** (H1 open). Remediation options:
+
+**Option A — proper binary IPv6 parser (~30-40 lines, 0 deps, recommended).**
+Parse IPv6 textual form to a 128-bit byte representation (16 bytes via
+`net.isIPv6()` validation + manual expansion of `::` compression), extract
+the low 32 bits, and feed to `isPrivateIPv4()` via the dotted-quad form.
+Covers ALL RFC 5952 variants by construction. Ends the "text-regex whack-a-mole"
+cycle that Pass 2 Codex flagged.
+
+**Option B — expand normalization regex (5-10 lines).**
+Add more `.replace(...)` patterns for common uncompressed / zero-padded
+variants. Faster but each subsequent Codex pass may find another variant.
+Not recommended.
+
+**Option C — WONTFIX + documentation.**
+Declare that `new URL()` + `dns.lookup()` canonicalization in the normal
+request path makes the residual text forms unreachable in practice. Overrule
+Codex's theoretical-completeness verdict on reachability grounds. Not
+recommended — defense-in-depth rule says harden the classifier, not trust
+upstream normalization.
+
+**Builder recommendation: A.** Ends the cycle. ~30 lines. No deps. Next
+Codex pass will be CLEAN on this surface.
+
+Phase 2.5 launchpad + build REMAIN SKIPPED per hard-stop #10 (Phase 2.1
+closeout still not achieved after Pass 2).

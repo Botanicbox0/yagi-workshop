@@ -86,14 +86,14 @@ c27fb26  docs(phase-2-1): G6 QA_SMOKE — initial (pre-fix)
 
 ## Carryovers for next session
 
-### Blocking (before Phase 2.1 can ship)
+### Blocking (before Phase 2.1 can ship) — **updated post-Pass-2**
 
-1. **[H1]** Patch `isPrivateIPv6()` in BOTH `og-unfurl.ts` and `og-video-unfurl.ts` to handle hex-form IPv4-mapped IPv6 (e.g. `::ffff:7f00:1`). Fix sketch in `G7_CODEX_REVIEW.md` §H1. Recommended as Option A in that doc.
-2. **Re-run Codex K-05** on the focused patch diff to confirm CLEAN/LOW-only.
+1. **[H1 — Pass 2 still open]** Text-regex normalization in `isPrivateIPv6()` covers two textual prefixes but misses mixed-compression (`0:0:0:0::ffff:*`) and zero-padded (`0000:0000:...`) IPv4-mapped variants. Proper fix is a ~30-40 line binary IPv6 parser (Option A in `G7_CODEX_REVIEW.md` Pass 2 section). No deps, ends regex whack-a-mole.
+2. **Re-run Codex K-05** after Option A patch.
 
 ### Non-blocking (can ship with Phase 2.1 if done in same session)
 
-3. **[M1]** Add `DO $$ IF NOT EXISTS ... END $$` idempotency wrapper to `supabase/migrations/20260423020000_h1_preprod_realtime_publication.sql`. No live re-apply needed — clean-clone reproducibility fix only.
+3. ~~**[M1]** Publication migration idempotency wrapper.~~ ✅ RESOLVED in commit `638ad43` — confirmed by Pass 2 Codex.
 
 ### Infra TODOs (Phase 2.2 or later)
 

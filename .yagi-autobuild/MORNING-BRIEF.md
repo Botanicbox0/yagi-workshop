@@ -1,7 +1,7 @@
 # Overnight autopilot brief — 2026-04-23 (hard-stop)
 
 ## TL;DR
-**PAUSED_AT_G7_CODEX_HIGH** — Phase 2.1 is one ~10-line SSRF patch + one idempotency wrapper + one Codex re-run away from shipping. Phase 2.5 SKIPPED (hard-stop protocol blocks it until 2.1 is green). 14 commits pushed, nothing broken in production.
+**PAUSED_AT_G7_CODEX_HIGH_PASS_2** — Pass 1 fix (hex-form IPv6 + full-form prefix) landed cleanly; M1 migration idempotency RESOLVED. But Codex Pass 2 flagged a category-level gap: text-regex normalization still misses mixed-compression and zero-padded IPv4-mapped IPv6 forms. Proper fix = 30-40 line binary IPv6 parser (no deps). 16 commits pushed, nothing broken in production. Phase 2.5 still SKIPPED.
 
 ## Phase 2.1
 - Status: **PAUSED** at Gate 4 / G7 (Codex K-05).
@@ -16,12 +16,15 @@
 - Launchpad X1-X4 (design audit / SPEC review / pre-flight / ADR-006): NOT RUN.
 - 10 success criteria: 0 evaluated.
 
-## Yagi TODOs on wake (ordered)
+## Yagi TODOs on wake (ordered) — **updated post-Pass-2**
 
-1. **Read** `.yagi-autobuild/phase-2-1/G7_CODEX_REVIEW.md` §H1 (30 sec — the exploit class: `::ffff:7f00:1` bypasses private-IP classifier).
-2. **Approve or edit** the H1 fix sketch at the bottom of that file (~10 lines, same patch in `og-unfurl.ts` and `og-video-unfurl.ts` per "keep in sync" rule).
-3. **Give Builder a GO** to apply the H1 + M1 patches + re-run Codex K-05. Expected time: 30-45 min.
-4. **After Codex CLEAN:** auto-resume overnight plan from Phase 2.1 G8 closeout → Phase 2.5 launchpad → Phase 2.5 G1-G8 build. No decisions required mid-stream unless another hard-stop triggers.
+1. **Read** `.yagi-autobuild/phase-2-1/G7_CODEX_REVIEW.md` §"Pass 2" section (60 sec — residual gap is mixed-compression + zero-padded IPv4-mapped IPv6).
+2. **Pick remediation:**
+   - **Option A (recommended)** — 30-40 line binary IPv6 parser in both `og-unfurl.ts` + `og-video-unfurl.ts`. Parses textual form → 16-byte representation → extracts low 32 bits → feeds `isPrivateIPv4`. Ends regex whack-a-mole; CLEAN on next Codex.
+   - **Option B** — expand normalization regex with more `.replace()` variants. Fast but not exhaustive; subsequent Codex may still find variants.
+   - **Option C** — WONTFIX + doc. Overrule Codex on reachability (normal request path via `new URL()` canonicalizes). Not recommended for defense-in-depth.
+3. **Give Builder GO <option>** → patch + re-Codex (ETA ~45 min for A).
+4. **After Codex CLEAN:** resume original overnight chain — G8 closeout → Phase 2.5 launchpad → Phase 2.5 G1-G8 build.
 5. **Independent of 1-4:** when convenient, run the 7 manual QA items from `YAGI-MANUAL-QA-QUEUE.md`. None block Phase 2.1 ship.
 
 ## Design-audit highlights (Phase 2.5 launchpad X1)
@@ -36,13 +39,15 @@
 
 **NOT RUN** — same gate. (Phase 2.5 SPEC is committed and ready; `.yagi-autobuild/phase-2-5/SPEC.md`, `.yagi-autobuild/gates/phase-2-5/CEO_APPROVED.md`.)
 
-## Codex findings in one screen
+## Codex findings in one screen — **updated post-Pass-2**
 
-| Severity | File | Class | Fix size |
+| Pass | Severity | Issue | Status |
 |---|---|---|---|
-| HIGH | `src/lib/og-video-unfurl.ts` + `src/lib/og-unfurl.ts` | SSRF classifier bypass — hex-form IPv4-mapped IPv6 falls through as public | ~10 lines, both files |
-| MEDIUM | `supabase/migrations/20260423020000_h1_preprod_realtime_publication.sql` | Not idempotent on re-apply (bare `ALTER PUBLICATION`) | ~10 lines, DO $$ wrapper |
-| LOW | schema_migrations verification | Unverifiable from repo alone | Builder verified via SQL — all 3 migrations registered at correct versions |
+| 1 | HIGH | `isPrivateIPv6()` misses hex-form IPv4-mapped IPv6 (`::ffff:7f00:1`) | Partially patched in `638ad43` — covers hex + full-form `0:0:0:0:0:ffff:` but NOT mixed-compression (`0:0:0:0::ffff:`) or zero-padded (`0000:0000:...`) variants. Pass 2 still HIGH. |
+| 1 | MEDIUM | M1 publication migration not idempotent | ✅ RESOLVED in `638ad43` (DO $$ IF NOT EXISTS guards). |
+| 1 | LOW | schema_migrations unverifiable | ✅ RESOLVED by builder SQL query. |
+| 2 | HIGH | H1 residual — text-regex whack-a-mole; need binary IPv6 parser | **OPEN — awaiting decision.** |
+| 2 | LOW | `og-video-unfurl.ts` missing inline sync comment | minor, tag-along fix with A. |
 
 ## Things that went RIGHT (for momentum)
 
@@ -55,4 +60,4 @@
 
 ## Suggested first action
 
-> Open `.yagi-autobuild/phase-2-1/G7_CODEX_REVIEW.md` and reply with `GO H1+M1` (or `GO H1 only`). Builder applies the patch + re-runs Codex; if CLEAN, the rest of the overnight plan auto-resumes. ETA to Phase 2.5 G1 start: ~45 min from your GO.
+> Open `.yagi-autobuild/phase-2-1/G7_CODEX_REVIEW.md` §"Pass 2" (60-sec read). Reply `GO A` (binary IPv6 parser, recommended), `GO B` (wider regex), or `GO C` (WONTFIX). Builder applies + re-runs Codex; on CLEAN, the overnight chain auto-resumes. ETA to Phase 2.5 G1 start: ~45 min from your GO.
