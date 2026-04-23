@@ -53,7 +53,7 @@ async function NoLongerShared({ locale }: { locale: "ko" | "en" }) {
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className="text-center space-y-3">
         <p className="text-lg font-semibold text-black">{t("no_longer_shared")}</p>
-        <p className="text-sm text-gray-500">yagiworkshop.xyz</p>
+        <p className="text-sm text-muted-foreground">yagiworkshop.xyz</p>
       </div>
     </div>
   );
@@ -75,7 +75,7 @@ function FrameMedia({
       <img
         src={mediaUrl}
         alt={frame.caption ?? ""}
-        className="w-full rounded-xl object-contain max-h-[600px]"
+        className="w-full rounded-lg object-contain max-h-[600px]"
       />
     );
   }
@@ -83,7 +83,7 @@ function FrameMedia({
   if (frame.media_type === "video_upload") {
     if (!mediaUrl) return null;
     return (
-      <video src={mediaUrl} controls className="w-full rounded-xl max-h-[600px]" />
+      <video src={mediaUrl} controls className="w-full rounded-lg max-h-[600px]" />
     );
   }
 
@@ -98,7 +98,7 @@ function FrameMedia({
         .replace("watch?v=", "embed/")
         .replace("youtu.be/", "www.youtube.com/embed/");
       return (
-        <div className="relative w-full overflow-hidden rounded-xl" style={{ paddingTop: "56.25%" }}>
+        <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingTop: "56.25%" }}>
           <iframe
             src={embedUrl}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -112,7 +112,7 @@ function FrameMedia({
     if (provider === "vimeo") {
       const videoId = externalUrl.split("/").pop();
       return (
-        <div className="relative w-full overflow-hidden rounded-xl" style={{ paddingTop: "56.25%" }}>
+        <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingTop: "56.25%" }}>
           <iframe
             src={`https://player.vimeo.com/video/${videoId}`}
             allow="autoplay; fullscreen; picture-in-picture"
@@ -126,12 +126,12 @@ function FrameMedia({
     // TikTok / Instagram / other: show thumbnail + link
     const thumbUrl = frame.thumbnail_path ? mediaUrl : undefined;
     return (
-      <div className="relative w-full rounded-xl overflow-hidden bg-gray-100">
+      <div className="relative w-full rounded-lg overflow-hidden bg-muted">
         {thumbUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={thumbUrl} alt="" className="w-full object-cover max-h-[400px]" />
         ) : (
-          <div className="flex h-40 items-center justify-center text-gray-400 text-sm">
+          <div className="flex h-40 items-center justify-center text-muted-foreground text-sm">
             {provider ?? "video"}
           </div>
         )}
@@ -141,7 +141,7 @@ function FrameMedia({
           rel="noopener noreferrer"
           className="absolute inset-0 flex items-end p-3"
         >
-          <span className="rounded-full bg-black/70 px-3 py-1 text-xs text-white backdrop-blur-sm">
+          <span className="rounded-full bg-foreground/70 px-3 py-1 text-xs text-background backdrop-blur-sm">
             Open on {provider ?? "external site"} →
           </span>
         </a>
@@ -180,7 +180,7 @@ function ReferenceThumbnails({
         return (
           <div
             key={ref.id}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-100 bg-gray-50 px-2 py-1"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2 py-1"
             title={label}
           >
             {thumbUrl ? (
@@ -191,10 +191,10 @@ function ReferenceThumbnails({
                 className="h-8 w-8 rounded object-cover flex-shrink-0"
               />
             ) : (
-              <div className="h-8 w-8 rounded bg-gray-200 flex-shrink-0" />
+              <div className="h-8 w-8 rounded bg-muted flex-shrink-0" />
             )}
             {label && (
-              <span className="text-xs text-gray-600 max-w-[100px] truncate">
+              <span className="text-xs text-muted-foreground max-w-[100px] truncate">
                 {label}
               </span>
             )}
@@ -218,7 +218,7 @@ async function CommentsSection({
 
   if (comments.length === 0) {
     return (
-      <p className="text-sm text-gray-400 mt-2">{t("comments_empty")}</p>
+      <p className="text-sm text-muted-foreground mt-2">{t("comments_empty")}</p>
     );
   }
 
@@ -240,7 +240,7 @@ async function CommentsSection({
       {displayComments.map((c) => (
         <div
           key={c.id}
-          className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-1"
+          className="rounded-lg border border-border bg-muted px-4 py-3 space-y-1"
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-black">
@@ -251,13 +251,13 @@ async function CommentsSection({
                 {t("resolved_badge")}
               </span>
             )}
-            <span className="ml-auto text-xs text-gray-400">
+            <span className="ml-auto text-xs text-muted-foreground">
               {new Date(c.created_at).toLocaleDateString(
                 locale === "ko" ? "ko-KR" : "en-US",
               )}
             </span>
           </div>
-          <p className="whitespace-pre-wrap text-sm text-gray-700 [word-break:keep-all]">
+          <p className="whitespace-pre-wrap text-sm text-foreground [word-break:keep-all]">
             {c.body}
           </p>
         </div>
@@ -321,13 +321,13 @@ export default async function SharePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-white">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <span className="text-xs font-semibold uppercase tracking-widest text-black">
             YAGI WORKSHOP
           </span>
-          <span className="text-gray-300">·</span>
-          <span className="text-xs text-gray-500">{t("header_label")}</span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-xs text-muted-foreground">{t("header_label")}</span>
           <span className="text-sm font-medium text-black truncate">
             {projectTitle}
           </span>
@@ -343,7 +343,7 @@ export default async function SharePage({ params }: Props) {
             <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold text-black">
               {t("welcome_title")}
             </h1>
-            <p className="text-gray-500">{t("welcome_sub")}</p>
+            <p className="text-muted-foreground">{t("welcome_sub")}</p>
           </section>
 
           {/* Frame sections */}
@@ -384,7 +384,7 @@ export default async function SharePage({ params }: Props) {
                 className="scroll-mt-20 space-y-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-400 tabular-nums">
+                  <span className="text-xs font-semibold text-muted-foreground tabular-nums">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
                   {historicalRevisions.length > 0 && (
@@ -407,7 +407,7 @@ export default async function SharePage({ params }: Props) {
 
                 {/* Director's note */}
                 {frame.director_note && (
-                  <p className="whitespace-pre-wrap text-sm italic text-gray-500 [word-break:keep-all]">
+                  <p className="whitespace-pre-wrap text-sm italic text-muted-foreground [word-break:keep-all]">
                     {frame.director_note}
                   </p>
                 )}
@@ -436,7 +436,7 @@ export default async function SharePage({ params }: Props) {
           })}
 
           {/* Footer CTA */}
-          <footer className="border-t border-gray-100 pt-10 pb-16 text-center">
+          <footer className="border-t border-border pt-10 pb-16 text-center">
             {board.status === "approved" ? (
               <p className="text-base font-semibold text-green-700">
                 {t("approved_thanks")}
@@ -446,7 +446,7 @@ export default async function SharePage({ params }: Props) {
                 <ApproveButton token={token} />
               </div>
             ) : null}
-            <p className="mt-6 text-xs text-gray-400">
+            <p className="mt-6 text-xs text-muted-foreground">
               <a
                 href={siteUrl}
                 className="hover:underline"
@@ -467,7 +467,7 @@ export default async function SharePage({ params }: Props) {
                 <a
                   key={idx}
                   href={`#frame-${idx + 1}`}
-                  className="text-xs font-semibold text-gray-300 hover:text-black transition-colors tabular-nums"
+                  className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors tabular-nums"
                 >
                   {idx + 1}
                 </a>
