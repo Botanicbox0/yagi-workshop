@@ -227,8 +227,11 @@ Tasks (v2 — X2 CRITICAL #1 + HIGH #5/#8/#9 applied):
      challenge not yet `closed_judging`.
    - `challenge_votes`: SELECT public (counts); INSERT scoped to own voter +
      challenge is `open`; no UPDATE/DELETE.
-   - `challenge_judgments`, `showcase_challenge_winners`: SELECT public;
-     write gated by `is_yagi_admin`.
+   - `challenge_judgments`: SELECT/INSERT/UPDATE/DELETE admin-only via
+     `is_yagi_admin` (judgment notes contain internal deliberation; public
+     exposure inappropriate).
+   - `showcase_challenge_winners`: SELECT public; write gated by
+     `is_yagi_admin`.
 
 7. Add `challenges` + `challenge_submissions` + `challenge_votes` +
    `showcase_challenge_winners` to `supabase_realtime` publication. Use the
