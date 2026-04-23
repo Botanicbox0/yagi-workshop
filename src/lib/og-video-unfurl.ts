@@ -45,12 +45,31 @@ function isPrivateIPv4(ip: string): boolean {
 function isPrivateIPv6(ip: string): boolean {
   const lower = ip.toLowerCase();
   if (lower === "::" || lower === "::1") return true;
-  const v4MappedMatch = lower.match(
-    /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/
+
+  // Phase 2.1 G7 H1 — normalize full-form IPv4-mapped prefix so a single
+  // regex matches BOTH `::ffff:*` compressed and `0:0:0:0:0:ffff:*`
+  // uncompressed textual styles. Without this, an attacker could submit
+  // `0:0:0:0:0:ffff:7f00:1` (= 127.0.0.1) and slip past the prior regex
+  // anchored at `^::ffff:`. Both forms are RFC-valid for the same address.
+  const normalized = lower.replace(/^0:0:0:0:0:ffff:/, "::ffff:");
+
+  // IPv4-mapped IPv6 — hex low-word form first, dotted-quad second. Both
+  // resolve to the same IPv4 space and must be classified identically.
+  const v4Mapped = normalized.match(
+    /^::ffff:(?:([0-9a-f]{1,4}):([0-9a-f]{1,4})|(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))$/
   );
-  if (v4MappedMatch && net.isIPv4(v4MappedMatch[1])) {
-    return isPrivateIPv4(v4MappedMatch[1]);
+  if (v4Mapped) {
+    if (v4Mapped[3]) {
+      // dotted-quad
+      return net.isIPv4(v4Mapped[3]) ? isPrivateIPv4(v4Mapped[3]) : true;
+    }
+    // hex low-word → reconstruct dotted quad from the two 16-bit groups.
+    const hi = parseInt(v4Mapped[1], 16);
+    const lo = parseInt(v4Mapped[2], 16);
+    const dotted = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+    return isPrivateIPv4(dotted);
   }
+
   if (/^f[cd][0-9a-f]{2}:/.test(lower)) return true;
   if (/^fe[89ab][0-9a-f]:/.test(lower)) return true;
   if (lower.startsWith("ff")) return true;
