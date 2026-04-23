@@ -301,3 +301,24 @@ Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0; re-smoke `/challenge
 **Owner**: G3 Builder (next session) or Phase 2.6 author.
 **Status**: open
 **Registered**: G3 Group B entry (2026-04-24)
+
+---
+
+## FU-18 — Submit form inline toast map → useTranslations
+
+**Trigger**: Post-G4 or Phase 2.6 polish batch.
+**Risk**: LOW — purely cosmetic/maintainability. Strings are already Korean-only per SPEC §0; no user-visible bug. Cost of drift: 6 literals in one file vs 6 keys in ko.json.
+**Background**: G4 B2 submission-form.tsx used an inline Korean toast map for 6 error codes (unauthenticated / wrong_role / not_open / already_submitted / validation_failed / upload_missing) to avoid adding ko.json keys mid-parallel-spawn. Per-teammate brief explicitly permitted this as TODO.
+**Action**: In `src/components/challenges/submission-form.tsx`:
+- Replace the inline toast map with `const t = useTranslations("challenges.submit.toast")` calls.
+- Add 6 new keys to `messages/ko.json` under `challenges.submit.toast.*`:
+  - `unauthenticated`: "로그인이 필요해요. 다시 시도해주세요."
+  - `wrong_role`: "창작자 계정으로 전환해주세요."
+  - `not_open`: "챌린지가 마감됐어요."
+  - `already_submitted`: "이미 이 챌린지에 작품을 올렸어요."
+  - `validation_failed`: "입력을 확인해주세요."
+  - `upload_missing`: "업로드가 완료되지 않았어요. 다시 시도해주세요."
+- Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0.
+**Owner**: G4 Builder (next session) or Phase 2.6 author.
+**Status**: open
+**Registered**: G4 Group C closeout (2026-04-24)

@@ -1,7 +1,23 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-24 (Phase 2.5 G1/G2/**G3 SHIPPED** — 첫 Agent Teams 실전 완주, `worktree-g3-challenges` 브랜치, push + merge 대기)
-> **목적:** Phase 2.5 G4 (submission flow) 다음 진입. G3에서 검증된 Agent Teams + parallel_group 패턴을 후속 gate에 계속 적용.
+> **갱신:** 2026-04-24 (Phase 2.5 G1/G2/G3/**G4 SHIPPED** — overnight Gate Autopilot G5-G8 chain 진행 중)
+> **목적:** 야기 취침 모드. G4 closed, G5→G6→G7→G8 체인 자동 진행. Phase 2.5 G8 완료 후 STOP. Phase 2.6 morning kickoff 대기.
+
+---
+
+## 🌙 Overnight Gate Autopilot 활성 (2026-04-24)
+
+상세 진행: `.yagi-autobuild/phase-2-5/OVERNIGHT_LOG.md`
+Stop triggers: Codex HIGH-A / SPEC drift / build|tsc|lint 2회 연속 실패 / R2-Supabase 접근 실패 / 배치 답변 파싱 실패 — 발생 시 즉시 Telegram halt.
+
+---
+
+## ✅ G4 shipped (2026-04-24)
+- Submit flow: `/challenges/[slug]/submit` + R2 signed-URL upload + atomic post-upload INSERT + dynamic Zod schema + YouTube strict regex
+- R2 bucket CORS + Lifecycle applied via Cloudflare HTTP API
+- 상세: `.yagi-autobuild/phase-2-5/G4_CLOSEOUT.md`
+
+---
 
 ---
 

@@ -96,6 +96,23 @@ Phase 2.5 G3 gallery realtime 2-browser smoke (5s SLA per SPEC §2 #6):
 
 ---
 
+## Phase 2.5 G4 items
+
+### Q-G4-C1 — Submit flow 400MB+ video upload resilience
+
+- **Scope**: manual browser smoke, cannot be automated in CI without large test fixtures.
+- **Target**: `/challenges/test-open-1/submit` with `role='creator'` on yagi-admin or a test creator account.
+- **Scenarios**:
+  1. Upload a 400+ MB mp4 to test-open-1 → expect progress bar ticks, final submit succeeds, redirect to `/challenges/test-open-1/gallery#submission-<id>`, the new submission appears in gallery within 5s (G3 realtime SLA).
+  2. Start a 400+ MB upload, close tab mid-upload → expect no submission row in DB, R2 `tmp/` object eventually purged by 24h lifecycle rule.
+  3. Upload a 400+ MB file twice (same challenge, same user) → expect second attempt blocked with toast "이미 이 챌린지에 작품을 올렸어요".
+  4. Upload on slow 3G-simulated network (DevTools throttling) → expect upload to complete eventually without false-error toast.
+- **Expected defects to watch**: browser memory during large PUT (Chrome may OOM at ~1GB), CORS 403 from R2 (indicates CORS policy not saved — re-check via `curl` or dashboard), progress event gaps if XHR upload.onprogress is blocked.
+- **Status**: open
+- **Registered**: G4 Group C closeout (2026-04-24)
+
+---
+
 ## Priority ordering (suggested)
 
 Most business-visible first:
