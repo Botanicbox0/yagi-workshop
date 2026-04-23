@@ -15,7 +15,7 @@ export default async function SettingsLayout({ children, params }: Props) {
 
   const t = await getTranslations("settings");
 
-  const isWsAdmin = ctx!.roles.includes("workspace_admin");
+  const isWsAdmin = ctx!.workspaceRoles.includes("workspace_admin");
 
   const tabs = [
     { key: "profile", label: t("profile_tab"), href: "/app/settings" as const },

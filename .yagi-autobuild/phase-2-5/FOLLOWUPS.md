@@ -231,4 +231,42 @@ Document the exact pattern + review scope at backfill design time. INSERT paths 
 **Action required**: Migration that seeds the `notify-dispatch` cron job idempotently (ALTER/DROP/CREATE `cron.schedule` as needed). Pattern reusable for FU-6 challenges-closing-reminder.
 
 **Owner**: deferred (Phase 2.2 BACKLOG §Infra seed migrations — already logged)
+
+---
+
+## FU-11 — `is_handle_available` UNION ALL short-circuit optimization
+
+**Trigger**: Phase 2.6 (performance sweep)
+**Risk**: 미미. 현재 부하 zero, citext index 조회 O(log n) × 2.
+**Action**: UNION ALL → OR EXISTS 구조로 재작성하여 planner short-circuit 활성화.
+
+```sql
+RETURN NOT (
+  EXISTS (SELECT 1 FROM public.profiles WHERE handle = candidate)
+  OR EXISTS (SELECT 1 FROM public.handle_history WHERE old_handle = candidate)
+);
+```
+
+**Status**: deferred to Phase 2.6
+**Registered**: G2 hardening v1 authoring (2026-04-23)
+
+---
+
+## FU-13 — FORCE ROW LEVEL SECURITY system-wide rollout
+
+**Trigger**: Phase 2.6 (security hardening batch, alongside FU-8 `auth.uid()` optimization)
+**Risk**: 현재 MED — table owner (postgres / authenticator) RLS 우회 가능. 공격 경로 구체성 낮음 (Supabase managed role 누수 드묾) 하지만 defense in depth.
+**Action**: 전 Phase 2.5 테이블에 FORCE RLS 적용:
+- `profiles` (existing — Phase 1.1 의존 변경 주의)
+- `creators`, `studios`
+- `challenges`, `challenge_submissions`, `challenge_votes`, `challenge_judgments`
+- `showcase_challenge_winners`
+- `handle_history` (G2 hardening v1 surfaced this — deferred to system-wide rollout)
+
+**Caveats**:
+- FORCE RLS은 table owner도 RLS 적용. Supabase migrations는 role=postgres 실행이므로 DDL 시점엔 bypass 가능 (RLS check 안 걸림). `SECURITY DEFINER` 함수만 주의.
+- Service role key 사용 코드 경로 전수 검토 필요 (FORCE 적용 후 service_role도 RLS 통과 필요).
+
+**Status**: deferred to Phase 2.6
+**Registered**: G2 hardening v1 Codex K-05 M2 finding (2026-04-23)
 **Status**: open

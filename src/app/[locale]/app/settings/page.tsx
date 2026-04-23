@@ -37,7 +37,7 @@ export default async function SettingsPage({
   }
 
   // workspace + team tabs require workspace_admin
-  if (!ctx!.roles.includes("workspace_admin")) {
+  if (!ctx!.workspaceRoles.includes("workspace_admin")) {
     redirect({ href: "/app/settings", locale });
   }
 

@@ -26,7 +26,8 @@ export default async function AppLayout({
   }
 
   const hasPrivilegedGlobalRole =
-    ctx.roles.includes("yagi_admin") || ctx.roles.includes("creator");
+    ctx.workspaceRoles.includes("yagi_admin") ||
+    ctx.workspaceRoles.includes("creator");
   if (ctx.workspaces.length === 0 && !hasPrivilegedGlobalRole) {
     redirect({ href: "/onboarding/workspace", locale });
     return null;

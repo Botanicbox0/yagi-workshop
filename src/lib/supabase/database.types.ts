@@ -294,6 +294,38 @@ export type Database = {
           },
         ]
       }
+      handle_history: {
+        Row: {
+          changed_at: string
+          id: string
+          new_handle: string
+          old_handle: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          new_handle: string
+          old_handle: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          new_handle?: string
+          old_handle?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handle_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           created_at: string
@@ -2008,6 +2040,7 @@ export type Database = {
         Args: { p_logo_url?: string; p_name: string; p_slug: string }
         Returns: string
       }
+      change_handle: { Args: { new_handle_input: string }; Returns: undefined }
       create_meeting_with_attendees: {
         Args: {
           p_attendees: Json
@@ -2022,6 +2055,7 @@ export type Database = {
         Returns: string
       }
       increment_showcase_view: { Args: { sid: string }; Returns: number }
+      is_handle_available: { Args: { candidate: string }; Returns: boolean }
       is_ws_admin: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_ws_member: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_yagi_admin: { Args: { uid: string }; Returns: boolean }

@@ -1,6 +1,17 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-export type Role = "creator" | "workspace_admin" | "workspace_member" | "yagi_admin";
+// Phase 1.1 workspace permission system — unchanged literals, renamed type.
+// Per ADR-009 (docs/design/DECISIONS.md).
+export type WorkspaceRole =
+  | "creator"
+  | "workspace_admin"
+  | "workspace_member"
+  | "yagi_admin";
+
+// Phase 2.5 challenge persona system — distinct namespace.
+// NEVER compare against a bare "creator" literal without prefixing with
+// `profile.role ===` — see ADR-009 naming rule.
+export type ProfileRole = "creator" | "studio" | "observer";
 
 export type AppContext = {
   userId: string;
@@ -10,8 +21,9 @@ export type AppContext = {
     display_name: string;
     avatar_url: string | null;
     locale: "ko" | "en";
+    role: ProfileRole | null;
   };
-  roles: Role[];
+  workspaceRoles: WorkspaceRole[];
   workspaces: { id: string; name: string; slug: string }[];
   currentWorkspaceId: string | null;
 };
@@ -25,7 +37,7 @@ export async function fetchAppContext(): Promise<AppContext | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, handle, display_name, avatar_url, locale")
+    .select("id, handle, display_name, avatar_url, locale, role")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -36,7 +48,9 @@ export async function fetchAppContext(): Promise<AppContext | null> {
     .select("role")
     .eq("user_id", user.id);
 
-  const roles = (rolesRows ?? []).map((r) => r.role as Role);
+  const workspaceRoles = (rolesRows ?? []).map(
+    (r) => r.role as WorkspaceRole
+  );
 
   const { data: memberRows } = await supabase
     .from("workspace_members")
@@ -56,8 +70,9 @@ export async function fetchAppContext(): Promise<AppContext | null> {
       display_name: profile.display_name,
       avatar_url: profile.avatar_url,
       locale: profile.locale as "ko" | "en",
+      role: (profile.role as ProfileRole | null) ?? null,
     },
-    roles,
+    workspaceRoles,
     workspaces,
     currentWorkspaceId: workspaces[0]?.id ?? null,
   };

@@ -17,7 +17,7 @@ export function Sidebar({ context }: { context: AppContext }) {
       </div>
       <div className="flex-1 overflow-y-auto py-3">
         <SidebarNav
-          roles={context.roles}
+          roles={context.workspaceRoles}
           isYagiInternalMember={isYagiInternalMember}
         />
       </div>

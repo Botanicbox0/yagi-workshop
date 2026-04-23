@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Role } from "@/lib/app/context";
+import type { WorkspaceRole } from "@/lib/app/context";
 
 type Item = {
   key: string;
   href: string;
   icon: typeof FolderKanban;
   disabled?: boolean;
-  roles: Role[];
+  roles: WorkspaceRole[];
 };
 
 const items: Item[] = [
@@ -48,7 +48,7 @@ export function SidebarNav({
   roles,
   isYagiInternalMember,
 }: {
-  roles: Role[];
+  roles: WorkspaceRole[];
   isYagiInternalMember: boolean;
 }) {
   const t = useTranslations("nav");

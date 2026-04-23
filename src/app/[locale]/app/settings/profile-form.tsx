@@ -13,10 +13,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { updateProfile, updateAvatarUrl } from "./actions";
+import {
+  validateHandle,
+  HANDLE_MIN_LENGTH,
+  HANDLE_MAX_LENGTH,
+} from "@/lib/handles/validate";
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(1).max(80),
-  handle: z.string().trim().min(2).max(40).regex(/^[a-z0-9_]+$/),
+  handle: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(HANDLE_MIN_LENGTH)
+    .max(HANDLE_MAX_LENGTH)
+    .superRefine((val, ctx) => {
+      const err = validateHandle(val);
+      if (err) ctx.addIssue({ code: "custom", message: err });
+    }),
   locale: z.enum(["ko", "en"]),
 });
 

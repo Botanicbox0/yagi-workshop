@@ -16,6 +16,7 @@ Audience: human contributors + future YAGI. Context + rationale lives here, not 
 | ADR-004 | Modular typographic scale 1.125 (Major Second)         | Accepted  | 2026-04-23 |
 | ADR-005 | Expedited Phase Protocol for 1–2 day sprints           | Accepted  | 2026-04-23 |
 | ADR-006 | SPEC-to-kickoff alignment protocol                     | Accepted  | 2026-04-23 |
+| ADR-009 | Role type system reconciliation (Phase 1.1 ↔ 2.5)      | Accepted  | 2026-04-23 |
 
 ---
 
@@ -186,3 +187,124 @@ Post-approval kickoff authoring MUST be line-by-line matched to the committed SP
 
 ### Follow-ups
 - If Phase 2.5 or 2.6 kickoff exhibits drift despite this ADR, escalate to a template in a follow-up ADR-007.
+
+---
+
+## ADR-009: Role type system reconciliation (Phase 1.1 ↔ Phase 2.5)
+
+**Date**: 2026-04-23
+**Status**: Accepted
+**Context-trigger**: Phase 2.5 G2 entry (auth flow + role selection)
+
+### Context
+
+Phase 2.5 G1 introduced `profiles.role IN ('creator','studio','observer')`,
+intended as the **persona role** for the public Challenge Platform. Per
+Phase 2.5 SPEC v2 §1.2, this is **orthogonal** to the existing Phase 1.1
+system `user_roles.role IN ('yagi_admin','workspace_admin','workspace_member','creator')`.
+
+The literal string `creator` collides between the two systems:
+
+- `user_roles.role='creator'` (Phase 1.1) — used in `src/app/[locale]/app/layout.tsx`
+  as part of `hasPrivilegedGlobalRole` to allow workspace-less app access.
+  Originally seeded to enable solo-creator usage of preprod / showcase tools.
+- `profiles.role='creator'` (Phase 2.5) — the AI Creator persona who
+  participates in Challenges. Has nothing to do with workspace permissions.
+
+Without disambiguation, downstream code reading `roles.includes('creator')`
+will silently mean different things in different files.
+
+### Decision
+
+Adopt **Option C: type discrimination + scope hook**.
+
+#### Type system
+
+In `src/lib/app/context.ts`:
+
+```ts
+// Phase 1.1 workspace permission system — unchanged literal, renamed type.
+export type WorkspaceRole =
+  | "yagi_admin"
+  | "workspace_admin"
+  | "workspace_member"
+  | "creator";  // legacy: "workspace-less app access" semantic
+
+// Phase 2.5 challenge persona system — distinct type, distinct namespace.
+export type ProfileRole = "creator" | "studio" | "observer";
+
+// AppContext exposes both as separate fields. Never overloaded.
+export type AppContext = {
+  userId: string;
+  profile: {
+    id: string;
+    handle: string;
+    display_name: string;
+    avatar_url: string | null;
+    locale: "ko" | "en";
+    role: ProfileRole | null;  // NEW — from profiles.role (Phase 2.5)
+  };
+  workspaceRoles: WorkspaceRole[];  // RENAMED from `roles`
+  workspaces: { id: string; name: string; slug: string }[];
+  currentWorkspaceId: string | null;
+};
+```
+
+Migration impact:
+- `ctx.roles` → `ctx.workspaceRoles` (mechanical rename, all call sites)
+- `ctx.profile.role` is new (Phase 2.5 G2 populates this from `profiles.role`)
+- No DB change
+
+#### Naming rule (durable)
+
+Whenever a code site needs to ask "what kind of user is this?", **always
+prefix with the system name**:
+- `workspaceRoles.includes('creator')` — "is this user a Phase 1.1 workspace
+  creator (workspace-less app access entitlement)?"
+- `profile.role === 'creator'` — "is this user a Phase 2.5 AI Creator
+  persona (Challenge participant)?"
+
+Code reviewers reject any usage of bare `roles.includes('creator')` after
+this ADR — it's a type error AND a semantic error.
+
+### Consequences
+
+- (+) Type system surfaces the conflict at every call site; impossible
+      to write `roles.includes('creator')` without TypeScript error
+      pointing at the namespace ambiguity.
+- (+) Reads like documentation: `profile.role === 'creator'` is
+      unambiguous in code review.
+- (+) Phase 1.1 rows untouched. Migration is TS-only, instant.
+- (–) Mechanical rename touches every file that reads `ctx.roles`. Likely
+      ~10-15 sites based on grep. Trivial codemod.
+- (–) `creators` table (Phase 2.5) and `creator` workspace role share
+      stem. Mitigated by the strict prefix rule.
+
+### Alternatives considered
+
+- **Option A**: Rename Phase 1.1 `creator` to `solo_user` immediately.
+  Rejected: requires DB migration on already-shipped Phase 1.1 system.
+- **Option B**: Add `WorkspaceRole` / `ProfileRole` types but keep
+  shared `roles` field. Rejected: shared field still invites bug class.
+- **Option D**: String prefixes (`ws:creator`, `pr:creator`). Rejected:
+  ugly at call site, requires runtime parsing.
+
+### Followups (deferred)
+
+- Phase 3+: Rename Phase 1.1 `creator` → `solo_user` once schema migration
+  cost is acceptable. Logged in `.yagi-autobuild/phase-2-5/FOLLOWUPS.md` FU-9 candidate.
+
+### Adoption (Builder at G2 entry)
+
+1. Edit `src/lib/app/context.ts`: introduce `WorkspaceRole` + `ProfileRole`
+   types, rename field `roles` → `workspaceRoles`, add `profile.role`.
+2. Update `fetchAppContext`: select `role` from `profiles` table, return
+   in `profile.role`.
+3. Codemod: `git grep "ctx.roles" src/` → rename to `ctx.workspaceRoles`.
+4. Codemod: `git grep "roles.includes('creator')" src/` → audit each site.
+5. Run `tsc --noEmit` — should be clean after all rename sites updated.
+
+### Cross-references
+
+- `.yagi-autobuild/phase-2-5/G2-ENTRY-DECISION-PACKAGE.md` §A
+- `.yagi-autobuild/phase-2-6/SPEC.md` §2 PRE-1

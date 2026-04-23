@@ -288,6 +288,31 @@ Acceptance:
 - Tsc clean
 - E2E smoke via curl-based auth API calls
 
+### G2 detailed task breakdown (web Claude pre-G2 expansion)
+
+Tasks above are SPEC-level. G2 Decision Package
+(`.yagi-autobuild/phase-2-5/G2-ENTRY-DECISION-PACKAGE.md`) provides
+adoption-ready expansions:
+
+| SPEC G2 Task | Decision Package source | Builder action |
+|---|---|---|
+| Task 1 (signup + role select) | §F Step 3 + Step 4a/4b/4c | Adopt 5-step flow as-is, build `/onboarding/role/page.tsx` + 3 role-specific profile pages |
+| Task 2 (conditional fields) | §F Step 4a/4b/4c | Per-role fields tabulated; observer minimal |
+| Task 3 (handle validation) | §C verbatim | Use `validateHandle()` from `src/lib/handles/validate.ts` (pre-built) |
+| Task 4 (Instagram validation) | §D verbatim | Use `validateInstagramHandle()` from `src/lib/handles/instagram.ts` (pre-built) |
+| Task 5 (reserved handles) | §B verbatim | Use `RESERVED_HANDLES` from `src/lib/handles/reserved.ts` (pre-built) |
+| Task 6 (handle change 90-day) | §E verbatim | Use `canChangeHandle()` from `src/lib/handles/change.ts` (pre-built); add `handle_history` table migration if needed |
+
+Sub-utility infrastructure (pre-built by web Claude in side #2):
+- `src/lib/handles/{reserved,validate,instagram,change,messages,index}.ts` — 6 files, ~245 lines
+- `src/lib/onboarding/role-redirects.ts` — pre-built helpers for §F Step 5 redirect logic (web Claude pre-G2)
+- `src/lib/email/templates/{signup-welcome,role-confirmation}.ts` — pre-built Korean email templates (web Claude pre-G2)
+
+ADR backing: ADR-009 (Role type system) — `docs/design/DECISIONS.md` finalized 2026-04-23.
+
+Pre-G2 readiness report:
+`.yagi-autobuild/phase-2-5/G2-PRE-INFRA-READINESS.md`
+
 ### G3 — Public challenge surfaces
 **Duration target:** 4-5 hours  
 **Stop point:** Yagi visual review of challenge list + detail page

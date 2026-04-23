@@ -7,8 +7,8 @@ export default async function AppDashboardPage() {
   const t = await getTranslations("dashboard");
   const ctx = await fetchAppContext();
 
-  const isYagiAdmin = ctx?.roles.includes("yagi_admin") ?? false;
-  const isCreator = ctx?.roles.includes("creator") ?? false;
+  const isYagiAdmin = ctx?.workspaceRoles.includes("yagi_admin") ?? false;
+  const isCreator = ctx?.workspaceRoles.includes("creator") ?? false;
 
   if (isYagiAdmin) {
     return (

@@ -3,10 +3,20 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import {
+  validateHandle,
+  HANDLE_MIN_LENGTH,
+  HANDLE_MAX_LENGTH,
+} from "@/lib/handles/validate";
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(1).max(80),
-  handle: z.string().trim().min(2).max(40).regex(/^[a-z0-9_]+$/),
+  handle: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(HANDLE_MIN_LENGTH)
+    .max(HANDLE_MAX_LENGTH),
   locale: z.enum(["ko", "en"]),
 });
 
@@ -14,17 +24,42 @@ export async function updateProfile(input: unknown) {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { error: "validation" as const };
 
+  const handleErr = validateHandle(parsed.data.handle);
+  if (handleErr) return { error: "handle" as const, kind: handleErr };
+
   const supabase = await createSupabaseServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" as const };
 
+  // Detect handle change vs. metadata-only update. Handle changes must go
+  // through the change_handle RPC (enforces 90-day lock + anti-squatting
+  // via handle_history).
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("handle")
+    .eq("id", user.id)
+    .maybeSingle();
+  const currentHandle = currentProfile?.handle ?? null;
+
+  if (currentHandle && currentHandle !== parsed.data.handle) {
+    const { error: rpcErr } = await (supabase.rpc as unknown as (
+      fn: "change_handle",
+      args: { new_handle_input: string }
+    ) => Promise<{ data: unknown; error: { message: string; code?: string } | null }>)(
+      "change_handle",
+      { new_handle_input: parsed.data.handle }
+    );
+    if (rpcErr) {
+      return { error: "handle_change" as const, message: rpcErr.message };
+    }
+  }
+
   const { error } = await supabase
     .from("profiles")
     .update({
       display_name: parsed.data.display_name,
-      handle: parsed.data.handle,
       locale: parsed.data.locale,
     })
     .eq("id", user.id);
