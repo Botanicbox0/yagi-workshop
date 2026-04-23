@@ -250,8 +250,11 @@ Acceptance:
 - Realtime publication membership verified via
   `SELECT tablename FROM pg_publication_tables WHERE pubname='supabase_realtime'`
   returning the 4 new tables (Phase 2.1 H1 playbook).
-- `profiles` + `notification_preferences` ALTERs backward-compatible (default
-  NULL / default FALSE — existing rows survive).
+- `profiles` + `notification_preferences` ALTERs backward-compatible: new
+  `profiles` columns default to NULL (existing rows survive with NULL role,
+  NULL handle, etc.); new `notification_preferences.challenge_updates_enabled`
+  defaults to TRUE so existing users are opted-in to challenge notifications
+  by default (matches Task 4 ALTER body). Existing rows survive.
 
 ### G2 — Auth flow + role selection
 **Duration target:** 3-4 hours  
