@@ -38,6 +38,7 @@ yarn-error.log*
 # Claude Code runtime state (lock files, caches)
 .claude/scheduled_tasks.lock
 .claude/cache/
+.claude/worktrees/
 
 # vercel
 .vercel
