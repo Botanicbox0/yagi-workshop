@@ -1,4 +1,3 @@
-Initialising login role...
 export type Json =
   | string
   | number
@@ -12,31 +11,6 @@ export type Database = {
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
   }
   public: {
     Tables: {
@@ -124,6 +98,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "challenge_judgments_submission_challenge_consistency_fkey"
+            columns: ["challenge_id", "submission_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_submissions"
+            referencedColumns: ["challenge_id", "id"]
+          },
+          {
             foreignKeyName: "challenge_judgments_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
@@ -206,6 +187,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "challenges"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_votes_submission_challenge_consistency_fkey"
+            columns: ["challenge_id", "submission_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_submissions"
+            referencedColumns: ["challenge_id", "id"]
           },
           {
             foreignKeyName: "challenge_votes_submission_id_fkey"
@@ -1346,6 +1334,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "showcase_challenge_winners_submission_challenge_consistency_fke"
+            columns: ["challenge_id", "submission_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_submissions"
+            referencedColumns: ["challenge_id", "id"]
+          },
+          {
             foreignKeyName: "showcase_challenge_winners_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: true
@@ -2166,9 +2161,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

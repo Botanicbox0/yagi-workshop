@@ -173,6 +173,30 @@ Not all need indexes — decide based on G5/G6 query shape once landed.
 
 ---
 
+## FU-10 — Active-persona VIEWs (G3 entry, optional)
+
+**Trigger**: G3 public challenge surfaces, when the first creators/studios read query is authored
+**Risk**: Post-hardening, stale creators/studios rows survive role flips by design (see migration 20260423030001 §3c). G3/G6 read queries must filter by current `profiles.role` — forgetting the join surfaces retired personas as active creators.
+
+**Action required**: Create two VIEWs as canonical read paths:
+
+```sql
+CREATE VIEW public.v_active_creators AS
+SELECT c.* FROM public.creators c
+JOIN public.profiles p ON p.id = c.id AND p.role = 'creator';
+
+CREATE VIEW public.v_active_studios AS
+SELECT s.* FROM public.studios s
+JOIN public.profiles p ON p.id = s.id AND p.role = 'studio';
+```
+
+Grant SELECT to `anon` + `authenticated`. G3/G6 Server Actions + RSC queries query the VIEW, not the raw table. Raw table access remains for admin tooling + historical audit.
+
+**Owner**: Builder (G3 entry, if read-query patterns materialize)
+**Status**: deferred — optional convenience; correctness achievable without VIEW by hand-writing the JOIN at each call site
+
+---
+
 ## FU-7 — Cron job seed migration (Phase 2.2 or 2.6)
 
 **Trigger**: First Phase 2.x infra-consolidation sprint
