@@ -25,6 +25,12 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
+        // Phase 2.5 launchpad X1 CRITICAL #12 — canonical CTA pill.
+        // Replaces the hand-rolled `rounded-full uppercase tracking-[0.12em]
+        // px-6 py-3` anchors scattered across new-X empty-state CTAs and
+        // share-surface primary actions. Use with `variant="default"` or
+        // `variant="outline"` for the two idiomatic pill styles.
+        pill: "h-10 rounded-full px-6 py-2 uppercase tracking-[0.12em] text-xs",
       },
     },
     defaultVariants: {
