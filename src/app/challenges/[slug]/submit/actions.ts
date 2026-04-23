@@ -56,7 +56,7 @@ async function fetchChallenge(
 ) {
   const { data } = await supabase
     .from("challenges")
-    .select("id, slug, state, submission_requirements")
+    .select("id, slug, title, state, submission_requirements")
     .eq("id", challengeId)
     .maybeSingle();
   return data;
@@ -265,6 +265,30 @@ export async function submitChallengeAction(
       return { ok: false, error: "already_submitted" };
     }
     return { ok: false, error: "validation_failed", detail: insertError.message };
+  }
+
+  // G7 emit: challenge_submission_confirmed (submitter-facing, medium severity).
+  // Body/title intentionally blank — notify-dispatch renders localized copy
+  // from payload.challenge_title per §D locale-aware dispatch pattern.
+  const { error: notifyError } = await supabase
+    .from("notification_events")
+    .insert({
+      user_id: user.id,
+      kind: "challenge_submission_confirmed",
+      severity: "medium",
+      title: "",
+      body: "",
+      url_path: `/challenges/${slug}/gallery#submission-${submissionId}`,
+      payload: {
+        challenge_title: challenge.title,
+        challenge_slug: slug,
+        submission_id: submissionId,
+      },
+    });
+  if (notifyError) {
+    // Notification emit failure is NOT fatal — submission already persisted.
+    // Log and continue. Phase 2.6 could add retry queue.
+    console.error("[submitChallengeAction] notify emit failed (non-fatal)", notifyError);
   }
 
   revalidatePath(`/challenges/${slug}/gallery`);

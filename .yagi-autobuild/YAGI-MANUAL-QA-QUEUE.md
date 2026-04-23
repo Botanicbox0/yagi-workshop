@@ -125,3 +125,19 @@ Most business-visible first:
 7. Q-G5 meeting txn rollback — transactional behavior smoke, hard to accidentally trigger.
 
 Log any FAIL back to `gates/phase-2-1/QA_SMOKE.md` (move the row back from PASS with note) so Phase 2.2 has the history.
+
+---
+
+## [YAGI TODO] Phase 2.5 G7 — 2-browser realtime smoke (5s SLA)
+
+**Scope**: manual browser, verifies realtime subscription + notification fan-out.
+**Target**: `/app/admin/challenges/[slug]/judge` (Browser A, yagi_admin) ↔ `/challenges/[slug]/submit` (Browser B, creator account)
+**Procedure**:
+1. Browser A: navigate to `/app/admin/challenges/<open-slug>/judge` as yagi_admin. Leave tab open.
+2. Browser B: navigate to `/challenges/<open-slug>/submit` as creator role. Submit a test entry.
+3. Expect in Browser A within 5s: new submission appears in judge list WITHOUT page refresh.
+4. Also verify: notification_events row created with kind `challenge_submission_confirmed` for the submitter.
+5. Email smoke (optional): check submitter inbox — email from notify-dispatch within ~10-15min (cron tick dependent).
+**Expected defects to watch**: realtime connection fails (check browser console for `postgres_changes` errors), `supabase_realtime` publication missing `challenge_submissions` (verify via `pg_publication_tables`), notification bell doesn't refresh (Phase 1.8 realtime on notification_events unchanged).
+**Status**: open
+**Registered**: G7 Group A closeout (2026-04-24, overnight autopilot)

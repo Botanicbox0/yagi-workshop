@@ -59,3 +59,16 @@ No DB writes. No Codex K-05 pre-apply (per ADR-005). Phase 2.5 G8 runs single co
 - external_links deferred → FU-19 (Phase 2.6) per ULTRA-CHAIN D rule (no DB migrations outside G7)
 - Barrier: tsc/lint/build EXIT=0, §J + DS clean
 - Detail: `.yagi-autobuild/phase-2-5/G6_CLOSEOUT.md`
+
+---
+
+## G7 — SHIPPED (2026-04-24)
+
+- First Phase 2.5 DB write: pg_cron challenges-closing-reminder (jobid=3)
+- MCP apply_migration success, get_advisors 0 new WARNs
+- `supabase functions deploy notify-dispatch` — deployed with 4 new renderers + challenge_updates_enabled pref gate
+- Lead pre-flight: G4 submit missing `challenge_submission_confirmed` emit → fixed inline
+- Barrier: tsc/lint/build EXIT=0, §J clean
+- DECISIONS_CACHE Q-033 through Q-039 adopted (all yes)
+- Codex K-05 deferred to G8 consolidated pass per ADR-005
+- Detail: `.yagi-autobuild/phase-2-5/G7_CLOSEOUT.md`
