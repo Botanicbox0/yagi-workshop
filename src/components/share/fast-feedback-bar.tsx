@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { ThumbsUp, ThumbsDown, Hand } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type ReactionType = "like" | "dislike" | "needs_change";
 
@@ -170,10 +173,10 @@ export function FastFeedbackBar({
             disabled={submitting}
             title={label}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
               selected === type
-                ? "bg-black text-white border-black"
-                : "bg-white text-black border-gray-200 hover:border-black",
+                ? "bg-foreground text-background border-foreground"
+                : "bg-background text-foreground border-input hover:border-foreground",
               "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
@@ -189,45 +192,39 @@ export function FastFeedbackBar({
       {showForm && (
         <form
           onSubmit={handleFormSubmit}
-          className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50 p-4 max-w-sm"
+          className="flex flex-col gap-2 rounded-lg border border-border bg-muted p-4 max-w-sm"
         >
-          <p className="text-sm font-medium text-black">
-            {t("reactor_name_label")}
-          </p>
-          <input
+          <Label htmlFor="feedback-reactor-name">{t("reactor_name_label")}</Label>
+          <Input
+            id="feedback-reactor-name"
             type="text"
             placeholder={t("reactor_name_ph")}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
           />
-          <p className="text-sm font-medium text-black">
-            {t("reactor_email_label")}
-          </p>
-          <input
+          <Label htmlFor="feedback-reactor-email">{t("reactor_email_label")}</Label>
+          <Input
+            id="feedback-reactor-email"
             type="email"
             placeholder={t("reactor_email_ph")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
           />
           <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-900"
-            >
+            <Button type="submit" size="pill">
               {t("reaction_send")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              size="pill"
+              variant="outline"
               onClick={() => {
                 setShowForm(false);
                 setPendingReaction(null);
               }}
-              className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:border-black"
             >
               ✕
-            </button>
+            </Button>
           </div>
         </form>
       )}

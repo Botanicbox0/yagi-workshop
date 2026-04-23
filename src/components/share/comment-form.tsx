@@ -4,6 +4,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const LS_KEY_PREFIX = "yagi-share-";
 
@@ -85,37 +88,38 @@ export function CommentForm({ frameId, token }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-2">
-      <textarea
+      <Textarea
         placeholder={t("comment_ph")}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black"
+        className="resize-none"
       />
       <div className="flex flex-col sm:flex-row gap-2">
-        <input
+        <Input
           type="text"
           placeholder={t("comment_name_ph")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          className="flex-1"
         />
-        <input
+        <Input
           type="email"
           placeholder={t("comment_email_ph")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          className="flex-1"
         />
-        <button
+        <Button
           type="submit"
+          size="pill"
           disabled={submitting || !body.trim() || !name.trim() || !email.trim()}
-          className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+          className="whitespace-nowrap"
         >
           {t("comment_submit")}
-        </button>
+        </Button>
       </div>
     </form>
   );

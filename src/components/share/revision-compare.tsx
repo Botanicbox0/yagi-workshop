@@ -21,7 +21,7 @@ type Props = {
 function MediaPreview({ entry }: { entry: RevisionEntry }) {
   if (!entry.url) {
     return (
-      <div className="flex h-48 items-center justify-center rounded-lg bg-gray-100 text-sm text-gray-400">
+      <div className="flex h-48 items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
         No media
       </div>
     );
@@ -49,7 +49,7 @@ function MediaPreview({ entry }: { entry: RevisionEntry }) {
   }
 
   return (
-    <div className="flex h-48 items-center justify-center rounded-lg bg-gray-100 text-sm text-gray-500">
+    <div className="flex h-48 items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
       {entry.media_type}
     </div>
   );
@@ -68,22 +68,22 @@ export function RevisionCompare({ current, historical }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-black hover:border-black transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-full border border-input px-3 py-1.5 text-sm font-medium hover:border-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >
         {t("see_changes")}
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-background p-6 shadow-xl">
             <button
               onClick={() => setOpen(false)}
-              className="absolute right-4 top-4 rounded-full p-1 hover:bg-gray-100"
+              className="absolute right-4 top-4 rounded-full p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <h2 className="mb-4 text-lg font-semibold text-black">
+            <h2 className="mb-4 text-lg font-semibold">
               {t("compare_side_by_side")}
             </h2>
 
@@ -95,10 +95,10 @@ export function RevisionCompare({ current, historical }: Props) {
                     key={h.id}
                     onClick={() => setActiveIdx(idx)}
                     className={cn(
-                      "rounded-full px-3 py-1 text-sm font-medium border transition-colors",
+                      "rounded-full px-3 py-1 text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                       activeIdx === idx
-                        ? "bg-black text-white border-black"
-                        : "border-gray-200 text-black hover:border-black",
+                        ? "bg-foreground text-background border-foreground"
+                        : "border-input hover:border-foreground",
                     )}
                   >
                     {t("revision_n", { n: h.revision })}
@@ -111,12 +111,12 @@ export function RevisionCompare({ current, historical }: Props) {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               {/* Historical (older) */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("revision_n", { n: activeHistorical.revision })}
                 </p>
                 <MediaPreview entry={activeHistorical} />
                 {activeHistorical.caption && (
-                  <p className="whitespace-pre-wrap text-sm text-gray-600 [word-break:keep-all]">
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground [word-break:keep-all]">
                     {activeHistorical.caption}
                   </p>
                 )}
@@ -124,12 +124,12 @@ export function RevisionCompare({ current, historical }: Props) {
 
               {/* Current */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("revision_current")}
                 </p>
                 <MediaPreview entry={current} />
                 {current.caption && (
-                  <p className="whitespace-pre-wrap text-sm text-gray-600 [word-break:keep-all]">
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground [word-break:keep-all]">
                     {current.caption}
                   </p>
                 )}
