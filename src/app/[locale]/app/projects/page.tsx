@@ -3,6 +3,7 @@ import { Link } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { statusPillClass } from "@/lib/ui/status-pill";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -30,24 +31,12 @@ type StatusKey =
   | "approved"
   | "archived";
 
+// Phase 2.5 launchpad X1 CRITICAL #3 — replaced the file-local
+// statusBadgeClass with src/lib/ui/status-pill.ts. Kept the `archived`
+// opacity modifier via a small wrapper so callers keep the faded look.
 function statusBadgeClass(status: string): string {
-  switch (status as StatusKey) {
-    case "draft":
-      return "border-transparent bg-muted text-muted-foreground";
-    case "submitted":
-      return "border-transparent bg-blue-100 text-blue-700";
-    case "in_discovery":
-    case "in_production":
-    case "in_revision":
-      return "border-transparent bg-foreground text-background";
-    case "delivered":
-    case "approved":
-      return "border-transparent bg-green-100 text-green-700";
-    case "archived":
-      return "border-transparent bg-muted text-muted-foreground opacity-60";
-    default:
-      return "border-transparent bg-muted text-muted-foreground";
-  }
+  const base = statusPillClass("project", status);
+  return status === "archived" ? `${base} opacity-60` : base;
 }
 
 export default async function ProjectsPage({ params, searchParams }: Props) {
