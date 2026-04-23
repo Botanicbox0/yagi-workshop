@@ -1,12 +1,11 @@
-import { promises as dns } from "node:dns";
-import net from "node:net";
+import { validateHost } from "@/lib/ip-classify";
 
 /**
  * Server-side oEmbed resolver for common video platforms.
  * Used by the reference uploader URL tab before falling back to the
  * generic OG unfurl. Never throws.
  *
- * Runs on the Node runtime (uses node:dns / node:net for SSRF guard).
+ * Runs on the Node runtime (ip-classify uses node:dns / node:net).
  */
 
 export type VideoProvider = "youtube" | "vimeo" | "tiktok" | "instagram";
@@ -23,96 +22,11 @@ export type VideoUnfurlResult = {
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_BODY_BYTES = 200_000;
 
-// ---------------- SSRF guard (mirrors src/lib/og-unfurl.ts) ----------------
-
-function isPrivateIPv4(ip: string): boolean {
-  const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return true;
-  const [a, b] = parts;
-  if (a === 0) return true;
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 192 && b === 0) return true;
-  if (a === 198 && (b === 18 || b === 19)) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  if (a >= 224) return true;
-  return false;
-}
-
-function isPrivateIPv6(ip: string): boolean {
-  const lower = ip.toLowerCase();
-  if (lower === "::" || lower === "::1") return true;
-
-  // Phase 2.1 G7 H1 — normalize full-form IPv4-mapped prefix so a single
-  // regex matches BOTH `::ffff:*` compressed and `0:0:0:0:0:ffff:*`
-  // uncompressed textual styles. Without this, an attacker could submit
-  // `0:0:0:0:0:ffff:7f00:1` (= 127.0.0.1) and slip past the prior regex
-  // anchored at `^::ffff:`. Both forms are RFC-valid for the same address.
-  const normalized = lower.replace(/^0:0:0:0:0:ffff:/, "::ffff:");
-
-  // IPv4-mapped IPv6 — hex low-word form first, dotted-quad second. Both
-  // resolve to the same IPv4 space and must be classified identically.
-  const v4Mapped = normalized.match(
-    /^::ffff:(?:([0-9a-f]{1,4}):([0-9a-f]{1,4})|(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))$/
-  );
-  if (v4Mapped) {
-    if (v4Mapped[3]) {
-      // dotted-quad
-      return net.isIPv4(v4Mapped[3]) ? isPrivateIPv4(v4Mapped[3]) : true;
-    }
-    // hex low-word → reconstruct dotted quad from the two 16-bit groups.
-    const hi = parseInt(v4Mapped[1], 16);
-    const lo = parseInt(v4Mapped[2], 16);
-    const dotted = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
-    return isPrivateIPv4(dotted);
-  }
-
-  if (/^f[cd][0-9a-f]{2}:/.test(lower)) return true;
-  if (/^fe[89ab][0-9a-f]:/.test(lower)) return true;
-  if (lower.startsWith("ff")) return true;
-  if (lower.startsWith("100:")) return true;
-  return false;
-}
-
-function isPrivateIpLiteral(ip: string): boolean {
-  const bare = ip.startsWith("[") && ip.endsWith("]") ? ip.slice(1, -1) : ip;
-  const noZone = bare.split("%")[0];
-  if (net.isIPv4(noZone)) return isPrivateIPv4(noZone);
-  if (net.isIPv6(noZone)) return isPrivateIPv6(noZone);
-  return false;
-}
-
-async function validateHost(rawUrl: string): Promise<URL | null> {
-  let parsed: URL;
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return null;
-  }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-
-  const host = parsed.hostname.replace(/^\[|\]$/g, "");
-  if (host === "localhost") return null;
-
-  if (net.isIP(host)) {
-    if (isPrivateIpLiteral(host)) return null;
-    return parsed;
-  }
-
-  try {
-    const records = await dns.lookup(host, { all: true, verbatim: true });
-    if (records.length === 0) return null;
-    for (const r of records) {
-      if (isPrivateIpLiteral(r.address)) return null;
-    }
-  } catch {
-    return null;
-  }
-  return parsed;
-}
+// Phase 2.1 G7 H1 Pass 3 — private-IP classification + host validation
+// moved to src/lib/ip-classify.ts so the SSRF guard lives in one place
+// and can't drift between the two unfurl walkers. See that file for the
+// binary IPv6 parser that closes the hex-form / mixed-compression /
+// zero-padded IPv4-mapped bypass surface.
 
 // ---------------- Provider detection ----------------
 

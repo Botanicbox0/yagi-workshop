@@ -1,5 +1,4 @@
-import { promises as dns } from "node:dns";
-import net from "node:net";
+import { validateHost } from "@/lib/ip-classify";
 
 export type OgData = {
   og_title?: string;
@@ -27,124 +26,11 @@ const MAX_REDIRECTS = 5;
 const FETCH_TIMEOUT_MS = 5000;
 const ALLOWED_CONTENT_TYPES = ["text/html", "application/xhtml+xml"];
 
-/**
- * Returns true if the IP literal falls in a reserved/private range.
- * Catches IPv4 loopback/private/link-local/0.0.0.0 and IPv6
- * loopback/unspecified/link-local/unique-local plus IPv4-mapped IPv6.
- */
-function isPrivateIpLiteral(ip: string): boolean {
-  // Strip IPv6 brackets
-  const bare = ip.startsWith("[") && ip.endsWith("]") ? ip.slice(1, -1) : ip;
-  // Drop zone-id (fe80::1%eth0)
-  const noZone = bare.split("%")[0];
-
-  if (net.isIPv4(noZone)) {
-    return isPrivateIPv4(noZone);
-  }
-  if (net.isIPv6(noZone)) {
-    return isPrivateIPv6(noZone);
-  }
-  return false;
-}
-
-function isPrivateIPv4(ip: string): boolean {
-  const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return true;
-  const [a, b] = parts;
-  if (a === 0) return true; // 0.0.0.0/8
-  if (a === 10) return true; // 10/8 private
-  if (a === 127) return true; // loopback
-  if (a === 169 && b === 254) return true; // link-local
-  if (a === 172 && b >= 16 && b <= 31) return true; // private
-  if (a === 192 && b === 168) return true; // private
-  if (a === 192 && b === 0) return true; // 192.0.0/24, 192.0.2/24 (TEST-NET-1)
-  if (a === 198 && (b === 18 || b === 19)) return true; // benchmarking
-  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64/10
-  if (a >= 224) return true; // multicast / reserved
-  return false;
-}
-
-function isPrivateIPv6(ip: string): boolean {
-  const lower = ip.toLowerCase();
-  if (lower === "::" || lower === "::1") return true;
-
-  // Phase 2.1 G7 H1 — normalize full-form IPv4-mapped prefix so a single
-  // regex matches BOTH `::ffff:*` compressed and `0:0:0:0:0:ffff:*`
-  // uncompressed textual styles. Without this, an attacker could submit
-  // `0:0:0:0:0:ffff:7f00:1` (= 127.0.0.1) and slip past the prior regex
-  // anchored at `^::ffff:`. Both forms are RFC-valid for the same address.
-  // (Mirrors og-video-unfurl.ts walker — keep in sync.)
-  const normalized = lower.replace(/^0:0:0:0:0:ffff:/, "::ffff:");
-
-  // IPv4-mapped IPv6 — hex low-word form first, dotted-quad second. Both
-  // resolve to the same IPv4 space and must be classified identically.
-  const v4Mapped = normalized.match(
-    /^::ffff:(?:([0-9a-f]{1,4}):([0-9a-f]{1,4})|(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))$/
-  );
-  if (v4Mapped) {
-    if (v4Mapped[3]) {
-      // dotted-quad
-      return net.isIPv4(v4Mapped[3]) ? isPrivateIPv4(v4Mapped[3]) : true;
-    }
-    // hex low-word → reconstruct dotted quad from the two 16-bit groups.
-    const hi = parseInt(v4Mapped[1], 16);
-    const lo = parseInt(v4Mapped[2], 16);
-    const dotted = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
-    return isPrivateIPv4(dotted);
-  }
-
-  // Unique-local fc00::/7  → first byte 0xfc or 0xfd
-  if (/^f[cd][0-9a-f]{2}:/.test(lower)) return true;
-  // Link-local fe80::/10
-  if (/^fe[89ab][0-9a-f]:/.test(lower)) return true;
-  // Multicast ff00::/8
-  if (lower.startsWith("ff")) return true;
-  // Discard-only 100::/64
-  if (lower.startsWith("100:")) return true;
-  return false;
-}
-
-/**
- * Validates the URL host: parses, checks protocol, resolves DNS, and
- * blocks any private/reserved address. Returns null if blocked, or the
- * parsed URL if safe.
- */
-async function validateHost(rawUrl: string): Promise<URL | null> {
-  let parsed: URL;
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return null;
-  }
-
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    return null;
-  }
-
-  // Strip brackets from IPv6 literal hostnames before checking.
-  const host = parsed.hostname.replace(/^\[|\]$/g, "");
-
-  if (host === "localhost") return null;
-
-  // If the hostname is itself an IP literal, validate directly.
-  if (net.isIP(host)) {
-    if (isPrivateIpLiteral(host)) return null;
-    return parsed;
-  }
-
-  // DNS-resolve and reject if ANY resolved address is private.
-  try {
-    const records = await dns.lookup(host, { all: true, verbatim: true });
-    if (records.length === 0) return null;
-    for (const r of records) {
-      if (isPrivateIpLiteral(r.address)) return null;
-    }
-  } catch {
-    return null;
-  }
-
-  return parsed;
-}
+// Phase 2.1 G7 H1 Pass 3 — private-IP classification + host validation
+// moved to src/lib/ip-classify.ts so the SSRF guard lives in one place
+// and can't drift between the two unfurl walkers. See that file for the
+// binary IPv6 parser that closes the hex-form / mixed-compression /
+// zero-padded IPv4-mapped bypass surface.
 
 /**
  * Performs a single fetch with no redirect following, hard timeout, and
