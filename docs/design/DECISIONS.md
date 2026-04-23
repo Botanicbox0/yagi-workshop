@@ -15,6 +15,7 @@ Audience: human contributors + future YAGI. Context + rationale lives here, not 
 | ADR-003 | Delete `frame-picker.ts`; replace with skill           | Accepted  | 2026-04-23 |
 | ADR-004 | Modular typographic scale 1.125 (Major Second)         | Accepted  | 2026-04-23 |
 | ADR-005 | Expedited Phase Protocol for 1–2 day sprints           | Accepted  | 2026-04-23 |
+| ADR-006 | SPEC-to-kickoff alignment protocol                     | Accepted  | 2026-04-23 |
 
 ---
 
@@ -153,3 +154,35 @@ Introduce **Expedited Phase** as a formal mode. A phase qualifies as Expedited i
 - Run all phases through full 6 gates — rejected: impossible with current skill/review file gaps; 1-day scope infeasible.
 - Skip all gates for "emergency" phases — rejected: no quality floor, violates ARCH §17 spirit.
 - Write the missing skills/reviews first, then do operational tail — rejected: blocks operational work 3–5 days for no operational benefit.
+
+---
+
+## ADR-006: SPEC-to-kickoff alignment protocol
+Date: 2026-04-23
+Status: Accepted
+
+### Context
+On Phase 2.1 kickoff, the chat-level prompt to Builder diverged from the committed `SPEC.md` + `CEO_APPROVED.md` in several places: task count (kickoff "5 tasks" vs SPEC 8 groups), scope subset (kickoff omitted G3 yagi-internal seed + G4 POPBILL guard), group labels (kickoff "G1" covered SPEC G1+G2+G5+G6 partial), and triage item count (kickoff "7 items" vs SPEC "15" vs actual `G4_TRIAGE.md` 24). The drift was caught pre-execution by Builder flagging the misalignments explicitly and the user retracting the kickoff in favor of SPEC. Had it not been caught, Phase 2.1 would have shipped missing two SPEC success criteria (G3 seed + G4 POPBILL guard).
+
+Kickoffs are authored in chat flow, often from memory of the SPEC conversation rather than with SPEC.md open. That's fast but lossy — especially when SPEC has 150+ lines, 8 groups, and 7 success criteria.
+
+### Decision
+Post-approval kickoff authoring MUST be line-by-line matched to the committed SPEC.md. Memory-based authoring is prohibited. Every kickoff MUST:
+
+1. **Cite SPEC section numbers explicitly** — "per SPEC §3 G2 steps 1-4" rather than "do the auth flow".
+2. **Enumerate the full scope** — group count, success-criteria count, stop-point count all match SPEC exactly. No subsets unless the divergence is itself a CEO decision logged as a separate ADR amendment.
+3. **Resolve every SPEC open question** (§6 style) — either accept proposal as-is or list the decision inline. Kickoff cannot assume defaults.
+4. **Pre-flight check**: Builder's FIRST response to a kickoff is to spot-check kickoff ↔ SPEC/CEO_APPROVED alignment. Any discrepancy → Builder flags pre-execution; user retracts or amends the kickoff before Builder runs a single tool.
+
+### Consequences
+- Positive: scope drift caught at dictation time, not mid-build. +5 min per kickoff is a cheap trade vs a mid-phase surprise that may be irreversible (e.g., partial DB schema, landed migrations without matching code).
+- Positive: Builder's pre-flight check habit hardens into a reliable gate (now explicitly mandated, not improvised).
+- Negative: small overhead on every phase kickoff; may feel paperwork-heavy for trivial phases. Mitigation: for phases ≤3 groups and ≤2 success criteria, an inline SPEC reference in the kickoff body may stand in for section-by-section citation.
+
+### Alternatives considered
+- Strict-SPEC-only execution (no kickoff chat) — rejected: loses the CEO's real-time shaping / emphasis that chat prompts naturally carry.
+- Post-execution reconciliation — rejected: divergence only surfaces after damage is done (landed commits, applied migrations).
+- Format-driven (required template for kickoff messages) — deferred. If ADR-006 in practice doesn't catch drift, a template is the next escalation.
+
+### Follow-ups
+- If Phase 2.5 or 2.6 kickoff exhibits drift despite this ADR, escalate to a template in a follow-up ADR-007.
