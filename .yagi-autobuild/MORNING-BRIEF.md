@@ -1,7 +1,7 @@
-# Overnight autopilot brief — 2026-04-23 (hard-stop)
+# Overnight autopilot brief — 2026-04-23 (Phase 2.1 SHIPPED; Phase 2.5 in progress)
 
 ## TL;DR
-**PAUSED_AT_G7_CODEX_HIGH_PASS_2** — Pass 1 fix (hex-form IPv6 + full-form prefix) landed cleanly; M1 migration idempotency RESOLVED. But Codex Pass 2 flagged a category-level gap: text-regex normalization still misses mixed-compression and zero-padded IPv4-mapped IPv6 forms. Proper fix = 30-40 line binary IPv6 parser (no deps). 16 commits pushed, nothing broken in production. Phase 2.5 still SKIPPED.
+**Phase 2.1 SHIPPED** after 3-pass Codex K-05 cycle. H1 closed via binary RFC 5952 IPv6 parser + shared classifier (`src/lib/ip-classify.ts`). 22/22 test assertions pass. Chain now resumed: Phase 2.5 launchpad X1-X4 → G1 DB/migrations → as far as one session can reach.
 
 ## Phase 2.1
 - Status: **PAUSED** at Gate 4 / G7 (Codex K-05).

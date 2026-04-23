@@ -1,7 +1,30 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-23 (Phase 2.0 **SHIPPED** — G0/G1.5/G2/G3/G4/G5/G6/G7 완료, G1 verify pending only)
-> **목적:** Phase 2.0 기술 부채 정리 phase 완료. 새 기능 0개. 7개 group 순차 처리 전부 완주.
+> **갱신:** 2026-04-23 (Phase 2.0 + 2.1 **SHIPPED** — Phase 2.5 entry ready, launchpad in progress)
+> **목적:** Phase 2.1 operational tail (expedited per ADR-005) 완료. Phase 2.5 Challenge MVP build 다음.
+
+---
+
+## 🚀 Phase 2.1 진행 상태 (2026-04-23 — SHIPPED)
+
+| Group | 상태 | 비고 |
+|-------|------|------|
+| G1 Resend DNS verify | ✅ | 야기 가비아 DNS 수정 후 18:00 UTC tick에서 첫 email 발송 확인 |
+| G2 H1 realtime publication | ✅ | `20260423020000_h1_preprod_realtime_publication` — `preprod_frame_reactions/comments` 추가. Pass 2 Codex에서 idempotency wrapper 보완 (commit `638ad43`). |
+| G3 yagi-internal seed | ✅ | `20260423020100_seed_yagi_internal_workspace` — clean-clone 부트스트랩 |
+| G4 POPBILL guard | ✅ | Structured `PopbillNotImplementedError` + bilingual toast |
+| G5 triage + FIX_NOW 3 | ✅ | 24 items classified (3 FIX_NOW / 14 DEFER_PHASE_2_5 / 6 DEFER_PHASE_3 / 1 WONTFIX). FIX_NOW: SSRF walker 포트 / 미팅+attendees atomic RPC / media_type server-derive. |
+| G6 Smoke + middleware | ✅ | middleware matcher `/showcase/` + `/challenges/` 제외 추가 (locale-free 라우트 지원). SPEC 6 items: 4 PASS/auto (item 4 RLS + 5 showcase 404 + 6 Shorts) + 3 MANUAL_PENDING queue. |
+| G7 Codex K-05 | ✅ | 3-pass cycle. Pass 1 HIGH → Pass 2 HIGH (partial) → Pass 3 CLEAN. Final: 바이너리 RFC 5952 IPv6 parser + shared `src/lib/ip-classify.ts`. 22/22 test assertions pass. |
+| G8 Closeout | ✅ | `.yagi-autobuild/phase-2-1/CLOSEOUT.md`. 17 commits `4bf7591..484ed09`. |
+
+**남은 carryover (non-blocking for Phase 2.5):**
+- `.yagi-autobuild/YAGI-MANUAL-QA-QUEUE.md`: 7 browser smokes (journal locale toggle / timezone save / invoice draft 404 / preprod realtime 2-tab / POPBILL toast i18n / meeting txn rollback / YouTube Shorts end-to-end)
+- `.yagi-autobuild/phase-2-2/BACKLOG.md`: 21 DEFER items (14 PHASE_2_5 / 6 PHASE_3 / 1 WONTFIX) + infra seed migrations (cron job seed pending)
+
+---
+
+## Phase 2.0 archive (reference — 이미 SHIPPED)
 
 ---
 

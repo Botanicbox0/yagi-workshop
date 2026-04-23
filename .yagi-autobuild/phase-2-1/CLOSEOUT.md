@@ -1,7 +1,7 @@
-# Phase 2.1 — Closeout (PARTIAL / PAUSED AT G7)
+# Phase 2.1 — Closeout (SHIPPED)
 
-**Date:** 2026-04-23 (overnight autopilot)
-**Status:** ⚠️ **PAUSED at G7** — Codex K-05 returned HIGH. Phase 2.1 NOT shipped; Phase 2.5 launchpad + build **SKIPPED** per hard-stop #10.
+**Date:** 2026-04-23 (overnight autopilot + morning resume)
+**Status:** ✅ **SHIPPED** — all gates passed after 3-pass Codex K-05 cycle. Phase 2.5 launchpad + build now eligible to proceed.
 
 ---
 
@@ -12,7 +12,7 @@
 | 1 | CEO Approval | ✅ pre-filled + accepted | `gates/phase-2-1/CEO_APPROVED.md` |
 | 2 | Design Consultation | N/A per ADR-005 (no new UI) | — |
 | 3 | Plan Design Review | N/A per ADR-005 (no new design) | — |
-| 4 | Engineering Review (Codex K-05) | ❌ **HIGH** — 1 HIGH (SSRF hex-IPv6 bypass), 1 MEDIUM (migration idempotency), 1 LOW (resolved) | `phase-2-1/G7_CODEX_REVIEW.md` |
+| 4 | Engineering Review (Codex K-05) | ✅ **CLEAN** (Pass 3) after 2 remediation cycles — H1 SSRF surface fully closed via binary IPv6 parser + shared classifier module; M1 publication-migration idempotency wrapper applied | `phase-2-1/G7_CODEX_REVIEW.md` |
 | 5 | Design Review (post-build) | N/A per ADR-005 | — |
 | 6 | QA Smoke | ✅ PASS with deferred manual queue | `gates/phase-2-1/QA_SMOKE.md`, `YAGI-MANUAL-QA-QUEUE.md` |
 | 7 | Codex review (= Gate 4 in this phase's SPEC numbering; see note) | see Gate 4 | — |
@@ -32,8 +32,8 @@
 | G4 POPBILL guard | ✅ DONE — structured NOT_IMPLEMENTED + bilingual i18n, commit `cc02bce` | `G4_POPBILL_GUARDED.md` |
 | G5 triage + FIX_NOW | ✅ DONE — 3 FIX_NOW committed + 21 rehomed to BACKLOG, commits `f3fade5` / `7eb5686` / `f8fb5d9` | `G5_TRIAGE_RESULT.md`, `phase-2-2/BACKLOG.md` |
 | G6 Browser smoke + middleware fix | ✅ DONE — item 5/6 regression found + fixed (middleware matcher exclusion), commit `5855dd0`. Items 1/2/3 deferred to manual queue | `gates/phase-2-1/QA_SMOKE.md`, `YAGI-MANUAL-QA-QUEUE.md` |
-| G7 Codex K-05 | ❌ **HIGH — paused** — 1 HIGH SSRF finding | `G7_CODEX_REVIEW.md` |
-| G8 Closeout | ⏸ partial (this file) | — |
+| G7 Codex K-05 | ✅ CLEAN (Pass 3) after 2 remediation cycles | `G7_CODEX_REVIEW.md` |
+| G8 Closeout | ✅ DONE (this file — SHIPPED) | — |
 
 ---
 
@@ -78,22 +78,18 @@ c27fb26  docs(phase-2-1): G6 QA_SMOKE — initial (pre-fix)
 | 4 | POPBILL `issueTaxInvoice()` in production mode returns structured 501-equivalent | ✅ (adapted to server-action return-union pattern) |
 | 5 | G4 deferred 24 items all classified | ✅ (`FIX_NOW`:3 / `DEFER_PHASE_2_5`:14 / `DEFER_PHASE_3`:6 / `WONTFIX`:1 — counts include carry-over runners-up) |
 | 6 | Six browser smoke tests logged, no FAIL outstanding without a ticket | ✅ (items 1/2/3 in manual queue; 4 PASS; 5/6 PASS post middleware fix) |
-| 7 | Codex K-05 returns CLEAN or MEDIUM-only, all addressed or deferred | ❌ **HIGH remains — blocks shipping** |
+| 7 | Codex K-05 returns CLEAN or MEDIUM-only, all addressed or deferred | ✅ **CLEAN** (Pass 3, commit `484ed09`) |
 
-**6 of 7 satisfied.** Criterion 7 blocks closeout.
+**7 of 7 satisfied.** Phase 2.1 SHIPPED.
 
 ---
 
 ## Carryovers for next session
 
-### Blocking (before Phase 2.1 can ship) — **updated post-Pass-2**
+### Blocking (before Phase 2.1 can ship) — **all resolved in Pass 3**
 
-1. **[H1 — Pass 2 still open]** Text-regex normalization in `isPrivateIPv6()` covers two textual prefixes but misses mixed-compression (`0:0:0:0::ffff:*`) and zero-padded (`0000:0000:...`) IPv4-mapped variants. Proper fix is a ~30-40 line binary IPv6 parser (Option A in `G7_CODEX_REVIEW.md` Pass 2 section). No deps, ends regex whack-a-mole.
-2. **Re-run Codex K-05** after Option A patch.
-
-### Non-blocking (can ship with Phase 2.1 if done in same session)
-
-3. ~~**[M1]** Publication migration idempotency wrapper.~~ ✅ RESOLVED in commit `638ad43` — confirmed by Pass 2 Codex.
+1. ~~**[H1]** Text-regex classifier bypass.~~ ✅ RESOLVED in commit `484ed09` — replaced with binary RFC 5952 parser in `src/lib/ip-classify.ts`. Shared module eliminates the duplicated-classifier drift surface entirely. Codex Pass 3 CLEAN, 22/22 test assertions pass.
+2. ~~**[M1]** Publication migration idempotency wrapper.~~ ✅ RESOLVED in commit `638ad43` — Pass 2 Codex confirmed.
 
 ### Infra TODOs (Phase 2.2 or later)
 
@@ -107,15 +103,19 @@ See `.yagi-autobuild/YAGI-MANUAL-QA-QUEUE.md` — 7 items (Phase 2.1 G6 items 1/
 
 ## Phase 2.5 entry
 
-**NOT READY.** Per overnight autopilot hard-stop #10: "Phase 2.1 CLOSEOUT not achieved (skip Phase 2.5 entirely if this)." Launchpad X1-X4 + Phase 2.5 G1-G8 **not attempted**.
+**READY.** All Phase 2.1 gates passed; hard-stop #10 is cleared. Next overnight-plan step: Phase 2.5 launchpad X1-X4 (design audit / SPEC review / pre-flight / ADR-006), then Phase 2.5 G1-G8 build.
 
-Phase 2.5 SPEC.md is in the repo (`c82ff6f` / `3c97a6b` commits — pre-autopilot) and ready to execute once Phase 2.1 clears G7.
+Phase 2.5 SPEC at `.yagi-autobuild/phase-2-5/SPEC.md`; CEO approval at `.yagi-autobuild/gates/phase-2-5/CEO_APPROVED.md` (both committed in `c82ff6f` / `3c97a6b` pre-autopilot).
 
 ---
 
 ## Autopilot summary
 
-- **Hard-stop trigger:** condition #1 (HIGH Codex finding).
-- **Remediation autonomy:** explicitly forbidden by the overnight protocol ("No autonomous patches" on HIGH).
-- **Action taken:** commit all Phase 2.1 WIP, push to remote, Telegram alert, end autopilot. This closeout is the WIP marker.
-- **Estimated resume time:** 30-45 min (H1 SSRF patch + M1 idempotency wrapper + re-Codex). Phase 2.5 then takes its full budgeted time (~20+ hrs), unchanged.
+- **Initial autopilot run:** hard-stop at G7 Pass 1 (Codex HIGH on SSRF text-regex bypass). Per protocol: committed WIP, pushed, Telegram, ended.
+- **Morning resume pass 1 (user GO H1+M1):** applied Codex Pass 1 sketch + 야기 additional `0:0:0:0:0:ffff:` normalization requirement. Re-Codex → still HIGH (PARTIAL_RESOLUTION) due to mixed-compression + zero-padded variants.
+- **Morning resume pass 2 (user GO A):** rewrote classifier as binary RFC 5952 parser; refactored to shared `src/lib/ip-classify.ts` module; added 22-case `.mjs` verification script (no test-framework dep). Re-Codex (Pass 3) → **CLEAN**.
+- **Net delta vs original estimate:** H1 remediation consumed ~3 iterations instead of the original 45-min single-shot estimate. Pass 2 failure saved us from shipping a classifier with a defense-in-depth gap — a net security win even if the wall-clock cost rose.
+
+## Commits (final Phase 2.1 range)
+
+Post-Pass-3 final commit range: `4bf7591..484ed09` (17 commits). All pushed after each hard-stop + one final push after G8 + Phase 2.5 launchpad/build chain completes.
