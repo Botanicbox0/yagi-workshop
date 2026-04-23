@@ -165,10 +165,14 @@ Tasks (v2 — X2 CRITICAL #1 + HIGH #5/#8/#9 applied):
      ADD COLUMN instagram_handle text,
      ADD COLUMN bio text CHECK (bio IS NULL OR char_length(bio) <= 200),
      ADD COLUMN avatar_url text,
-     ADD COLUMN role_switched_at timestamptz;
+     ADD COLUMN role_switched_at timestamptz,
+     ADD COLUMN handle_changed_at timestamptz;
    ```
    Existing `profiles.avatar_url` lives in the `avatars` bucket from
    Phase 1.1; reuse. No separate `user_profiles`. See `contracts.md` Phase 1.1.
+   `handle_changed_at` is the source of truth for the 90-day change lock
+   referenced in §3 G2 Task 6 + §6 Q7 (v2 Codex MED-2 resolution —
+   previously §624 referenced the column without G1 adding it).
 
 2. Create role-specific tables referencing `profiles.id` (1:1 for Creator/Studio):
    - `creators` (id uuid PK FK → profiles.id, display_name text NOT NULL)

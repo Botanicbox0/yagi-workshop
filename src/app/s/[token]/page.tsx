@@ -50,9 +50,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 async function NoLongerShared({ locale }: { locale: "ko" | "en" }) {
   const t = await getTranslations({ locale, namespace: "share" });
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center space-y-3">
-        <p className="text-lg font-semibold text-black">{t("no_longer_shared")}</p>
+        <p className="text-lg font-semibold text-foreground">{t("no_longer_shared")}</p>
         <p className="text-sm text-muted-foreground">yagiworkshop.xyz</p>
       </div>
     </div>
@@ -139,7 +139,7 @@ function FrameMedia({
           href={externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute inset-0 flex items-end p-3"
+          className="absolute inset-0 flex items-end p-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <span className="rounded-full bg-foreground/70 px-3 py-1 text-xs text-background backdrop-blur-sm">
             Open on {provider ?? "external site"} →
@@ -236,18 +236,18 @@ async function CommentsSection({
 
   return (
     <div className="mt-3 space-y-3">
-      <p className="text-sm font-semibold text-black">{t("comments_title")}</p>
+      <p className="text-sm font-semibold text-foreground">{t("comments_title")}</p>
       {displayComments.map((c) => (
         <div
           key={c.id}
           className="rounded-lg border border-border bg-muted px-4 py-3 space-y-1"
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-black">
+            <span className="text-sm font-medium text-foreground">
               {c.author_display_name}
             </span>
             {c.resolved_at && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+              <span className="rounded-full bg-success px-2 py-0.5 text-xs text-success-foreground">
                 {t("resolved_badge")}
               </span>
             )}
@@ -319,16 +319,16 @@ export default async function SharePage({ params }: Props) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* ── Header ── */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-black">
+          <span className="text-xs font-semibold uppercase tracking-widest text-foreground">
             YAGI WORKSHOP
           </span>
           <span className="text-muted-foreground">·</span>
           <span className="text-xs text-muted-foreground">{t("header_label")}</span>
-          <span className="text-sm font-medium text-black truncate">
+          <span className="text-sm font-medium text-foreground truncate">
             {projectTitle}
           </span>
         </div>
@@ -340,7 +340,7 @@ export default async function SharePage({ params }: Props) {
         <main className="flex-1 min-w-0 space-y-16">
           {/* Welcome banner */}
           <section className="space-y-1">
-            <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold text-black">
+            <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold text-foreground">
               {t("welcome_title")}
             </h1>
             <p className="text-muted-foreground">{t("welcome_sub")}</p>
@@ -400,7 +400,7 @@ export default async function SharePage({ params }: Props) {
 
                 {/* Caption */}
                 {frame.caption && (
-                  <p className="whitespace-pre-wrap text-base text-black [word-break:keep-all]">
+                  <p className="whitespace-pre-wrap text-base text-foreground [word-break:keep-all]">
                     {frame.caption}
                   </p>
                 )}
@@ -438,7 +438,7 @@ export default async function SharePage({ params }: Props) {
           {/* Footer CTA */}
           <footer className="border-t border-border pt-10 pb-16 text-center">
             {board.status === "approved" ? (
-              <p className="text-base font-semibold text-green-700">
+              <p className="text-base font-semibold text-success-foreground">
                 {t("approved_thanks")}
               </p>
             ) : board.status === "shared" ? (
@@ -449,7 +449,7 @@ export default async function SharePage({ params }: Props) {
             <p className="mt-6 text-xs text-muted-foreground">
               <a
                 href={siteUrl}
-                className="hover:underline"
+                className="hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -467,7 +467,7 @@ export default async function SharePage({ params }: Props) {
                 <a
                   key={idx}
                   href={`#frame-${idx + 1}`}
-                  className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors tabular-nums"
+                  className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors tabular-nums focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
                 >
                   {idx + 1}
                 </a>
