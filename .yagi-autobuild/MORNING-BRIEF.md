@@ -1,63 +1,69 @@
-# Overnight autopilot brief — 2026-04-23 (Phase 2.1 SHIPPED; Phase 2.5 in progress)
+# Overnight autopilot brief v3 — 2026-04-23 (Phase 2.1 SHIPPED; Phase 2.5 BLOCKED on SPEC revision)
 
 ## TL;DR
-**Phase 2.1 SHIPPED** after 3-pass Codex K-05 cycle. H1 closed via binary RFC 5952 IPv6 parser + shared classifier (`src/lib/ip-classify.ts`). 22/22 test assertions pass. Chain now resumed: Phase 2.5 launchpad X1-X4 → G1 DB/migrations → as far as one session can reach.
+**Phase 2.1 SHIPPED ✅** after 3-pass Codex K-05 cycle (H1 closed via binary RFC 5952 IPv6 parser + shared classifier). **Phase 2.5 HALTED** per hard-stop #8: X2 SPEC review returned **4 CRITICAL_BLOCKING** + 9 HIGH findings, all clustered around identity/role-model collision between Phase 2.5 new `user_profiles` and Phase 1.1's existing `profiles`. Phase 2.5 SPEC needs one revision pass before G1 kickoff.
 
 ## Phase 2.1
-- Status: **PAUSED** at Gate 4 / G7 (Codex K-05).
-- Commits: `4bf7591..8d34210` + `5855dd0` middleware fix + G7/closeout docs = 14 pushed.
-- Codex: HIGH (1) / MEDIUM (1) / LOW (1, builder-resolved).
-- G1-G6: all ✅. G1 (Resend DNS) closed post-야기-fix; notification pipeline live.
-- Manual QA queue: 7 items → `.yagi-autobuild/YAGI-MANUAL-QA-QUEUE.md` (non-blocking).
+- Status: **SHIPPED**
+- Commits: `4bf7591..484ed09` (17) + closeout chain through `b68976e` — **21 commits unpushed on local main** at halt time.
+- Codex: CLEAN (Pass 3).
+- G1-G8 all green. Success criteria: 7/7.
+- Manual QA queue: 7 items → `YAGI-MANUAL-QA-QUEUE.md` (non-blocking).
 
 ## Phase 2.5
-- Status: **SKIPPED** (per hard-stop #10: "Phase 2.1 CLOSEOUT not achieved → skip Phase 2.5 entirely").
-- Commits: 0.
-- Launchpad X1-X4 (design audit / SPEC review / pre-flight / ADR-006): NOT RUN.
-- 10 success criteria: 0 evaluated.
+- Status: **BLOCKED** at launchpad X2 CRITICAL_BLOCKING.
+- Commits: 0 (G1-G8 not started — hard-stop #8 triggered before any build work).
+- Launchpad outcomes:
+  - **X1 design audit:** still running at halt time. Will complete in background; results saved to `.yagi-autobuild/design-audit/{CRITICAL,IMPROVEMENTS,COMPLIANT}.md` when agent finishes. X1 result NOT available at brief-write time.
+  - **X2 SPEC review:** ✅ DONE → `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md`. 26 findings (4 CRITICAL_BLOCKING + 9 HIGH + 10 MEDIUM + 3 LOW).
+  - **X3 pre-flight:** ✅ DONE → `.yagi-autobuild/phase-2-5/PRE-FLIGHT-FINDINGS.md`. No blocking unknowns, 3 caveats.
+  - **X4 ADR-006:** ✅ DONE (commit `55b06e7`).
 
-## Yagi TODOs on wake (ordered) — **updated post-Pass-2**
+## Why blocked (X2 CRITICAL_BLOCKING summary)
 
-1. **Read** `.yagi-autobuild/phase-2-1/G7_CODEX_REVIEW.md` §"Pass 2" section (60 sec — residual gap is mixed-compression + zero-padded IPv4-mapped IPv6).
-2. **Pick remediation:**
-   - **Option A (recommended)** — 30-40 line binary IPv6 parser in both `og-unfurl.ts` + `og-video-unfurl.ts`. Parses textual form → 16-byte representation → extracts low 32 bits → feeds `isPrivateIPv4`. Ends regex whack-a-mole; CLEAN on next Codex.
-   - **Option B** — expand normalization regex with more `.replace()` variants. Fast but not exhaustive; subsequent Codex may still find variants.
-   - **Option C** — WONTFIX + doc. Overrule Codex on reachability (normal request path via `new URL()` canonicalizes). Not recommended for defense-in-depth.
-3. **Give Builder GO <option>** → patch + re-Codex (ETA ~45 min for A).
-4. **After Codex CLEAN:** resume original overnight chain — G8 closeout → Phase 2.5 launchpad → Phase 2.5 G1-G8 build.
-5. **Independent of 1-4:** when convenient, run the 7 manual QA items from `YAGI-MANUAL-QA-QUEUE.md`. None block Phase 2.1 ship.
+All 4 CRITICAL findings cluster on one theme — **Phase 2.5 SPEC rewrites identity/role mechanics that Phase 1.1 already owns:**
 
-## Design-audit highlights (Phase 2.5 launchpad X1)
+1. **`user_profiles` duplicates existing `profiles`** (Phase 1.1 has 1:1-with-auth.users surface already). G1 as written would fragment identity or shadow existing table. Fix: ALTER the existing `profiles` table instead.
 
-**NOT RUN** — requires Phase 2.1 green first.
+2. **"4th admin role" bypasses existing `is_yagi_admin` RPC** (Phase 1.1 has `user_roles.role='yagi_admin'` + the RPC used by every 1.2–1.9 admin surface). Introducing `user_profiles.role='admin'` creates a parallel authz system. Fix: use existing `is_yagi_admin` for admin gating.
 
-## Phase 2.5 SPEC review outcomes (launchpad X2)
+3. **Phase 2.5 roles drop workspace-scoping** (Phase 1.x roles are workspace-scoped; 2.5 roles global-only). A user who is Creator AND `workspace_admin` in a client workspace — which role wins? Not specified. Fix: explicit orthogonality clause (Creator/Studio/Observer live on `profiles.role`, `user_roles` untouched).
 
-**NOT RUN** — same gate.
+4. **SPEC cites "launchpad X1 audit findings"** in G3/G6 acceptance, but X1 didn't complete pre-G1. Fix: either block G3/G6 on X1 OR anchor to existing COMPONENT_CONTRACTS §5.1–5.5 + UI_FRAMES Frame-2 defaults only.
 
-## Pre-flight outcomes (launchpad X3)
+Plus 9 HIGH clustered around:
+- Unresolved §6 open questions (Q2 R2 CORS, Q4 handle reserved list — ADR-006 violation)
+- Success criteria #6/#9 not 30s-smoke-testable
+- `notification_preferences.challenge_updates_enabled` missing from schema (needs G1 migration)
+- Winner auto-pin to Showcase — no defined integration (junction table vs ALTER)
+- 24h-before reminder scheduler not specified
 
-**NOT RUN** — same gate. (Phase 2.5 SPEC is committed and ready; `.yagi-autobuild/phase-2-5/SPEC.md`, `.yagi-autobuild/gates/phase-2-5/CEO_APPROVED.md`.)
+Full detail: `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md`.
 
-## Codex findings in one screen — **updated post-Pass-2**
+## Yagi TODOs on wake (ordered)
 
-| Pass | Severity | Issue | Status |
-|---|---|---|---|
-| 1 | HIGH | `isPrivateIPv6()` misses hex-form IPv4-mapped IPv6 (`::ffff:7f00:1`) | Partially patched in `638ad43` — covers hex + full-form `0:0:0:0:0:ffff:` but NOT mixed-compression (`0:0:0:0::ffff:`) or zero-padded (`0000:0000:...`) variants. Pass 2 still HIGH. |
-| 1 | MEDIUM | M1 publication migration not idempotent | ✅ RESOLVED in `638ad43` (DO $$ IF NOT EXISTS guards). |
-| 1 | LOW | schema_migrations unverifiable | ✅ RESOLVED by builder SQL query. |
-| 2 | HIGH | H1 residual — text-regex whack-a-mole; need binary IPv6 parser | **OPEN — awaiting decision.** |
-| 2 | LOW | `og-video-unfurl.ts` missing inline sync comment | minor, tag-along fix with A. |
+1. **Scan** `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md` TL;DR + the 4 CRITICAL_BLOCKING entries (5 min).
+2. **Decide** the SPEC revision path:
+   - **A.** CEO-approved quick-pass: apply the 4 CRITICAL fixes inline in SPEC, re-commit, mark CEO_APPROVED addendum, builder restarts from Phase 2.5 G1. ~30 min SPEC edit.
+   - **B.** Full SPEC rewrite: address the 4 CRITICAL + all 9 HIGH systematically. Safer for closeout sign-off. ~2h SPEC edit.
+   - **C.** Hand to Web Claude for SPEC revision pass, then resume here with updated SPEC.
+3. **Wait for X1** (design audit) to complete in background — likely ready by the time you're mid-scan. If X1 flags additional CRITICAL items in current surfaces, bundle into the same SPEC revision.
+4. **Independent:** 7 browser smokes from Phase 2.1 QA queue remain non-blocking for Phase 2.5 start.
+5. **Git push** — **21 commits unpushed**. Overnight plan mandated "push after Phase 2.5 G8 only", but hard-stop protocol says "push to remote" on halt. Doing the hard-stop push now.
 
-## Things that went RIGHT (for momentum)
+## Launchpad outputs for review
 
-- G1-G6 all landed cleanly.
-- Middleware matcher fix unblocked items 5 + 6 in one 2-line edit (verified via curl — `/showcase/does-not-exist` now HTTP 404 with custom not-found.tsx RSC payload).
-- Meeting atomic RPC landed with G4 #8 `requestId` preservation intact; Codex confirmed.
-- G1 watcher caught the first post-verify tick and closed itself.
-- No production DB writes went wrong; all 3 migrations applied idempotently and version-aligned.
-- G5 taxonomy rename (DEFER_PHASE_2_5 / PHASE_3 / WONTFIX) completed; Phase 2.2 BACKLOG ready.
+- `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md` — X2 output (26 findings)
+- `.yagi-autobuild/phase-2-5/PRE-FLIGHT-FINDINGS.md` — X3 output (3 caveats: R2 bucket, `/u/` middleware, 500MB vs 50MB size)
+- `.yagi-autobuild/design-audit/*.md` — X1 output (pending — background agent)
+- `docs/design/DECISIONS.md` ADR-006 — SPEC-to-kickoff alignment protocol
+
+## Hard-stop-8 vs success criteria
+
+Overnight plan hard-stop condition #8: "X2 SPEC review CRITICAL_BLOCKING finding" — MATCHED. Halt action executed: WIP commit, push, Telegram alert, autopilot ended. Phase 2.5 G1-G8 skipped (not attempted).
+
+Net delta vs plan: Phase 2.1 delivered in full (+ the detour through 3 Codex passes). Phase 2.5 stopped at launchpad — which is arguably the right place for the collision to surface (pre-build vs mid-G1 when production DB would have a half-duplicated identity surface).
 
 ## Suggested first action
 
-> Open `.yagi-autobuild/phase-2-1/G7_CODEX_REVIEW.md` §"Pass 2" (60-sec read). Reply `GO A` (binary IPv6 parser, recommended), `GO B` (wider regex), or `GO C` (WONTFIX). Builder applies + re-runs Codex; on CLEAN, the overnight chain auto-resumes. ETA to Phase 2.5 G1 start: ~45 min from your GO.
+> Open `SPEC-REVIEW-NOTES.md` → read the 4 CRITICAL_BLOCKING entries (~3 minutes). Reply `GO A` (quick-pass) / `GO B` (full) / `GO C` (hand to Web Claude). Builder applies the SPEC diff on `GO A`, or waits for revised SPEC on `GO C`. ETA to Phase 2.5 G1 from `GO A`: ~45 min (SPEC edit + re-CEO_APPROVED + G1 kickoff).
