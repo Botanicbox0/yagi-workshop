@@ -1,7 +1,38 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-24 (Phase 2.5 G1/G2/G3/**G4 SHIPPED** — overnight Gate Autopilot G5-G8 chain 진행 중)
-> **목적:** 야기 취침 모드. G4 closed, G5→G6→G7→G8 체인 자동 진행. Phase 2.5 G8 완료 후 STOP. Phase 2.6 morning kickoff 대기.
+> **갱신:** 2026-04-24 (Phase 2.5 G1~G7 shipped, **G8 HALT** — Codex K-05 verdict HIGH_FINDINGS 6건, branch not merged)
+> **목적:** Phase 2.5 G8 hardening 필요. 야기 morning review + hardening migration + re-K-05 후 merge. Phase 2.6 kickoff 블록됨.
+
+---
+
+## 🛑 Phase 2.5 HALT at G8 (2026-04-24 ~04:35 KST)
+
+**Codex K-05 consolidated pass returned HIGH_FINDINGS (6 ship-blockers).** Details: `.yagi-autobuild/phase-2-5/G8_K05_FINDINGS.md`. Telegram halt alert sent (msg #60).
+
+**G1~G7 shipped (branch `worktree-g3-challenges`, commit `90a5b8f` — pushed to origin):**
+- G1 schema baseline + 2 hardening migrations
+- G2 auth flow + handle RPCs + ADR-009
+- G3 public /challenges/* + realtime gallery
+- G4 submission flow (R2 signed-URL + Zod + XHR progress)
+- G5 admin management (5 routes + CRUD/judge/announce)
+- G6 public profile /u/[handle] + settings + avatar crop
+- G7 notifications glue (4 kinds + pg_cron reminder — APPLIED to prod DB)
+
+**G8 blockers (all SHIP_BLOCKER):**
+- K05-001 HIGH-A: challenge_submissions public SELECT leaks non-ready content
+- K05-002 HIGH-A: challenge_votes public SELECT leaks voter identities
+- K05-003 HIGH-C: submission content validation bypassable via direct INSERT/UPDATE
+- K05-004 HIGH-A: R2 submit move copies+deletes arbitrary existing keys
+- K05-005 HIGH-C: state machine bypassable via direct admin UPDATE
+- K05-006 HIGH-C: challenge config JSONB stored without server-side Zod
+
+4/6 need migration → ULTRA-CHAIN D forbids further overnight migration → halt.
+
+**Next action (morning):** yagi reviews `G8_K05_FINDINGS.md`, picks remediation strategy, authors hardening migration + app patches, re-runs K-05, merges to main.
+
+**Codex session resume:** `codex resume 019dbbcd-37fe-73d0-8611-d28140ae0ccc`
+
+---
 
 ---
 

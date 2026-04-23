@@ -72,3 +72,29 @@ No DB writes. No Codex K-05 pre-apply (per ADR-005). Phase 2.5 G8 runs single co
 - DECISIONS_CACHE Q-033 through Q-039 adopted (all yes)
 - Codex K-05 deferred to G8 consolidated pass per ADR-005
 - Detail: `.yagi-autobuild/phase-2-5/G7_CLOSEOUT.md`
+
+---
+
+## G8 — HALTED (2026-04-24 ~04:35 KST)
+
+**Codex K-05 verdict: HIGH_FINDINGS** (6 ship-blockers, all require remediation before merge).
+
+Findings summary (see `.yagi-autobuild/phase-2-5/G8_K05_FINDINGS.md` for full detail + fixes):
+- K05-001 HIGH-A challenge_submissions SELECT USING(true) — non-ready content leaked
+- K05-002 HIGH-A challenge_votes SELECT USING(true) — voter_id leaked
+- K05-003 HIGH-C submission content validation bypassable (direct RLS INSERT/UPDATE)
+- K05-004 HIGH-A R2 move copies+deletes arbitrary existing keys
+- K05-005 HIGH-C state machine bypassable (no DB trigger on challenges.state)
+- K05-006 HIGH-C JSONB config stored without server-side Zod
+
+4/6 require migration. ULTRA-CHAIN D forbids further overnight migrations → halt triggered per ULTRA-CHAIN E.
+
+Actions taken at halt:
+- Telegram msg #60 sent (HIGH_FINDINGS alert with remediation summary)
+- G8_K05_FINDINGS.md authored with per-finding fix + remediation strategy
+- CLOSEOUT.md + HANDOFF.md marked HALTED
+- WIP G8 docs committed to branch (NOT merged to main)
+
+**Autopilot chain STOPPED per ULTRA-CHAIN F.** Phase 2.6 kickoff blocked. Morning action required.
+
+**Codex session resume:** `codex resume 019dbbcd-37fe-73d0-8611-d28140ae0ccc` after hardening lands.
