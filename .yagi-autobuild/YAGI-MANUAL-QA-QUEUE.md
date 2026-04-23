@@ -80,6 +80,22 @@ Each entry: preconditions, steps, expected, code-path reference.
 
 ---
 
+---
+
+## Phase 2.5 G3 items
+
+### Q-G3-C1 — Gallery realtime 2-browser smoke (5s SLA per SPEC §2 #6)
+
+Phase 2.5 G3 gallery realtime 2-browser smoke (5s SLA per SPEC §2 #6):
+- Open `/challenges/test-open-1/gallery` in 2 browser tabs.
+- In Supabase SQL Editor: INSERT a new challenge_submission for test-open-1.
+- Both tabs should refresh within 5s showing the new submission.
+- If not: check browser console for postgres_changes subscription errors.
+
+**Code path:** `src/components/challenges/gallery-realtime.tsx` — first realtime subscriber in codebase. Channel name: `gallery:<challengeId>`.
+
+---
+
 ## Priority ordering (suggested)
 
 Most business-visible first:

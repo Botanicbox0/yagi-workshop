@@ -270,3 +270,34 @@ RETURN NOT (
 **Status**: deferred to Phase 2.6
 **Registered**: G2 hardening v1 Codex K-05 M2 finding (2026-04-23)
 **Status**: open
+
+---
+
+## FU-16 — header-cta-resolver literals → useTranslations
+
+**Trigger**: Post-G3 (before G8 closeout preferred; acceptable to slip to Phase 2.6 polish batch).
+**Risk**: LOW — purely cosmetic/maintainability. Strings match Q2-1 B copy exactly; no user-visible bug. Cost of drift if copy changes later: 4 literal touches in one file vs 4 key updates in `messages/ko.json`.
+**Action**: In `src/components/challenges/header-cta-resolver.tsx`, replace 4 hardcoded literals with `useTranslations("challenges.header_cta")` lookups:
+- `"참여 시작하기"` → `t("no_auth")`
+- `"작품 올리기"` → `t("creator_studio")`
+- `"창작자로 참여하기"` → `t("observer")`  (Q2-1 B value)
+- `"새 챌린지"` → `t("admin")`
+
+Remove the TODO comment block flagged by chrome-author at Group A closeout.
+Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0; re-smoke `/challenges` header in all 4 auth/role states.
+**Owner**: G3 Builder (next session) or Phase 2.6 author.
+**Status**: open
+**Registered**: G3 Group A closeout (2026-04-24)
+**Scope reduction 2026-04-24**: Observer `?next=` path-preservation was folded into Group B closeout (lead inline fix, not deferred). FU-16 now covers *only* the 4 literal→`useTranslations` swaps. File content unchanged apart from the observer branch href update.
+
+---
+
+## FU-17 — B1 list inline empty-state → consolidate with `<EmptyState>`
+
+**Trigger**: Post-G3 (before G8 closeout ideal; acceptable to slip to Phase 2.6).
+**Risk**: LOW — maintainability only. Duplication is one Korean string + a wrapper `<div>`; no runtime bug, no user-visible drift.
+**Background**: In G3 Group B, B1 (list-author) and B2 (detail-author) ran in parallel. B2 authored `src/components/challenges/empty-state.tsx` as the canonical empty-state component. B1 needed an empty state for the "all three sections empty" edge case but could not import B2's component without a cross-group barrier, so B1 inlined a minimal version. yagi approved the duplication in exchange for parallelism (Group B entry decision, 2026-04-24).
+**Action**: In `src/app/challenges/page.tsx`, replace the inline empty block with `<EmptyState variant="no_open" />` imported from `src/components/challenges/empty-state.tsx`. Delete the inline copy. Verify `pnpm exec tsc --noEmit` + `pnpm lint` still EXIT=0 and the list page still renders the empty branch correctly when all three arrays are empty.
+**Owner**: G3 Builder (next session) or Phase 2.6 author.
+**Status**: open
+**Registered**: G3 Group B entry (2026-04-24)

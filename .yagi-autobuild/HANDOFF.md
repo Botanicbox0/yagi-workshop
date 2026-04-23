@@ -1,7 +1,38 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-23 저녁 (Phase 2.5 G1/G2 **SHIPPED**, G3 entry 진행 중 — infra v2.0 완료, Agent Teams 실전 대기)
-> **목적:** Phase 2.5 G3 (공개 /challenges/* routes + realtime gallery) 진입. G2 retro에서 도출된 병렬화 infra 전면 도입.
+> **갱신:** 2026-04-24 (Phase 2.5 G1/G2/**G3 SHIPPED** — 첫 Agent Teams 실전 완주, `worktree-g3-challenges` 브랜치, push + merge 대기)
+> **목적:** Phase 2.5 G4 (submission flow) 다음 진입. G3에서 검증된 Agent Teams + parallel_group 패턴을 후속 gate에 계속 적용.
+
+---
+
+## ✅ 방금 끝난 것 — Phase 2.5 G3 (2026-04-24 closeout)
+
+**Worktree:** `.claude/worktrees/g3-challenges/` (branch `worktree-g3-challenges`)
+**첫 Agent Teams 실전 완주.** 5 sub-groups (A/B/B.5/C/D), 9 teammates, ~30 files, ~3h wall clock (SPEC 목표 4-5h — ~40% 단축).
+
+### G3에서 shipped
+- Public `/challenges` list + `/challenges/[slug]` detail + `/challenges/[slug]/gallery` (realtime, votes, winners)
+- 첫 realtime subscriber in codebase (`gallery-realtime.tsx`)
+- Countdown timer + 16:9 thumbnail support + Higgsfield-style archived card grid (B.5 polish round, mid-flight 추가)
+- Sitemap + 9-assertion node smoke test
+- 자세한 내역: `.yagi-autobuild/phase-2-5/G3_CLOSEOUT.md`
+
+### 열린 follow-ups
+- FU-16 (LOW) — header-cta-resolver 리터럴 → useTranslations
+- FU-17 (LOW) — B1 인라인 empty-state → B2 `<EmptyState>` 통합
+
+### G3에서 소비된 seed data (테스트용, prod 아님)
+6 challenges (`test-*`) + 3 test creators + 6 submissions + 3 winners + 3 votes. 정리 SQL은 CLOSEOUT.md §seed-data 참조.
+
+### 다음
+야기 authorization 대기 중:
+1. `git push origin worktree-g3-challenges`
+2. merge 전략 결정 (직접 main merge vs PR review)
+3. G4 (submission flow) 진입
+
+---
+
+## 📚 Archive — Phase 2.5 G3 entry session (2026-04-23 저녁, SHIPPED per above)
 
 ---
 

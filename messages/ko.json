@@ -983,5 +983,70 @@
     "not_found": "찾을 수 없습니다",
     "unauthorized": "권한이 없습니다",
     "validation": "입력값이 올바르지 않습니다"
+  },
+  "challenges": {
+    "list": {
+      "headline": "지금 가장 주목받는 AI 챌린지",
+      "sections": {
+        "open": "진행 중",
+        "announced": "결과 발표",
+        "archived": "지난 챌린지"
+      },
+      "expand_cta": "더 보기",
+      "empty_all": "아직 챌린지가 없습니다"
+    },
+    "detail": {
+      "status_banner": {
+        "open_normal": "지금 참여 가능 · 마감까지 {daysHours}",
+        "open_h24": "⏰ 마감까지 {hoursMinutes} 남았어요",
+        "open_h1": "⚠️ 곧 마감입니다 — 지금 작품을 올려보세요",
+        "closed_judging": "심사 진행 중 · 결과 발표 예정: {announceAt}",
+        "closed_announced": "결과 발표 완료 — 이번 챌린지의 주인공을 확인하세요",
+        "archived": "지난 챌린지"
+      },
+      "primary_cta": {
+        "submit": "작품 올리기",
+        "upgrade": "창작자로 참여하기",
+        "signin": "참여 시작하기",
+        "view_gallery": "작품 보기",
+        "view_winners": "주인공 보기"
+      },
+      "secondary_cta": {
+        "view_works": "작품 보기",
+        "share": "공유"
+      },
+      "empty": {
+        "no_open": "참여한 작품이 없습니다",
+        "no_open_sub": "첫 번째 작품을 기다리고 있어요\n이 챌린지의 첫 주인공이 되어보세요",
+        "no_closed": "참여한 작품이 없습니다"
+      },
+      "share_copied": "링크가 복사되었어요",
+      "timeline": {
+        "start": "시작",
+        "close": "마감",
+        "announce": "발표"
+      }
+    },
+    "gallery": {
+      "winners_title": "이번 챌린지의 주인공",
+      "winners_subtitle": "창작자와 응원이 만난 작품들",
+      "submitted_ago": "올린 지 {days}일 전",
+      "vote": {
+        "default": "응원하기",
+        "voted": "응원"
+      },
+      "toast": {
+        "auth_required": "참여한 분만 응원할 수 있어요",
+        "auth_action": "참여 시작하기",
+        "already_voted": "이미 응원했어요",
+        "vote_closed": "이 챌린지는 마감되었습니다"
+      }
+    },
+    "header_cta": {
+      "no_auth": "참여 시작하기",
+      "creator_studio": "작품 올리기",
+      "observer": "창작자로 참여하기",
+      "admin": "새 챌린지"
+    }
   }
 }
