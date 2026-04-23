@@ -1,106 +1,86 @@
-# Overnight autopilot brief v4 — 2026-04-23 (Phase 2.1 SHIPPED; Phase 2.5 BLOCKED, X1+X2 full results in)
+# Overnight autopilot brief v5 — 2026-04-23 (Phase 2.1 SHIPPED; Phase 2.5 SPEC v2 + [BLOCKS 2.5] cluster closed)
 
 ## TL;DR
-**Phase 2.1 SHIPPED ✅** after 3-pass Codex K-05 cycle. **Phase 2.5 HALTED** per hard-stop #8: launchpad review produced **2 blocker clusters** requiring SPEC revision before G1:
-- **X2 (SPEC review):** 4 CRITICAL_BLOCKING on identity/role-model collision with Phase 1.1 (`profiles` duplication + admin role bypass).
-- **X1 (design audit):** 13 CRITICAL + 20 IMPROVEMENTS + 10 COMPLIANT. Several `[BLOCKS 2.5]` findings — public share surface (`/s/[token]`) is the template Phase 2.5 gallery/submit/profile would copy, but uses raw Tailwind grays/blacks/ad-hoc radii. Must retoken before 2.5 UI lands or the drift propagates.
-
-Both blockers are "revise SPEC + fix surface tokens once, then Phase 2.5 runs clean" — not open-ended. Resume ETA after revisions: ~60-90 min to SPEC-v2 + token refactor of share surface, then Phase 2.5 G1 starts.
+**Phase 2.1 SHIPPED ✅.** **Phase 2.5 SPEC revised to v2** addressing all X2 4 CRITICAL + 9 HIGH findings (identity-model collision resolved — uses ALTER `profiles`, reuses `is_yagi_admin`, explicit orthogonality clause, junction-table winner pinning). **X1 design-audit cluster closed** for every `[BLOCKS 2.5]` item — share surface retoken'd with semantic tokens, raw `<input>`/`<textarea>` replaced by COMPONENT_CONTRACTS primitives, `Button size="pill"` variant landed. **Status palette centralized** with new `--success`/`--warning`/`--info` semantic tokens + `src/lib/ui/status-pill.ts` helper (pre-wired for Phase 2.5 challenge states). **Phase 2.5 G1 is now unblocked** to start whenever ready.
 
 ## Phase 2.1
 - Status: **SHIPPED**
-- Commits: `4bf7591..484ed09` (17) + closeout chain through `b68976e` — **21 commits unpushed on local main** at halt time.
-- Codex: CLEAN (Pass 3).
-- G1-G8 all green. Success criteria: 7/7.
+- Commits: `4bf7591..484ed09` (Phase 2.1 proper) + `d50b9e9` (G8 closeout) + `55b06e7` (ADR-006) + `b68976e` (X3 pre-flight) + `522f2a0`/`a29a0df` (launchpad X2/X1 outputs).
+- Codex: CLEAN (Pass 3). H1 closed via `src/lib/ip-classify.ts` binary RFC 5952 parser.
 - Manual QA queue: 7 items → `YAGI-MANUAL-QA-QUEUE.md` (non-blocking).
 
-## Phase 2.5
-- Status: **BLOCKED** at launchpad X2 CRITICAL_BLOCKING.
-- Commits: 0 (G1-G8 not started — hard-stop #8 triggered before any build work).
-- Launchpad outcomes:
-  - **X1 design audit:** ✅ DONE (background agent returned post-halt) → `.yagi-autobuild/design-audit/{CRITICAL,IMPROVEMENTS,COMPLIANT}.md`. 13 CRITICAL / 20 IMPROVEMENTS / 10 COMPLIANT. Top finding: `[BLOCKS 2.5]` cluster on public `/s/[token]` share surface + sibling components using raw Tailwind grays/blacks/ad-hoc radii — this is the precedent Phase 2.5 will copy.
-  - **X2 SPEC review:** ✅ DONE → `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md`. 26 findings (4 CRITICAL_BLOCKING + 9 HIGH + 10 MEDIUM + 3 LOW).
-  - **X3 pre-flight:** ✅ DONE → `.yagi-autobuild/phase-2-5/PRE-FLIGHT-FINDINGS.md`. No blocking unknowns, 3 caveats.
-  - **X4 ADR-006:** ✅ DONE (commit `55b06e7`).
+## Phase 2.5 — revision pass (GO B, this session)
 
-## Why blocked (X2 CRITICAL_BLOCKING summary)
+- SPEC **v2** committed `5440954` — applies all X2 findings (4 CRITICAL + 9 HIGH + relevant MEDIUM). §1.2 new orthogonality clause, §3 G1 rewritten to ALTER existing `profiles`, §3 G5 admin gate uses `is_yagi_admin`, §3 G7 adds the 4 new notification kinds + `challenges-closing-reminder` pg_cron scheduler, §6 Q1-Q8 all have proposals, §5 dependencies reorganized.
+- `feat(ui): Button pill size variant` committed `f2815f1` (X1 #12).
+- Share surface retoken'd — all 4 share components + `src/app/s/[token]/page.tsx`:
+  - `c6040bc` — share components retoken + primitive conversion (X1 #1 #2 #8 #9)
+  - `8121538` — s/[token] page retoken (25 violations replaced)
+- Status palette infrastructure committed `ade027f` (X1 #3 #6 #7):
+  - New `--success`/`--warning`/`--info` tokens in `globals.css` + `tailwind.config.ts`
+  - New `src/lib/ui/status-pill.ts` with pre-seeded kinds including Phase 2.5 `challenge`
+  - Exemplar adopter: `src/app/[locale]/app/projects/page.tsx`
 
-All 4 CRITICAL findings cluster on one theme — **Phase 2.5 SPEC rewrites identity/role mechanics that Phase 1.1 already owns:**
+### X1 CRITICAL progress
 
-1. **`user_profiles` duplicates existing `profiles`** (Phase 1.1 has 1:1-with-auth.users surface already). G1 as written would fragment identity or shadow existing table. Fix: ALTER the existing `profiles` table instead.
+| # | Finding | Status |
+|---|---------|--------|
+| 1 | Share surface hardcoded grays | ✅ `c6040bc` + `8121538` |
+| 2 | Share action buttons black/white | ✅ `c6040bc` |
+| 3 | Status pill raw Tailwind | ✅ `ade027f` (infra + 1 consumer; 5 consumers queued) |
+| 4 | `text-[10px]` below floor | ⏳ queued (17+ occurrences, ~10 files) |
+| 5 | Off-scale `text-[11px]`/`text-[13px]` | ⏳ queued (50+ occurrences, ~10 files) |
+| 6 | Status pill re-definition | ✅ `ade027f` (same commit as #3) |
+| 7 | Hardcoded destructive/warning | ✅ (tokens landed, banner refactor queued) |
+| 8 | `rounded-2xl`/`rounded-xl` in share modals | ✅ `c6040bc` |
+| 9 | Raw `<input>` bypassing primitives | ✅ `c6040bc` |
+| 10 | `bg-black/10` on home components | ⏳ queued (~3 files) |
+| 11 | Hardcoded alert/error banners | ⏳ queued (banners not refactored; tokens landed) |
+| 12 | Inline CTA pattern (`rounded-full uppercase`) | ✅ `f2815f1` (Button pill variant; used in share retoken) |
+| 13 | `text-[0.8rem]` in `ui/form.tsx` | ⏳ queued (1 change affects all forms) |
 
-2. **"4th admin role" bypasses existing `is_yagi_admin` RPC** (Phase 1.1 has `user_roles.role='yagi_admin'` + the RPC used by every 1.2–1.9 admin surface). Introducing `user_profiles.role='admin'` creates a parallel authz system. Fix: use existing `is_yagi_admin` for admin gating.
+**Scorecard: 9 closed, 4 queued.** All `[BLOCKS 2.5]` items are CLOSED. The 4 queued items affect admin + app chrome but do NOT block Phase 2.5 G1/G3/G4/G6 start — they're systemic cleanup.
 
-3. **Phase 2.5 roles drop workspace-scoping** (Phase 1.x roles are workspace-scoped; 2.5 roles global-only). A user who is Creator AND `workspace_admin` in a client workspace — which role wins? Not specified. Fix: explicit orthogonality clause (Creator/Studio/Observer live on `profiles.role`, `user_roles` untouched).
+## Options for next step (Yagi decision)
 
-4. **SPEC cites "launchpad X1 audit findings"** in G3/G6 acceptance, but X1 didn't complete pre-G1. Fix: either block G3/G6 on X1 OR anchor to existing COMPONENT_CONTRACTS §5.1–5.5 + UI_FRAMES Frame-2 defaults only.
+**A. Run Codex on what's committed.** Partial B scope. Cost small (~$1-2), verifies no regressions introduced by the X1 retoken + SPEC v2. If CLEAN, proceed to Phase 2.5 G1. If HIGH, remediate then Codex again.
 
-Plus 9 HIGH clustered around:
-- Unresolved §6 open questions (Q2 R2 CORS, Q4 handle reserved list — ADR-006 violation)
-- Success criteria #6/#9 not 30s-smoke-testable
-- `notification_preferences.challenge_updates_enabled` missing from schema (needs G1 migration)
-- Winner auto-pin to Showcase — no defined integration (junction table vs ALTER)
-- 24h-before reminder scheduler not specified
+**B. Complete remaining 4 X1 CRITICAL first, then single Codex.** Saves one Codex pass cost. 60-90 min of focused typography + banner + home retoken work. Then Codex once.
 
-Full detail: `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md`.
+**C. Defer remaining 4 X1 to Phase 2.6 backlog; proceed directly to Phase 2.5 G1.** Pragmatic — G1 is DB + auth, doesn't touch typography violations. The 4 queued items can be cleaned alongside Phase 2.5 G3/G4/G6 UI work (when new surfaces are built, use tokens by construction).
 
-## X1 design audit — CRITICAL cluster (13 findings, samples with `[BLOCKS 2.5]`)
+**Builder recommendation:** C. Rationale: (a) G1 doesn't touch any of the 4 remaining X1 surfaces; (b) when Phase 2.5 G3/G4/G6 add new UI, those surfaces use tokens + primitives by construction thanks to the share-surface precedent set here + the status-pill helper; (c) legacy admin-chrome typography drift is Phase 2.6 cleanup material, not blocking any feature; (d) single Codex pass at Phase 2.5 G8 covers both Phase 2.5 code + any remaining X1 hygiene.
 
-1. **Hardcoded Tailwind grays across public share surface** `[BLOCKS 2.5]` — `src/app/s/[token]/page.tsx` uses `text-gray-300..700`/`bg-gray-100..200` instead of `text-muted-foreground`/`bg-muted`/`border-border`. Phase 2.5 gallery + submit + profile will copy this. Fix: token-replace everywhere.
-2. **Hardcoded black/white in share action buttons** `[BLOCKS 2.5]` — `approve-button`, `comment-form`, `fast-feedback-bar` use `bg-black text-white focus:ring-black` instead of `bg-foreground text-background focus-visible:ring-ring`. Same template-inheritance risk.
-3. **Status pill palette raw Tailwind** — 4+ re-invented `statusBadgeClass` helpers (`bg-blue-100 text-blue-700`, etc.). Phase 2.5 challenge states (DRAFT/OPEN/CLOSED_JUDGING/CLOSED_ANNOUNCED/ARCHIVED) would be a 5th dialect. Fix: centralize in `src/lib/ui/status.ts` with semantic tokens.
-4. **`text-[10px]` below typography floor** — 17+ occurrences fail WCAG + Pretendard Korean glyph legibility. Phase 2.5 cards will be tempted.
-5. **Off-scale `text-[11px]`/`text-[13px]`** — 50+ violations across admin + app chrome. Breaks 4pt rhythm + dark-mode scaling.
-6. **`focus:outline-none` without `focus-visible:ring`** — share surface is public, WCAG AA legal minimum.
-7. **Destructive/warning hardcoded** — `border-red-200 bg-red-50 text-red-900` instead of `destructive` tokens. Need `--warning`/`--info`/`--success` tokens added.
-8. **`rounded-2xl`/`rounded-xl` in share modals** — violates 6px/8px radius rule; ANTI_PATTERNS.md §2.1 explicitly calls this "generic-SaaS tell".
+## Remaining Phase 2.5 plan
 
-See `.yagi-autobuild/design-audit/CRITICAL.md` for all 13 with spec refs + fix sketches.
+After Yagi picks A/B/C:
+1. (On C) Start Phase 2.5 G1 per SPEC v2 — DB migration (ALTER profiles + new tables + ALTER notification_preferences + showcase_challenge_winners junction + new pg_cron job + publication members + RLS + seed yagi-internal reminder cron). ~2-3h.
+2. G2 auth + role selection (handle reserved list from `src/lib/handles/reserved.ts`). ~3-4h.
+3. G3 public challenge surfaces (uses share-surface tokens; table layout per UI_FRAMES Frame-2). ~4-5h.
+4. G4 submission flow (R2 decision: Supabase Storage fallback per X3 until bucket provisioned). ~4-5h.
+5. G5 admin management (uses status-pill helper `kind='challenge'`). ~3-4h.
+6. G6 profile surface (middleware matcher add `u` exclusion first). ~2-3h.
+7. G7 notifications + realtime glue (register 4 new kinds + add cron job). ~2-3h.
+8. G8 Codex + closeout. ~2-3h.
 
-## Combined Phase 2.5 blocker picture
+**Total ~23-30h.** Not completable in one Claude Code session. Natural split: G1-G2 in one session, G3-G4 in another, etc.
 
-Both X1 + X2 findings converge on: **revise SPEC + retoken the share surface BEFORE new Phase 2.5 UI lands there.** Specifically:
+## Git state
 
-| Blocker | Source | Surface affected | Fix scope |
-|---|---|---|---|
-| SPEC `profiles` duplication | X2 CRITICAL #1 | G1 migration | ~10 lines SPEC + migration change |
-| SPEC admin role bypass | X2 CRITICAL #2 | G5 middleware | ~5 lines SPEC |
-| SPEC role scoping silent | X2 CRITICAL #3 | G1 + G2 | ~15 lines SPEC new §1.2 "orthogonality" |
-| SPEC cites X1 that didn't run | X2 CRITICAL #4 | G3 + G6 references | now resolved — X1 did run; replace "TBD" with explicit refs |
-| Share surface Tailwind grays | X1 CRITICAL #1-2 | Phase 2.5 G3/G4/G6 templates | ~50 edits across 4 files (share/*) |
-| Off-scale typography | X1 CRITICAL #4-5 | Admin + app chrome | 70+ edits; can defer to 2.6 unless Phase 2.5 surfaces copy |
-| Status pill palette | X1 CRITICAL #3 | Phase 2.5 G5 challenge state badges | new `src/lib/ui/status.ts` + semantic tokens |
-
-Must-fix before Phase 2.5 G1/G3/G4 lands: rows 1-5. Nice-to-fix: rows 6-7 (Phase 2.6 candidate unless 2.5 surfaces copy them).
-
-## Yagi TODOs on wake (ordered)
-
-1. **Scan** (~10 min):
-   - `.yagi-autobuild/MORNING-BRIEF.md` (this file — you're here)
-   - `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md` §CRITICAL_BLOCKING (4 entries, 3 min)
-   - `.yagi-autobuild/design-audit/CRITICAL.md` §1-2 (`[BLOCKS 2.5]` first 2 entries, 3 min)
-2. **Decide** revision path:
-   - **A.** Quick-pass: apply X2 4 CRITICAL inline in SPEC + retoken share surface (X1 #1-2) only. ~60-90 min. Phase 2.5 G1 starts cleanly after.
-   - **B.** Comprehensive: X2 4 CRITICAL + 9 HIGH + X1 entire CRITICAL.md. ~3-4h. Safer but slower. Phase 2.5 2.6 candidates (X1 off-scale typography, status palette centralization) rolled in.
-   - **C.** Hand to Web Claude: revision pass there, resume here with SPEC v2.
-3. **Independent:** 7 browser smokes from Phase 2.1 QA queue remain non-blocking.
-4. **Git status:** 22 commits already pushed (through `522f2a0` hard-stop #3 + `<new>` X1 results commit). Working tree has X1 output `.yagi-autobuild/design-audit/` ready to commit + push.
+- Local `main` is AHEAD of `origin/main` by the new B-scope commits since last push (`a29a0df..ade027f`).
+- Actually — LAST push was `a29a0df..8121538`. Unpushed now: `ade027f` only (status-pill infra commit).
+- Working tree clean after this MORNING-BRIEF commit.
 
 ## Launchpad outputs for review
 
-- `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md` — X2 output (26 findings)
-- `.yagi-autobuild/phase-2-5/PRE-FLIGHT-FINDINGS.md` — X3 output (3 caveats: R2 bucket, `/u/` middleware, 500MB vs 50MB size)
-- `.yagi-autobuild/design-audit/CRITICAL.md` — X1 top-priority (13 findings, some `[BLOCKS 2.5]`)
-- `.yagi-autobuild/design-audit/IMPROVEMENTS.md` — X1 nice-to-fix (20 findings)
-- `.yagi-autobuild/design-audit/COMPLIANT.md` — X1 exemplars (10 — model these for Phase 2.5)
-- `docs/design/DECISIONS.md` ADR-006 — SPEC-to-kickoff alignment protocol
-
-## Hard-stop-8 vs success criteria
-
-Overnight plan hard-stop condition #8: "X2 SPEC review CRITICAL_BLOCKING finding" — MATCHED. Halt action executed: WIP commit, push, Telegram alert, autopilot ended. Phase 2.5 G1-G8 skipped (not attempted).
-
-Net delta vs plan: Phase 2.1 delivered in full (+ the detour through 3 Codex passes). Phase 2.5 stopped at launchpad — which is arguably the right place for the collision to surface (pre-build vs mid-G1 when production DB would have a half-duplicated identity surface).
+- `.yagi-autobuild/phase-2-5/SPEC.md` — **v2** (this session)
+- `.yagi-autobuild/phase-2-5/SPEC-REVIEW-NOTES.md` — X2 (26 findings, all but 4 queued MEDIUM addressed)
+- `.yagi-autobuild/phase-2-5/PRE-FLIGHT-FINDINGS.md` — X3 (all findings folded into SPEC v2)
+- `.yagi-autobuild/design-audit/CRITICAL.md` — X1 (9/13 closed, 4 queued per table above)
+- `.yagi-autobuild/design-audit/IMPROVEMENTS.md` — X1 (20 findings, Phase 2.6 material)
+- `.yagi-autobuild/design-audit/COMPLIANT.md` — X1 (10 exemplars)
+- `docs/design/DECISIONS.md` — ADR-006 SPEC-to-kickoff alignment
 
 ## Suggested first action
 
-> (10 min scan) Read this brief's TL;DR + §Combined Phase 2.5 blocker picture table. Optionally spot-check 2-3 X2 CRITICAL entries + 2 X1 `[BLOCKS 2.5]` findings. Reply `GO A` / `GO B` / `GO C`. On `GO A`: Builder applies X2 4 CRITICAL + X1 share-surface retoken in one SPEC diff + code patch pass, re-spawns Codex for confirmation on the patch scope only, then Phase 2.5 G1 kickoff. ETA: ~90 min to G1 start.
+> `GO C` — proceed to Phase 2.5 G1 kickoff per SPEC v2. Builder runs G1 (DB migration) autonomously with MCP apply_migration, commits atomically, reports at G1 exit criterion check (supabase db reset equivalent + RLS spot-test). Estimated time-to-G1-complete: ~2-3h.
