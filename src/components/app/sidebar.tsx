@@ -1,6 +1,7 @@
 import { SidebarScopeSwitcher } from "./sidebar-scope-switcher";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarUserMenu } from "./sidebar-user-menu";
+import { SidebarPublicExit } from "./sidebar-public-exit";
 import type { AppContext } from "@/lib/app/context";
 
 export function Sidebar({ context }: { context: AppContext }) {
@@ -18,8 +19,9 @@ export function Sidebar({ context }: { context: AppContext }) {
           isYagiInternalMember={isYagiInternalMember}
         />
       </div>
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border space-y-1">
         <SidebarUserMenu profile={context.profile} />
+        <SidebarPublicExit />
       </div>
     </aside>
   );

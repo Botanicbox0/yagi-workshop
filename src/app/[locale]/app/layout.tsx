@@ -2,6 +2,7 @@ import { redirect } from "@/i18n/routing";
 import { fetchAppContext } from "@/lib/app/context";
 import { Sidebar } from "@/components/app/sidebar";
 import { NotificationBell } from "@/components/app/notification-bell";
+import { PageHelpLink } from "@/components/app/page-help-link";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserScopes } from "@/lib/app/scopes";
 import { UserScopesProvider } from "@/lib/app/use-user-scopes";
@@ -51,7 +52,8 @@ export default async function AppLayout({
       <div className="min-h-dvh flex">
         <Sidebar context={ctx} />
         <div className="flex-1 min-w-0 flex flex-col">
-          <header className="flex items-center justify-end h-12 px-4 border-b border-border">
+          <header className="flex items-center justify-end gap-2 h-12 px-4 border-b border-border">
+            <PageHelpLink />
             <NotificationBell
               initialUnreadCount={initialUnreadCount ?? 0}
               locale={bellLocale}

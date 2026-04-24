@@ -18,6 +18,7 @@ export default async function JournalListPage({ params, searchParams }: Props) {
   const posts = allPosts
     .filter((p) => p.locale === locale)
     .filter((p) => isDev || !p.draft)
+    .filter((p) => !p.tags.includes("guide"))
     .filter((p) => (tag ? p.tags.includes(tag) : true))
     .sort(
       (a, b) =>
