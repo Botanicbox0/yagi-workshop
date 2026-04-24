@@ -98,3 +98,34 @@ Actions taken at halt:
 **Autopilot chain STOPPED per ULTRA-CHAIN F.** Phase 2.6 kickoff blocked. Morning action required.
 
 **Codex session resume:** `codex resume 019dbbcd-37fe-73d0-8611-d28140ae0ccc` after hardening lands.
+
+---
+
+## G8 hardening sub-chain (2026-04-24 ~11:00 KST)
+
+yagi woke + authorized hardening sub-chain (Option 1 path).
+
+### Loop 1 — hardening v1 (commit bcddd04, pushed)
+- Migration `20260424020000_phase_2_5_g8_hardening.sql` — 5 split policies + 1 aggregate RPC + 2 validation triggers
+- App patches: R2 key prefix ownership (K05-004) + admin JSONB Zod (K05-006)
+- MCP apply_migration success, advisors clean (0 new WARNs)
+- Codex K-05 resume pass 1 (task-moca84u0) verdict: HIGH_FINDINGS — 5/6 closed, K05-003 partial
+
+### Loop 2 — hardening v2 (commit 5ceff0f, pushed)
+- Migration `20260424030000_phase_2_5_g8_hardening_v2.sql` — extended validate_challenge_submission_content() to enforce full submission_requirements (native_video/image/pdf/youtube_url required+shape, image count, YouTube regex)
+- MCP apply_migration success
+- Codex K-05 resume pass 2 (task-mocb3c3j) verdict: HIGH — 2 K05-003 variants remain:
+  * K05-003A: optional field wrong-type not rejected (e.g. pdf="")
+  * K05-003B: undeclared content keys not whitelisted
+
+### HALT (loop budget exhausted 2/2 per yagi protocol)
+
+- Telegram halt alert msg #61 sent (impact analysis + 4-path decision matrix)
+- Proposed v3 spec (~20 LOC wrong-type reject + whitelist) documented in G8_K05_FINDINGS.md but NOT applied
+- Branch worktree-g3-challenges at commit 5ceff0f — NOT merged to main
+
+**Autopilot chain STOPPED per yagi overnight protocol.** yagi morning action required:
+- A3 authorize v3 loop (recommended, ~10min to CLEAN)
+- B refactor to SECURITY DEFINER RPC (clean but ~1-2h)
+- Downgrade K05-003A/B to MED + FU-23 deferral + ship
+- Escalate for full manual review

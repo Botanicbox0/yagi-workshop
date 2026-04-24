@@ -162,3 +162,81 @@ Will commit these as a single "G8 WIP halt" commit so yagi has a starting point.
 5. Ship Phase 2.5
 
 Phase 2.6 kickoff blocked until Phase 2.5 ships.
+
+---
+
+## Hardening sub-chain history (2026-04-24 overnight)
+
+### Pass 2 — hardening v1 (commit bcddd04)
+
+**Applied:** 5 policies + 1 RPC + 2 triggers via MCP (`20260424020000_phase_2_5_g8_hardening.sql`). App patches: R2 key prefix ownership + admin JSONB Zod.
+
+**Codex verdict (task-moca84u0):** HIGH_FINDINGS — 5/6 closed, K05-003 partially open.
+
+Closed: K05-001, K05-002, K05-004, K05-005, K05-006. K05-003 remains because v1 trigger only checked text_description + status + content type, not full submission_requirements schema.
+
+### Pass 3 — hardening v2 (commit 5ceff0f)
+
+**Applied:** Extended `validate_challenge_submission_content()` to cover native_video/image/pdf/youtube_url required-ness + object/array shape + image count bounds + YouTube regex (`20260424030000_phase_2_5_g8_hardening_v2.sql`).
+
+**Codex verdict (task-mocb3c3j):** HIGH — 2 K05-003 variants remain.
+
+### Remaining open findings (after hardening v2)
+
+**K05-003A — HIGH-C — Optional field wrong-type bypass**
+- Scenario: `content = {"pdf": ""}` (string instead of object)
+- Root cause: trigger guards `IF jsonb_typeof(content->'pdf') = 'object'` — wrong-type values skip validation silently
+- Fix: explicit reject when field is present but jsonb_typeof mismatches expected type, regardless of required-ness
+
+**K05-003B — HIGH-C — Undeclared key bypass**
+- Scenario: challenge `submission_requirements` doesn't declare `native_video`, but creator writes `content.native_video = <anything>`
+- Root cause: no whitelist check — undeclared keys pass through
+- Fix: "if requirement absent AND key present → reject", or whitelist allowed keys from v_reqs
+
+### Impact analysis (Builder judgment, pending yagi decision)
+
+K05-003A/B require authenticated creator/studio credentials. Attacker can only corrupt their OWN submission row; no cross-user data leak, no privilege escalation. Practical attack surface: corrupt own `content` shape → own gallery card or admin judging view may render incomplete data. Codex maintained HIGH-C; Builder suggests possible downgrade to MED given the self-corruption-only impact, but defers to yagi.
+
+### Proposed v3 spec (NOT written/applied — loop budget exhausted)
+
+Add to `validate_challenge_submission_content()`:
+
+```sql
+-- Reject wrong-type when key present (regardless of required flag)
+IF NEW.content ? 'native_video' AND jsonb_typeof(NEW.content->'native_video') <> 'object' THEN
+  RAISE EXCEPTION 'native_video_wrong_type' USING ERRCODE = '22023';
+END IF;
+IF NEW.content ? 'images' AND jsonb_typeof(NEW.content->'images') <> 'array' THEN
+  RAISE EXCEPTION 'images_wrong_type' USING ERRCODE = '22023';
+END IF;
+IF NEW.content ? 'pdf' AND jsonb_typeof(NEW.content->'pdf') <> 'object' THEN
+  RAISE EXCEPTION 'pdf_wrong_type' USING ERRCODE = '22023';
+END IF;
+
+-- Whitelist: reject undeclared content keys
+IF NEW.content ? 'native_video' AND v_reqs->'native_video' IS NULL THEN
+  RAISE EXCEPTION 'native_video_not_declared' USING ERRCODE = '23514';
+END IF;
+IF NEW.content ? 'images' AND v_reqs->'image' IS NULL THEN
+  RAISE EXCEPTION 'image_not_declared' USING ERRCODE = '23514';
+END IF;
+IF NEW.content ? 'pdf' AND v_reqs->'pdf' IS NULL THEN
+  RAISE EXCEPTION 'pdf_not_declared' USING ERRCODE = '23514';
+END IF;
+IF NEW.content ? 'youtube_url' AND v_reqs->'youtube_url' IS NULL THEN
+  RAISE EXCEPTION 'youtube_url_not_declared' USING ERRCODE = '23514';
+END IF;
+```
+
+~20 LOC total. Can be v3 migration if yagi authorizes another loop.
+
+### yagi morning decision matrix
+
+| Path | Action | Effort | Result |
+|---|---|---|---|
+| A3 | Authorize v3 loop: apply above spec | ~10 min | Should CLEAN the final HIGH |
+| B | Remove owner direct writes, route through submit_challenge_entry SECURITY DEFINER RPC | ~1-2h refactor + new migration + G4 action update | Cleaner long-term; bigger diff |
+| Downgrade | Accept K05-003A/B as MED, register FU-23, ship | ~5 min | Fast ship, tracked debt |
+| Escalate | Full manual review | Variable | Preserves 야기 judgment |
+
+Builder recommendation (pending yagi): **Path A3** — v3 migration is trivially small + keeps chain momentum + no G4 refactor risk.
