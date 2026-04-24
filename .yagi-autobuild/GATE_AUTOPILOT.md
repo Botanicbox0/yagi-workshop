@@ -210,3 +210,57 @@ Gate 진행 중에 "이 task가 사실 SPEC 이후 조항과 충돌함" 발견 �
 - Post-apply 이슈 패턴 발견 → "Codex CLEAN 후" failure mode 구체화
 
 **Owner:** Web Claude + 야기 (Builder가 제안 append 가능, web Claude가 sanity check)
+
+
+---
+
+## G6-specific entry requirement (2026-04-24 Phase 2.6 v3.1 amendment)
+
+Phase 2.5 G6 entry has an **additional pre-flight check** beyond the standard Step 4 package-load and Step 5 cache-scan flow.
+
+### Why
+
+Phase 2.6 G2 (scope selector) and Phase 2.5 G6 (`/u/[handle]` edit affordance) both consume `useUserScopes()` hook. Phase 2.6 SPEC §8 fragility guard requires this hook lands BEFORE G6 first commit — otherwise G6 ships with ad-hoc role checks and Phase 2.6 requires retrofitting.
+
+### Extra G6 entry step (inserted between Step 3 and Step 4)
+
+**Step 3.5: FU-SCOPES-1 verification (G0 pre-work)**
+
+```bash
+# Builder runs before loading G6 ENTRY-DECISION-PACKAGE:
+test -f src/lib/app/scopes.ts && \
+  grep -q "export function getUserScopes" src/lib/app/scopes.ts && \
+  test -f src/lib/app/use-user-scopes.ts && \
+  grep -q "export function useUserScopes" src/lib/app/use-user-scopes.ts
+```
+
+**Branches:**
+- **EXIT 0** (all checks pass) → proceed to Step 4 normally.
+- **EXIT non-zero** → HALT normal G6 entry. Execute G0 pre-work FIRST:
+  1. Read `.yagi-autobuild/phase-2-5/G6-ENTRY-DECISION-PACKAGE.md` §0 inline spec
+  2. Create `src/lib/app/scopes.ts` + `src/lib/app/use-user-scopes.ts`
+  3. Modify `src/app/[locale]/app/layout.tsx` to wrap children with `<UserScopesProvider>`
+  4. Verify `pnpm exec tsc --noEmit` + `pnpm lint` both EXIT=0
+  5. Telegram: `✅ Phase 2.5 G0 (FU-SCOPES-1) SHIPPED`
+  6. Commit: `chore(phase-2-5): G0 pre-work (FU-SCOPES-1) — useUserScopes hook`
+  7. Resume normal G6 entry from Step 4
+
+### Why this is special-cased for G6 only
+
+G6 is the only gate that structurally depends on a Phase 2.6 primitive. Other gates (G5/G7/G8) are self-contained within Phase 2.5 scope. No other gate triggers this pre-flight.
+
+### Cross-refs
+
+- `.yagi-autobuild/phase-2-5/FOLLOWUPS.md` FU-SCOPES-1
+- `.yagi-autobuild/phase-2-5/G6-ENTRY-DECISION-PACKAGE.md` §0
+- `.yagi-autobuild/phase-2-6/SPEC.md` §8 (fragility guard 3-layer)
+- `.yagi-autobuild/phase-2-6/SPEC.md` §6 Success Criterion #15
+
+### Layer accounting
+
+This check is **Layer 2** of the 3-layer fragility guard:
+- Layer 1: FU-SCOPES-1 in Phase 2.5 FOLLOWUPS.md (passive reminder)
+- **Layer 2: this GATE_AUTOPILOT G6 entry step (active block) ← you are here**
+- Layer 3: Phase 2.6 SPEC.md G1 prerequisite note (post-hoc warning)
+
+If all 3 layers fire and Builder still skips G0, that's a systemic process failure warranting ARCHITECTURE.md revision.

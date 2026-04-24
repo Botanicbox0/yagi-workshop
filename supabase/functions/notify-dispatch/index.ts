@@ -50,6 +50,7 @@ type Preferences = {
   quiet_hours_start: string; // "HH:MM:SS"
   quiet_hours_end: string; // "HH:MM:SS"
   timezone: string;
+  challenge_updates_enabled: boolean;
 };
 
 // -------- Config --------
@@ -142,6 +143,96 @@ function isInWindow(
 function minuteDistance(a: number, b: number): number {
   const diff = Math.abs(a - b) % (24 * 60);
   return Math.min(diff, 24 * 60 - diff);
+}
+
+// -------- Challenge kind helpers --------
+
+function isChallengeKind(kind: string): boolean {
+  return kind.startsWith("challenge_");
+}
+
+function renderChallengeSubmissionConfirmed(
+  event: NotificationEvent,
+  locale: Locale,
+): { subject: string; text: string } {
+  const title = (event.payload?.challenge_title as string | undefined) ?? "";
+  const subject =
+    locale === "ko"
+      ? `[YAGI] 작품이 등록되었어요 — ${title}`
+      : `[YAGI] Submission confirmed — ${title}`;
+  const text =
+    locale === "ko"
+      ? `${title} 챌린지에 작품을 올렸어요.\n\n결과 발표일까지 기다려 주세요!\n\n작품 보기: ${SITE_URL}${event.url_path ?? "/"}`
+      : `Your entry for ${title} has been received.\n\nResults will be announced soon.\n\nView: ${SITE_URL}${event.url_path ?? "/"}`;
+  return { subject, text };
+}
+
+function renderChallengeClosingSoon(
+  event: NotificationEvent,
+  locale: Locale,
+): { subject: string; text: string } {
+  const title = (event.payload?.challenge_title as string | undefined) ?? "";
+  const link = `${SITE_URL}${event.url_path ?? "/"}`;
+  const subject =
+    locale === "ko"
+      ? `[YAGI] 곧 마감이에요 — ${title}`
+      : `[YAGI] Closing in 24 hours — ${title}`;
+  const text =
+    locale === "ko"
+      ? `${title} 챌린지가 24시간 뒤 마감됩니다. 참여를 마무리해 주세요.\n\n챌린지 보기: ${link}`
+      : `${title} closes in 24 hours. Wrap up your entry before the deadline.\n\nView: ${link}`;
+  return { subject, text };
+}
+
+function renderChallengeAnnouncedWinner(
+  event: NotificationEvent,
+  locale: Locale,
+): { subject: string; text: string } {
+  const title = (event.payload?.challenge_title as string | undefined) ?? "";
+  const subject =
+    locale === "ko"
+      ? `[YAGI] 주인공으로 선정되었어요 — ${title}`
+      : `[YAGI] You're a winner — ${title}`;
+  const text =
+    locale === "ko"
+      ? `${title} 챌린지의 이번 주인공으로 선정됐어요! 축하드려요.\n\n결과 보기: ${SITE_URL}${event.url_path ?? "/"}`
+      : `Your submission for ${title} has been selected. Congratulations!\n\nView results: ${SITE_URL}${event.url_path ?? "/"}`;
+  return { subject, text };
+}
+
+function renderChallengeAnnouncedParticipant(
+  event: NotificationEvent,
+  locale: Locale,
+): { subject: string; text: string } {
+  const title = (event.payload?.challenge_title as string | undefined) ?? "";
+  const subject =
+    locale === "ko"
+      ? `[YAGI] 결과가 발표되었어요 — ${title}`
+      : `[YAGI] Results announced — ${title}`;
+  const text =
+    locale === "ko"
+      ? `${title} 챌린지의 결과가 발표됐어요. 주인공들의 작품을 확인해 보세요.\n\n결과 보기: ${SITE_URL}${event.url_path ?? "/"}`
+      : `Results are in for ${title}. Check out the winning entries.\n\nView results: ${SITE_URL}${event.url_path ?? "/"}`;
+  return { subject, text };
+}
+
+/** Returns localized subject + text for challenge kinds, or null if kind is unknown. */
+function renderChallengeEmail(
+  event: NotificationEvent,
+  locale: Locale,
+): { subject: string; text: string } | null {
+  switch (event.kind) {
+    case "challenge_submission_confirmed":
+      return renderChallengeSubmissionConfirmed(event, locale);
+    case "challenge_closing_soon":
+      return renderChallengeClosingSoon(event, locale);
+    case "challenge_announced_winner":
+      return renderChallengeAnnouncedWinner(event, locale);
+    case "challenge_announced_participant":
+      return renderChallengeAnnouncedParticipant(event, locale);
+    default:
+      return null;
+  }
 }
 
 // -------- Email HTML (inline, mirrors src/emails/*) --------
@@ -485,7 +576,7 @@ Deno.serve(async (req: Request) => {
     let { data: prefsRow } = await supabase
       .from("notification_preferences")
       .select(
-        "user_id,email_immediate_enabled,email_digest_enabled,digest_time_local,quiet_hours_start,quiet_hours_end,timezone",
+        "user_id,email_immediate_enabled,email_digest_enabled,digest_time_local,quiet_hours_start,quiet_hours_end,timezone,challenge_updates_enabled",
       )
       .eq("user_id", user_id)
       .maybeSingle();
@@ -498,7 +589,7 @@ Deno.serve(async (req: Request) => {
           { onConflict: "user_id", ignoreDuplicates: false },
         )
         .select(
-          "user_id,email_immediate_enabled,email_digest_enabled,digest_time_local,quiet_hours_start,quiet_hours_end,timezone",
+          "user_id,email_immediate_enabled,email_digest_enabled,digest_time_local,quiet_hours_start,quiet_hours_end,timezone,challenge_updates_enabled",
         )
         .maybeSingle();
       prefsRow = inserted;
@@ -512,6 +603,7 @@ Deno.serve(async (req: Request) => {
       quiet_hours_start: "22:00:00",
       quiet_hours_end: "08:00:00",
       timezone: "Asia/Seoul",
+      challenge_updates_enabled: true,
     };
 
     // Resolve/issue unsubscribe token
@@ -579,6 +671,15 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
+      // Challenge pref gate: skip email (in-app row stays) if opted out
+      if (isChallengeKind(ev.kind) && prefs.challenge_updates_enabled === false) {
+        console.log(
+          JSON.stringify({ run_id, user_id, event_id: ev.id, kind: ev.kind, msg: "skipped (pref=off)" }),
+        );
+        skipped_count++;
+        continue;
+      }
+
       const ageMs = Date.now() - new Date(ev.created_at).getTime();
       const oneHour = 60 * 60 * 1000;
       if (inQuiet && ageMs < oneHour) {
@@ -597,19 +698,29 @@ Deno.serve(async (req: Request) => {
         skipped_count++;
         continue;
       }
+      // For challenge kinds: render locale-aware subject/text from payload;
+      // cron inserts blank title/body so we must override here.
+      const challengeRendered = isChallengeKind(ev.kind)
+        ? renderChallengeEmail(ev, locale)
+        : null;
+      const evForRender = challengeRendered
+        ? { ...ev, title: challengeRendered.subject, body: challengeRendered.text }
+        : ev;
       // Render + send
       const rendered = renderImmediateHtml({
         locale,
-        event: ev,
+        event: evForRender,
         recipientEmail,
         unsubscribeUrl,
         siteUrl: SITE_URL,
       });
+      const emailSubject = challengeRendered ? challengeRendered.subject : rendered.subject;
+      const emailText = challengeRendered ? challengeRendered.text : rendered.text;
       const result = await sendEmail({
         to: recipientEmail,
-        subject: rendered.subject,
+        subject: emailSubject,
         html: rendered.html,
-        text: rendered.text,
+        text: emailText,
       });
       if (result.ok) {
         const { error: markErr } = await supabase
@@ -662,10 +773,23 @@ Deno.serve(async (req: Request) => {
     }
 
     // --- Medium severity: hourly digest ---
-    if (mediums.length > 0) {
+    // Filter out challenge events when challenge_updates_enabled=false (in-app stays)
+    const mediumsForEmail = prefs.challenge_updates_enabled === false
+      ? mediums.filter((e) => {
+          if (isChallengeKind(e.kind)) {
+            console.log(
+              JSON.stringify({ run_id, user_id, event_id: e.id, kind: e.kind, msg: "skipped (pref=off)" }),
+            );
+            skipped_count++;
+            return false;
+          }
+          return true;
+        })
+      : mediums;
+    if (mediumsForEmail.length > 0) {
       if (!prefs.email_digest_enabled) {
         // mark sent without sending so they don't requeue forever
-        const ids = mediums.map((e) => e.id);
+        const ids = mediumsForEmail.map((e) => e.id);
         const { error: markErr } = await supabase
           .from("notification_events")
           .update({ email_sent_at: new Date().toISOString() })
@@ -673,7 +797,7 @@ Deno.serve(async (req: Request) => {
         if (markErr) {
           error_count++;
         } else {
-          skipped_count += mediums.length;
+          skipped_count += mediumsForEmail.length;
         }
       } else {
         // Check if any medium was sent in the last 1 hour
@@ -687,14 +811,14 @@ Deno.serve(async (req: Request) => {
 
         const recent = recentCount ?? 0;
         if (recent > 0) {
-          skipped_count += mediums.length;
+          skipped_count += mediumsForEmail.length;
         } else if (inQuiet) {
           // Mediums defer out of quiet hours (no grace on mediums)
-          skipped_count += mediums.length;
+          skipped_count += mediumsForEmail.length;
         } else {
           // Claim all
           const batchId = crypto.randomUUID();
-          const ids = mediums.map((e) => e.id);
+          const ids = mediumsForEmail.map((e) => e.id);
           const { data: claimed } = await supabase
             .from("notification_events")
             .update({ email_batch_id: batchId })
@@ -704,9 +828,9 @@ Deno.serve(async (req: Request) => {
           const claimedIds = new Set(
             (claimed as Array<{ id: string }> | null ?? []).map((r) => r.id),
           );
-          const claimedEvents = mediums.filter((e) => claimedIds.has(e.id));
+          const claimedEvents = mediumsForEmail.filter((e) => claimedIds.has(e.id));
           if (claimedEvents.length === 0) {
-            skipped_count += mediums.length;
+            skipped_count += mediumsForEmail.length;
           } else {
             const rendered = renderDigestHtml({
               locale,

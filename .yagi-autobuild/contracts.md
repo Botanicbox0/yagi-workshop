@@ -559,3 +559,93 @@ Resolutions from Phase 2.0 G7 Codex K-05 independent audit, plus items explicitl
 ---
 
 **End of contracts.md. Update policy: every new table / RPC / notification event / storage bucket / realtime publication member MUST add its entry here in the same PR.**
+
+---
+
+## Phase 2.5 — Challenge Platform (shipped 2026-04-24)
+
+### New tables
+
+- `challenges` (id uuid PK, slug citext UNIQUE, title, description_md, hero_media_url, state CHECK ('draft'|'open'|'closed_judging'|'closed_announced'|'archived'), open_at, close_at, announce_at, submission_requirements jsonb, judging_config jsonb, reminder_sent_at timestamptz NULL, created_by FK auth.users, created_at, updated_at)
+- `challenge_submissions` (id, challenge_id FK, submitter_id FK profiles.id, content jsonb, status CHECK ('created'|'processing'|'ready'|'rejected'), created_at, updated_at, UNIQUE (challenge_id, submitter_id))
+- `challenge_votes` (id, challenge_id FK, submission_id FK, voter_id FK, created_at, UNIQUE (challenge_id, voter_id))
+- `challenge_judgments` (id, challenge_id FK, submission_id FK, admin_id FK, score numeric, notes, created_at, UNIQUE (submission_id, admin_id))
+- `showcase_challenge_winners` (junction: submission_id FK UNIQUE, showcase_id FK nullable, challenge_id FK, rank int, announced_at, announced_by FK)
+- `creators` (id FK profiles.id PK, display_name NOT NULL)
+- `studios` (id FK profiles.id PK, studio_name NOT NULL, contact_email citext, member_count CHECK ('1-5'|'6-10'|'11+'))
+- `handle_history` (id, old_handle citext, owner_id FK, released_at, created_at)
+
+### Table modifications
+
+- `profiles` — added: role CHECK ('creator'|'studio'|'observer'), handle citext UNIQUE, instagram_handle, bio CHECK (char_length ≤ 200), avatar_url, role_switched_at, handle_changed_at. (`external_links jsonb` — deferred to Phase 2.6 per FU-19; ULTRA-CHAIN D forbade mid-chain migration.)
+- `notification_preferences` — added: `challenge_updates_enabled boolean DEFAULT TRUE`
+
+### Realtime publication additions
+
+`supabase_realtime` extended with: `challenges`, `challenge_submissions`, `challenge_votes`, `showcase_challenge_winners`.
+
+### Notification kinds (Phase 1.8 registry extension)
+
+- `challenge_submission_confirmed` (medium severity) — emitted by G4 `submitChallengeAction` post-INSERT
+- `challenge_closing_soon` (high severity) — emitted by G7 pg_cron `challenges-closing-reminder` 24h before close_at
+- `challenge_announced_winner` (high severity) — emitted by G5 `announceWinnersAction`
+- `challenge_announced_participant` (medium severity) — emitted by G5 `announceWinnersAction` to non-winner submitters
+
+### Storage buckets
+
+- **`yagi-challenge-submissions`** (Cloudflare R2, ENAM location) — video (mp4, ≤500MB), image (jpg/png, ≤10MB × 5), pdf (≤20MB) upload target. Lifecycle: `tmp/` prefix expires 24h. CORS: `[localhost:3003, yagiworkshop.xyz]` × `[GET,PUT,POST,HEAD]`.
+- **`avatars`** (Supabase Storage, Phase 1.1 reused) — profile avatar uploads, 512×512 JPEG (react-image-crop client-side).
+
+### Cron jobs
+
+- `challenges-closing-reminder` — schedule `*/15 * * * *`. Finds open challenges in ~24h close window + emits `challenge_closing_soon` rows. Idempotent via `reminder_sent_at` guard + `FOR UPDATE SKIP LOCKED`.
+
+### Public routes (middleware-excluded from locale redirect)
+
+- `/challenges` (list)
+- `/challenges/[slug]` (detail)
+- `/challenges/[slug]/gallery` (realtime gallery)
+- `/challenges/[slug]/submit` (auth + role gate; locale-free on purpose, gated at page level)
+- `/u/[handle]` (public profile)
+- (previously excluded: `/showcase`, `/s/[token]`)
+
+### Admin routes (yagi_admin via parent /admin layout guard)
+
+- `/[locale]/app/admin/challenges` — list + state filter
+- `/[locale]/app/admin/challenges/new` — creation
+- `/[locale]/app/admin/challenges/[slug]/edit` — edit with slug lock post-draft
+- `/[locale]/app/admin/challenges/[slug]/judge` — score submissions (0-10 scale)
+- `/[locale]/app/admin/challenges/[slug]/announce` — winner selection + notification fan-out
+
+### RPCs
+
+- `is_yagi_admin(uid)` — Phase 1.1, reused unchanged for admin gating
+- `change_handle(new_handle_input)` — Phase 2.5 G2, enforces 90-day lock + handle_history insertion
+- `is_handle_available(candidate)` — Phase 2.5 G2, checks profiles + handle_history
+
+No new RPCs in G3-G7 (beyond G2's handle RPCs from earlier Phase 2.5).
+
+### Reads (cross-phase dependency)
+
+- G6 `/u/[handle]` page reads `profiles` + `challenge_submissions` + `challenges` via join (inner on challenge).
+- G5 announce action reads `challenge_submissions` + writes `showcase_challenge_winners` + `notification_events`.
+- G7 cron reads `challenges` + `challenge_submissions` + writes `notification_events` + stamps `challenges.reminder_sent_at`.
+
+### New dependencies
+
+- `@aws-sdk/client-s3` + `@aws-sdk/s3-request-presigner` (G4 R2 client)
+- `react-image-crop` (G6 avatar upload)
+- `react-markdown` + `rehype-sanitize` (pre-G3 infra, committed before Phase 2.5 G1 in commit `1fb9dd2`)
+
+### ADRs
+
+- ADR-009 Role type reconciliation (2026-04-23, G2 landing)
+- ADR-010 Sidebar IA grouping + billing retirement (2026-04-24, cross-phase tidy; governs Phase 2.6 IA refactor)
+
+### Known deferrals to Phase 2.6
+
+- FU-8, FU-9, FU-11, FU-13 (security/performance sweep)
+- FU-16, FU-17, FU-18 (UI i18n polish)
+- FU-19 (profiles.external_links column + UI)
+- FU-21 (first-admin seed migration backfill — deferred because ULTRA-CHAIN D rule forbade additional G8 migration beyond G7 pg_cron)
+

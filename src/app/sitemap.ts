@@ -108,11 +108,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] showcase query failed:", err);
   }
 
+  const challengeIndexEntry: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/challenges`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+  ];
+
+  let challengeDetailEntries: MetadataRoute.Sitemap = [];
+  try {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const svc = createSupabaseService();
+      const { data: challenges } = await svc
+        .from("challenges")
+        .select("slug, state, announce_at, updated_at")
+        .in("state", ["open", "closed_announced"])
+        .limit(1000);
+      challengeDetailEntries = (challenges ?? []).map((c) => ({
+        url: `${SITE_URL}/challenges/${c.slug}`,
+        lastModified: new Date(c.updated_at ?? c.announce_at ?? now),
+        changeFrequency: c.state === "open" ? ("daily" as const) : ("monthly" as const),
+        priority: c.state === "open" ? 0.8 : 0.7,
+      }));
+    }
+  } catch (err) {
+    console.error("[sitemap] challenges query failed:", err);
+  }
+
   return [
     ...landingWithAlts,
     ...journalWithAlts,
     ...workWithAlts,
     ...postEntries,
     ...showcaseEntries,
+    ...challengeIndexEntry,
+    ...challengeDetailEntries,
   ];
 }

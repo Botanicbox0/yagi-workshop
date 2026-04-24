@@ -80,6 +80,39 @@ Each entry: preconditions, steps, expected, code-path reference.
 
 ---
 
+---
+
+## Phase 2.5 G3 items
+
+### Q-G3-C1 — Gallery realtime 2-browser smoke (5s SLA per SPEC §2 #6)
+
+Phase 2.5 G3 gallery realtime 2-browser smoke (5s SLA per SPEC §2 #6):
+- Open `/challenges/test-open-1/gallery` in 2 browser tabs.
+- In Supabase SQL Editor: INSERT a new challenge_submission for test-open-1.
+- Both tabs should refresh within 5s showing the new submission.
+- If not: check browser console for postgres_changes subscription errors.
+
+**Code path:** `src/components/challenges/gallery-realtime.tsx` — first realtime subscriber in codebase. Channel name: `gallery:<challengeId>`.
+
+---
+
+## Phase 2.5 G4 items
+
+### Q-G4-C1 — Submit flow 400MB+ video upload resilience
+
+- **Scope**: manual browser smoke, cannot be automated in CI without large test fixtures.
+- **Target**: `/challenges/test-open-1/submit` with `role='creator'` on yagi-admin or a test creator account.
+- **Scenarios**:
+  1. Upload a 400+ MB mp4 to test-open-1 → expect progress bar ticks, final submit succeeds, redirect to `/challenges/test-open-1/gallery#submission-<id>`, the new submission appears in gallery within 5s (G3 realtime SLA).
+  2. Start a 400+ MB upload, close tab mid-upload → expect no submission row in DB, R2 `tmp/` object eventually purged by 24h lifecycle rule.
+  3. Upload a 400+ MB file twice (same challenge, same user) → expect second attempt blocked with toast "이미 이 챌린지에 작품을 올렸어요".
+  4. Upload on slow 3G-simulated network (DevTools throttling) → expect upload to complete eventually without false-error toast.
+- **Expected defects to watch**: browser memory during large PUT (Chrome may OOM at ~1GB), CORS 403 from R2 (indicates CORS policy not saved — re-check via `curl` or dashboard), progress event gaps if XHR upload.onprogress is blocked.
+- **Status**: open
+- **Registered**: G4 Group C closeout (2026-04-24)
+
+---
+
 ## Priority ordering (suggested)
 
 Most business-visible first:
@@ -92,3 +125,19 @@ Most business-visible first:
 7. Q-G5 meeting txn rollback — transactional behavior smoke, hard to accidentally trigger.
 
 Log any FAIL back to `gates/phase-2-1/QA_SMOKE.md` (move the row back from PASS with note) so Phase 2.2 has the history.
+
+---
+
+## [YAGI TODO] Phase 2.5 G7 — 2-browser realtime smoke (5s SLA)
+
+**Scope**: manual browser, verifies realtime subscription + notification fan-out.
+**Target**: `/app/admin/challenges/[slug]/judge` (Browser A, yagi_admin) ↔ `/challenges/[slug]/submit` (Browser B, creator account)
+**Procedure**:
+1. Browser A: navigate to `/app/admin/challenges/<open-slug>/judge` as yagi_admin. Leave tab open.
+2. Browser B: navigate to `/challenges/<open-slug>/submit` as creator role. Submit a test entry.
+3. Expect in Browser A within 5s: new submission appears in judge list WITHOUT page refresh.
+4. Also verify: notification_events row created with kind `challenge_submission_confirmed` for the submitter.
+5. Email smoke (optional): check submitter inbox — email from notify-dispatch within ~10-15min (cron tick dependent).
+**Expected defects to watch**: realtime connection fails (check browser console for `postgres_changes` errors), `supabase_realtime` publication missing `challenge_submissions` (verify via `pg_publication_tables`), notification bell doesn't refresh (Phase 1.8 realtime on notification_events unchanged).
+**Status**: open
+**Registered**: G7 Group A closeout (2026-04-24, overnight autopilot)

@@ -1,7 +1,81 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-23 저녁 (Phase 2.5 G1/G2 **SHIPPED**, G3 entry 진행 중 — infra v2.0 완료, Agent Teams 실전 대기)
-> **목적:** Phase 2.5 G3 (공개 /challenges/* routes + realtime gallery) 진입. G2 retro에서 도출된 병렬화 infra 전면 도입.
+> **갱신:** 2026-04-24 (Phase 2.5 **SHIPPED** — overnight G4-G7 autopilot + morning G8 3-loop hardening chain, Codex K-05 CLEAN, merged to main)
+> **목적:** Phase 2.5 closed. Phase 2.6 (IA revision) kickoff 가능. SPEC v3 at `.yagi-autobuild/phase-2-6/SPEC.md`.
+
+---
+
+## ✅ Phase 2.5 SHIPPED (2026-04-24)
+
+**Build:** G1-G8 전체 shipped. Overnight autopilot로 G4→G5→G6→G7 연속 진행, G8 Codex K-05 초기 verdict HIGH_FINDINGS 6건 → 3-loop hardening chain 완료 → K-05 CLEAN → main merge.
+
+**Hardening chain:**
+- v1 (bcddd04): RLS split + aggregate RPC + validation triggers + R2 prefix ownership + admin Zod → Codex pass 1 closed 5/6
+- v2 (5ceff0f): full submission_requirements schema trigger → Codex pass 2 closed 1 partial (K05-003A/B remain)
+- v3 (bc22b21): wrong-type reject + undeclared-key whitelist → Codex pass 3 **CLEAN**
+
+**Deferred to Phase 2.6:** 9 FUs (FU-8/9/11/13 security+perf sweep, FU-16/17/18 i18n polish, FU-19 external_links, FU-22 gallery vote count RPC).
+
+**Scope delivered:**
+- G1 schema baseline (7 new tables, profile+notif_prefs extensions, 3 hardening migrations total)
+- G2 auth + handle RPCs + ADR-009
+- G3 public /challenges/* + realtime gallery
+- G4 submission flow (R2 + Zod + XHR progress)
+- G5 admin management (5 routes)
+- G6 /u/[handle] profile + settings + avatar crop
+- G7 notifications glue (4 kinds + pg_cron)
+- G8 Codex K-05 hardening + CLOSEOUT
+
+**Detail:** `.yagi-autobuild/phase-2-5/CLOSEOUT.md` + `.yagi-autobuild/phase-2-5/OVERNIGHT_LOG.md` + per-gate `G{N}_CLOSEOUT.md` + `G8_K05_FINDINGS.md`
+
+---
+
+---
+
+## 🌙 Overnight Gate Autopilot 활성 (2026-04-24)
+
+상세 진행: `.yagi-autobuild/phase-2-5/OVERNIGHT_LOG.md`
+Stop triggers: Codex HIGH-A / SPEC drift / build|tsc|lint 2회 연속 실패 / R2-Supabase 접근 실패 / 배치 답변 파싱 실패 — 발생 시 즉시 Telegram halt.
+
+---
+
+## ✅ G4 shipped (2026-04-24)
+- Submit flow: `/challenges/[slug]/submit` + R2 signed-URL upload + atomic post-upload INSERT + dynamic Zod schema + YouTube strict regex
+- R2 bucket CORS + Lifecycle applied via Cloudflare HTTP API
+- 상세: `.yagi-autobuild/phase-2-5/G4_CLOSEOUT.md`
+
+---
+
+---
+
+## ✅ 방금 끝난 것 — Phase 2.5 G3 (2026-04-24 closeout)
+
+**Worktree:** `.claude/worktrees/g3-challenges/` (branch `worktree-g3-challenges`)
+**첫 Agent Teams 실전 완주.** 5 sub-groups (A/B/B.5/C/D), 9 teammates, ~30 files, ~3h wall clock (SPEC 목표 4-5h — ~40% 단축).
+
+### G3에서 shipped
+- Public `/challenges` list + `/challenges/[slug]` detail + `/challenges/[slug]/gallery` (realtime, votes, winners)
+- 첫 realtime subscriber in codebase (`gallery-realtime.tsx`)
+- Countdown timer + 16:9 thumbnail support + Higgsfield-style archived card grid (B.5 polish round, mid-flight 추가)
+- Sitemap + 9-assertion node smoke test
+- 자세한 내역: `.yagi-autobuild/phase-2-5/G3_CLOSEOUT.md`
+
+### 열린 follow-ups
+- FU-16 (LOW) — header-cta-resolver 리터럴 → useTranslations
+- FU-17 (LOW) — B1 인라인 empty-state → B2 `<EmptyState>` 통합
+
+### G3에서 소비된 seed data (테스트용, prod 아님)
+6 challenges (`test-*`) + 3 test creators + 6 submissions + 3 winners + 3 votes. 정리 SQL은 CLOSEOUT.md §seed-data 참조.
+
+### 다음
+야기 authorization 대기 중:
+1. `git push origin worktree-g3-challenges`
+2. merge 전략 결정 (직접 main merge vs PR review)
+3. G4 (submission flow) 진입
+
+---
+
+## 📚 Archive — Phase 2.5 G3 entry session (2026-04-23 저녁, SHIPPED per above)
 
 ---
 

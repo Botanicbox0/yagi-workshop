@@ -270,3 +270,82 @@ RETURN NOT (
 **Status**: deferred to Phase 2.6
 **Registered**: G2 hardening v1 Codex K-05 M2 finding (2026-04-23)
 **Status**: open
+
+
+---
+
+## FU-SCOPES-1 — G0 pre-work: useUserScopes hook + scope resolver (⚠️ BLOCKER for G6 entry)
+
+**Trigger:** Phase 2.6 G0 pre-work. See `.yagi-autobuild/phase-2-6/SPEC.md` §8 fragility guard.
+
+**Status:** ⚠️ BLOCKER — G6 entry verification required.
+
+**Problem:** Phase 2.6 G2 (scope selector) and Phase 2.5 G6 (`/u/[handle]` edit affordance) both need to consume role-gated scope information via a shared hook. If Phase 2.5 G6 ships first with ad-hoc role checks, Phase 2.6 requires retrofitting (3-4h cost).
+
+**Solution:** Land `useUserScopes` hook + `getUserScopes` server resolver BEFORE G6 first commit. Full spec inline in `.yagi-autobuild/phase-2-5/G6-ENTRY-DECISION-PACKAGE.md` §0.
+
+**Action at G6 entry (Builder):**
+
+```bash
+# Verification step (run FIRST, before any G6 work)
+test -f src/lib/app/scopes.ts && \
+  grep -q "export function getUserScopes" src/lib/app/scopes.ts && \
+  test -f src/lib/app/use-user-scopes.ts && \
+  grep -q "export function useUserScopes" src/lib/app/use-user-scopes.ts
+```
+
+- **EXIT 0** → skip to G6 main tasks.
+- **EXIT non-zero** → execute G0 spec from G6-ENTRY-DECISION-PACKAGE.md §0 FIRST, then G6.
+
+**Telegram on G0 completion:**
+```
+✅ Phase 2.5 G0 (FU-SCOPES-1) SHIPPED — useUserScopes hook + scope resolver landed.
+Proceeding to G6 main tasks.
+```
+
+**Files created by G0:**
+- `src/lib/app/scopes.ts`
+- `src/lib/app/use-user-scopes.ts`
+- `src/app/[locale]/app/layout.tsx` (wrapped with `<UserScopesProvider>`)
+
+**Duration:** 1-1.5h (mini-gate inside Phase 2.5 G5↔G6 window).
+
+**Cross-refs:**
+- Phase 2.6 SPEC.md §8 fragility guard (3-layer)
+- Phase 2.5 G6-ENTRY-DECISION-PACKAGE.md §0 inline spec
+- Phase 2.6 Success Criterion #15 (`useUserScopes` shared across 2.5 G6 + 2.6 G2)
+
+**Registered:** 2026-04-24 (Phase 2.6 v3.1 SPEC authoring)
+**Status:** open (blocker until G6 entry)
+
+---
+
+## FU-19 — profiles.external_links column + UI
+
+**Trigger**: Phase 2.6 (bundled with sidebar IA refactor if schema work needed anyway).
+**Risk**: LOW — cosmetic/profile-richness. No user-blocking impact.
+**Background**: G6 DP §F specified `external_links jsonb` on profiles. Column was missing at G6 entry. Per ULTRA-CHAIN D rule (only G7 pg_cron migration allowed in overnight autopilot), migration was deferred instead of landing mid-chain.
+**Action**: 
+1. Migration: `ALTER TABLE public.profiles ADD COLUMN external_links jsonb DEFAULT '[]'::jsonb;` with CHECK `(jsonb_typeof(external_links) = 'array' AND jsonb_array_length(external_links) <= 3)`.
+2. Regenerate `src/lib/supabase/database.types.ts`.
+3. UI: extend `settings/profile-form.tsx` with external-links dynamic array (RHF useFieldArray, max 3 rows, label max 30, url Zod .url()).
+4. Server: extend `updateProfileExtendedAction` to accept/validate/UPDATE external_links.
+5. Display: extend `src/app/u/[handle]/page.tsx` Meta section to render external_links below Instagram.
+**Owner**: Phase 2.6 author.
+**Status**: open
+**Registered**: G6 Group A closeout (2026-04-24, overnight autopilot)
+
+---
+
+## FU-22 — Public gallery vote counts via get_submission_vote_counts RPC
+
+**Trigger**: Phase 2.6 polish
+**Risk**: LOW — UX gap, no security impact
+**Background**: Post-G8 hardening, challenge_votes direct read is now owner-scoped + admin. `getChallengeGallery(challengeId)` in `src/lib/challenges/queries.ts` does not populate `submission.vote_count`. `submission-card.tsx` falls back to 0 when field is absent. Public gallery displays "응원 0" for all submissions as a result. Announce page (admin) already calls `get_submission_vote_counts` RPC correctly.
+**Action**:
+1. In `src/lib/challenges/queries.ts` `getChallengeGallery()`: after fetching submissions + winners, call `supabase.rpc("get_submission_vote_counts", { p_challenge_id: challengeId })` and merge the counts onto each submission by `submission_id`.
+2. Verify type from regenerated `database.types.ts`; cast if RPC isn't in types yet.
+3. Smoke: anon viewer sees real counts on /challenges/<slug>/gallery.
+**Owner**: Phase 2.6 author.
+**Status**: open
+**Registered**: G8 hardening sub-chain closeout (2026-04-24)

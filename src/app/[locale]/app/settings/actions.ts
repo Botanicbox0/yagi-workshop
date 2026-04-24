@@ -18,6 +18,22 @@ const profileSchema = z.object({
     .min(HANDLE_MIN_LENGTH)
     .max(HANDLE_MAX_LENGTH),
   locale: z.enum(["ko", "en"]),
+  // G6 additions
+  bio: z
+    .string()
+    .trim()
+    .max(200, "bio_too_long")
+    .nullable()
+    .optional()
+    .transform((v) => (v === "" ? null : v ?? null)),
+  instagram_handle: z
+    .string()
+    .trim()
+    .max(50)
+    .regex(/^[a-zA-Z0-9._]*$/, "instagram_invalid")
+    .nullable()
+    .optional()
+    .transform((v) => (v === "" ? null : v ?? null)),
 });
 
 export async function updateProfile(input: unknown) {
@@ -61,6 +77,8 @@ export async function updateProfile(input: unknown) {
     .update({
       display_name: parsed.data.display_name,
       locale: parsed.data.locale,
+      bio: parsed.data.bio ?? null,
+      instagram_handle: parsed.data.instagram_handle ?? null,
     })
     .eq("id", user.id);
 
