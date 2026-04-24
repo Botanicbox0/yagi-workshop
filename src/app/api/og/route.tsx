@@ -121,7 +121,10 @@ export async function GET(req: Request): Promise<Response> {
 
   const post = slug
     ? allPosts.find(
-        (p) => p.slug === slug && p.locale === localeParam,
+        (p) =>
+          p.slug === slug &&
+          p.locale === localeParam &&
+          !p.tags.includes("guide"),
       )
     : undefined;
 
