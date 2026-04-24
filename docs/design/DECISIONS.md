@@ -17,6 +17,7 @@ Audience: human contributors + future YAGI. Context + rationale lives here, not 
 | ADR-005 | Expedited Phase Protocol for 1–2 day sprints           | Accepted  | 2026-04-23 |
 | ADR-006 | SPEC-to-kickoff alignment protocol                     | Accepted  | 2026-04-23 |
 | ADR-009 | Role type system reconciliation (Phase 1.1 ↔ 2.5)      | Accepted  | 2026-04-23 |
+| ADR-010 | Sidebar IA grouping + billing retirement + invoice consolidation | Accepted | 2026-04-24 |
 
 ---
 
@@ -308,3 +309,114 @@ this ADR — it's a type error AND a semantic error.
 
 - `.yagi-autobuild/phase-2-5/G2-ENTRY-DECISION-PACKAGE.md` §A
 - `.yagi-autobuild/phase-2-6/SPEC.md` §2 PRE-1
+
+---
+
+## ADR-010: Sidebar IA grouping + billing retirement + invoice consolidation
+Date: 2026-04-24
+Status: Accepted
+
+### Context
+
+Phase 2.5 added 3 public surfaces + 1 admin challenge console to the app.
+The existing sidebar (Phase 1.x baseline) is a flat 11+ item list with
+heterogeneous categories — past Miller 7±2, no visual grouping, and no
+information hierarchy beyond workspace context. New routes (`/app/admin/challenges/*`) would push the list to 14+ items, degrading findability further.
+
+Three latent issues surface at the same time:
+
+1. **No grouping** — operations tier mixes work-output (projects, preprod,
+   showcases), communication (meetings, notifications, team), money
+   (invoices, admin_invoices), and system (settings, admin) without
+   visual separation.
+2. **Aspirational slot with no roadmap** — `billing` renders as a
+   disabled "(Soon)" entry in Phase 1.x, but there is no Phase plan
+   for self-serve usage billing and no ADR establishing what `billing`
+   would even mean. It signals scope we don't own.
+3. **Invoice surface split** — `invoices` (workspace-received) lives in
+   the main list, `admin_invoices` (YAGI-issued) lives in a bottom
+   admin divider. Both are the same money surface viewed from different
+   sides; splitting them across the tier obscures the coherence.
+
+### Decision
+
+1. **Introduce 4-group operations tier.** Flat list becomes quiet
+   uppercase sections: `작업` (work output) / `소통` (communication) /
+   `결제` (money) / `시스템` (system). Labels auto-hide when a group
+   has fewer than 2 visible items for the current user role, so the
+   visual weight tracks role, not structure.
+2. **Retire `billing`** from the sidebar. Entry removed from the items
+   array and translation keys (`nav.billing`) removed. If SaaS usage
+   billing becomes a real phase, it re-enters via a new ADR + mapping
+   amendment.
+3. **Consolidate invoices under 결제.** `invoices` + `admin_invoices`
+   become two children of a single `결제 ▾` parent row. When only one
+   is role-visible, the parent wrapper collapses into a bare link so
+   workspace-only users see exactly one `결제` entry with no redundant
+   group chrome.
+4. **2-depth indent with auto-expand.** Parents with no `href` act as
+   non-clickable toggles. Parent auto-expands when the current pathname
+   matches any child route. Used by `챌린지 ▾` (yagi_admin — list + new
+   + open-filter) and `결제 ▾` (yagi_admin — received + issued).
+
+### Consequences
+
+- (+) Operations tier drops from ~11 flat items to 4 labeled groups;
+      each group stays well under Miller 7±2.
+- (+) Role-dynamic auto-hide means non-admin users see a smaller sidebar
+      without us authoring separate role trees — one config, runtime
+      filter.
+- (+) Invoice coherence: `결제 ▾` gathers both perspectives under one
+      parent. Admin users see the money surface as a unit instead of
+      two disconnected items.
+- (+) `billing` removal eliminates the longest-standing "(Soon)" entry
+      that had no roadmap, aligning with ADR-001-adjacent
+      aspirational-slot-retirement principle from ARCHITECTURE.md.
+- (–) 2-depth introduces a small parent-row toggle interaction users
+      didn't have before. Mitigated by auto-expand on active route.
+- (–) `challenges_open` child uses `?state=open` query variant, which
+      requires a custom active-state matcher (pathname + search).
+      Complexity isolated to `sidebar-nav.tsx`.
+
+### Alternatives considered
+
+- **Keep flat list, rename labels for clarity.** Rejected — doesn't
+  solve Miller 7±2; just re-labels the same density problem.
+- **Label-less dividers between mental groups.** Rejected — requires
+  users to infer categories; eliminates the self-documenting benefit
+  of named groups.
+- **Collapsible groups with persisted state.** Deferred — state
+  persistence (client storage + hydration) is out of Phase 2.6 scope.
+  Auto-expand-on-active-route gives 90% of the benefit without the
+  storage surface. Revisit in Phase 3+ if feedback demands.
+- **Keep `billing` as a visible aspirational slot.** Rejected — signals
+  scope we don't own and trains users to expect an unshipped feature.
+
+### Followups
+
+- **FU-SIDEBAR-STORYBOARD-1** (`.yagi-autobuild/phase-2-6/FOLLOWUPS.md`)
+  — `storyboards` and `brands` remain disabled placeholders. Flip
+  `disabled: false` when those phases ship.
+- **FU-GUIDES-1** — remaining 3 help-route entries ship at
+  `published: false` in Phase 2.6; content authoring is cross-phase.
+- Growth triggers (SPEC §4) — any group >5 items, 3-depth warranted,
+  or "I can't find X" from ≥2 distinct users fires an IA review. Each
+  expansion requires a new ADR.
+
+### Adoption
+
+1. `src/components/app/sidebar-nav.tsx` — flat `items` array replaced
+   by `GROUPS` array; added `filterItem` / `computeActiveKey` /
+   `ParentRow` helpers.
+2. `src/components/app/sidebar-group-label.tsx` — new quiet-uppercase
+   label component.
+3. `messages/ko.json` + `messages/en.json` — added `nav.groups.*`
+   keys, `nav.challenges*` keys, `nav.notifications`, `nav.showcases`,
+   `nav.billing_group`; removed `nav.billing`.
+
+### Cross-references
+
+- `.yagi-autobuild/phase-2-6/SPEC.md` §1, §4 (IA governance)
+- `.yagi-autobuild/phase-2-6/IMPLEMENTATION.md` §1 (route table)
+- `.yagi-autobuild/phase-2-6/REFERENCES.md` §1 ADR-010
+- ADR-009 (role type reconciliation — enables role-dynamic filtering)

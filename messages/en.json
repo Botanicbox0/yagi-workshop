@@ -209,17 +209,29 @@
     "observer_done_sub": "Taking you to the challenges."
   },
   "nav": {
+    "groups": {
+      "work": "Work",
+      "communication": "Communication",
+      "billing": "Billing",
+      "system": "System"
+    },
     "projects": "Projects",
+    "showcases": "Showcases",
     "storyboards": "Storyboards",
     "brands": "Brands",
     "team": "Team",
-    "billing": "Billing",
     "settings": "Settings",
     "admin": "YAGI Admin",
-    "admin_invoices": "Invoicing admin",
+    "admin_invoices": "Issued invoices",
     "meetings": "Meetings",
+    "notifications": "Notifications",
     "preprod": "Pre-production",
-    "invoices": "Invoices"
+    "invoices": "Received invoices",
+    "billing_group": "Billing",
+    "challenges": "Challenges",
+    "challenges_all": "All",
+    "challenges_new": "New challenge",
+    "challenges_open": "Open now"
   },
   "dashboard": {
     "empty_title": "No active projects yet",

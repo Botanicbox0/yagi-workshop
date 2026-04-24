@@ -209,17 +209,29 @@
     "observer_done_sub": "챌린지 둘러보기로 이동합니다."
   },
   "nav": {
+    "groups": {
+      "work": "작업",
+      "communication": "소통",
+      "billing": "결제",
+      "system": "시스템"
+    },
     "projects": "프로젝트",
+    "showcases": "쇼케이스",
     "storyboards": "스토리보드",
     "brands": "브랜드",
     "team": "팀",
-    "billing": "청구",
     "settings": "설정",
     "admin": "YAGI 관리",
-    "admin_invoices": "송장 관리",
+    "admin_invoices": "발행 송장",
     "meetings": "미팅",
+    "notifications": "알림",
     "preprod": "사전제작",
-    "invoices": "송장"
+    "invoices": "받은 송장",
+    "billing_group": "결제",
+    "challenges": "챌린지",
+    "challenges_all": "전체",
+    "challenges_new": "새 챌린지",
+    "challenges_open": "공개중"
   },
   "dashboard": {
     "empty_title": "아직 진행 중인 프로젝트가 없습니다",
