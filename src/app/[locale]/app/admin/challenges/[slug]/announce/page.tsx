@@ -54,20 +54,22 @@ export default async function AdminAnnounceChallengePage({
   const judgingConfig = challenge.judging_config as JudgingConfig;
   let voteCounts: { submission_id: string; count: number }[] = [];
   if (judgingConfig.mode === "public_vote" || judgingConfig.mode === "hybrid") {
-    const { data: voteRows } = await supabase
-      .from("challenge_votes")
-      .select("submission_id")
-      .eq("challenge_id", challenge.id);
+    // TODO: replace with proper type from database.types.ts once RPC is deployed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: voteRows } = await (supabase as any).rpc(
+      "get_submission_vote_counts",
+      {
+        p_challenge_id: challenge.id,
+      }
+    );
 
     if (voteRows) {
-      const countMap = new Map<string, number>();
-      for (const v of voteRows) {
-        countMap.set(v.submission_id, (countMap.get(v.submission_id) ?? 0) + 1);
-      }
-      voteCounts = Array.from(countMap.entries()).map(([submission_id, count]) => ({
-        submission_id,
-        count,
-      }));
+      voteCounts = (voteRows as Array<{ submission_id: string; vote_count: number }>).map(
+        (row) => ({
+          submission_id: row.submission_id,
+          count: Number(row.vote_count),
+        })
+      );
     }
   }
 

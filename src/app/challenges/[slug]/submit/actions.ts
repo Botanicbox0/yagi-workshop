@@ -119,8 +119,8 @@ export async function requestUploadUrlsAction(
   const issued: IssuedUpload[] = [];
   for (const slot of slots) {
     const slotKey = crypto.randomUUID();
-    const safeFilename = sanitizeFilename(slot.filename);
-    const objectKey = `tmp/${challengeId}/${slotKey}/${safeFilename}`;
+    const safeName = sanitizeFilename(slot.filename);
+    const objectKey = `tmp/${challengeId}/${user.id}/${crypto.randomUUID()}/${safeName}`;
     const uploadUrl = await createPresignedPutUrl(objectKey, slot.contentType);
     issued.push({ slotKey, uploadUrl, objectKey });
   }
@@ -147,7 +147,8 @@ export async function submitChallengeAction(
         | "not_open"
         | "already_submitted"
         | "validation_failed"
-        | "upload_missing";
+        | "upload_missing"
+        | "invalid_object_key_prefix";
       detail?: string;
     }
 > {
@@ -175,8 +176,17 @@ export async function submitChallengeAction(
   // Collect all objectKeys referenced in content
   const referencedKeys: string[] = [];
   if (content.native_video?.objectKey) referencedKeys.push(content.native_video.objectKey);
-  if (content.images) referencedKeys.push(...content.images.map((img) => img.objectKey));
   if (content.pdf?.objectKey) referencedKeys.push(content.pdf.objectKey);
+  for (const img of content.images ?? []) referencedKeys.push(img.objectKey);
+
+  // Enforce ownership: every key must have been issued under the caller's tmp prefix
+  const allowedPrefix = `tmp/${challengeId}/${user.id}/`;
+  for (const key of referencedKeys) {
+    if (!key.startsWith(allowedPrefix)) {
+      console.error("[submitChallengeAction] key outside allowed prefix", { key, allowedPrefix });
+      return { ok: false, error: "invalid_object_key_prefix" };
+    }
+  }
 
   // Verify each uploaded object exists in R2
   const r2 = getR2Client();

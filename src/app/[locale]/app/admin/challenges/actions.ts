@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { isValidTransition } from "@/lib/challenges/state-machine";
+import { submissionRequirementsSchema, judgingConfigSchema } from "@/lib/challenges/config-schemas";
 import type { ChallengeState, SubmissionRequirements, JudgingConfig } from "@/lib/challenges/types";
 import type { Json, Database } from "@/lib/supabase/database.types";
 
@@ -52,7 +53,7 @@ async function getAuthenticatedAdmin() {
 
 export async function createChallengeAction(
   input: CreateInput,
-): Promise<{ ok: true; slug: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; slug: string } | { ok: false; error: string; detail?: string }> {
   const auth = await getAuthenticatedAdmin();
   if (!auth.ok) return { ok: false, error: auth.error };
 
@@ -64,6 +65,11 @@ export async function createChallengeAction(
     return { ok: false, error: "title_required" };
   }
 
+  const reqParse = submissionRequirementsSchema.safeParse(input.submission_requirements);
+  if (!reqParse.success) return { ok: false, error: "invalid_requirements", detail: reqParse.error.message };
+  const judgeParse = judgingConfigSchema.safeParse(input.judging_config);
+  if (!judgeParse.success) return { ok: false, error: "invalid_judging", detail: judgeParse.error.message };
+
   const { supabase, user } = auth;
   const { error } = await supabase.from("challenges").insert({
     slug,
@@ -73,8 +79,8 @@ export async function createChallengeAction(
     open_at: input.open_at ?? null,
     close_at: input.close_at ?? null,
     announce_at: input.announce_at ?? null,
-    submission_requirements: input.submission_requirements as unknown as Json,
-    judging_config: input.judging_config as unknown as Json,
+    submission_requirements: reqParse.data as unknown as Json,
+    judging_config: judgeParse.data as unknown as Json,
     created_by: user.id,
   });
 
@@ -91,7 +97,7 @@ export async function createChallengeAction(
 export async function updateChallengeAction(
   currentSlug: string,
   patch: UpdateInput,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true } | { ok: false; error: string; detail?: string }> {
   const auth = await getAuthenticatedAdmin();
   if (!auth.ok) return { ok: false, error: auth.error };
 
@@ -126,10 +132,14 @@ export async function updateChallengeAction(
   if (patch.close_at !== undefined) update.close_at = patch.close_at;
   if (patch.announce_at !== undefined) update.announce_at = patch.announce_at;
   if (patch.submission_requirements !== undefined) {
-    update.submission_requirements = patch.submission_requirements as unknown as Json;
+    const reqParse = submissionRequirementsSchema.safeParse(patch.submission_requirements);
+    if (!reqParse.success) return { ok: false, error: "invalid_requirements", detail: reqParse.error.message };
+    update.submission_requirements = reqParse.data as unknown as Json;
   }
   if (patch.judging_config !== undefined) {
-    update.judging_config = patch.judging_config as unknown as Json;
+    const judgeParse = judgingConfigSchema.safeParse(patch.judging_config);
+    if (!judgeParse.success) return { ok: false, error: "invalid_judging", detail: judgeParse.error.message };
+    update.judging_config = judgeParse.data as unknown as Json;
   }
 
   if (Object.keys(update).length === 0) return { ok: true };

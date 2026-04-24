@@ -334,3 +334,18 @@ Proceeding to G6 main tasks.
 **Owner**: Phase 2.6 author.
 **Status**: open
 **Registered**: G6 Group A closeout (2026-04-24, overnight autopilot)
+
+---
+
+## FU-22 — Public gallery vote counts via get_submission_vote_counts RPC
+
+**Trigger**: Phase 2.6 polish
+**Risk**: LOW — UX gap, no security impact
+**Background**: Post-G8 hardening, challenge_votes direct read is now owner-scoped + admin. `getChallengeGallery(challengeId)` in `src/lib/challenges/queries.ts` does not populate `submission.vote_count`. `submission-card.tsx` falls back to 0 when field is absent. Public gallery displays "응원 0" for all submissions as a result. Announce page (admin) already calls `get_submission_vote_counts` RPC correctly.
+**Action**:
+1. In `src/lib/challenges/queries.ts` `getChallengeGallery()`: after fetching submissions + winners, call `supabase.rpc("get_submission_vote_counts", { p_challenge_id: challengeId })` and merge the counts onto each submission by `submission_id`.
+2. Verify type from regenerated `database.types.ts`; cast if RPC isn't in types yet.
+3. Smoke: anon viewer sees real counts on /challenges/<slug>/gallery.
+**Owner**: Phase 2.6 author.
+**Status**: open
+**Registered**: G8 hardening sub-chain closeout (2026-04-24)
