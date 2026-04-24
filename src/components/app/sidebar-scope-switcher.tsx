@@ -36,7 +36,14 @@ function scopeLabel(scope: Scope): string {
       : scope.name;
 }
 
-export function SidebarScopeSwitcher() {
+export function SidebarScopeSwitcher({
+  onNavigate,
+}: {
+  /** Optional callback fired immediately before `router.push`, used by the
+   *  mobile sheet to close itself since scope selection is programmatic
+   *  navigation (no <a> for the anchor-capture handler to catch). */
+  onNavigate?: () => void;
+} = {}) {
   const scopes = useUserScopes();
   const router = useRouter();
   const t = useTranslations("app.scopeSelector");
@@ -64,7 +71,10 @@ export function SidebarScopeSwitcher() {
     <MultiScopeSwitcher
       scopes={scopes}
       active={active}
-      onSelect={(scope) => router.push(scope.href)}
+      onSelect={(scope) => {
+        onNavigate?.();
+        router.push(scope.href);
+      }}
       tooltipLabel={t("firstUseTooltip")}
     />
   );

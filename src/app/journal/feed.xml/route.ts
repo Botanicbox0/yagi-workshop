@@ -31,6 +31,7 @@ function buildSummary(
 export async function GET(): Promise<Response> {
   const published = allPosts
     .filter((post) => !post.draft)
+    .filter((post) => !post.tags.includes("guide"))
     .slice()
     .sort(
       (a, b) =>

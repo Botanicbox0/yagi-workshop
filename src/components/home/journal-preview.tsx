@@ -29,6 +29,7 @@ export async function JournalPreview({ locale }: Props) {
   const posts = allPosts
     .filter((p) => p.locale === locale)
     .filter((p) => isDev || !p.draft)
+    .filter((p) => !p.tags.includes("guide"))
     .sort(
       (a, b) =>
         new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),

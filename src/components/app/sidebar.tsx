@@ -37,7 +37,7 @@ function SidebarBody({
       }}
     >
       <div className="p-5 border-b border-border">
-        <SidebarScopeSwitcher />
+        <SidebarScopeSwitcher onNavigate={onNavigate} />
       </div>
       <div className="flex-1 overflow-y-auto py-3">
         <SidebarNav

@@ -34,7 +34,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  const publishedPosts = allPosts.filter((post) => !post.draft);
+  const publishedPosts = allPosts
+    .filter((post) => !post.draft)
+    .filter((post) => !post.tags.includes("guide"));
 
   const postEntries: MetadataRoute.Sitemap = publishedPosts.map((post) => {
     // Build per-post hreflang map only for sibling locales that actually exist.
