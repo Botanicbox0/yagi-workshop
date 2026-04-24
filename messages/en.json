@@ -995,5 +995,20 @@
     "not_found": "Not found",
     "unauthorized": "You don't have permission",
     "validation": "Invalid input"
+  },
+  "app": {
+    "scopeSelector": {
+      "firstUseTooltip": "Switch between workspaces, profile, and admin."
+    },
+    "publicExit": "Back to public site",
+    "help": {
+      "label": "Page guide",
+      "routes": {
+        "challengeCreation": "Challenge creation guide",
+        "challengeManagement": "Challenge management guide",
+        "projectSetup": "Project setup guide",
+        "showcasePublishing": "Showcase publishing guide"
+      }
+    }
   }
 }

@@ -1060,5 +1060,20 @@
       "observer": "창작자로 참여하기",
       "admin": "새 챌린지"
     }
+  },
+  "app": {
+    "scopeSelector": {
+      "firstUseTooltip": "여러 공간을 전환할 수 있어요. 클릭해 보세요."
+    },
+    "publicExit": "공개 사이트로 나가기",
+    "help": {
+      "label": "페이지 가이드",
+      "routes": {
+        "challengeCreation": "챌린지 만들기 가이드",
+        "challengeManagement": "챌린지 운영 가이드",
+        "projectSetup": "프로젝트 시작 가이드",
+        "showcasePublishing": "쇼케이스 공개 가이드"
+      }
+    }
   }
 }

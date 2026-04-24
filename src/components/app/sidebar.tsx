@@ -1,4 +1,4 @@
-import { SidebarWorkspaceSwitcher } from "./sidebar-workspace-switcher";
+import { SidebarScopeSwitcher } from "./sidebar-scope-switcher";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import type { AppContext } from "@/lib/app/context";
@@ -10,10 +10,7 @@ export function Sidebar({ context }: { context: AppContext }) {
   return (
     <aside className="w-[240px] shrink-0 border-r border-border bg-background flex flex-col min-h-dvh">
       <div className="p-5 border-b border-border">
-        <SidebarWorkspaceSwitcher
-          workspaces={context.workspaces}
-          currentWorkspaceId={context.currentWorkspaceId}
-        />
+        <SidebarScopeSwitcher />
       </div>
       <div className="flex-1 overflow-y-auto py-3">
         <SidebarNav
