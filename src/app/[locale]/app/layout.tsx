@@ -1,6 +1,6 @@
 import { redirect } from "@/i18n/routing";
 import { fetchAppContext } from "@/lib/app/context";
-import { Sidebar } from "@/components/app/sidebar";
+import { Sidebar, MobileSidebarSheet } from "@/components/app/sidebar";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { PageHelpLink } from "@/components/app/page-help-link";
 import { createSupabaseServer } from "@/lib/supabase/server";
@@ -52,7 +52,9 @@ export default async function AppLayout({
       <div className="min-h-dvh flex">
         <Sidebar context={ctx} />
         <div className="flex-1 min-w-0 flex flex-col">
-          <header className="flex items-center justify-end gap-2 h-12 px-4 border-b border-border">
+          <header className="flex items-center justify-between gap-2 h-12 px-4 border-b border-border">
+            <MobileSidebarSheet context={ctx} />
+            <div className="flex-1" />
             <PageHelpLink />
             <NotificationBell
               initialUnreadCount={initialUnreadCount ?? 0}
