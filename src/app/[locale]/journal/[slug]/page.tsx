@@ -67,7 +67,15 @@ export async function generateMetadata({
   };
   for (const otherLocale of ["ko", "en"] as const) {
     if (otherLocale === locale) continue;
-    if (allPosts.some((p) => p.locale === otherLocale && p.slug === slug && !p.draft)) {
+    if (
+      allPosts.some(
+        (p) =>
+          p.locale === otherLocale &&
+          p.slug === slug &&
+          !p.draft &&
+          !p.tags.includes("guide"),
+      )
+    ) {
       languages[otherLocale] = `/${otherLocale}/journal/${slug}`;
     }
   }
@@ -113,6 +121,7 @@ export default async function JournalArticlePage({ params }: Props) {
   const otherPosts = allPosts
     .filter((p) => p.locale === locale)
     .filter((p) => isDev || !p.draft)
+    .filter((p) => !p.tags.includes("guide"))
     .filter((p) => p.slug !== post.slug)
     .sort(
       (a, b) =>
