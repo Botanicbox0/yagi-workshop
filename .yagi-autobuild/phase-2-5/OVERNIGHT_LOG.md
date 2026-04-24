@@ -129,3 +129,20 @@ yagi woke + authorized hardening sub-chain (Option 1 path).
 - B refactor to SECURITY DEFINER RPC (clean but ~1-2h)
 - Downgrade K05-003A/B to MED + FU-23 deferral + ship
 - Escalate for full manual review
+
+### Morning resolution — Path A3 (v3 loop)
+
+야기 authorized final loop 3/3 (Path A3). Migration `20260424040000_phase_2_5_g8_hardening_v3.sql` applied via MCP. Added 8 new reject blocks before existing validation: 4 wrong-type (ERRCODE 22023) + 4 undeclared-key whitelist (ERRCODE 23514).
+
+**Loop 3 — hardening v3 (commit bc22b21)**
+- Codex K-05 resume pass 3 (task-a26b8447...): **VERDICT CLEAN** (0 findings, 0 HIGH). K05-003A + K05-003B both RESOLVED.
+- Advisors: 0 new WARNs attributable to hardening.
+- Barrier: tsc + lint + build EXIT=0.
+
+**→ Ship path engaged.** T6 final closeout commit + main merge FF + Telegram Phase 2.5 SHIPPED.
+
+---
+
+## Phase 2.5 SHIPPED (2026-04-24)
+
+Full chain closed in ~6h overnight + morning hardening. Phase 2.6 kickoff unblocked.

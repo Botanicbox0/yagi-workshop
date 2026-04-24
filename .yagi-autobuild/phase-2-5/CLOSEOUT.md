@@ -1,10 +1,10 @@
-# Phase 2.5 — Challenge Platform CLOSEOUT (HALTED at G8)
+# Phase 2.5 — Challenge Platform SHIPPED
 
 **Date:** 2026-04-24
-**Status:** **HALTED at G8** — Codex K-05 returned HIGH_FINDINGS (6 ship-blockers). NOT merged to main. 야기 morning hardening required.
-**Codex verdict:** **HIGH_FINDINGS** — see `.yagi-autobuild/phase-2-5/G8_K05_FINDINGS.md`
-**Duration:** ~2h overnight autopilot (G4 closeout → K-05 completion), target window 9-13h truncated by halt
-**Branch:** `worktree-g3-challenges` at `90a5b8f` (post-G7 ship, pre-G8 merge) — pushed to origin but NOT merged to main
+**Status:** **SHIPPED** — merged to origin/main after 3-loop hardening chain
+**Codex verdict:** **CLEAN** (resume pass 3 task-moc...; session 019dbbcd). 0 findings. 9 FUs deferred to Phase 2.6.
+**Duration:** Overnight autopilot + 3-loop hardening morning chain. Initial K-05 verdict HIGH_FINDINGS 6; two hardening loops closed 5/6; yagi authorized final loop 3/3 which returned CLEAN.
+**Branch:** `worktree-g3-challenges` → merged to `main` (fast-forward).
 
 ## 1. Scope delivered
 
@@ -34,12 +34,26 @@
 
 ## 3. Codex K-05 summary
 
-_Populated post-K-05-completion. See OVERNIGHT_LOG G8 entry._
+**Initial pass (task-mobvetk2):** HIGH_FINDINGS — 6 ship-blockers.
 
-Expected structure:
-- Findings: _N by severity_
-- Fixed inline (HIGH-A / MED-A): _items_
-- Deferred to Phase 2.6 (HIGH-B/C, MED-B): _items + FU refs_
+**Hardening loop 1 — v1 migration (commit bcddd04):** 5 policies + 1 aggregate RPC + 2 validation triggers + R2 prefix ownership app patch + admin JSONB Zod. Codex resume pass 1 (task-moca84u0): HIGH_FINDINGS — 5/6 closed (K05-001, 002, 004, 005, 006); K05-003 partial.
+
+**Hardening loop 2 — v2 migration (commit 5ceff0f):** Extended `validate_challenge_submission_content()` trigger to enforce full `submission_requirements` schema (native_video/image/pdf/youtube_url required + shape + count + regex). Codex resume pass 2 (task-mocb3c3j): HIGH — 2 K05-003 variants remain (A wrong-type, B undeclared keys).
+
+**Hardening loop 3 — v3 migration (commit bc22b21):** yagi authorized final loop. Added 8 explicit reject blocks before existing validation — 4 wrong-type (ERRCODE 22023) + 4 whitelist (ERRCODE 23514). Codex resume pass 3: **VERDICT CLEAN** (0 findings).
+
+### Fixed inline across 3 loops
+
+- K05-001 challenge_submissions SELECT split (public + owner + admin)
+- K05-002 challenge_votes SELECT narrowed + `get_submission_vote_counts` SECURITY DEFINER aggregate RPC
+- K05-003 `validate_challenge_submission_content()` full schema + wrong-type reject + whitelist
+- K05-004 R2 move enforces `tmp/<challengeId>/<user.id>/` prefix ownership
+- K05-005 `validate_challenge_state_transition()` BEFORE UPDATE OF state trigger
+- K05-006 server-side Zod (`submissionRequirementsSchema` + `judgingConfigSchema` discriminated union) in admin create/update actions
+
+### Deferred to Phase 2.6 (9 FUs)
+
+FU-8 (auth.uid InitPlan), FU-9 (covering indexes), FU-11 (handle_available short-circuit), FU-13 (FORCE RLS system-wide), FU-16 (header-cta literals), FU-17 (empty-state dedup), FU-18 (toast i18n), FU-19 (external_links column), FU-22 (public gallery vote count RPC).
 
 ## 4. Carryover to Phase 2.6
 

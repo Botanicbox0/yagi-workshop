@@ -1,36 +1,32 @@
 # YAGI Workshop — Handoff
 
-> **갱신:** 2026-04-24 (Phase 2.5 G1~G7 shipped, **G8 HALT** — Codex K-05 verdict HIGH_FINDINGS 6건, branch not merged)
-> **목적:** Phase 2.5 G8 hardening 필요. 야기 morning review + hardening migration + re-K-05 후 merge. Phase 2.6 kickoff 블록됨.
+> **갱신:** 2026-04-24 (Phase 2.5 **SHIPPED** — overnight G4-G7 autopilot + morning G8 3-loop hardening chain, Codex K-05 CLEAN, merged to main)
+> **목적:** Phase 2.5 closed. Phase 2.6 (IA revision) kickoff 가능. SPEC v3 at `.yagi-autobuild/phase-2-6/SPEC.md`.
 
 ---
 
-## 🛑 Phase 2.5 HALT at G8 (2026-04-24 ~04:35 KST)
+## ✅ Phase 2.5 SHIPPED (2026-04-24)
 
-**Codex K-05 consolidated pass returned HIGH_FINDINGS (6 ship-blockers).** Details: `.yagi-autobuild/phase-2-5/G8_K05_FINDINGS.md`. Telegram halt alert sent (msg #60).
+**Build:** G1-G8 전체 shipped. Overnight autopilot로 G4→G5→G6→G7 연속 진행, G8 Codex K-05 초기 verdict HIGH_FINDINGS 6건 → 3-loop hardening chain 완료 → K-05 CLEAN → main merge.
 
-**G1~G7 shipped (branch `worktree-g3-challenges`, commit `90a5b8f` — pushed to origin):**
-- G1 schema baseline + 2 hardening migrations
-- G2 auth flow + handle RPCs + ADR-009
+**Hardening chain:**
+- v1 (bcddd04): RLS split + aggregate RPC + validation triggers + R2 prefix ownership + admin Zod → Codex pass 1 closed 5/6
+- v2 (5ceff0f): full submission_requirements schema trigger → Codex pass 2 closed 1 partial (K05-003A/B remain)
+- v3 (bc22b21): wrong-type reject + undeclared-key whitelist → Codex pass 3 **CLEAN**
+
+**Deferred to Phase 2.6:** 9 FUs (FU-8/9/11/13 security+perf sweep, FU-16/17/18 i18n polish, FU-19 external_links, FU-22 gallery vote count RPC).
+
+**Scope delivered:**
+- G1 schema baseline (7 new tables, profile+notif_prefs extensions, 3 hardening migrations total)
+- G2 auth + handle RPCs + ADR-009
 - G3 public /challenges/* + realtime gallery
-- G4 submission flow (R2 signed-URL + Zod + XHR progress)
-- G5 admin management (5 routes + CRUD/judge/announce)
-- G6 public profile /u/[handle] + settings + avatar crop
-- G7 notifications glue (4 kinds + pg_cron reminder — APPLIED to prod DB)
+- G4 submission flow (R2 + Zod + XHR progress)
+- G5 admin management (5 routes)
+- G6 /u/[handle] profile + settings + avatar crop
+- G7 notifications glue (4 kinds + pg_cron)
+- G8 Codex K-05 hardening + CLOSEOUT
 
-**G8 blockers (all SHIP_BLOCKER):**
-- K05-001 HIGH-A: challenge_submissions public SELECT leaks non-ready content
-- K05-002 HIGH-A: challenge_votes public SELECT leaks voter identities
-- K05-003 HIGH-C: submission content validation bypassable via direct INSERT/UPDATE
-- K05-004 HIGH-A: R2 submit move copies+deletes arbitrary existing keys
-- K05-005 HIGH-C: state machine bypassable via direct admin UPDATE
-- K05-006 HIGH-C: challenge config JSONB stored without server-side Zod
-
-4/6 need migration → ULTRA-CHAIN D forbids further overnight migration → halt.
-
-**Next action (morning):** yagi reviews `G8_K05_FINDINGS.md`, picks remediation strategy, authors hardening migration + app patches, re-runs K-05, merges to main.
-
-**Codex session resume:** `codex resume 019dbbcd-37fe-73d0-8611-d28140ae0ccc`
+**Detail:** `.yagi-autobuild/phase-2-5/CLOSEOUT.md` + `.yagi-autobuild/phase-2-5/OVERNIGHT_LOG.md` + per-gate `G{N}_CLOSEOUT.md` + `G8_K05_FINDINGS.md`
 
 ---
 
