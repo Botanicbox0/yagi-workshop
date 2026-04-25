@@ -1,11 +1,24 @@
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { fetchAppContext } from "@/lib/app/context";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default async function AppDashboardPage() {
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function AppDashboardPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations("dashboard");
   const ctx = await fetchAppContext();
+
+  // Phase 2.7: client persona's primary surface is /app/commission, not
+  // /app. Send them there so they don't see the workspace-projects shell
+  // they have no use for.
+  if (ctx?.profile.role === "client") {
+    redirect(`/${locale}/app/commission`);
+  }
 
   const isYagiAdmin = ctx?.workspaceRoles.includes("yagi_admin") ?? false;
   const isCreator = ctx?.workspaceRoles.includes("creator") ?? false;
