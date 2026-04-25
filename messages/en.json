@@ -1113,5 +1113,21 @@
         "showcasePublishing": "Showcase publishing guide"
       }
     }
+  },
+  "brief_board": {
+    "title": "Brief board",
+    "toolbar_idle": "No changes",
+    "toolbar_saving": "Auto-saving...",
+    "toolbar_saved": "Saved",
+    "toolbar_save_failed": "Save failed",
+    "save_conflict": "Someone else just saved. Please refresh",
+    "save_conflict_btn": "Refresh",
+    "save_unauthenticated": "Please sign in and try again",
+    "save_validation": "Content does not match the expected format",
+    "save_too_large": "Board exceeds the 2MB size limit",
+    "save_db_error": "Save error. Please try again",
+    "empty_title": "Start your brief however you like",
+    "empty_hint": "Type / to insert a block, or just start typing.",
+    "locked_banner": "This board is locked. Contact admin to unlock"
   }
 }

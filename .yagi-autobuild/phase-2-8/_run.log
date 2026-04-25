@@ -27,6 +27,16 @@
 2026-04-26T00:32:00Z G_B_1 RLS_STRUCTURAL_SMOKE passed=5/5 note=oversized_check_skip_path_on_zero_uuid_fk_codex_covers_logic
 2026-04-26T00:33:00Z G_B_1 GATE_EXIT ok=4/4 elapsed=2880s exits_met=migration_applied,actions_skeleton,types_regen,tsc_clean,rls_smoke
 2026-04-26T00:33:01Z G_B_2 GATE_ENTER
+2026-04-26T00:35:00Z G_B_2 DEPS_INSTALLED tiptap_react=3.22.4 tiptap_starter_kit=3.22.4 tiptap_pm=3.22.4 caret=none verified=ok
+2026-04-26T00:36:00Z G_B_2 EDITOR_AUTHORED file=src/components/brief-board/editor.tsx mode=client_component immediately_render=false debounce_ms=3000
+2026-04-26T00:37:00Z G_B_2 I18N_NAMESPACE_ADDED brief_board ko=14_keys en=14_keys parity=ok
+2026-04-26T00:38:00Z G_B_2 SLASH_COMMAND_DEFERRED reason=requires_tiptap_suggestion_or_tippy_not_in_spec_7 followup=FU-2.8-slash-command-deferred
+2026-04-26T00:39:00Z G_B_2 TSC_NOEMIT errors_total=58 brief_files=0 net_new=0
+2026-04-26T00:40:00Z G_B_2 ESLINT files=editor.tsx,actions.ts errors=0 warnings=0
+2026-04-26T00:41:00Z G_B_2 IME_SMOKE_DEFERRED reason=builder_cannot_exercise_OS_level_IME followup=FU-2.8-ime-smoke-manual owner=yagi_pre_ship
+2026-04-26T00:42:00Z G_B_2 GATE_EXIT ok=4/4 elapsed=540s exits_met=deps_pinned,editor_file,tsc_clean,lint_clean exits_deferred=ime_smoke_manual,slash_command
+2026-04-26T00:42:01Z G_B_3 GATE_ENTER
+
 
 
 

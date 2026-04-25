@@ -1178,5 +1178,21 @@
         "showcasePublishing": "쇼케이스 공개 가이드"
       }
     }
+  },
+  "brief_board": {
+    "title": "기획 보드",
+    "toolbar_idle": "변경사항 없음",
+    "toolbar_saving": "자동 저장 중...",
+    "toolbar_saved": "저장됨",
+    "toolbar_save_failed": "저장 실패",
+    "save_conflict": "다른 분이 방금 저장했습니다. 새로고침해 주세요",
+    "save_conflict_btn": "새로고침",
+    "save_unauthenticated": "로그인 후 다시 시도해 주세요",
+    "save_validation": "내용이 형식에 맞지 않아요",
+    "save_too_large": "보드가 너무 커요 (2MB 한도)",
+    "save_db_error": "저장 중 오류가 발생했어요. 다시 시도해 주세요",
+    "empty_title": "기획을 자유롭게 시작해 보세요",
+    "empty_hint": "/ 입력으로 블록을 선택할 수 있어요. 아니면 그냥 타이핑하세요.",
+    "locked_banner": "이 보드는 잠겨 있어요. 변경하려면 admin 에게 요청하세요"
   }
 }

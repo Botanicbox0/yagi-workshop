@@ -76,3 +76,62 @@ plpgsql` SECURITY DEFINER). Phase 2.8.1 candidate.
 **Status:** Open.
 
 **Registered:** 2026-04-25 (G_B-1 design-time annotation in actions.ts).
+
+---
+
+## FU-2.8-ime-smoke-manual
+
+**Trigger:** KICKOFF G_B-2 EXIT requires Korean IME smoke ("type 안녕 via
+xdotool/clipboard paste → no character drop"). The Builder runtime cannot
+exercise IME composition events programmatically — IME is OS-level input
+plumbing, not a JS API surface. tsc + lint pass for `src/components/brief-board/editor.tsx`,
+and TipTap 3.22.4 (ProseMirror v1.x) has resolved most Hangul composition
+issues observed in v2.x.
+
+**Risk:** IME character drop or duplicate insertion on Hangul composition
+boundary would corrupt user content silently. KICKOFF flags as HIGH on
+confirmed repro (E_G_B_2_TIPTAP_IME after loop 3 fail).
+
+**Action:** Manual QA queue entry — open `/app/projects/<id>?tab=brief`
+in Chrome on Windows with Korean IME (Microsoft IME, default for Win11),
+type "안녕하세요 반갑습니다" naturally (no copy-paste), inspect
+`project_briefs.content_json` for character-perfect storage. Repeat with
+mid-word edits and undo/redo. If repro fails: HALT + capture browser +
+TipTap version + steps. G_B-7 Playwright e2e covers the keyboard-paste
+path (mechanically distinct from IME).
+
+**Owner:** yagi (manual QA, single 5-minute pass before SHIPPED).
+
+**Status:** Open — pending manual smoke before merge to main.
+
+**Registered:** 2026-04-26 (G_B-2 EXIT acknowledgment that the Builder
+cannot self-verify IME).
+
+---
+
+## FU-2.8-slash-command-deferred
+
+**Trigger:** SPEC §4.5 puts "Slash command (/ → block picker)" inside
+G_B-2 scope. Implementing it cleanly in TipTap requires `@tiptap/suggestion`
+(plus Tippy.js for the picker popup), neither of which is in SPEC §7
+stack list. Adding either would be HALT E_DEP_UNLISTED.
+
+**Risk:** UX hint in `empty_hint` says "Type / to insert a block" —
+that string is now slightly aspirational at G_B-2 ship. Users typing /
+will get a literal slash character. No data corruption, just a missing
+affordance.
+
+**Action:** Two paths:
+  (a) Hand-roll a slash-trigger detector using a TipTap `keymap` extension
+      (no new deps) plus a custom React popup. v2 surface + finite scope.
+  (b) Add `@tiptap/suggestion` + `tippy.js` to SPEC §7 (amend SPEC) and
+      wire the canonical pattern.
+SPEC v2 was scope-cut to fit 7 days; option (a) at G_B-3 if time permits,
+otherwise Phase 2.8.1.
+
+**Owner:** Phase 2.8.1 builder, or G_B-3 stretch goal.
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (G_B-2 scope decision documenting deviation
+from SPEC §4.5 mechanism while honoring §7 stack constraint).
