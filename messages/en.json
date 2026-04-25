@@ -1138,6 +1138,21 @@
     "asset_too_large_image": "Image exceeds 50MB limit",
     "asset_too_large_file": "File exceeds 200MB limit",
     "asset_unsupported": "Unsupported file type",
-    "asset_upload_failed": "Upload failed. Please try again"
+    "asset_upload_failed": "Upload failed. Please try again",
+    "toolbar_save_v": "Save v{n}",
+    "save_modal_title": "Save version",
+    "save_modal_label": "Label (optional)",
+    "save_modal_label_ph": "e.g. Draft, Post-kickoff v2",
+    "save_modal_save": "Save",
+    "save_modal_cancel": "Cancel",
+    "save_modal_success": "Saved as v{n}",
+    "history_title": "Version history",
+    "history_current": "Current",
+    "history_no_versions": "No saved versions yet",
+    "history_restore": "Restore this version",
+    "history_restore_success": "Copied this version into the latest",
+    "history_view": "View this version",
+    "viewer_banner": "Viewing v{n} — read-only",
+    "viewer_back": "Back to latest"
   }
 }

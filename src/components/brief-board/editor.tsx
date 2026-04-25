@@ -75,10 +75,21 @@ export interface BriefBoardEditorProps {
    */
   initialStatus: "editing" | "locked";
   /**
-   * Wizard mode hides save indicator and version chrome (handled by
-   * caller layout in G_B-7). Default 'full'.
+   * - 'full'   : default, autosave + toolbar visible
+   * - 'wizard' : hides toolbar's save indicator (caller in G_B-7 owns the
+   *              wizard chrome); autosave still wired
+   * - 'viewer' : forces read-only with a viewer banner; auto-save disabled.
+   *              Used by the version-history sidebar to view a snapshot.
    */
-  mode?: "wizard" | "full";
+  mode?: "wizard" | "full" | "viewer";
+  /**
+   * When mode='viewer', the version_n being viewed (for the banner).
+   */
+  viewerVersionN?: number;
+  /**
+   * When mode='viewer', the locale-aware "back to latest" CTA target href.
+   */
+  viewerBackHref?: string;
   className?: string;
 }
 
@@ -90,10 +101,12 @@ export function BriefBoardEditor({
   initialUpdatedAt,
   initialStatus,
   mode = "full",
+  viewerVersionN,
+  viewerBackHref,
   className,
 }: BriefBoardEditorProps) {
   const t = useTranslations("brief_board");
-  const editable = initialStatus === "editing";
+  const editable = mode !== "viewer" && initialStatus === "editing";
 
   // Mutable refs that don't trigger re-renders. updatedAtRef is the
   // CAS token: the most recent server-stamped timestamp we know about.
@@ -459,7 +472,24 @@ export function BriefBoardEditor({
         className
       )}
     >
-      {!editable && (
+      {mode === "viewer" && (
+        <div className="px-4 py-2 flex items-center justify-between text-xs font-medium uppercase tracking-[0.12em] bg-foreground/5 text-foreground border-b border-border">
+          <span>
+            {viewerVersionN
+              ? t("viewer_banner", { n: viewerVersionN })
+              : t("viewer_banner", { n: "?" })}
+          </span>
+          {viewerBackHref && (
+            <a
+              href={viewerBackHref}
+              className="rounded-full border border-border px-2 py-0.5 text-[11px] hover:bg-background"
+            >
+              {t("viewer_back")}
+            </a>
+          )}
+        </div>
+      )}
+      {mode !== "viewer" && !editable && (
         <div className="px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] bg-muted text-muted-foreground border-b border-border">
           {t("locked_banner")}
         </div>

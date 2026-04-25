@@ -1203,6 +1203,21 @@
     "asset_too_large_image": "이미지가 50MB 제한을 초과해요",
     "asset_too_large_file": "파일이 200MB 제한을 초과해요",
     "asset_unsupported": "지원하지 않는 파일 형식이에요",
-    "asset_upload_failed": "업로드 실패. 다시 시도해 주세요"
+    "asset_upload_failed": "업로드 실패. 다시 시도해 주세요",
+    "toolbar_save_v": "v{n} 저장",
+    "save_modal_title": "버전 저장",
+    "save_modal_label": "라벨 (선택)",
+    "save_modal_label_ph": "예: 초안, 미팅 후 수정 v2",
+    "save_modal_save": "저장",
+    "save_modal_cancel": "취소",
+    "save_modal_success": "v{n} 으로 저장됨",
+    "history_title": "버전 기록",
+    "history_current": "현재",
+    "history_no_versions": "아직 저장된 버전이 없어요",
+    "history_restore": "이 버전으로 복원",
+    "history_restore_success": "이 버전 내용을 최신에 복사했어요",
+    "history_view": "이 버전 보기",
+    "viewer_banner": "v{n} 보기 — 편집 불가",
+    "viewer_back": "최신으로 돌아가기"
   }
 }

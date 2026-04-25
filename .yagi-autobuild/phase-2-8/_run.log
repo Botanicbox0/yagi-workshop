@@ -61,6 +61,15 @@
 2026-04-26T01:06:30Z G_B_4 ESLINT files=g-b-4_set errors=0 warnings=0
 2026-04-26T01:07:00Z G_B_4 GATE_EXIT ok=4/4 elapsed=720s exits_met=cheerio_dep_pinned,api_logic_in_action,embed_block,paste_swap_ux,tsc_clean,lint_clean exits_deferred=4_provider_runtime_tests
 2026-04-26T01:07:01Z G_B_5 GATE_ENTER
+2026-04-26T01:10:00Z G_B_5 VERSION_HISTORY_AUTHORED file=src/components/brief-board/version-history.tsx components=VersionHistorySidebar+SaveVersionModal
+2026-04-26T01:11:00Z G_B_5 EDITOR_VIEWER_MODE_ADDED prop=mode=viewer banner=viewer_banner back_href=viewerBackHref
+2026-04-26T01:12:00Z G_B_5 I18N_VERSION_KEYS_ADDED ko=15 en=15 parity=ok
+2026-04-26T01:13:00Z G_B_5 SEQUENCE_TEST_DEFERRED reason=requires_fixture_user_auth_cleanup followup=g_b_7_playwright_or_2_8_1
+2026-04-26T01:14:00Z G_B_5 TSC_NOEMIT errors_total=58 net_new=0
+2026-04-26T01:14:30Z G_B_5 ESLINT files=g_b_5_set errors=0 warnings=0
+2026-04-26T01:15:00Z G_B_5 GATE_EXIT ok=4/4 elapsed=480s exits_met=version_history_file,save_modal,viewer_mode,tsc_clean,lint_clean exits_deferred=sequence_test
+2026-04-26T01:15:01Z G_B_6 GATE_ENTER
+
 
 
 
