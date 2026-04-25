@@ -98,6 +98,15 @@
 2026-04-26T02:09:00Z REVIEW CODEX_K05_VERDICT loop=3 verdict=MEDIUM_ONLY findings=2 high_a=0 high_b=0 med_a=1 med_b=1 tokens=44024 pass_condition_met
 2026-04-26T02:10:00Z REVIEW PASS_VIA_MEDIUM_ONLY findings_logged_to_followups=FU-2.8-ssrf-cgn-prefix,FU-2.8-ssrf-ipv6-compat-hex per_kickoff_section_3=med_low_log_and_ship
 2026-04-26T02:11:00Z REVIEW REVIEW_RESULT codex_findings=2 high_a=0 high_b=0 downgraded=0 med_a=1 med_b=1
+2026-04-26T02:12:00Z REVIEW GATE_EXIT verdict=MEDIUM_ONLY=PASS deferred_to_FU=2 codex_loops_consumed=3
+2026-04-26T02:13:00Z REVIEW COMMIT 9913c98 fix(phase-2-8 review): codex k-05 loop1+loop2 patches
+2026-04-26T02:14:00Z SHIPPED GATE_ENTER
+2026-04-26T02:15:00Z SHIPPED MAIN_FF_MERGE from=g-b-brief-board to=main 5bb0a57..9913c98 strategy=fast_forward conflict=none
+2026-04-26T02:16:00Z SHIPPED MAIN_INSTALL pnpm_frozen=ok
+2026-04-26T02:17:00Z SHIPPED MAIN_TSC errors=0 MAIN_BUILD=clean
+2026-04-26T02:18:00Z SHIPPED PUSH origin/main=9913c98
+2026-04-26T02:19:00Z SHIPPED TELEGRAM_PAYLOAD "Phase 2.8 SHIPPED · 7 gates · brief board live"
+2026-04-26T02:20:00Z SHIPPED STOP per_kickoff_section_11 do_not_chain_phase_2_9
 
 
 
