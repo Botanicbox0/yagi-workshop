@@ -102,7 +102,12 @@ export async function respondToCommissionIntakeAction(
   // The state-machine trigger (G1) also enforces submitted → admin_responded
   // at the row level — this UPDATE filter prevents stomping a response
   // that another admin posted concurrently.
-  const { error } = await supabase
+  // K05-C-002 hardening: append .select("id") so PostgREST returns the
+  // updated rows. A zero-row update under our `state = 'submitted'` filter
+  // means the intake is no longer in submitted state (already responded by
+  // another admin, archived, or stale id), and we surface that as a
+  // distinct error rather than a silent success.
+  const { data: updatedRows, error } = await supabase
     .from("commission_intakes")
     .update({
       admin_response_md: parsed.data.response_md,
@@ -111,9 +116,13 @@ export async function respondToCommissionIntakeAction(
       state: "admin_responded",
     })
     .eq("id", parsed.data.intake_id)
-    .eq("state", "submitted");
+    .eq("state", "submitted")
+    .select("id");
 
   if (error) return { ok: false, error: error.message };
+  if (!updatedRows || updatedRows.length === 0) {
+    return { ok: false, error: "stale_or_already_responded" };
+  }
 
   revalidatePath("/app/admin/commissions");
   revalidatePath(`/app/admin/commissions/${parsed.data.intake_id}`);

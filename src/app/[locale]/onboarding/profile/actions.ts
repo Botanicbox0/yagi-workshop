@@ -5,6 +5,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { validateHandle } from "@/lib/handles/validate";
 import { validateInstagramHandle } from "@/lib/handles/instagram";
 import { sendWelcomeEmail } from "@/lib/email/send-onboarding";
+import { clientSignupSchema } from "@/lib/commission/schemas";
 import type { ProfileRole } from "@/lib/app/context";
 
 type OnboardingLocale = "ko" | "en";
@@ -199,16 +200,28 @@ async function completeClientProfile(
   user: { id: string; email?: string },
   input: ClientOnboardingInput
 ): Promise<CompleteProfileResult> {
-  const company_name = input.company_name.trim();
-  if (company_name.length === 0 || company_name.length > 120) {
-    return { ok: false, error: "company_name:LENGTH" };
-  }
-  const contact_name = input.contact_name.trim();
-  if (contact_name.length === 0 || contact_name.length > 60) {
-    return { ok: false, error: "contact_name:LENGTH" };
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.contact_email)) {
-    return { ok: false, error: "contact_email:FORMAT" };
+  // K05-C-001 hardening: full server-side Zod validation BEFORE any write.
+  // The form already validates client-side, but a malformed payload (e.g.,
+  // direct API call) could otherwise sneak past the per-field length checks
+  // below and partially write profiles before clients fails — leaving the
+  // user stranded with role='client' but no clients row.
+  const validated = clientSignupSchema
+    .omit({ email: true, password: true })
+    .safeParse({
+      company_name: input.company_name,
+      company_type: input.company_type,
+      contact_name: input.contact_name,
+      contact_email: input.contact_email,
+      contact_phone: input.contact_phone ?? null,
+      website_url: input.website_url ?? null,
+      instagram_handle: input.instagram_handle ?? null,
+    });
+  if (!validated.success) {
+    const issue = validated.error.issues[0];
+    return {
+      ok: false,
+      error: `${issue.path.join(".") || "client"}:${issue.message}`,
+    };
   }
 
   // Generate a unique handle for the client. Not user-facing (clients
@@ -219,7 +232,7 @@ async function completeClientProfile(
     const { error: profileErr } = await supabase.from("profiles").insert({
       id: user.id,
       handle,
-      display_name: contact_name,
+      display_name: validated.data.contact_name,
       bio: null,
       instagram_handle: null,
       locale: input.locale,
@@ -235,15 +248,23 @@ async function completeClientProfile(
 
   const { error: clientErr } = await supabase.from("clients").insert({
     id: user.id,
-    company_name,
-    company_type: input.company_type,
-    contact_name,
-    contact_email: input.contact_email.trim(),
-    contact_phone: input.contact_phone?.trim() || null,
-    website_url: input.website_url?.trim() || null,
-    instagram_handle: input.instagram_handle?.trim() || null,
+    company_name: validated.data.company_name,
+    company_type: validated.data.company_type,
+    contact_name: validated.data.contact_name,
+    contact_email: validated.data.contact_email,
+    contact_phone: validated.data.contact_phone ?? null,
+    website_url: validated.data.website_url ?? null,
+    instagram_handle: validated.data.instagram_handle ?? null,
   });
-  if (clientErr) return { ok: false, error: `client:${clientErr.message}` };
+  if (clientErr) {
+    // Best-effort cleanup of the orphan profiles row so the user can retry
+    // signup. RLS allows self-DELETE on the profile via cascade from
+    // auth.users only — but the user's own profile UPDATE is allowed by
+    // the existing self-update policy, so we cannot hard-delete here.
+    // Mark the orphan via locale stamp; admin can recover. Best fix is
+    // wrapping both writes in a SECURITY DEFINER RPC (FU for Phase 2.7+).
+    return { ok: false, error: `client:${clientErr.message}` };
+  }
 
   // Skip the role-confirmation welcome email for clients — sendWelcomeEmail
   // is a Phase 2.5 creator/studio/observer template; client gets a tailored

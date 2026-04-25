@@ -90,11 +90,14 @@ export type CommissionIntakeFormInput = z.input<typeof commissionIntakeFormSchem
 export type CommissionIntakeFormParsed = z.output<typeof commissionIntakeFormSchema>;
 
 export const clientSignupSchema = z.object({
+  // Auth email (Supabase auth.users.email). May differ from contact_email
+  // (company-side contact may not be the account holder).
   email: z.string().email().max(254),
   password: z.string().min(8).max(128),
   company_name: z.string().min(1).max(120),
   company_type: z.enum(COMPANY_TYPES),
   contact_name: z.string().min(1).max(60),
+  contact_email: z.string().email().max(254),
   contact_phone: z.string().max(40).nullable().optional(),
   website_url: z.string().url().max(500).nullable().optional(),
   instagram_handle: z.string().max(60).nullable().optional(),
