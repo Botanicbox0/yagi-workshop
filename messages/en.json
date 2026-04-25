@@ -1153,6 +1153,19 @@
     "history_restore_success": "Copied this version into the latest",
     "history_view": "View this version",
     "viewer_banner": "Viewing v{n} — read-only",
-    "viewer_back": "Back to latest"
+    "viewer_back": "Back to latest",
+    "empty_yagi_cta": "Ask YAGI to propose",
+    "yagi_request_modal_title": "Request YAGI to propose",
+    "yagi_request_goal_label": "Project goal",
+    "yagi_request_goal_required": "Please enter the goal",
+    "yagi_request_audience_label": "Target audience",
+    "yagi_request_budget_label": "Budget range",
+    "yagi_request_timeline_label": "Preferred timeline",
+    "yagi_request_submit": "Send request",
+    "yagi_request_sent": "Request sent. YAGI responds within 1-2 business days",
+    "lock_button": "Lock brief",
+    "lock_success": "Board locked",
+    "unlock_button": "Unlock",
+    "unlock_success": "Board unlocked"
   }
 }

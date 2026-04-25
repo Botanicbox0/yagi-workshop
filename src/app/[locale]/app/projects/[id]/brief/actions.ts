@@ -802,3 +802,105 @@ export async function fetchEmbed(
 
   return { ok: true, data: fetched };
 }
+
+// -----------------------------------------------------------------------------
+// 9. requestYagiProposal — empty-state CTA (SPEC §2 surface B + §6)
+// -----------------------------------------------------------------------------
+// User clicks "YAGI에게 제안 요청" on an empty brief board, fills 4
+// fields (goal / audience / budget / timeline), submit fans out a
+// notification to every yagi_admin so they can pick up the request.
+// The brief content_json itself is left empty — admin (Y3) seeds it
+// after responding.
+
+const RequestYagiProposalInput = z.object({
+  projectId: z.string().uuid(),
+  goal: z.string().trim().min(1).max(1000),
+  audience: z.string().trim().max(500).optional().or(z.literal("")),
+  budget: z.string().trim().max(200).optional().or(z.literal("")),
+  timeline: z.string().trim().max(200).optional().or(z.literal("")),
+});
+
+export async function requestYagiProposal(
+  input: unknown
+): Promise<BriefActionResult<{ adminCount: number }>> {
+  const parsed = RequestYagiProposalInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: "validation", issues: parsed.error.issues };
+  }
+
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "unauthenticated" };
+
+  // Verify caller is a project member (via existing RLS: SELECT on
+  // project_briefs requires membership).
+  const { data: brief, error: briefErr } = await supabase
+    .from("project_briefs")
+    .select("project_id")
+    .eq("project_id", parsed.data.projectId)
+    .maybeSingle();
+  if (briefErr) {
+    console.error("[requestYagiProposal] brief read", briefErr);
+    return { error: "db", message: briefErr.message };
+  }
+  if (!brief) return { error: "not_found" };
+
+  // Resolve project workspace for notification context.
+  const { data: project } = await supabase
+    .from("projects")
+    .select("workspace_id, title")
+    .eq("id", parsed.data.projectId)
+    .maybeSingle();
+
+  // Enumerate yagi_admin recipients via service role (user_roles SELECT
+  // requires admin; SSR client may not have permission depending on
+  // policy. Service role bypasses RLS for fan-out — caller already
+  // validated as a project member.)
+  const service = createSupabaseService();
+  const { data: admins, error: admErr } = await service
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "yagi_admin");
+
+  if (admErr) {
+    console.error("[requestYagiProposal] admin lookup", admErr);
+    return { error: "db", message: admErr.message };
+  }
+  const adminIds = (admins ?? []).map((r) => r.user_id).filter(Boolean);
+  if (adminIds.length === 0) {
+    // No admins configured — degrade gracefully so the user still gets
+    // a confirmation. Phase 1.x has a yagi internal workspace seed; in
+    // practice this branch is unreachable in prod.
+    return { ok: true, data: { adminCount: 0 } };
+  }
+
+  const payload: Json = {
+    goal: parsed.data.goal,
+    audience: parsed.data.audience ?? null,
+    budget: parsed.data.budget ?? null,
+    timeline: parsed.data.timeline ?? null,
+    requester_user_id: user.id,
+    project_title: project?.title ?? null,
+  };
+
+  const rows = adminIds.map((adminId) => ({
+    user_id: adminId,
+    project_id: parsed.data.projectId,
+    workspace_id: project?.workspace_id ?? null,
+    kind: "project_brief_yagi_request",
+    severity: "high",
+    title: project?.title
+      ? `Brief 제안 요청: ${project.title}`
+      : "Brief 제안 요청",
+    body: parsed.data.goal,
+    url_path: `/app/projects/${parsed.data.projectId}?tab=brief`,
+    payload,
+  }));
+
+  const { error: nErr } = await service.from("notification_events").insert(rows);
+  if (nErr) {
+    console.error("[requestYagiProposal] notif insert", nErr);
+    return { error: "db", message: nErr.message };
+  }
+
+  return { ok: true, data: { adminCount: adminIds.length } };
+}

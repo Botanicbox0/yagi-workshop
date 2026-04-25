@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { ImageBlock } from "./blocks/image-block";
 import { FileBlock } from "./blocks/file-block";
 import { EmbedBlock } from "./blocks/embed-block";
+import { YagiRequestModal } from "./yagi-request-modal";
 import { resizeImageIfNeeded } from "@/lib/brief-board/resize-image";
 
 const EMBED_URL_RE = /^\s*(https?:\/\/\S+)\s*$/i;
@@ -523,9 +524,26 @@ export function BriefBoardEditor({
         )}
         <EditorContent editor={editor} />
         {isEmpty && editable && (
-          <p className="mt-3 text-xs text-muted-foreground/70 keep-all">
-            {t("empty_hint")}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p className="text-xs text-muted-foreground/70 keep-all">
+              {t("empty_hint")}
+            </p>
+            {mode === "full" && (
+              <YagiRequestModal
+                projectId={projectId}
+                trigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-xs uppercase tracking-[0.08em]"
+                  >
+                    {t("empty_yagi_cta")}
+                  </Button>
+                }
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
