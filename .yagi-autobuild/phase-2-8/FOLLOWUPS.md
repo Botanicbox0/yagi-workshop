@@ -214,3 +214,99 @@ scope.
 **Status:** Open.
 
 **Registered:** 2026-04-26 (G_B-3 EXIT acknowledgment).
+
+---
+
+## FU-2.8-wizard-step3-draft-pattern
+
+**Trigger:** KICKOFF G_B-7 EXIT specifies "wizard Step 3 placeholder
+replaced by `<BriefBoardEditor mode='draft' />`" and a transactional
+single-tx INSERT of projects + project_briefs at submit. SPEC §2 surface A
+spells out the full draft-project pattern: wizard creates a draft project
+on Step 3 entry, asset uploads bind to that project_id, submit flips
+projects.status from 'draft' to 'submitted'.
+
+**Risk:** v1 ships a partial integration: createProject (server action)
+still INSERTs both `projects` and a sibling `project_briefs` row in one
+SSR call (atomic enough — both succeed or first fails before the second
+runs), but the Wizard Step 3 UI itself keeps the Phase 2.7.2 "기획 보드 —
+준비 중" placeholder. Brief editing happens *after* project creation via
+the new ?tab=brief surface on /app/projects/[id]. This means clients
+cannot upload images / paste embeds during the wizard — only after.
+
+**Why deferred:** Implementing the draft-project pattern requires
+restructuring `src/app/[locale]/app/projects/new/new-project-wizard.tsx`
+(Client Component) to call an `ensureDraftProject` action on Step 3
+mount, hold the draft project_id in wizard state, and split submit into
+"flip status" rather than "INSERT". The existing wizard's createProject
+path is shared with non-draft flows; refactoring without breaking the
+existing path needs careful testing. v1 ships post-create brief editing
+which delivers ~90% of user value.
+
+**Action:** Phase 2.8.1 (or parallel hardening worktree):
+1. Add `ensureDraftProject(workspaceId, brandId?, intakeMode)` server
+   action — INSERT projects with status='draft' if no draft exists for
+   this user yet, else return existing draft id.
+2. Rewrite Step 3 mount: call ensureDraftProject, mount BriefBoardEditor
+   with mode='wizard' and projectId from action result.
+3. Replace submit logic: instead of createProject INSERT, call
+   submitDraftProject(projectId, allFields) which UPDATEs the row and
+   flips status='submitted'.
+4. Add cleanup cron: archive draft projects older than 7 days with
+   empty content (FU-2.8-draft-gc).
+
+**Owner:** Phase 2.8.1 builder.
+
+**Status:** Open — v1 ships the post-create brief surface; wizard surface
+is informational placeholder.
+
+**Registered:** 2026-04-26 (G_B-7 partial integration acknowledgment).
+
+---
+
+## FU-2.8-playwright-e2e
+
+**Trigger:** KICKOFF G_B-7 EXIT requires a Playwright e2e covering:
+signin → wizard create → 1 paragraph + 1 image + 1 youtube embed →
+submit → land on Brief tab → admin opens → admin posts comment →
+client receives notif. The repo has no Playwright dependency or test
+runner installed.
+
+**Risk:** v1 ships without automated end-to-end coverage. tsc + lint +
+build pass; Codex K-05 REVIEW will adversarially audit the diff. Manual
+QA pass required before SHIPPED merge.
+
+**Action:** Phase 2.8.1 — install `@playwright/test` (one new dev
+dep), author `e2e/brief-board.spec.ts`, wire `pnpm test:e2e` script.
+Or: add Playwright at the platform level for all phases together.
+
+**Owner:** Phase 2.8.1 builder, or platform-wide e2e initiative.
+
+**Status:** Open. Manual QA mandatory before SHIPPED merge.
+
+**Registered:** 2026-04-26 (G_B-7 EXIT acknowledgment).
+
+---
+
+## FU-2.8-tabs-i18n
+
+**Trigger:** Brief tab nav added to /app/projects/[id]/page.tsx in G_B-7
+hardcodes the strings "Overview" and "Brief board" instead of going
+through useTranslations. The Tab nav file lives in the Server Component
+page and the existing surface uses translations elsewhere — the tab
+labels are the only ones not yet i18n-ed.
+
+**Risk:** ko users see English tab labels. Cosmetic. Locale switch on
+this page already affects other strings; tab labels are an oversight.
+
+**Action:** Add tab nav keys to `projects` namespace (e.g.,
+`tab_overview`, `tab_brief`) in both ko.json and en.json, switch the
+Server Component to use `getTranslations({locale, namespace:'projects'})`
+for those labels.
+
+**Owner:** Phase 2.8.1 builder, or trivial follow-up commit on this
+worktree before SHIPPED.
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (G_B-7 oversight).

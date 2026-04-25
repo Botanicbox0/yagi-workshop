@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { BriefBoardEditor } from "@/components/brief-board/editor";
+import { VersionHistorySidebar } from "@/components/brief-board/version-history";
+import { BriefCommentPanel } from "@/components/brief-board/comment-panel";
+import { LockBriefButton } from "@/components/brief-board/lock-button";
+import type { JSONContent } from "@tiptap/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +22,10 @@ import { ReferenceUploader } from "@/components/project/reference-uploader";
 import { ReferenceGrid } from "@/components/project/reference-grid";
 import { CopyShareLinkButton } from "@/components/preprod/copy-share-link-button";
 
-type Props = { params: Promise<{ locale: string; id: string }> };
+type Props = {
+  params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ tab?: string; version?: string }>;
+};
 
 // Local type matching the select shape
 type ProjectDetail = {
@@ -140,6 +149,71 @@ function getPreprodStatusBadgeVariant(
   }
 }
 
+function BriefBreadcrumb({
+  workspaceName,
+  brandName,
+  title,
+}: {
+  workspaceName: string;
+  brandName: string | null;
+  title: string;
+}) {
+  return (
+    <nav aria-label="breadcrumb" className="mb-6 text-sm text-muted-foreground">
+      <span>{workspaceName}</span>
+      {brandName && (
+        <>
+          <span className="mx-1.5 text-muted-foreground/60">›</span>
+          <span>{brandName}</span>
+        </>
+      )}
+      <span className="mx-1.5 text-muted-foreground/60">›</span>
+      <span className="font-semibold text-foreground keep-all">{title}</span>
+    </nav>
+  );
+}
+
+function BriefTabsNav({
+  id,
+  active,
+}: {
+  id: string;
+  active: "overview" | "brief";
+}) {
+  return (
+    <div className="mb-6 flex items-center gap-1 border-b border-border" role="tablist">
+      <Link
+        href={`?tab=overview`}
+        role="tab"
+        aria-selected={active === "overview"}
+        className={cn(
+          "px-3 py-2 text-xs uppercase tracking-[0.12em] border-b-2 -mb-px",
+          active === "overview"
+            ? "border-foreground text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+        )}
+      >
+        Overview
+      </Link>
+      <Link
+        href={`?tab=brief`}
+        role="tab"
+        aria-selected={active === "brief"}
+        className={cn(
+          "px-3 py-2 text-xs uppercase tracking-[0.12em] border-b-2 -mb-px",
+          active === "brief"
+            ? "border-foreground text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+        )}
+        // Mark the link unused for prop typing — id is implicit via current route.
+        data-project={id}
+      >
+        Brief board
+      </Link>
+    </div>
+  );
+}
+
 function getRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
@@ -185,8 +259,11 @@ type DeliverableKey =
   | "deliverable_social"
   | "deliverable_other";
 
-export default async function ProjectDetailPage({ params }: Props) {
+export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
+  const sp = await searchParams;
+  const activeTab = sp.tab === "brief" ? "brief" : "overview";
+  const versionParam = sp.version ? Number(sp.version) : null;
 
   // Load namespaces — projects for most strings; threads/dashboard/settings/preprod
   // for section headers that don't have dedicated keys in the projects namespace
@@ -286,6 +363,113 @@ export default async function ProjectDetailPage({ params }: Props) {
   // Determine if user is yagi_admin for preprod boards visibility
   const isYagiAdmin = roles.has("yagi_admin");
   const isClientUser = roles.has("workspace_admin") || roles.has("workspace_member");
+
+  // Computed early so the brief-tab branch below can reuse them in the
+  // shared breadcrumb / metadata slots.
+  const workspaceName = project.workspace?.name ?? "—";
+  const brandName = project.brand?.name ?? null;
+
+  // -----------------------------------------------------------------------
+  // Phase 2.8 G_B-7: Brief tab branch.
+  // When ?tab=brief, render the brief board surface (editor + version
+  // history + comments) instead of the overview. ?version=N within
+  // brief tab mounts the editor in viewer mode for that snapshot.
+  // -----------------------------------------------------------------------
+  if (activeTab === "brief") {
+    const tBrief = await getTranslations({ locale, namespace: "brief_board" });
+
+    const { data: briefRow } = await supabase
+      .from("project_briefs")
+      .select(
+        "content_json, status, current_version, tiptap_schema_version, updated_at"
+      )
+      .eq("project_id", project.id)
+      .maybeSingle();
+
+    const { data: versionsRaw } = await supabase
+      .from("project_brief_versions")
+      .select("id, version_n, label, created_at")
+      .eq("project_id", project.id)
+      .order("version_n", { ascending: false });
+
+    const versions = (versionsRaw ?? []).map((v) => ({
+      id: v.id,
+      version_n: v.version_n,
+      label: v.label,
+      created_at: v.created_at,
+    }));
+
+    let viewerSnapshot: { content_json: unknown; version_n: number } | null = null;
+    if (versionParam !== null && Number.isFinite(versionParam)) {
+      const { data: snap } = await supabase
+        .from("project_brief_versions")
+        .select("content_json, version_n")
+        .eq("project_id", project.id)
+        .eq("version_n", versionParam)
+        .maybeSingle();
+      if (snap) viewerSnapshot = { content_json: snap.content_json, version_n: snap.version_n };
+    }
+
+    const editorContent =
+      (viewerSnapshot
+        ? (viewerSnapshot.content_json as JSONContent | null)
+        : (briefRow?.content_json as JSONContent | null)) ?? null;
+    const editorUpdatedAt = briefRow?.updated_at ?? new Date(0).toISOString();
+    const editorStatus =
+      (briefRow?.status as "editing" | "locked" | undefined) ?? "editing";
+    const editorMode = viewerSnapshot ? "viewer" : "full";
+
+    return (
+      <div className="px-6 md:px-10 py-10 max-w-6xl">
+        <BriefBreadcrumb workspaceName={workspaceName} brandName={brandName} title={project.title} />
+        <BriefTabsNav id={project.id} active="brief" />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {tBrief("title")}
+              </h2>
+              <LockBriefButton
+                projectId={project.id}
+                status={editorStatus}
+                isYagiAdmin={isYagiAdmin}
+              />
+            </div>
+            <BriefBoardEditor
+              projectId={project.id}
+              initialContent={editorContent}
+              initialUpdatedAt={editorUpdatedAt}
+              initialStatus={editorStatus}
+              mode={editorMode}
+              viewerVersionN={viewerSnapshot?.version_n}
+              viewerBackHref={`/${locale}/app/projects/${project.id}?tab=brief`}
+            />
+            <section className="mt-8">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+                {tThreads("title")}
+              </h3>
+              <BriefCommentPanel projectId={project.id} />
+            </section>
+          </div>
+
+          <VersionHistorySidebar
+            projectId={project.id}
+            versions={versions}
+            currentVersion={briefRow?.current_version ?? 0}
+            viewingVersion={viewerSnapshot?.version_n ?? null}
+            locale={locale}
+            briefLocked={editorStatus === "locked"}
+            className="md:col-span-1"
+          />
+        </div>
+      </div>
+    );
+  }
+  // -----------------------------------------------------------------------
+  // (default) Overview tab — existing legacy render below.
+  // -----------------------------------------------------------------------
+
 
   // Fetch pre-production boards for this project
   type Board = {
@@ -442,8 +626,6 @@ export default async function ProjectDetailPage({ params }: Props) {
     ? fmt.format(new Date(project.target_delivery_at))
     : "—";
 
-  const workspaceName = project.workspace?.name ?? "—";
-  const brandName = project.brand?.name ?? null;
   const statusI18nKey = `status_${project.status}` as StatusI18nKey;
 
   return (
@@ -465,6 +647,8 @@ export default async function ProjectDetailPage({ params }: Props) {
           {project.title}
         </span>
       </nav>
+
+      <BriefTabsNav id={project.id} active="overview" />
 
       {/* Title row: status badge + action dropdown */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">

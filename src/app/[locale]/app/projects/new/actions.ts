@@ -124,6 +124,28 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     return { error: "db", message: error?.message ?? "insert failed" };
   }
 
+  // Phase 2.8 G_B-7: every new project gets a sibling project_briefs row
+  // with empty content, so the Brief tab on /app/projects/[id] can mount
+  // the editor immediately. RLS allows this INSERT because the caller
+  // is the project's workspace member (just created the project above).
+  // Errors here are non-fatal — the brief board can lazy-create on
+  // first save if this insert ever fails.
+  const { error: briefErr } = await supabase
+    .from("project_briefs")
+    .insert({
+      project_id: project.id,
+      // status / current_version / tiptap_schema_version use column defaults
+      // (editing / 0 / 1) — required by validate_project_brief_change for
+      // non-yagi_admin INSERT.
+      updated_by: user.id,
+    });
+  if (briefErr) {
+    console.error(
+      "[createProject] project_briefs sibling insert failed (non-fatal):",
+      briefErr
+    );
+  }
+
   revalidatePath("/[locale]/app/projects", "page");
   return { ok: true, id: project.id, status };
 }

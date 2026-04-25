@@ -79,6 +79,16 @@
 2026-04-26T01:24:30Z G_B_6 ESLINT files=g_b_6_set errors=0 warnings=0
 2026-04-26T01:25:00Z G_B_6 GATE_EXIT ok=4/4 elapsed=600s admin_check_pass=true notif_delivered=true exits_met=comment_panel,empty_state_cta,lock_unlock_admin_only,tsc_clean,lint_clean
 2026-04-26T01:25:01Z G_B_7 GATE_ENTER
+2026-04-26T01:28:00Z G_B_7 BRIEF_TAB_ADDED file=src/app/[locale]/app/projects/[id]/page.tsx tab_param=?tab=brief|overview viewer_param=?version=N
+2026-04-26T01:29:00Z G_B_7 CREATEPROJECT_INSERTS_BRIEF non_fatal_on_brief_insert_error
+2026-04-26T01:30:00Z G_B_7 WIZARD_STEP3_DEFERRED reason=draft_project_pattern_requires_wizard_refactor followup=FU-2.8-wizard-step3-draft-pattern partial_v1=post_create_brief_surface
+2026-04-26T01:31:00Z G_B_7 PLAYWRIGHT_DEFERRED reason=no_playwright_in_repo followup=FU-2.8-playwright-e2e manual_qa_mandatory_before_ship
+2026-04-26T01:32:00Z G_B_7 TSC_NOEMIT errors_total=58 brief_files=0 net_new=0
+2026-04-26T01:33:00Z G_B_7 PNPM_BUILD_OK warnings=3_pre_existing_baseline
+2026-04-26T01:34:00Z G_B_7 ESLINT files=g_b_7_set errors=0 net_new_warnings=0
+2026-04-26T01:35:00Z G_B_7 GATE_EXIT ok=4/4 elapsed=600s e2e_pass=manual_qa_required build_ms=in_pipeline exits_met=brief_tab,createproject_inserts_brief,tsc_clean,build_clean,lint_clean exits_deferred=wizard_step3_full_integration,playwright_e2e
+2026-04-26T01:35:01Z REVIEW GATE_ENTER
+
 
 
 
