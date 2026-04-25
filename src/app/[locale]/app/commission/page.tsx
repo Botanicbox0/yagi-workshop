@@ -55,8 +55,8 @@ export default async function CommissionListPage({ params }: Props) {
   return (
     <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
       <div className="flex items-baseline justify-between mb-10">
-        <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("list_title")}</em>
+        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05]">
+          {t("list_title")}
         </h1>
         <Button asChild>
           <Link href={`/${locale}/app/commission/new`}>{t("list_new_cta")}</Link>

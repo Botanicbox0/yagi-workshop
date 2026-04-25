@@ -365,12 +365,14 @@ function NavLink({
   indent: 0 | 1;
 }) {
   const Icon = item.icon;
+  // Phase 2.7.1 P12-3: bumped resting contrast (muted → 85) and active
+  // weight (font-semibold) so the active item reads as anchor, not label.
   const base = cn(
     "flex items-center gap-2.5 py-2 rounded-md text-[13px] transition-colors",
     indent === 0 ? "px-3" : "pl-9 pr-3",
     active
-      ? "text-foreground bg-accent"
-      : "text-muted-foreground hover:text-foreground",
+      ? "text-foreground bg-accent font-semibold"
+      : "text-foreground/85 hover:text-foreground hover:bg-accent/50",
     item.disabled && "opacity-50 cursor-not-allowed pointer-events-none",
   );
 

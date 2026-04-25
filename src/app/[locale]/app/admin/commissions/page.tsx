@@ -68,7 +68,7 @@ export default async function AdminCommissionsPage({
   return (
     <div className="max-w-5xl mx-auto px-6 md:px-8 py-12">
       <header className="space-y-2 mb-8">
-        <h1 className="font-display text-3xl tracking-tight">
+        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05]">
           {t("queue_title")}
         </h1>
         <p className="text-sm text-muted-foreground">{t("queue_sub")}</p>

@@ -14,10 +14,10 @@ export type RoleConfirmationContext = {
 };
 
 const ROLE_LABEL_KO: Record<ProfileRole, string> = {
-  creator: "AI 창작자",
-  studio: "AI 스튜디오",
-  observer: "관람자",
-  client: "의뢰 고객",
+  creator: "크리에이터",
+  studio: "스튜디오",
+  observer: "관찰자",
+  client: "의뢰인",
 };
 
 export function roleConfirmationSubject(ctx: RoleConfirmationContext): string {

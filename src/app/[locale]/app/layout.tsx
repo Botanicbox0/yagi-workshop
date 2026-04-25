@@ -66,7 +66,11 @@ export default async function AppLayout({
               locale={bellLocale}
             />
           </header>
-          <main className="flex-1 min-w-0">{children}</main>
+          <main className="flex-1 min-w-0">
+            <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8 w-full">
+              {children}
+            </div>
+          </main>
         </div>
       </div>
     </UserScopesProvider>

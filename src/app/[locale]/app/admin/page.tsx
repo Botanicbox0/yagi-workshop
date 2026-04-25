@@ -112,7 +112,7 @@ export default async function AdminDashboardPage({ params }: Props) {
     <div className="px-10 py-12 max-w-5xl">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="font-display text-3xl tracking-tight mb-1">
+        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1">
           {t("title")}
         </h1>
       </div>

@@ -26,7 +26,7 @@ export default async function AppDashboardPage({ params }: Props) {
   if (isYagiAdmin) {
     return (
       <div className="px-10 py-12 max-w-5xl">
-        <h1 className="font-display text-3xl tracking-tight mb-2">
+        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-2">
           <em>All projects</em>
         </h1>
         <p className="text-sm text-muted-foreground">Across all workspaces</p>
@@ -41,7 +41,7 @@ export default async function AppDashboardPage({ params }: Props) {
   if (isCreator) {
     return (
       <div className="px-10 py-12 max-w-5xl">
-        <h1 className="font-display text-3xl tracking-tight mb-2">
+        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-2">
           <em>Creator dashboard</em>
         </h1>
         <p className="text-sm text-muted-foreground">Contests &amp; submissions</p>
@@ -58,7 +58,7 @@ export default async function AppDashboardPage({ params }: Props) {
     <div className="px-10 py-12 max-w-5xl">
       <div className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="font-display text-3xl tracking-tight mb-1">
+          <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1">
             <em>Projects</em>
           </h1>
           <p className="text-sm text-muted-foreground">

@@ -4,7 +4,10 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Phase 2.7.1 P12: off-white background per Webflow light-mode tone.
+       Cards/popover stay pure white so they pop against the off-white
+       page surface. */
+    --background: 0 0% 98%;
     --foreground: 0 0% 4%;
 
     --card: 0 0% 100%;
@@ -22,7 +25,7 @@
     --muted: 0 0% 97%;
     --muted-foreground: 0 0% 42%;
 
-    --accent: 0 0% 97%;
+    --accent: 0 0% 95%;
     --accent-foreground: 0 0% 4%;
 
     --destructive: 0 72% 48%;
@@ -40,8 +43,9 @@
     --info: 214 100% 94%;
     --info-foreground: 214 80% 30%;
 
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
+    /* Phase 2.7.1 P12: softer border to fit the off-white surface. */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 0 0% 4%;
 
     --radius: 0.5rem;
