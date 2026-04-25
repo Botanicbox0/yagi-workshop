@@ -35,6 +35,10 @@ export default async function OnboardingRolePage({ params }: Props) {
       redirect({ href: `/u/${profile.handle}`, locale });
       return null;
     }
+    if (role === "client") {
+      redirect({ href: "/app/commission/new", locale });
+      return null;
+    }
     // Legacy profile without Phase 2.5 role — send to app shell.
     redirect({ href: "/app", locale });
     return null;
@@ -58,6 +62,11 @@ export default async function OnboardingRolePage({ params }: Props) {
       title: t("role_v2_observer_title"),
       desc: t("role_v2_observer_desc"),
     },
+    {
+      key: "client",
+      title: t("role_v2_client_title"),
+      desc: t("role_v2_client_desc"),
+    },
   ];
 
   return (
@@ -74,7 +83,15 @@ export default async function OnboardingRolePage({ params }: Props) {
         {roles.map((role) => (
           <Link
             key={role.key}
-            href={`/onboarding/profile/${role.key}` as "/onboarding/profile/creator"}
+            // Cast to one of the known onboarding paths; next-intl is strict
+            // on Link href shape but all these paths share the same prefix.
+            href={
+              `/onboarding/profile/${role.key}` as
+                | "/onboarding/profile/creator"
+                | "/onboarding/profile/studio"
+                | "/onboarding/profile/observer"
+                | "/onboarding/profile/client"
+            }
             className="block rounded-lg border border-border p-5 hover:border-foreground transition-colors"
           >
             <p className="font-display text-xl tracking-tight mb-1">

@@ -57,14 +57,13 @@ const GROUPS: NavGroup[] = [
     key: "work",
     items: [
       {
-        // disabled until G2 ships /app/commission. Schema gate is live (G1)
-        // but the route + intake form land at G2; a clickable link to a 404
-        // would be a UX regression. Codex K-05 Finding 3 (MED-B).
+        // G2 lands /app/commission + /app/commission/new + /app/commission/[id].
+        // Sidebar entry now visible to client persona; admin queue still gated
+        // until G3 (admin_commissions entry below remains disabled).
         key: "commission",
         href: "/app/commission",
         icon: Briefcase,
         profileRoles: ["client"],
-        disabled: true,
       },
       {
         key: "projects",

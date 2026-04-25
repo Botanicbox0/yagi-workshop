@@ -31,7 +31,10 @@ export default async function AppLayout({
   const hasPrivilegedGlobalRole =
     ctx.workspaceRoles.includes("yagi_admin") ||
     ctx.workspaceRoles.includes("creator");
-  if (ctx.workspaces.length === 0 && !hasPrivilegedGlobalRole) {
+  // Phase 2.7: client persona doesn't need a workspace; their primary
+  // surface is /app/commission.
+  const isClient = ctx.profile.role === "client";
+  if (ctx.workspaces.length === 0 && !hasPrivilegedGlobalRole && !isClient) {
     redirect({ href: "/onboarding/workspace", locale });
     return null;
   }

@@ -64,21 +64,30 @@ export const commissionIntakeFormSchema = z.object({
   title: z.string().min(1).max(200),
   category: z.enum(COMMISSION_CATEGORIES),
   budget_range: z.enum(BUDGET_RANGES),
+  // Empty string normalizes to null on submit; the form passes "" from
+  // <Input type="date"> when the user clears the field.
   deadline_preference: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD 형식이어야 합니다.")
-    .nullable()
-    .optional(),
-  reference_urls: z.array(referenceUrlSchema).max(3).default([]),
-  reference_uploads: z.array(referenceUploadSchema).max(5).default([]),
+    .union([
+      z.literal(""),
+      z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD 형식이어야 합니다."),
+      z.null(),
+    ])
+    .optional()
+    .transform((v) => (v ? v : null)),
+  reference_urls: z.array(referenceUrlSchema).max(3),
+  reference_uploads: z.array(referenceUploadSchema).max(5),
   brief_md: z
     .string()
     .min(50, "브리프는 최소 50자 이상 작성해 주세요.")
     .max(10000),
-  timestamp_notes: z.string().max(5000).nullable().optional(),
+  timestamp_notes: z
+    .union([z.literal(""), z.string().max(5000), z.null()])
+    .optional()
+    .transform((v) => (v ? v : null)),
 });
 
-export type CommissionIntakeFormInput = z.infer<typeof commissionIntakeFormSchema>;
+export type CommissionIntakeFormInput = z.input<typeof commissionIntakeFormSchema>;
+export type CommissionIntakeFormParsed = z.output<typeof commissionIntakeFormSchema>;
 
 export const clientSignupSchema = z.object({
   email: z.string().email().max(254),
