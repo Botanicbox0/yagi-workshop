@@ -18,6 +18,9 @@ Audience: human contributors + future YAGI. Context + rationale lives here, not 
 | ADR-006 | SPEC-to-kickoff alignment protocol                     | Accepted  | 2026-04-23 |
 | ADR-009 | Role type system reconciliation (Phase 1.1 ↔ 2.5)      | Accepted  | 2026-04-23 |
 | ADR-010 | Sidebar IA grouping + billing retirement + invoice consolidation | Accepted | 2026-04-24 |
+| ADR-011 | Phase 2.7 course correction (v1 → v2): commission marketplace → soft-launch intake | Accepted | 2026-04-25 |
+| ADR-012 | Commission intake form (manual admin response) vs full marketplace | Accepted | 2026-04-25 |
+| ADR-013 | Sponsored challenge attribution: `challenges.sponsor_client_id` column vs separate table | Accepted | 2026-04-25 |
 
 ---
 
@@ -420,3 +423,233 @@ Three latent issues surface at the same time:
 - `.yagi-autobuild/phase-2-6/IMPLEMENTATION.md` §1 (route table)
 - `.yagi-autobuild/phase-2-6/REFERENCES.md` §1 ADR-010
 - ADR-009 (role type reconciliation — enables role-dynamic filtering)
+
+---
+
+## ADR-011: Phase 2.7 course correction (v1 → v2): commission marketplace → soft-launch intake
+Date: 2026-04-25
+Status: Accepted
+
+### Context
+
+Phase 2.7 v1 (web Claude, 2026-04-24 late night) authored a commission
+marketplace: 7 new tables (projects, project_proposals,
+project_contracts, project_milestones, project_deliverables,
+project_messages, clients), creator proposal flow, two-party contract
+sign + PDF generation, milestone workspace, ranking-tier auto-upgrade,
+4-page premium redesign. 9 gates, 33-46h estimate. Intent: ship a full
+B2B AI VFX marketplace before Monday's MVP launch.
+
+At G1 entry the Builder discovered three structural problems:
+
+1. **Schema collision.** public.projects, public.project_milestones,
+   public.project_deliverables already exist in Phase 2.0 baseline as
+   workspace-scoped tables, used by 10+ Phase 1.x call sites
+   (invoices, meetings, preprod, showcases). v1's plan to redefine
+   them as commission-marketplace tables would silently break Phase 1.x.
+2. **Scope mismatch with the launch window.** 9 gates × 33-46h was
+   incompatible with a 1.5-day soft-launch target.
+3. **Misread of the AI VFX commission shape.** v1 modeled commissions
+   as a generic creator-marketplace ("brief + creators bid"). The
+   actual product is timeline-annotated VFX briefs against a single
+   yagi-vfx-studio (or B-O-E pipeline) — proposal/bid/match isn't
+   the bottleneck; intake-clarity-then-quote is.
+
+### Decision
+
+Discard v1. Author Phase 2.7 v2: "Soft Launch (Commission Intake +
+Sponsored Challenge)". Two reductions:
+
+1. **Schema is now 2 new tables + 1 column**:
+   - clients (1:1 with profiles for the new client persona)
+   - commission_intakes (intake-form rows; manual admin response)
+   - challenges.sponsor_client_id (sponsored challenge attribution)
+   No collision with Phase 1.x projects. The full marketplace tables
+   (proposals/contracts/milestones/deliverables/messages) are deferred
+   to Phase 2.8 once we have intake volume and learning.
+2. **Scope is now 5 gates × 18-25h**:
+   - G1 schema + RLS + sidebar adapter
+   - G2 client signup + intake form
+   - G3 admin queue + sponsor + landing redesign
+   - G4 polish + smoke
+   - G5 Codex K-05 + closeout
+   Compatible with the soft-launch window.
+
+The interactive timeline-annotation player (a real differentiator)
+is also deferred to Phase 2.8 — for MVP, clients describe shot-level
+markings as free-form text in timestamp_notes.
+
+### Consequences
+
+- (+) Schema does not touch Phase 1.x. Zero regression risk against
+      invoices/meetings/preprod/showcases.
+- (+) Soft-launch on Monday is feasible. The 18-25h range fits the
+      sprint window with full gate ceremony (Codex K-05 final review
+      passed CLEAN at Loop 3).
+- (+) Intake form is fast to build (RHF + Zod + textarea), and the
+      manual admin-response path is exactly what a 1-person studio
+      can support during initial volume of 0-30 inquiries.
+- (–) The full marketplace differentiator (proposal matching, contract
+      automation, milestone workspace) ships later. We will not have
+      that surface for the MVP launch announcement.
+- (–) Sponsor companies must sign up as client to be listed as a
+      challenge sponsor (no inline "register a sponsor" admin
+      shortcut). Acceptable for MVP given a small known set of
+      partner brands.
+
+### Alternatives considered
+
+- **Continue with v1's schema using a name remap** (e.g. commissions
+  instead of projects). Rejected — still 33-46h, still doesn't
+  match the timeline pressure, still misreads the product shape.
+- **Build v1 over a longer arc, slip launch to next week**. Rejected
+  — the launch window had business-side commitments that depended
+  on having something visible by Monday.
+- **Skip the schema entirely; manual intake via email/typeform**.
+  Rejected — owning the form on-platform is the entry point for the
+  Phase 2.8 marketplace.
+
+### Followups
+
+- ADR-012 covers intake-form vs marketplace.
+- ADR-013 covers sponsor attribution choice.
+- All Phase 2.8+ deferrals listed in `.yagi-autobuild/phase-2-7/SPEC.md` §8.
+
+### Cross-references
+
+- `.yagi-autobuild/phase-2-7/SPEC.md` v2 (canonical product policy)
+- `.yagi-autobuild/phase-2-7/IMPLEMENTATION.md` v2 (canonical how)
+- `.yagi-autobuild/phase-2-7/v1-archive/SPEC_v1_archived.md`
+- ADR-005 Expedited Phase Protocol (compressed-scope precedent)
+
+
+---
+
+## ADR-012: Commission intake form (manual admin response) vs full marketplace
+Date: 2026-04-25
+Status: Accepted
+
+### Context
+
+The "AI VFX commission" UX has two viable shapes for MVP:
+
+A. **Marketplace.** Client posts brief → multiple creators submit
+   proposals → client shortlists → matching → contract → milestones
+   → deliverables. Schema-heavy. Multi-actor coordination.
+B. **Intake form.** Client submits structured brief → admin (yagi)
+   reviews and responds with a quote/timeline → all subsequent
+   coordination happens via direct channels (email/카톡/zoom) with
+   the response thread anchored on-platform. Form-heavy. Single-actor
+   (admin) coordination.
+
+v1 chose A. v2 chooses B.
+
+### Decision
+
+Phase 2.7 v2 implements (B) intake form only. The marketplace surface
+(creator proposals, two-party contracts, milestones, 3-way messaging,
+PDF generation) is deferred to Phase 2.8.
+
+### Consequences
+
+- (+) MVP launch is feasible. The intake form is one form + one
+      detail page + one admin queue surface, vs. ~12 surfaces for (A).
+- (+) Manual admin response is a high-quality feedback loop for the
+      first 0-30 inquiries — every reply is human-curated. This is
+      the right cadence to learn what intakes actually look like
+      before automating proposal-matching.
+- (+) Future shape is open: the commission_intakes row already
+      captures everything a Phase 2.8 marketplace will need.
+- (–) Creators currently have no way to "discover" inbound work on
+      platform. Until Phase 2.8 the creator-side proposal flow does
+      not exist; commissions are routed through admin (yagi) directly.
+- (–) Each inquiry requires admin time. With more than ~30/week the
+      manual response model breaks down — that's the natural trigger
+      for Phase 2.8 marketplace work.
+
+### Alternatives considered
+
+- **Marketplace from day one** (v1 plan). Rejected per ADR-011.
+- **Direct-message intake (no form, just an email link)**. Rejected
+  — loses the structure that makes admin response efficient.
+- **Hybrid: form + creator notification but no proposal flow**.
+  Rejected — partial Phase 2.8 surface that doesn't ship cleanly.
+
+### Followups
+
+- Phase 2.8 builds the marketplace surface. Trigger: ≥30 intakes/week.
+- Interactive timeline annotation editor (FU-2.7-INTERACTIVE) — the
+  true AI-VFX-specific differentiator.
+
+### Cross-references
+
+- ADR-011 (course correction context)
+- `.yagi-autobuild/phase-2-7/SPEC.md` v2 §0
+- `.yagi-autobuild/phase-2-7/SPEC.md` v2 §8 (Phase 2.8 deferrals)
+
+
+---
+
+## ADR-013: Sponsored challenge attribution — `challenges.sponsor_client_id` column vs separate table
+Date: 2026-04-25
+Status: Accepted
+
+### Context
+
+Phase 2.5 challenges already exist as a public surface with admin
+authoring. Phase 2.7 introduces sponsored challenges (brand-funded,
+e.g. Samyang sponsoring 불닭 챌린지). Two viable shapes:
+
+A. **Column.** Add `challenges.sponsor_client_id uuid REFERENCES
+   clients(id) ON DELETE SET NULL`. Sponsor display joins on read.
+B. **Separate table.** New `sponsored_challenges (challenge_id,
+   client_id, terms_md, fee_amount, ...)` 1-to-1. Carries
+   sponsor-specific metadata.
+
+### Decision
+
+Phase 2.7 v2 implements (A) — single nullable FK column on
+`challenges`. No `sponsored_challenges` table.
+
+### Consequences
+
+- (+) 1-line schema addition, no new RLS surface. Existing
+      challenges admin policies already cover INSERT/UPDATE.
+- (+) Existing public read path on challenges carries the
+      attribution implicitly. The only new piece is reading
+      clients.company_name for display, resolved via a narrowly
+      scoped service-role lookup (Codex K-05 G1 Finding 4 MVP
+      resolution).
+- (+) ON DELETE SET NULL preserves the challenge if the sponsor
+      account is removed — correct semantics for "historically
+      sponsored, sponsor gone".
+- (–) Sponsor-specific metadata (fee terms, sponsorship contract
+      ref, payment schedule) has nowhere structured to live. For MVP
+      these stay off-platform.
+- (–) Public sponsor name read path requires service-role today
+      because clients is self-or-admin RLS-gated. SECURITY DEFINER
+      RPC or denormalized column is registered as Phase 2.7+ FU.
+
+### Alternatives considered
+
+- **sponsored_challenges table from day one.** Rejected — adds
+  schema surface without justification at current sponsor volume.
+- **Free-text challenges.sponsor_name text.** Rejected — loses
+  referential integrity.
+- **Defer sponsored challenges entirely to Phase 2.8.** Rejected —
+  Samyang-style B2B challenge sponsorship is a key revenue path.
+
+### Followups
+
+- Phase 2.7+ FU: replace service-role sponsor-name read with one of
+  (a) SECURITY DEFINER RPC `get_challenge_sponsor_name(challenge_id)`,
+  (b) denormalized `sponsor_display_name` column with refresh trigger,
+  (c) public-read view with `security_invoker = false`.
+- Phase 2.8+ FU: `sponsored_challenge_terms` table for sponsorship
+  fee + contract metadata.
+
+### Cross-references
+
+- `.yagi-autobuild/phase-2-7/SPEC.md` v2 §3 Section 4
+- `.yagi-autobuild/phase-2-7/IMPLEMENTATION.md` v2 §1 Section 4
+- ADR-010 (sidebar IA — sponsor display does not change sidebar)
