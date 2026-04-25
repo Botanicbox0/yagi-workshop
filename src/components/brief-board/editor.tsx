@@ -114,6 +114,12 @@ export function BriefBoardEditor({
   const updatedAtRef = useRef<string>(initialUpdatedAt);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef<boolean>(false);
+  // K05-PHASE-2-8-01 fix: when an edit lands while a save is in flight,
+  // we mark dirty + remember the latest doc, then re-flush after the
+  // in-flight save completes. Without this, the latest keystrokes can
+  // be silently dropped when the user stops typing during the save.
+  const dirtyDuringInFlightRef = useRef<boolean>(false);
+  const pendingDocRef = useRef<JSONContent | null>(null);
 
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
 
@@ -181,85 +187,103 @@ export function BriefBoardEditor({
   });
 
   // Send the current document to the server with the most recent CAS
-  // token. Coalesces concurrent calls so a save in flight while another
-  // edit lands schedules exactly one follow-up pass after it returns.
+  // token. K05-PHASE-2-8-01 fix (loop 2 hardened): try/finally guarantees
+  // pending-doc drain on EVERY terminal path — success, exception, and
+  // every error branch (conflict, locked, validation, etc.). Without
+  // the centralized finally, branches that returned early would orphan
+  // dirtyDuringInFlightRef and leak content.
   const flushSave = useCallback(
     async (doc: JSONContent) => {
       if (inFlightRef.current) {
-        // Another save is in flight; the next onUpdate's debounce will
-        // pick up the latest doc on next idle.
+        dirtyDuringInFlightRef.current = true;
+        pendingDocRef.current = doc;
         return;
       }
       inFlightRef.current = true;
       setSaveState({ kind: "saving" });
 
-      let result: BriefActionResult<{
-        updatedAt: string;
-        status: "editing" | "locked";
-      }>;
       try {
-        result = await saveBrief({
-          projectId,
-          contentJson: doc,
-          ifMatchUpdatedAt: updatedAtRef.current,
-        });
-      } catch (err) {
-        inFlightRef.current = false;
-        const reason = err instanceof Error ? err.message : "unknown";
-        setSaveState({ kind: "failed", reason });
-        toast.error(t("save_db_error"));
-        return;
-      }
-      inFlightRef.current = false;
+        let result: BriefActionResult<{
+          updatedAt: string;
+          status: "editing" | "locked";
+        }>;
+        try {
+          result = await saveBrief({
+            projectId,
+            contentJson: doc,
+            ifMatchUpdatedAt: updatedAtRef.current,
+          });
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : "unknown";
+          setSaveState({ kind: "failed", reason });
+          toast.error(t("save_db_error"));
+          return;
+        }
 
-      if ("ok" in result && result.ok) {
-        updatedAtRef.current = result.data.updatedAt;
-        setSaveState({ kind: "saved" });
-        return;
-      }
+        if ("ok" in result && result.ok) {
+          updatedAtRef.current = result.data.updatedAt;
+          setSaveState({ kind: "saved" });
+          return;
+        }
 
-      if ("error" in result) {
-        switch (result.error) {
-          case "conflict":
-            setSaveState({
-              kind: "conflict",
-              latestUpdatedAt: result.latestUpdatedAt,
-            });
-            toast.error(t("save_conflict"), {
-              action: {
-                label: t("save_conflict_btn"),
-                onClick: () => {
-                  if (typeof window !== "undefined") window.location.reload();
+        if ("error" in result) {
+          switch (result.error) {
+            case "conflict":
+              setSaveState({
+                kind: "conflict",
+                latestUpdatedAt: result.latestUpdatedAt,
+              });
+              toast.error(t("save_conflict"), {
+                action: {
+                  label: t("save_conflict_btn"),
+                  onClick: () => {
+                    if (typeof window !== "undefined") window.location.reload();
+                  },
                 },
-              },
-            });
-            return;
-          case "locked":
-            setSaveState({ kind: "failed", reason: "locked" });
-            toast.error(t("locked_banner"));
-            return;
-          case "unauthenticated":
-            setSaveState({ kind: "failed", reason: "unauthenticated" });
-            toast.error(t("save_unauthenticated"));
-            return;
-          case "validation":
-            setSaveState({ kind: "failed", reason: "validation" });
-            // Distinguish 2 MiB cap from other validation issues for clearer UX.
-            {
-              const isSize = result.issues.some(
-                (i) => i.path?.[0] === "contentJson" && /2MiB|exceed/i.test(i.message)
-              );
-              toast.error(isSize ? t("save_too_large") : t("save_validation"));
-            }
-            return;
-          case "not_found":
-          case "forbidden":
-          case "not_implemented":
-          case "db":
-          default:
-            setSaveState({ kind: "failed", reason: String(result.error) });
-            toast.error(t("save_db_error"));
-            return;
+              });
+              return;
+            case "locked":
+              setSaveState({ kind: "failed", reason: "locked" });
+              toast.error(t("locked_banner"));
+              return;
+            case "unauthenticated":
+              setSaveState({ kind: "failed", reason: "unauthenticated" });
+              toast.error(t("save_unauthenticated"));
+              return;
+            case "validation":
+              setSaveState({ kind: "failed", reason: "validation" });
+              {
+                const isSize = result.issues.some(
+                  (i) => i.path?.[0] === "contentJson" && /2MiB|exceed/i.test(i.message)
+                );
+                toast.error(isSize ? t("save_too_large") : t("save_validation"));
+              }
+              return;
+            case "not_found":
+            case "forbidden":
+            case "not_implemented":
+            case "db":
+            default:
+              setSaveState({ kind: "failed", reason: String(result.error) });
+              toast.error(t("save_db_error"));
+              return;
+          }
+        }
+      } finally {
+        inFlightRef.current = false;
+        // Drain any pending doc captured while we were in flight. Runs
+        // regardless of which terminal branch we took above. The pending
+        // doc is the latest content the user typed during the save, so
+        // re-flushing guarantees no edits are silently dropped.
+        // Conflict/locked/validation branches still drain, even though
+        // re-flushing in those cases will likely surface the same error
+        // — that's intentional: the user sees consistent feedback rather
+        // than silent staleness.
+        if (dirtyDuringInFlightRef.current) {
+          const next = pendingDocRef.current;
+          dirtyDuringInFlightRef.current = false;
+          pendingDocRef.current = null;
+          if (next) void flushSave(next);
         }
       }
     },

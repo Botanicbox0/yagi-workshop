@@ -115,6 +115,55 @@ function approxJsonByteSize(value: unknown): number {
 
 const MAX_CONTENT_JSON_BYTES = 2 * 1024 * 1024; // 2 MiB
 
+// K05-PHASE-2-8-02 fix: TipTap content_json passes through Zod's
+// `.passthrough()` which does not validate URL-shaped attrs deep in
+// the document. A workspace member could persist an embed node with
+// `url: "javascript:..."` and trigger script execution when another
+// member clicks the rendered <a href>. This walker rejects any embed
+// or image node whose URL attribute is not a literal http(s) URL.
+const SAFE_HTTP_URL_RE = /^https?:\/\//i;
+
+function validateContentSafety(
+  doc: unknown
+): { ok: true } | { ok: false; reason: string } {
+  function walk(node: unknown): string | null {
+    if (!node || typeof node !== "object") return null;
+    const n = node as { type?: unknown; attrs?: Record<string, unknown>; content?: unknown };
+    if (n.type === "embed") {
+      const url = n.attrs?.url;
+      if (typeof url !== "string" || !SAFE_HTTP_URL_RE.test(url)) {
+        return `embed.url must be http(s) (got ${typeof url === "string" ? url.slice(0, 32) : typeof url})`;
+      }
+      const thumb = n.attrs?.thumbnail_url;
+      if (
+        thumb !== null &&
+        thumb !== undefined &&
+        (typeof thumb !== "string" || !SAFE_HTTP_URL_RE.test(thumb))
+      ) {
+        return `embed.thumbnail_url must be http(s) when set`;
+      }
+      const provider = n.attrs?.provider;
+      if (
+        provider !== undefined &&
+        (typeof provider !== "string" ||
+          !["youtube", "vimeo", "generic"].includes(provider))
+      ) {
+        return `embed.provider must be one of {youtube,vimeo,generic}`;
+      }
+    }
+    if (Array.isArray(n.content)) {
+      for (const child of n.content) {
+        const err = walk(child);
+        if (err) return err;
+      }
+    }
+    return null;
+  }
+  const err = walk(doc);
+  if (err) return { ok: false, reason: err };
+  return { ok: true };
+}
+
 // -----------------------------------------------------------------------------
 // 1. saveBrief — debounced auto-save with optimistic concurrency
 // -----------------------------------------------------------------------------
@@ -135,6 +184,20 @@ export async function saveBrief(
           code: "custom",
           path: ["contentJson"],
           message: "content exceeds 2MiB",
+        },
+      ],
+    };
+  }
+
+  const safety = validateContentSafety(parsed.data.contentJson);
+  if (!safety.ok) {
+    return {
+      error: "validation",
+      issues: [
+        {
+          code: "custom",
+          path: ["contentJson"],
+          message: safety.reason,
         },
       ],
     };
@@ -636,7 +699,122 @@ async function fetchOEmbedJson(endpoint: string): Promise<EmbedPayload | null> {
   };
 }
 
+// K05-PHASE-2-8-03 fix: pre-fetch SSRF guard for the generic OG path.
+// The YouTube and Vimeo branches resolve oEmbed endpoints on public
+// hosts (www.youtube.com / vimeo.com) so they don't need this check —
+// they already know what they're fetching. The generic OG fallback
+// fetches a user-supplied URL directly; without an IP filter, signed-in
+// users could probe loopback / private networks / cloud metadata.
+//
+// v1 mitigation: parse hostname, resolve via dns.lookup (both A + AAAA),
+// reject if any resolved IP falls in private / loopback / link-local
+// ranges. Does NOT re-check after redirects — `redirect: 'follow'` can
+// still chase a 302 to a private IP. Redirect-time re-check (manual
+// redirect handling) is FU-2.8-ssrf-redirect-rewrite.
+function normalizeIp(ipRaw: string): string {
+  // Strip RFC 3986 IPv6 brackets if present.
+  let ip = ipRaw.trim();
+  if (ip.startsWith("[") && ip.endsWith("]")) ip = ip.slice(1, -1);
+  return ip.toLowerCase();
+}
+
+function isPrivateIpv4Octets(ip: string): boolean {
+  if (ip === "0.0.0.0" || ip.startsWith("127.")) return true;
+  if (ip.startsWith("10.")) return true;
+  if (ip.startsWith("192.168.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+  if (ip.startsWith("169.254.")) return true; // link-local + AWS/GCP metadata
+  // Multicast 224/4 + reserved 240/4
+  if (/^(22[4-9]|2[3-4]\d|2[5-9]\d)\./.test(ip)) return true;
+  if (ip.startsWith("100.64.")) return true; // CGN
+  return false;
+}
+
+// K05-PHASE-2-8-LOOP2-02 fix: detect IPv4-mapped IPv6 (::ffff:1.2.3.4
+// or hex form ::ffff:7f00:1 = 127.0.0.1). Without this, an attacker
+// could request http://[::ffff:127.0.0.1]/ and our IPv4 range checks
+// would never run.
+function isPrivateIp(ipRaw: string): boolean {
+  const ip = normalizeIp(ipRaw);
+
+  // IPv4 dotted-quad
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
+    return isPrivateIpv4Octets(ip);
+  }
+
+  // IPv4-mapped IPv6 in dotted form
+  const mappedDotted = ip.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (mappedDotted) {
+    return isPrivateIpv4Octets(mappedDotted[1]);
+  }
+
+  // IPv4-mapped IPv6 in hex form: ::ffff:abcd:efef = a.b.c.d
+  const mappedHex = ip.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (mappedHex) {
+    const high = parseInt(mappedHex[1], 16);
+    const low = parseInt(mappedHex[2], 16);
+    const a = (high >> 8) & 0xff;
+    const b = high & 0xff;
+    const c = (low >> 8) & 0xff;
+    const d = low & 0xff;
+    return isPrivateIpv4Octets(`${a}.${b}.${c}.${d}`);
+  }
+
+  // IPv4-compatible IPv6 (deprecated but reject for safety): ::a.b.c.d
+  const compat = ip.match(/^::(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (compat) {
+    return isPrivateIpv4Octets(compat[1]);
+  }
+
+  // Bare IPv6 forms.
+  if (ip === "::1" || ip === "::") return true; // loopback / unspecified
+  if (ip === "::ffff:0:0" || ip === "::ffff") return true;
+  if (ip.startsWith("fc") || ip.startsWith("fd")) return true; // fc00::/7 ULA
+  if (ip.startsWith("fe80") || ip.startsWith("fec0")) return true; // link-local + site-local
+  if (ip.startsWith("ff")) return true; // multicast ff00::/8
+  if (ip === "100::" || ip.startsWith("100::")) return true; // discard prefix
+
+  return false;
+}
+
+async function isHostnameSafe(hostname: string): Promise<boolean> {
+  const { lookup } = await import("node:dns/promises");
+  const { isIP } = await import("node:net");
+
+  const norm = normalizeIp(hostname);
+
+  if (isIP(norm)) {
+    return !isPrivateIp(norm);
+  }
+
+  // Reject obvious non-public suffixes; .local / .internal / etc.
+  const lower = norm.toLowerCase();
+  if (lower === "localhost" || lower.endsWith(".localhost")) return false;
+  if (lower.endsWith(".local") || lower.endsWith(".internal")) return false;
+
+  try {
+    const addrs = await lookup(hostname, { all: true });
+    if (!addrs || addrs.length === 0) return false;
+    for (const a of addrs) {
+      if (isPrivateIp(a.address)) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function fetchOgFallback(url: string): Promise<EmbedPayload | null> {
+  let parsedHost: string;
+  try {
+    parsedHost = new URL(url).hostname;
+  } catch {
+    return null;
+  }
+  if (!(await isHostnameSafe(parsedHost))) {
+    return null;
+  }
+
   let resp: Response;
   try {
     resp = await fetch(url, {

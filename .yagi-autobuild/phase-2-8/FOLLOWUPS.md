@@ -310,3 +310,106 @@ worktree before SHIPPED.
 **Status:** Open.
 
 **Registered:** 2026-04-26 (G_B-7 oversight).
+
+---
+
+## FU-2.8-ssrf-redirect-rewrite
+
+**Trigger:** REVIEW loop 1 K05-PHASE-2-8-03 mitigation added pre-fetch
+hostname → IP allowlist in `fetchOgFallback`, but `fetch(... redirect:
+'follow')` still chases 302/301 redirects to whatever target the
+upstream returns. An attacker can host a public-IP page that 302s to
+a private IP; the IP-filter only ran on the seed hostname.
+
+**Risk:** SSRF via redirect chaining. Caller is auth-gated (any signed-
+in user) and the response body is not returned wholesale, but timing
++ OG-derived title/thumbnail URL still leak internal probe results.
+
+**Action:** Switch `fetchOgFallback` to `redirect: 'manual'`, parse the
+`Location` header, re-run `isHostnameSafe` on each redirect target, cap
+redirects at ~5 hops. Phase 2.8.1.
+
+**Owner:** Phase 2.8.1 builder.
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (REVIEW loop 1 fix scope cut).
+
+---
+
+## FU-2.8-link-mark-href-sanitization
+
+**Trigger:** `validateContentSafety` in saveBrief walks the TipTap node
+tree and validates `embed.url` / `embed.thumbnail_url`, but it does not
+inspect inline marks (e.g., a TipTap `link` mark on a text node would
+carry `attrs.href`). v1 toolbar exposes no link button so users can't
+insert link marks, but a TipTap config change in 2.8.1 could expose
+this gap.
+
+**Risk:** None today (no link mark in the v1 toolbar). Future addition
+of a link mark without extending the validator would re-open the
+javascript: URL persistence path.
+
+**Action:** Extend `validateContentSafety` to walk node `marks` arrays
+when link marks are added. Or restrict TipTap's StarterKit to
+explicitly disable `link` until validator is extended.
+
+**Owner:** Phase 2.8.1 / 2.9 (whoever first ships link marks).
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (REVIEW loop 1 follow-up scope).
+
+---
+
+## FU-2.8-ssrf-cgn-prefix
+
+**Trigger:** REVIEW loop 3 K05-PHASE-2-8-LOOP3-01 (MED-A). The
+isPrivateIpv4Octets check uses `ip.startsWith("100.64.")` for the
+RFC 6598 CGN range, but CGN is actually `100.64.0.0/10`, i.e.
+`100.64.0.0`–`100.127.255.255`. The current prefix only catches
+`100.64.0.0/16`; addresses like `100.65.0.1` or `100.127.255.255`
+still pass.
+
+**Risk:** A signed-in user can request URLs whose hostname resolves
+into the broader CGN range and reach shared/non-global address space
+the server has routes to. The 5s timeout + auth gate constrain the
+blast radius, and most cloud hosts don't route to CGN ranges.
+Theoretical defense-in-depth per Q-017.
+
+**Action:** Replace the prefix with the precise regex
+`/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./`, or switch to a CIDR-
+aware library. One-line fix; defer to Phase 2.8.1 with the rest of
+the SSRF refinements.
+
+**Owner:** Phase 2.8.1 builder.
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (REVIEW loop 3 finding).
+
+---
+
+## FU-2.8-ssrf-ipv6-compat-hex
+
+**Trigger:** REVIEW loop 3 K05-PHASE-2-8-LOOP3-02 (MED-B). The
+IPv4-compatible IPv6 detection in `isPrivateIp` uses a dotted-form
+regex `/^::(\d{...}\.\d{...})$/`, but `new URL("http://[::127.0.0.1]/").hostname`
+canonicalizes to `::7f00:1` (hex form) before reaching our check.
+The dotted regex never matches the canonicalized form.
+
+**Risk:** Theoretical. IPv4-compatible IPv6 (`::a.b.c.d`) was
+deprecated by RFC 4291 and is rare in practice. The IPv4-mapped
+form `::ffff:a.b.c.d` IS handled correctly. Real attacks would use
+mapped, not compatible. Theoretical defense-in-depth per Q-017.
+
+**Action:** Add hex-form detection: pattern `/^::([0-9a-f]{1,4}):([0-9a-f]{1,4})$/`
+where the high word is 0x0000 indicates IPv4-compatible (`::a:b` →
+`0.0.a.b`). Or switch to a CIDR library. Defer to Phase 2.8.1
+SSRF sweep.
+
+**Owner:** Phase 2.8.1 builder.
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (REVIEW loop 3 finding).

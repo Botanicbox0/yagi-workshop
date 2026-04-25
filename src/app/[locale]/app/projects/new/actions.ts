@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 
 const sharedFields = {
   title: z.string().trim().min(1).max(200),
@@ -128,8 +129,13 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   // with empty content, so the Brief tab on /app/projects/[id] can mount
   // the editor immediately. RLS allows this INSERT because the caller
   // is the project's workspace member (just created the project above).
-  // Errors here are non-fatal — the brief board can lazy-create on
-  // first save if this insert ever fails.
+  //
+  // K05-PHASE-2-8-04 fix: brief INSERT failure is now FATAL. If the
+  // sibling row can't be created we roll back the project to avoid
+  // leaving an orphan project that the Brief tab cannot edit (saveBrief
+  // returns not_found when the row is missing — there is no lazy-create
+  // path). Atomicity-via-RPC lands in Phase 2.8.1 (FU-2.8-saveversion-rollback
+  // covers a related two-write atomicity gap).
   const { error: briefErr } = await supabase
     .from("project_briefs")
     .insert({
@@ -141,9 +147,28 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     });
   if (briefErr) {
     console.error(
-      "[createProject] project_briefs sibling insert failed (non-fatal):",
+      "[createProject] project_briefs sibling insert failed (rolling back project):",
       briefErr
     );
+    // K05-PHASE-2-8-LOOP2-03 fix: rollback DELETE must use the
+    // service-role client. The user-scoped supabase client honors
+    // projects_delete_yagi RLS which only permits yagi_admin DELETEs;
+    // a non-yagi workspace_admin's rollback would be silently denied
+    // and leave an orphan project. Service role bypasses RLS so the
+    // rollback succeeds for all caller roles. Atomicity-via-RPC is
+    // still the cleaner long-term fix (FU-2.8-saveversion-rollback).
+    const service = createSupabaseService();
+    const { error: rollbackErr } = await service
+      .from("projects")
+      .delete()
+      .eq("id", project.id);
+    if (rollbackErr) {
+      console.error("[createProject] rollback DELETE failed:", rollbackErr);
+    }
+    return {
+      error: "db",
+      message: `brief insert failed: ${briefErr.message}`,
+    };
   }
 
   revalidatePath("/[locale]/app/projects", "page");

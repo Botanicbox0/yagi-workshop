@@ -164,11 +164,30 @@ function EmbedFallback({
   title: string | null;
   thumbnail: string | null;
 }) {
+  // K05-PHASE-2-8-02 client-side defense: even though server-side
+  // validateContentSafety in saveBrief rejects non-http(s) URLs, treat
+  // an unsafe scheme defensively here in case content was persisted by
+  // an older path or via direct DB write. Only render the link when
+  // the URL is a literal http(s); otherwise show a plain card.
+  const safeHttp = /^https?:\/\//i.test(url);
   let hostname = "";
   try {
     hostname = new URL(url).hostname;
   } catch {
     /* ignore */
+  }
+  if (!safeHttp) {
+    return (
+      <NodeViewWrapper
+        as="div"
+        data-type="brief-embed"
+        className={cn(
+          "my-3 border border-destructive/40 rounded-md px-3 py-2 bg-muted/30 max-w-md"
+        )}
+      >
+        <p className="text-xs text-destructive">unsafe URL hidden</p>
+      </NodeViewWrapper>
+    );
   }
   return (
     <NodeViewWrapper
