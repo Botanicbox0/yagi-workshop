@@ -39,7 +39,7 @@ export default async function CommissionListPage({ params }: Props) {
       <div className="max-w-3xl mx-auto px-6 md:px-8 py-16 md:py-24">
         <div className="text-center space-y-6 border border-dashed border-border rounded-xl py-16 px-6">
           <h1 className="font-display text-2xl tracking-tight">
-            <em>{t("list_empty_title")}</em>
+            {t("list_empty_title")}
           </h1>
           <p className="text-sm text-muted-foreground keep-all">
             {t("list_empty_sub")}

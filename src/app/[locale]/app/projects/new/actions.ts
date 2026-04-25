@@ -9,11 +9,13 @@ const sharedFields = {
   description: z.string().max(4000).optional().nullable(),
   brand_id: z.string().uuid().nullable().optional(),
   tone: z.string().max(500).optional().nullable(),
+  // Phase 2.7.2: free-text tag list (was a closed enum). Maps to the
+  // existing `deliverable_types text[]` Postgres column — no migration
+  // needed; the meaning shifts from "format" to "intended use".
   deliverable_types: z
-    .array(
-      z.enum(["film", "still", "campaign", "editorial", "social", "other"])
-    )
-    .min(1),
+    .array(z.string().trim().min(1).max(60))
+    .max(10)
+    .default([]),
   estimated_budget_range: z.string().max(100).optional().nullable(),
   target_delivery_at: z
     .string()

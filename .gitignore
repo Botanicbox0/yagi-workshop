@@ -52,9 +52,14 @@ next-env.d.ts
 .yagi-autobuild/logs/
 .yagi-autobuild/tmp/
 .yagi-autobuild/*.log
+.yagi-autobuild/**/*.tmp
 # Transient codex/telegram prompt dumps (noisy, not useful history)
 .yagi-autobuild/_codex_review_*.txt
 .yagi-autobuild/_telegram_*.txt
+
+# Local verification logs (tsc/lint/build outputs at repo root)
+.build.log
+.lint.log
 
 # Content Collections generated files
 .content-collections/

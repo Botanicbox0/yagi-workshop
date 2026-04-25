@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, Controller, useWatch } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,60 +30,45 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { IntakeModePicker } from "@/components/project/intake-mode-picker";
-import { ProposalFields } from "@/components/project/proposal-fields";
 
 // ---------------------------------------------------------------------------
-// Schema
+// Schema — Phase 2.7.2 single-flow brief
 // ---------------------------------------------------------------------------
-const deliverableEnum = z.enum([
-  "film",
-  "still",
-  "campaign",
-  "editorial",
-  "social",
-  "other",
-]);
-
-const sharedFields = {
+// The Step 0 intake-mode picker (brief vs proposal_request) was removed in
+// Phase 2.7.2: every project starts as a brief, and the "I do not have a
+// brief yet — help me draft one" affordance moves into the Brief Board
+// empty-state CTA shipping in Phase 2.8. `intake_mode` stays on the payload
+// as the literal "brief" so the existing `projects.intake_mode` column keeps
+// receiving a valid value without migration.
+//
+// `deliverable_types` was a closed enum (film/still/campaign/...). It is now
+// a free-text tag list mapped to the same `text[]` Postgres column — labels
+// in the wizard read "Where it will be used" so users describe surface
+// intent (e.g. "Meta ads", "OOH", "SNS content") rather than picking a
+// fixed format.
+const formSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().max(4000).optional(),
   brand_id: z.string().optional(),
   tone: z.string().max(500).optional(),
-  deliverable_types: z.array(deliverableEnum).min(1, "required"),
+  deliverable_types: z
+    .array(z.string().trim().min(1).max(60))
+    .max(10),
   estimated_budget_range: z.string().max(100).optional(),
   target_delivery_at: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .or(z.literal("")),
-};
-
-const briefSchema = z.object({
-  ...sharedFields,
   intake_mode: z.literal("brief"),
 });
-
-const proposalSchema = z.object({
-  ...sharedFields,
-  intake_mode: z.literal("proposal_request"),
-  proposal_goal: z.string().trim().min(1, "required").max(800),
-  proposal_audience: z.string().max(400).optional().or(z.literal("")),
-  proposal_budget_range: z.string().max(100).optional().or(z.literal("")),
-  proposal_timeline: z.string().max(200).optional().or(z.literal("")),
-});
-
-const formSchema = z.discriminatedUnion("intake_mode", [
-  briefSchema,
-  proposalSchema,
-]);
 
 type FormData = z.infer<typeof formSchema>;
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-type Step = "intake-mode" | "brief" | "refs" | "review";
+type Step = "brief" | "refs" | "review";
 
 type Brand = { id: string; name: string };
 
@@ -92,21 +76,103 @@ interface NewProjectWizardProps {
   brands: Brand[];
 }
 
-// ---------------------------------------------------------------------------
-// Deliverable options
-// ---------------------------------------------------------------------------
-const DELIVERABLE_VALUES = [
-  "film",
-  "still",
-  "campaign",
-  "editorial",
-  "social",
-  "other",
-] as const;
+const STEP_ORDER: Step[] = ["brief", "refs", "review"];
 
-type DeliverableValue = (typeof DELIVERABLE_VALUES)[number];
+// ---------------------------------------------------------------------------
+// Tag input — free-text chip input for `deliverable_types`
+// ---------------------------------------------------------------------------
+function TagInput({
+  value,
+  onChange,
+  placeholder,
+  helperText,
+  addLabel,
+  removeLabel,
+  maxItems = 10,
+  maxLength = 60,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+  helperText?: string;
+  addLabel: string;
+  removeLabel: string;
+  maxItems?: number;
+  maxLength?: number;
+}) {
+  const [draft, setDraft] = useState("");
+  const trimmed = draft.trim();
+  const canAdd =
+    trimmed.length > 0 &&
+    value.length < maxItems &&
+    !value.includes(trimmed);
 
-const STEP_ORDER: Step[] = ["intake-mode", "brief", "refs", "review"];
+  const addTag = () => {
+    const v = trimmed;
+    if (!v) return;
+    if (value.includes(v)) {
+      setDraft("");
+      return;
+    }
+    if (value.length >= maxItems) return;
+    onChange([...value, v.slice(0, maxLength)]);
+    setDraft("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2 items-center">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addTag();
+            }
+          }}
+          placeholder={placeholder}
+          maxLength={maxLength}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addTag}
+          disabled={!canAdd}
+          className="rounded-full"
+        >
+          {addLabel}
+        </Button>
+      </div>
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs keep-all"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(value.filter((t) => t !== tag))
+                }
+                className="text-muted-foreground hover:text-foreground leading-none"
+                aria-label={removeLabel}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {helperText && (
+        <p className="text-xs text-muted-foreground keep-all">{helperText}</p>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Progress indicator
@@ -119,7 +185,6 @@ function StepIndicator({
   tProjects: ReturnType<typeof useTranslations<"projects">>;
 }) {
   const steps: { key: Step; label: string }[] = [
-    { key: "intake-mode", label: tProjects("intake_mode_label") },
     { key: "brief", label: tProjects("brief_step") },
     { key: "refs", label: tProjects("refs_step") },
     { key: "review", label: tProjects("review_step") },
@@ -170,7 +235,7 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
   const tErrors = useTranslations("errors");
   const router = useRouter();
 
-  const [step, setStep] = useState<Step>("intake-mode");
+  const [step, setStep] = useState<Step>("brief");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,14 +254,12 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
     },
   });
 
-  const intakeMode = useWatch({ control, name: "intake_mode" }) ?? "brief";
-
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Helpers
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   function buildPayload(intent: "draft" | "submit") {
     const vals = getValues();
-    const base = {
+    return {
       title: vals.title ?? "",
       description: vals.description || null,
       brand_id: vals.brand_id || null,
@@ -208,21 +271,6 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
           ? vals.target_delivery_at
           : null,
       intent,
-    };
-
-    if (vals.intake_mode === "proposal_request") {
-      return {
-        ...base,
-        intake_mode: "proposal_request" as const,
-        proposal_goal: vals.proposal_goal ?? "",
-        proposal_audience: vals.proposal_audience || "",
-        proposal_budget_range: vals.proposal_budget_range || "",
-        proposal_timeline: vals.proposal_timeline || "",
-      };
-    }
-
-    return {
-      ...base,
       intake_mode: "brief" as const,
     };
   }
@@ -244,7 +292,6 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
         }
         return;
       }
-      // No toast — no fitting i18n key for save draft success
       router.push(`/app/projects/${res.id}` as `/app/projects/${string}`);
     } finally {
       setIsSaving(false);
@@ -271,50 +318,13 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
     }
   }
 
-  // Advance from Brief step — pure client-side
   const onBriefNext = handleSubmit(() => {
     setStep("refs");
   });
 
-  // ---------------------------------------------------------------------------
-  // Step 0 — Intake mode
-  // ---------------------------------------------------------------------------
-  function IntakeModeStep() {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <h2 className="font-display text-xl tracking-tight keep-all">
-            {t("intake_mode_label")}
-          </h2>
-        </div>
-
-        <Controller
-          control={control}
-          name="intake_mode"
-          render={({ field }) => (
-            <IntakeModePicker
-              value={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-
-        <div className="flex items-center justify-end pt-2">
-          <Button
-            type="button"
-            className="rounded-full uppercase tracking-[0.12em]"
-            onClick={() => setStep("brief")}
-          >
-            {tCommon("continue")}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Step 1 — Brief
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   function BriefStep() {
     return (
       <form onSubmit={onBriefNext} className="space-y-6">
@@ -347,11 +357,6 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
           )}
         </div>
 
-        {/* Proposal fields — shown only when intake_mode === 'proposal_request' */}
-        {intakeMode === "proposal_request" && (
-          <ProposalFields<FormData> register={register} errors={errors} />
-        )}
-
         {/* Brand */}
         <div className="space-y-1.5">
           <Label htmlFor="brand_id">{t("brand_label")}</Label>
@@ -359,11 +364,10 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
             control={control}
             name="brand_id"
             render={({ field }) => (
-              // Radix Select rejects "" as an item value (used internally for
-              // the cleared/placeholder state). Use a sentinel "__none" and
-              // map it to "" on the form side.
               <Select
-                onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}
+                onValueChange={(v) =>
+                  field.onChange(v === "__none" ? "" : v)
+                }
                 value={field.value ? field.value : "__none"}
               >
                 <SelectTrigger id="brand_id">
@@ -395,46 +399,23 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
           )}
         </div>
 
-        {/* Deliverable types */}
+        {/* Deliverable types — free input tags */}
         <div className="space-y-2">
-          <Label>
-            {t("deliverable_types_label")}{" "}
-            <span className="text-destructive">*</span>
-          </Label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <Controller
-              control={control}
-              name="deliverable_types"
-              render={({ field }) => (
-                <>
-                  {DELIVERABLE_VALUES.map((val) => {
-                    const labelKey =
-                      `deliverable_${val}` as `deliverable_${DeliverableValue}`;
-                    const checked = field.value?.includes(val) ?? false;
-                    return (
-                      <label
-                        key={val}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={(c) => {
-                            const current = field.value ?? [];
-                            field.onChange(
-                              c
-                                ? [...current, val]
-                                : current.filter((v) => v !== val)
-                            );
-                          }}
-                        />
-                        <span className="text-sm keep-all">{t(labelKey)}</span>
-                      </label>
-                    );
-                  })}
-                </>
-              )}
-            />
-          </div>
+          <Label>{t("deliverable_types_label")}</Label>
+          <Controller
+            control={control}
+            name="deliverable_types"
+            render={({ field }) => (
+              <TagInput
+                value={field.value ?? []}
+                onChange={field.onChange}
+                placeholder={t("deliverable_types_ph")}
+                helperText={t("deliverable_types_helper")}
+                addLabel={t("deliverable_types_add")}
+                removeLabel={t("deliverable_types_remove")}
+              />
+            )}
+          />
           {errors.deliverable_types && (
             <p className="text-xs text-destructive">{tErrors("validation")}</p>
           )}
@@ -466,27 +447,17 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
           )}
         </div>
 
-        {/* Action row */}
+        {/* Action row — first step has no back, save_draft + continue */}
         <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              className="rounded-full uppercase tracking-[0.12em] text-xs"
-              onClick={() => setStep("intake-mode")}
-            >
-              {tCommon("back")}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="rounded-full uppercase tracking-[0.12em] text-xs"
-              onClick={handleSaveDraft}
-              disabled={isSaving}
-            >
-              {t("save_draft")}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            className="rounded-full uppercase tracking-[0.12em] text-xs"
+            onClick={handleSaveDraft}
+            disabled={isSaving}
+          >
+            {t("save_draft")}
+          </Button>
           <Button
             type="submit"
             className="rounded-full uppercase tracking-[0.12em]"
@@ -498,15 +469,18 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Step 2 — References (placeholder)
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Step 2 — Refs (Phase 2.7.2 placeholder; full Brief Board ships Phase 2.8)
+  // -------------------------------------------------------------------------
   function RefsStep() {
     return (
       <div className="space-y-6">
-        <div className="border border-dashed border-border rounded-lg py-16 flex flex-col items-center justify-center text-center gap-3">
+        <div className="border border-dashed border-border rounded-lg py-16 px-6 flex flex-col items-center justify-center text-center gap-3">
           <p className="font-display text-lg tracking-tight keep-all">
-            {t("refs_step")}
+            {t("refs_step_placeholder_title")}
+          </p>
+          <p className="text-sm text-muted-foreground keep-all max-w-md">
+            {t("refs_step_placeholder_sub")}
           </p>
         </div>
         <div className="flex items-center justify-between pt-2">
@@ -530,12 +504,11 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
     );
   }
 
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Step 3 — Review
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   function ReviewStep() {
     const vals = getValues();
-
     const selectedBrand = brands.find((b) => b.id === vals.brand_id);
 
     function ReviewRow({
@@ -548,9 +521,7 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
       return (
         <div className="grid grid-cols-[140px_1fr] gap-4 py-3 border-b border-border last:border-0">
           <dt className="text-sm text-muted-foreground keep-all">{label}</dt>
-          <dd className="text-sm keep-all break-words">
-            {value || "—"}
-          </dd>
+          <dd className="text-sm keep-all break-words">{value || "—"}</dd>
         </div>
       );
     }
@@ -567,6 +538,7 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
             label={t("brand_label")}
             value={selectedBrand?.name ?? null}
           />
+          <ReviewRow label={t("tone_label")} value={vals.tone || null} />
           <div className="grid grid-cols-[140px_1fr] gap-4 py-3 border-b border-border">
             <dt className="text-sm text-muted-foreground keep-all">
               {t("deliverable_types_label")}
@@ -576,11 +548,9 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
                 vals.deliverable_types.map((v) => (
                   <span
                     key={v}
-                    className="rounded-full border border-border px-2.5 py-0.5 text-xs"
+                    className="rounded-full border border-border px-2.5 py-0.5 text-xs keep-all"
                   >
-                    {t(
-                      `deliverable_${v}` as `deliverable_${DeliverableValue}`
-                    )}
+                    {v}
                   </span>
                 ))
               ) : (
@@ -597,33 +567,6 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
             value={vals.target_delivery_at || null}
           />
         </dl>
-
-        {/* Proposal fields review — only in proposal_request mode */}
-        {vals.intake_mode === "proposal_request" && (
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-              {t("intake_mode_proposal_title")}
-            </h3>
-            <dl className="border border-border rounded-lg px-4">
-              <ReviewRow
-                label={t("proposal_goal_label")}
-                value={vals.proposal_goal || null}
-              />
-              <ReviewRow
-                label={t("proposal_audience_label")}
-                value={vals.proposal_audience || null}
-              />
-              <ReviewRow
-                label={t("proposal_budget_range_label")}
-                value={vals.proposal_budget_range || null}
-              />
-              <ReviewRow
-                label={t("proposal_timeline_label")}
-                value={vals.proposal_timeline || null}
-              />
-            </dl>
-          </div>
-        )}
 
         {/* Action row */}
         <div className="flex items-center justify-between pt-2">
@@ -677,14 +620,13 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
     );
   }
 
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Render
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   return (
     <div className="px-6 py-10 max-w-2xl mx-auto">
       <StepIndicator current={step} tProjects={t} />
 
-      {step === "intake-mode" && <IntakeModeStep />}
       {step === "brief" && <BriefStep />}
       {step === "refs" && <RefsStep />}
       {step === "review" && <ReviewStep />}

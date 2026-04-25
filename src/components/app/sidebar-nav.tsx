@@ -52,11 +52,16 @@ const GROUPS: NavGroup[] = [
     key: "work",
     items: [
       {
-        // Phase 2.7: client persona's primary surface.
-        key: "commission",
-        href: "/app/commission",
+        // Phase 2.7.2: projects hub restored as the canonical commission
+        // surface (Option C — funnel split). `/commission` stays as the
+        // public-facing landing form for anonymous intake; once a user is
+        // logged in, `/app/projects` is the hub (full 4-step wizard,
+        // references, review). Visible to every authenticated user;
+        // admin/internal members rely on this entry to QA the client
+        // flow without leaving to the public site.
+        key: "projects",
+        href: "/app/projects",
         icon: Briefcase,
-        profileRoles: ["client"],
       },
       {
         // Phase 2.5 admin challenge console — yagi_admin only.
@@ -69,9 +74,9 @@ const GROUPS: NavGroup[] = [
           { key: "challenges_open", href: "/app/admin/challenges?state=open" },
         ],
       },
-      // Phase 2.7.1: projects / preprod / showcases / storyboards / brands
-      // removed from the active sidebar. Routes still work for direct
-      // navigation; phasing out from primary IA per visibility pass.
+      // Phase 2.7.1: preprod / showcases / storyboards / brands removed
+      // from the active sidebar. Routes still work for direct navigation;
+      // phasing out from primary IA per visibility pass.
     ],
   },
   {
