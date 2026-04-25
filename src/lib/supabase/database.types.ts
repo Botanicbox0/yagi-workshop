@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       brands: {
@@ -426,6 +451,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      embed_cache: {
+        Row: {
+          expires_at: string
+          fetched_at: string
+          provider: string
+          response_json: Json
+          url: string
+        }
+        Insert: {
+          expires_at?: string
+          fetched_at?: string
+          provider: string
+          response_json: Json
+          url: string
+        }
+        Update: {
+          expires_at?: string
+          fetched_at?: string
+          provider?: string
+          response_json?: Json
+          url?: string
+        }
+        Relationships: []
       }
       handle_history: {
         Row: {
@@ -1153,6 +1202,123 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_brief_assets: {
+        Row: {
+          byte_size: number
+          id: string
+          mime_type: string
+          original_name: string | null
+          project_id: string
+          storage_key: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          byte_size: number
+          id?: string
+          mime_type: string
+          original_name?: string | null
+          project_id: string
+          storage_key: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          byte_size?: number
+          id?: string
+          mime_type?: string
+          original_name?: string | null
+          project_id?: string
+          storage_key?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_brief_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_brief_versions: {
+        Row: {
+          content_json: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string | null
+          project_id: string
+          version_n: number
+        }
+        Insert: {
+          content_json: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          project_id: string
+          version_n: number
+        }
+        Update: {
+          content_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string | null
+          project_id?: string
+          version_n?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_brief_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_briefs: {
+        Row: {
+          content_json: Json
+          current_version: number
+          project_id: string
+          status: string
+          tiptap_schema_version: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content_json?: Json
+          current_version?: number
+          project_id: string
+          status?: string
+          tiptap_schema_version?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content_json?: Json
+          current_version?: number
+          project_id?: string
+          status?: string
+          tiptap_schema_version?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_briefs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_deliverables: {
         Row: {
@@ -2335,6 +2501,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

@@ -241,18 +241,29 @@ SCOPE:
   - all files changed since main
   - migration sql files
   - RLS policies
-INVOKE:
+INVOKE (Windows PowerShell — verified against developers.openai.com/codex/cli/reference 2026-04-25):
   cd ../yagi-workshop-g-b-brief-board
-  codex --model gpt-5.5 --reasoning-effort high \
-    --prompt "$(cat .yagi-autobuild/phase-2-8/CODEX_PROMPT.md)" \
-    > .yagi-autobuild/phase-2-8/_codex_review_output.txt
+  Get-Content .yagi-autobuild/phase-2-8/_codex_<gate>_prompt.md `
+    | codex exec --model gpt-5.5 -c model_reasoning_effort=high `
+    > .yagi-autobuild/phase-2-8/_codex_<gate>_output.txt
+  # Notes:
+  #   - `codex` (no subcommand) launches interactive TUI and waits on stdin -> hang.
+  #     ALWAYS use `codex exec` for non-interactive runs.
+  #   - `--prompt` flag does NOT exist. Pass prompt via stdin pipe (above) or as
+  #     positional arg: `codex exec --model gpt-5.5 "$(Get-Content prompt.md -Raw)"`.
+  #   - `--reasoning-effort` shortcut flag is unreliable across versions; use
+  #     `-c model_reasoning_effort=high` config override which works in all 0.12x+.
+  #   - For per-gate fix-then-verify cycles (loop 2+), reuse the same prompt file or
+  #     append a verification preamble to a new file (`_codex_<gate>_loop<n>_prompt.md`).
+  #   - Codex CLI 0.122.0 does NOT support gpt-5.5; ensure 0.125.0+ before invoking.
 SEVERITY HANDLING:
   HIGH-A (cross-tenant data leak | privilege escalation | auth bypass): HALT regardless of loop count
+  HIGH-A-SCHEMA-ONLY (privilege escalation in schema/RLS only, no production data, fix is precise and additive): allow auto-fix in loop 1, mandatory re-verify in loop 2; if loop 2 finds same severity HALT
   HIGH-B (auth ok but logic flaw): re-enter gate matched in finding, loop budget 2
   HIGH-C (input validation w/ app-layer guard): downgrade to MED, log, ship
   MED / LOW: log to FOLLOWUPS.md, ship
-PASS condition: 0 HIGH-A AND 0 unhandled HIGH-B
-LOG: REVIEW_RESULT codex_findings=<count> high_a=<n> high_b=<n> downgraded=<n>
+PASS condition: 0 HIGH-A (non-schema-only) AND 0 unhandled HIGH-B AND loop 2 of any HIGH-A-SCHEMA-ONLY confirms PASS
+LOG: REVIEW_RESULT codex_findings=<count> high_a=<n> high_a_schema_only=<n> high_b=<n> downgraded=<n>
 ```
 
 ---
