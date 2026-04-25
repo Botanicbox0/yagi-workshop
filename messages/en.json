@@ -231,7 +231,9 @@
     "challenges": "Challenges",
     "challenges_all": "All",
     "challenges_new": "New challenge",
-    "challenges_open": "Open now"
+    "challenges_open": "Open now",
+    "commission": "My commissions",
+    "admin_commissions": "Commission queue"
   },
   "dashboard": {
     "empty_title": "No active projects yet",

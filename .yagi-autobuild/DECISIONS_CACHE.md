@@ -572,3 +572,293 @@ Entry packages pre-authored by web Claude. These decisions map 1:1 to the Q-G{N}
 **Applies when:** Cross-phase ADR landing decisions. Web Claude can pre-author ADRs during SPEC phase.
 **Confidence:** HIGH
 **Registered:** 2026-04-24 overnight batch
+
+
+---
+
+## 2026-04-24 late night batch — Phase 2.7 Commission Platform decisions
+
+Phase 2.7 Kickoff 전 pre-answered decisions. Builder가 Ultra-chain Step 5 cache scan 시 autoAdopt.
+
+### Q-046: Client signup — phone 필수 여부
+
+**Asked context:** Phase 2.7 SPEC §1 Client persona, G2 signup form
+**Question:** Signup 시 phone 필수?
+**Answer:** NO. Optional. Email 필수, phone은 verification or urgent contact 시 admin이 별도 요청.
+**Rationale:** Privacy friction 최소화. 대기업 계정 생성 시 담당자 폰 공개 꺼림.
+**Applies:** Client signup G2
+
+### Q-047: Client verification — manual vs automated
+
+**Asked context:** SPEC §3 clients.verified_at field
+**Question:** Client 회사 (대기업 주장) 진위 verification?
+**Answer:** Manual admin. `verified_at timestamptz` stamp. Admin이 사업자등록증 or 회사 도메인 이메일 확인 후 stamp. Automated verification은 Phase 2.8+.
+**Rationale:** MVP 초기 10-30건은 야기가 직접 검증. 스케일 시 API 도입.
+**Applies:** G2 + Admin review flows.
+
+### Q-048: Project visibility default
+
+**Asked context:** SPEC §3 projects.visibility enum
+**Question:** Default visibility?
+**Answer:** `admin_curated`. Creator pool 중 자격/랭킹 맞는 크리에이터만 discover 가능 (완전 public보다 제한적).
+**Rationale:** Client privacy 보호 + creator quality filter.
+**Applies:** G3 brief wizard default.
+
+### Q-049: Brief markdown editor 수준
+
+**Asked context:** SPEC G3 task
+**Question:** Rich WYSIWYG editor vs textarea + preview?
+**Answer:** Textarea + markdown preview tab. WYSIWYG는 Phase 3+.
+**Rationale:** MVP 속도 우선. react-markdown 이미 깔려있음.
+**Applies:** G3.
+
+### Q-050: Pay-to-apply for creator proposals
+
+**Asked context:** SPEC §2 Creator journey
+**Question:** Creator가 proposal 제출 시 fee 지불?
+**Answer:** NO. Free submission.
+**Rationale:** Creator acquisition이 먼저. 향후 premium creator tier에서 "priority proposal" 유료화 가능 (Phase 2.9+).
+**Applies:** G4.
+
+### Q-051: Multi-winner challenge → portfolio auto-add
+
+**Asked context:** SPEC §2 Journey C
+**Question:** Challenge 우승작을 creator portfolio에 자동 추가?
+**Answer:** NO. 자동 candidate proposal만, creator 본인이 curate.
+**Rationale:** Portfolio는 creator의 editorial statement. 자동 추가는 invasion.
+**Applies:** G7.
+
+### Q-052: Client can request specific creator
+
+**Asked context:** SPEC §3 projects.visibility
+**Question:** Client가 특정 creator만 consider할 수 있는 invite_only 모드 제공?
+**Answer:** YES. `visibility = 'invite_only'` + `project_invitations` (G4 또는 FU-2.7-13). MVP는 admin 수동 process: client 요청 → admin이 invite_only project 생성 + 지정 creator에게 invitation notification.
+**Rationale:** 이미 관계 있는 creator와 계속 작업하고 싶은 client 많음. 엔터 업계 통상적.
+**Applies:** G3 (visibility 선택) + G4 (admin invite flow).
+
+### Q-053: Contract PDF legal validity
+
+**Asked context:** SPEC §6 Payment strategy
+**Question:** 전자서명 PDF가 MVP 법적 validity 충분?
+**Answer:** YES for MVP (1-1억원 미만 거래). "전자서명 + IP/timestamp 기록 보관"은 전자문서법상 적법. 공인전자문서 upgrade는 FU-2.7-11 (매출 규모 확대 시).
+**Rationale:** MVP 단계 법률 리스크 관리 가능 수준.
+**Applies:** G5.
+
+### Q-054: Multilingual (en + ko)
+
+**Asked context:** REFERENCES §6
+**Question:** Phase 2.7 en 지원?
+**Answer:** ko 우선. en은 stub 유지 (기존 Phase 2.5 패턴). en 본격 재도입은 해외 client 대비 Phase 2.9+.
+**Rationale:** 타겟 시장 (JYP, YG, 하이브 등) 전부 한국. en 품질 관리 overhead > 가치.
+**Applies:** 전체 phase.
+
+### Q-055: Refund policy
+
+**Asked context:** REFERENCES §6
+**Question:** Refund/cancellation 구조?
+**Answer:** `projects.state = 'cancelled'` + `project_contracts.state = 'cancelled'` + admin 중재. 정식 refund process는 Phase 2.8 (escrow 연동 시).
+**Rationale:** MVP 거래 적어 case-by-case 수동 처리 가능.
+**Applies:** G1 state machine triggers.
+
+### Q-056: Brokerage rate default
+
+**Asked context:** SPEC §6 project_contracts.brokerage_rate
+**Question:** Default 수수료율?
+**Answer:** 15%. Admin이 per-contract 조정 가능 (0-50% range).
+**Rationale:** 업계 통상 15-20% (agent + vendor 수수료 합). 경쟁력 + 수익 밸런스.
+**Applies:** G5 contract creation.
+
+### Q-057: Portfolio_publication_allowed default
+
+**Asked context:** IMPLEMENTATION §1 Section 6 project_contracts
+**Question:** Contract 체결 시 creator가 결과물을 portfolio에 공개 허용 default?
+**Answer:** TRUE (default 허용). Client가 NDA 필요 시 명시적으로 FALSE 설정.
+**Rationale:** Creator brand 성장에 portfolio 중요. 대부분 client는 홍보 효과로 OK.
+**Applies:** G5 contract terms.
+
+### Q-058: Milestone 자동 생성 vs admin 수동
+
+**Asked context:** IMPLEMENTATION §5 G6
+**Question:** Milestone은 contract active 시 자동 생성? 
+**Answer:** NO auto. Admin이 contract active 후 `/app/admin/commissions/[id]/match` surface에서 수동 생성. 권장 template: 3 milestones (concept approval / WIP review / final delivery).
+**Rationale:** 프로젝트별 milestone 다양. 자동화는 Phase 3+ AI 보조.
+**Applies:** G5/G6.
+
+### Q-059: R2 bucket separation project vs challenge
+
+**Asked context:** SPEC §3 Storage buckets
+**Question:** Project files를 기존 `yagi-challenge-submissions` bucket에 넣을까 새 bucket?
+**Answer:** 새 bucket `yagi-project-files`. 라이프사이클/CORS/권한 분리.
+**Rationale:** Challenge는 24h tmp lifecycle, project는 영구 보관. 혼용 시 정책 충돌.
+**Applies:** G1 (env 설정) + G6 (upload wiring).
+
+### Q-060: Font licensing MVP strategy
+
+**Asked context:** REFERENCES §4
+**Question:** Migra 구매 vs Playfair Display 무료?
+**Answer:** Playfair Display (무료, Google Fonts). Post-MVP Migra upgrade는 FU-2.7-10.
+**Rationale:** MVP 비용 최소화. 폰트 교체는 token level 한 줄 변경.
+**Applies:** G8-E.
+
+### Q-061: GSAP ScrollTrigger vs Framer Motion
+
+**Asked context:** IMPLEMENTATION §5 G8-F
+**Question:** Scroll motion library?
+**Answer:** Framer Motion (이미 프로젝트에 있음 가능성 + react 친화). GSAP는 추가 dep + 라이선스 검토 부담.
+**Rationale:** Webflow 같은 scroll 연출은 Framer Motion `useScroll` + `useTransform`으로 대부분 가능. GSAP은 Phase 2.8+ 필요시.
+**Applies:** G8-A landing + G8-B commission.
+
+### Q-062: Client role이 /app/discover 접근?
+
+**Asked context:** Route structure
+**Question:** Client가 creator discover feed 볼 수 있어야?
+**Answer:** NO. `/app/discover`는 creator/studio 전용. Client는 자기 project의 proposals만 본다. Discover 공개 시 client가 creator를 outside-of-platform contact 유도 가능.
+**Rationale:** Platform integrity 보호. Creator DM spam 방지.
+**Applies:** G4 middleware.
+
+### Q-063: Signup role 선택 UI 방식
+
+**Asked context:** G2 task 1
+**Question:** 4 roles (creator/studio/observer/client) 선택 UI?
+**Answer:** 2-step. Step 1: "당신은 무엇을 하러 왔나요?" - [의뢰하러 왔어요] (client) / [작품 만들러 왔어요] (creator/studio/observer). Step 2는 Step 1 선택에 따라 분기.
+**Rationale:** Client와 Creator는 서비스 본질 다름. 한 페이지에 4개 role 나열은 client 혼란 + creator/studio/observer는 기존 flow 유지.
+**Applies:** G2.
+
+### Q-064: Client dashboard first view
+
+**Asked context:** UX
+**Question:** Client가 `/app` 진입 시 첫 화면?
+**Answer:** `/app/commission` (project list, 비어 있으면 "첫 프로젝트 시작하기" CTA). Phase 2.6 sidebar는 client용으로 "작업" group에 의뢰 관리 항목 추가.
+**Rationale:** Client의 primary use case = 프로젝트 관리.
+**Applies:** G2 middleware + Phase 2.6 sidebar mapping 확장 (client role).
+
+### Q-065: Admin 의뢰 review 기간
+
+**Asked context:** SPEC G3
+**Question:** Admin 심사 SLA?
+**Answer:** "1-2 영업일" 공표 (SPEC에 명시). Client에게 submit 후 expected timeframe 표시.
+**Rationale:** Manual review 감당 가능 + client expectation management.
+**Applies:** G3 submission confirm UI.
+
+### Q-066: Proposal submit 후 edit 가능?
+
+**Asked context:** SPEC journey B
+**Question:** Creator가 submitted proposal 수정?
+**Answer:** NO edit, YES withdraw + resubmit. Status transition: submitted → withdrawn (creator self) → new submission (해당 creator 이 project에 UNIQUE constraint 있지만 withdrawn proposal은 제외 로직 허용).
+**Rationale:** Audit trail 명확성 + client 혼란 방지.
+**Applies:** G4 state machine + UNIQUE exclusion.
+
+### Q-067: Contract terms_md template
+
+**Asked context:** G5
+**Question:** 기본 계약서 template 출처?
+**Answer:** YAGI admin이 공증 법무사와 협의한 표준 템플릿 사용. Web Claude가 초안 Korean 작성 가능 (standard VFX 의뢰 계약 참고). Admin이 공식 template 준비될 때까지 draft template 사용.
+**Rationale:** 법무 검토는 post-MVP 우선순위. MVP는 "선의의 가이드라인 + 양자 합의" 수준.
+**Applies:** G5. Web Claude가 `docs/contract-template-draft.md` 작성 지원 가능 (post-G5).
+
+### Q-068: 3-way messaging (client-creator-admin)
+
+**Asked context:** G6
+**Question:** Admin이 모든 message 볼 수 있음? Privacy 이슈?
+**Answer:** YES admin sees all. Admin은 중재자 역할. Message thread에 "⚡ Admin can see this message" 노출로 transparency.
+**Rationale:** Platform integrity + dispute 사전 방지. Client/Creator 양측 동의 (ToS).
+**Applies:** G6 UI + ToS 명시.
+
+### Q-069: Deliverable file format 제한
+
+**Asked context:** SPEC §3 project_deliverables
+**Question:** File format 제한?
+**Answer:** WIP: mp4/mov/jpg/png/pdf (500MB max). Final: 동일 + zip (2GB max, final은 source files 포함 가능). 자동 virus scan은 Phase 2.8+.
+**Rationale:** 업계 standard 커버.
+**Applies:** G6 upload validation.
+
+### Q-070: Ranking tier upgrade 규칙
+
+**Asked context:** SPEC §7 G7
+**Question:** ranking_tier 자동 승급 구체 규칙?
+**Answer:** Bronze default (creator), Silver default (studio). 
+- Challenge 1회 우승 → 최소 Silver (creator). 
+- Same category 2회 우승 → Gold.
+- Premium client와 2회+ contract completed → Platinum.
+Admin override 항상 가능.
+**Rationale:** Merit-based + 가시적 성장 경로.
+**Applies:** G7 trigger + admin panel.
+
+### Q-071: Discover feed filter 우선순위
+
+**Asked context:** G4 task 1
+**Question:** Default sort order?
+**Answer:** 1. 내 specialty 매치 스코어, 2. ranking_tier (platinum first), 3. recency. Creator는 본인 상태 `accepting`인 것만 제안 권장 (app hint).
+**Rationale:** Relevance + incentive for quality creators.
+**Applies:** G4 query default.
+
+### Q-072: pg_cron 신규 job 추가 방법
+
+**Asked context:** G6 milestones-deadline-reminder
+**Question:** Phase 2.5 G7 pattern 그대로?
+**Answer:** YES. `supabase/migrations/{ts}_phase_2_7_milestones_cron.sql` 독립 파일. G1 migration과 분리 (Phase 2.5 ULTRA-CHAIN D pattern).
+**Applies:** G6.
+
+### Q-073: Challenge role과 Commission role 통합 사이드바
+
+**Asked context:** Phase 2.6 sidebar mapping 확장
+**Question:** "의뢰" 새 group 추가 vs 기존 "작업" group에 편입?
+**Answer:** 기존 "작업" group에 편입 (client role은 `작업 ▾` 하위에 `의뢰 작성` + `내 의뢰` 만 표시; creator/studio는 `Discover` + `내 제안` 추가). 4 group 상한 유지.
+**Rationale:** ADR-010 기본 4 group 설계 존중. Client UI는 자연스럽게 "작업" = "의뢰 작업".
+**Applies:** G2 + Phase 2.6 ADR-010 수정 (minor).
+
+### Q-074: Observer role의 Phase 2.7 권한
+
+**Asked context:** Observer가 commission surface 접근?
+**Question:** Observer가 `/app/discover` 또는 `/app/commission/*` 접근?
+**Answer:** Observer는 `/app/discover` read-only 가능 (단, proposal 제출 불가), `/app/commission/*`는 NO (role upgrade prompt). 
+**Rationale:** Observer가 의뢰 생태계 관찰할 수 있게 해야 role upgrade 동기 부여. 직접 참여는 creator/studio upgrade 후.
+**Applies:** G4 middleware.
+
+### Q-075: Email notification digest frequency
+
+**Asked context:** Phase 2.7의 12 new notification kinds
+**Question:** 모두 real-time email?
+**Answer:** High severity만 real-time, medium은 digest (기존 Phase 1.8 패턴). `new_message_in_project` 특히 spammy 가능성 → 5분 debounce per project.
+**Rationale:** Email fatigue 방지.
+**Applies:** G4/G6 notification wiring.
+
+### Q-076: Portfolio item 최대 개수
+
+**Asked context:** SPEC §2 Surface C
+**Question:** 12 items 확정?
+**Answer:** YES 12 max. 이유: 12 = 3 columns × 4 rows grid, desktop 적정. More items는 "See all" modal 또는 Phase 3+.
+**Applies:** G7.
+
+### Q-077: Landing page challenge preview 몇 개
+
+**Asked context:** G8-A
+**Question:** Landing에 challenge 노출 몇 개?
+**Answer:** 열린 챌린지 중 3개 carousel (desktop) / 1개 대표 (mobile). 0개일 때 최근 종료 챌린지 우승작 showcase.
+**Rationale:** Active signal 전달, 너무 많으면 landing 주목 분산.
+**Applies:** G8-A.
+
+### Q-078: Commission sales page에 실제 사례 표시
+
+**Asked context:** G8-B case studies section
+**Question:** 실제 case study 없는 상황에서 section 처리?
+**Answer:** 3-4개 placeholder cinematic 이미지 + 짧은 카피 ("AI로 재탄생한 K-POP 뮤직비디오", 등). Post-launch 실제 case 교체. Unsplash 고화질 cinematic 샘플 활용 (license 체크 — 대부분 OK, 최종 체크 야기).
+**Rationale:** 빈 섹션은 어색. 실제 case 수집까지 약 1-2달.
+**Applies:** G8-B.
+
+### Q-079: App shell 의뢰 entry point
+
+**Asked context:** UX
+**Question:** App shell 내에서 "의뢰하기" 버튼 어디?
+**Answer:** Client는 sidebar "작업 > 의뢰 작성" + global CTA 가능. Creator/Studio는 `/app/discover` 사이드바 메뉴로 의뢰 탐색.
+**Rationale:** Role별 primary action 명확화.
+**Applies:** G2 middleware + sidebar mapping.
+
+### Q-080: Phase 2.7 SHIPPED 후 Phase 2.6 FU 정리?
+
+**Asked context:** Phase 2.6에 9개 FU carryforward 있음
+**Question:** Phase 2.7 G9 closeout에서 Phase 2.6 FU 도 포함 처리?
+**Answer:** NO. Phase 2.6 FU는 Phase 2.7 범위 밖. G9 closeout에서 FU-2.7 전용 목록만 등록. Phase 2.6 FU는 별도 sweep phase (Phase 2.7.1 또는 Phase 2.8 security sweep 예정).
+**Rationale:** Scope creep 방지.
+**Applies:** G9 closeout.
+

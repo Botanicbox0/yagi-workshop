@@ -17,6 +17,7 @@ const ROLE_LABEL_KO: Record<ProfileRole, string> = {
   creator: "AI 창작자",
   studio: "AI 스튜디오",
   observer: "관람자",
+  client: "의뢰 고객",
 };
 
 export function roleConfirmationSubject(ctx: RoleConfirmationContext): string {

@@ -231,7 +231,9 @@
     "challenges": "챌린지",
     "challenges_all": "전체",
     "challenges_new": "새 챌린지",
-    "challenges_open": "공개중"
+    "challenges_open": "공개중",
+    "commission": "내 의뢰",
+    "admin_commissions": "의뢰 관리"
   },
   "dashboard": {
     "empty_title": "아직 진행 중인 프로젝트가 없습니다",

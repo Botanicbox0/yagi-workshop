@@ -17,6 +17,8 @@ import {
   Bell,
   Trophy,
   Presentation,
+  Briefcase,
+  Mailbox,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -28,14 +30,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { SidebarGroupLabel } from "./sidebar-group-label";
-import type { WorkspaceRole } from "@/lib/app/context";
+import type { ProfileRole, WorkspaceRole } from "@/lib/app/context";
 
 type NavItem = {
   key: string;
   href?: string;
   icon?: LucideIcon;
   disabled?: boolean;
+  /** Visible if user has any of these workspace roles. Combined with `profileRoles`
+   *  via OR — passing either gate makes the item visible. If both are unset, item
+   *  is visible to everyone. */
   roles?: WorkspaceRole[];
+  /** Visible if user's `profile.role` matches one of these. See ADR-009 for why
+   *  profile-role and workspace-role are split. */
+  profileRoles?: ProfileRole[];
   children?: NavItem[];
 };
 
@@ -48,6 +56,16 @@ const GROUPS: NavGroup[] = [
   {
     key: "work",
     items: [
+      {
+        // disabled until G2 ships /app/commission. Schema gate is live (G1)
+        // but the route + intake form land at G2; a clickable link to a 404
+        // would be a UX regression. Codex K-05 Finding 3 (MED-B).
+        key: "commission",
+        href: "/app/commission",
+        icon: Briefcase,
+        profileRoles: ["client"],
+        disabled: true,
+      },
       {
         key: "projects",
         href: "/app/projects",
@@ -122,13 +140,35 @@ const GROUPS: NavGroup[] = [
     items: [
       { key: "settings", href: "/app/settings", icon: Settings },
       { key: "admin", href: "/app/admin", icon: ShieldCheck, roles: ["yagi_admin"] },
+      {
+        // disabled until G3 ships /app/admin/commissions. Sidebar entry now,
+        // route in G3 (admin queue + response form). Codex K-05 Finding 3.
+        key: "admin_commissions",
+        href: "/app/admin/commissions",
+        icon: Mailbox,
+        roles: ["yagi_admin"],
+        disabled: true,
+      },
     ],
   },
 ];
 
-function isRoleVisible(item: NavItem, roles: WorkspaceRole[]): boolean {
-  if (!item.roles || item.roles.length === 0) return true;
-  return item.roles.some((r) => roles.includes(r));
+function isRoleVisible(
+  item: NavItem,
+  roles: WorkspaceRole[],
+  profileRole: ProfileRole | null,
+): boolean {
+  const wsGated = item.roles && item.roles.length > 0;
+  const profileGated = item.profileRoles && item.profileRoles.length > 0;
+  // Ungated → visible.
+  if (!wsGated && !profileGated) return true;
+  // Either gate match makes the item visible (OR semantics).
+  const wsMatch = wsGated ? item.roles!.some((r) => roles.includes(r)) : false;
+  const profileMatch =
+    profileGated && profileRole !== null
+      ? item.profileRoles!.includes(profileRole)
+      : false;
+  return wsMatch || profileMatch;
 }
 
 /**
@@ -137,11 +177,15 @@ function isRoleVisible(item: NavItem, roles: WorkspaceRole[]): boolean {
  * - Parent (has children): filter children recursively. If 0 → null. If 1 → collapse
  *   into the single child so the parent wrapper disappears (IMPLEMENTATION §1 rule).
  */
-function filterItem(item: NavItem, roles: WorkspaceRole[]): NavItem | null {
-  if (!isRoleVisible(item, roles)) return null;
+function filterItem(
+  item: NavItem,
+  roles: WorkspaceRole[],
+  profileRole: ProfileRole | null,
+): NavItem | null {
+  if (!isRoleVisible(item, roles, profileRole)) return null;
   if (!item.children) return item;
   const kept = item.children
-    .map((c) => filterItem(c, roles))
+    .map((c) => filterItem(c, roles, profileRole))
     .filter((c): c is NavItem => c !== null);
   if (kept.length === 0) return null;
   if (kept.length === 1) return kept[0];
@@ -199,9 +243,11 @@ function computeActiveKey(
 
 export function SidebarNav({
   roles,
+  profileRole,
   isYagiInternalMember,
 }: {
   roles: WorkspaceRole[];
+  profileRole: ProfileRole | null;
   isYagiInternalMember: boolean;
 }) {
   const t = useTranslations("nav");
@@ -226,7 +272,7 @@ export function SidebarNav({
   const visibleGroups = runtimeGroups
     .map((g) => {
       const items = g.items
-        .map((it) => filterItem(it, roles))
+        .map((it) => filterItem(it, roles, profileRole))
         .filter((it): it is NavItem => it !== null);
       return { ...g, items };
     })

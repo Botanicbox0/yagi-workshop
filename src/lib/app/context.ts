@@ -11,7 +11,8 @@ export type WorkspaceRole =
 // Phase 2.5 challenge persona system — distinct namespace.
 // NEVER compare against a bare "creator" literal without prefixing with
 // `profile.role ===` — see ADR-009 naming rule.
-export type ProfileRole = "creator" | "studio" | "observer";
+// Phase 2.7 added "client" for the commission-intake persona (ADR-011).
+export type ProfileRole = "creator" | "studio" | "observer" | "client";
 
 export type AppContext = {
   userId: string;

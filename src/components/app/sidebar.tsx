@@ -42,6 +42,7 @@ function SidebarBody({
       <div className="flex-1 overflow-y-auto py-3">
         <SidebarNav
           roles={context.workspaceRoles}
+          profileRole={context.profile.role}
           isYagiInternalMember={internalMember}
         />
       </div>

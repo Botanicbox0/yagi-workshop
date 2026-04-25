@@ -224,6 +224,7 @@ export type Database = {
           open_at: string | null
           reminder_sent_at: string | null
           slug: string
+          sponsor_client_id: string | null
           state: string
           submission_requirements: Json
           title: string
@@ -241,6 +242,7 @@ export type Database = {
           open_at?: string | null
           reminder_sent_at?: string | null
           slug: string
+          sponsor_client_id?: string | null
           state?: string
           submission_requirements?: Json
           title: string
@@ -258,12 +260,143 @@ export type Database = {
           open_at?: string | null
           reminder_sent_at?: string | null
           slug?: string
+          sponsor_client_id?: string | null
           state?: string
           submission_requirements?: Json
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "challenges_sponsor_client_id_fkey"
+            columns: ["sponsor_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          company_name: string
+          company_type: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          instagram_handle: string | null
+          updated_at: string
+          verified_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          company_name: string
+          company_type: string
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          id: string
+          instagram_handle?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          company_name?: string
+          company_type?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          instagram_handle?: string | null
+          updated_at?: string
+          verified_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_intakes: {
+        Row: {
+          admin_responded_at: string | null
+          admin_responded_by: string | null
+          admin_response_md: string | null
+          brief_md: string
+          budget_range: string
+          category: string
+          client_id: string
+          created_at: string
+          deadline_preference: string | null
+          id: string
+          reference_uploads: Json
+          reference_urls: Json
+          state: string
+          timestamp_notes: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_responded_at?: string | null
+          admin_responded_by?: string | null
+          admin_response_md?: string | null
+          brief_md: string
+          budget_range: string
+          category: string
+          client_id: string
+          created_at?: string
+          deadline_preference?: string | null
+          id?: string
+          reference_uploads?: Json
+          reference_urls?: Json
+          state?: string
+          timestamp_notes?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_responded_at?: string | null
+          admin_responded_by?: string | null
+          admin_response_md?: string | null
+          brief_md?: string
+          budget_range?: string
+          category?: string
+          client_id?: string
+          created_at?: string
+          deadline_preference?: string | null
+          id?: string
+          reference_uploads?: Json
+          reference_urls?: Json
+          state?: string
+          timestamp_notes?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_intakes_admin_responded_by_fkey"
+            columns: ["admin_responded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_intakes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creators: {
         Row: {
@@ -2053,6 +2186,13 @@ export type Database = {
           p_workspace_id: string
         }
         Returns: string
+      }
+      get_submission_vote_counts: {
+        Args: { p_challenge_id: string }
+        Returns: {
+          submission_id: string
+          vote_count: number
+        }[]
       }
       increment_showcase_view: { Args: { sid: string }; Returns: number }
       is_handle_available: { Args: { candidate: string }; Returns: boolean }
