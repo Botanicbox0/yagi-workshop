@@ -18,7 +18,9 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import * as cheerio from "cheerio";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import type { Json } from "@/lib/supabase/database.types";
 import {
   createBriefAssetGetUrl,
@@ -543,4 +545,260 @@ export async function getAssetUrl(
       filename: asset.original_name,
     },
   };
+}
+
+// -----------------------------------------------------------------------------
+// 8. fetchEmbed — server-side oEmbed proxy with embed_cache lookup
+// -----------------------------------------------------------------------------
+// Per SPEC §4.B4: YouTube + Vimeo via official oEmbed JSON endpoints,
+// generic OG via cheerio HTML parse. No `html` field is stored — the
+// client renders a sandboxed iframe itself per provider whitelist (so a
+// poisoned cache cannot inject scripts). Cache TTL 7 days; v1 serves
+// stale until the Phase 2.8.1 background refresh job exists.
+//
+// RLS posture: SELECT is open to authenticated; INSERT/UPDATE/DELETE
+// have no policy under FORCE RLS, so cache writes use the service-role
+// client (createSupabaseService) which bypasses RLS by design.
+
+const FetchEmbedInput = z.object({
+  url: z
+    .string()
+    .url()
+    .max(2048)
+    .refine((u) => /^https?:\/\//i.test(u), {
+      message: "url must be http(s)",
+    }),
+});
+
+const EMBED_FETCH_TIMEOUT_MS = 5000;
+const EMBED_USER_AGENT =
+  "yagi-workshop-embed-proxy/1.0 (+https://studio.yagiworkshop.xyz)";
+
+const YOUTUBE_VIDEO_RE =
+  /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/i;
+const VIMEO_VIDEO_RE = /vimeo\.com\/(?:video\/)?(\d+)/i;
+
+type EmbedProvider = "youtube" | "vimeo" | "generic";
+
+export interface EmbedPayload {
+  url: string;
+  provider: EmbedProvider;
+  title: string | null;
+  thumbnail_url: string | null;
+  width: number | null;
+  height: number | null;
+  author_name: string | null;
+}
+
+function detectProvider(url: string): EmbedProvider {
+  if (YOUTUBE_VIDEO_RE.test(url)) return "youtube";
+  if (VIMEO_VIDEO_RE.test(url)) return "vimeo";
+  return "generic";
+}
+
+interface OEmbedJson {
+  title?: string;
+  thumbnail_url?: string;
+  width?: number;
+  height?: number;
+  author_name?: string;
+}
+
+async function fetchOEmbedJson(endpoint: string): Promise<EmbedPayload | null> {
+  let resp: Response;
+  try {
+    resp = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "User-Agent": EMBED_USER_AGENT,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(EMBED_FETCH_TIMEOUT_MS),
+    });
+  } catch {
+    return null;
+  }
+  if (!resp.ok) return null;
+  let body: OEmbedJson;
+  try {
+    body = (await resp.json()) as OEmbedJson;
+  } catch {
+    return null;
+  }
+  return {
+    url: endpoint,
+    provider: "youtube", // overridden by caller
+    title: body.title ?? null,
+    thumbnail_url: body.thumbnail_url ?? null,
+    width: typeof body.width === "number" ? body.width : null,
+    height: typeof body.height === "number" ? body.height : null,
+    author_name: body.author_name ?? null,
+  };
+}
+
+async function fetchOgFallback(url: string): Promise<EmbedPayload | null> {
+  let resp: Response;
+  try {
+    resp = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": EMBED_USER_AGENT,
+        Accept: "text/html,application/xhtml+xml",
+      },
+      signal: AbortSignal.timeout(EMBED_FETCH_TIMEOUT_MS),
+      redirect: "follow",
+    });
+  } catch {
+    return null;
+  }
+  if (!resp.ok) return null;
+  let html: string;
+  try {
+    html = await resp.text();
+  } catch {
+    return null;
+  }
+  // Defensive cap on how much HTML we parse — pages can be huge.
+  if (html.length > 1024 * 1024) html = html.slice(0, 1024 * 1024);
+
+  const $ = cheerio.load(html);
+  const title =
+    $('meta[property="og:title"]').attr("content") ||
+    $('meta[name="twitter:title"]').attr("content") ||
+    $("title").first().text() ||
+    null;
+  const thumbnail_url =
+    $('meta[property="og:image"]').attr("content") ||
+    $('meta[name="twitter:image"]').attr("content") ||
+    null;
+  const author_name =
+    $('meta[property="article:author"]').attr("content") ||
+    $('meta[name="author"]').attr("content") ||
+    null;
+
+  if (!title && !thumbnail_url) return null;
+
+  return {
+    url,
+    provider: "generic",
+    title,
+    thumbnail_url: thumbnail_url ? absolutize(thumbnail_url, url) : null,
+    width: null,
+    height: null,
+    author_name,
+  };
+}
+
+function absolutize(maybeRelative: string, baseUrl: string): string {
+  try {
+    return new URL(maybeRelative, baseUrl).toString();
+  } catch {
+    return maybeRelative;
+  }
+}
+
+async function resolveEmbed(url: string): Promise<EmbedPayload | null> {
+  const provider = detectProvider(url);
+  if (provider === "youtube") {
+    const ep = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    const r = await fetchOEmbedJson(ep);
+    if (r) return { ...r, url, provider: "youtube" };
+    // YouTube oEmbed failed (rate limit or removed video). Fall through
+    // to OG so the user still sees a card.
+  }
+  if (provider === "vimeo") {
+    const ep = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
+    const r = await fetchOEmbedJson(ep);
+    if (r) return { ...r, url, provider: "vimeo" };
+  }
+  return fetchOgFallback(url);
+}
+
+export async function fetchEmbed(
+  input: unknown
+): Promise<BriefActionResult<EmbedPayload>> {
+  const parsed = FetchEmbedInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: "validation", issues: parsed.error.issues };
+  }
+
+  // Auth gate: only authenticated users can hit the embed proxy
+  // (otherwise this becomes an SSRF surface for anonymous attackers).
+  const { user } = await requireUser();
+  if (!user) return { error: "unauthenticated" };
+
+  const url = parsed.data.url;
+
+  // Cache lookup via the SSR client (RLS read-open for authenticated).
+  const supabase = await createSupabaseServer();
+  const { data: cached } = await supabase
+    .from("embed_cache")
+    .select("provider, response_json, expires_at")
+    .eq("url", url)
+    .maybeSingle();
+
+  if (cached && new Date(cached.expires_at) > new Date()) {
+    const j = cached.response_json as Record<string, unknown> | null;
+    return {
+      ok: true,
+      data: {
+        url,
+        provider: cached.provider as EmbedProvider,
+        title: typeof j?.title === "string" ? j.title : null,
+        thumbnail_url:
+          typeof j?.thumbnail_url === "string" ? j.thumbnail_url : null,
+        width: typeof j?.width === "number" ? j.width : null,
+        height: typeof j?.height === "number" ? j.height : null,
+        author_name:
+          typeof j?.author_name === "string" ? j.author_name : null,
+      },
+    };
+  }
+
+  const fetched = await resolveEmbed(url);
+  if (!fetched) {
+    // Total miss — return a minimal payload so the editor can still show
+    // a hostname-only card instead of erroring out.
+    const hostname = (() => {
+      try {
+        return new URL(url).hostname;
+      } catch {
+        return null;
+      }
+    })();
+    return {
+      ok: true,
+      data: {
+        url,
+        provider: "generic",
+        title: hostname,
+        thumbnail_url: null,
+        width: null,
+        height: null,
+        author_name: null,
+      },
+    };
+  }
+
+  // Persist via service-role (embed_cache has no INSERT policy under FORCE RLS).
+  const service = createSupabaseService();
+  const responseJson: Json = {
+    title: fetched.title,
+    thumbnail_url: fetched.thumbnail_url,
+    width: fetched.width,
+    height: fetched.height,
+    author_name: fetched.author_name,
+  };
+  await service.from("embed_cache").upsert(
+    {
+      url,
+      provider: fetched.provider,
+      response_json: responseJson,
+      fetched_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    { onConflict: "url" }
+  );
+
+  return { ok: true, data: fetched };
 }

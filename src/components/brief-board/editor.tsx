@@ -29,6 +29,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
+  fetchEmbed,
   saveBrief,
   uploadAsset,
   type BriefActionResult,
@@ -37,7 +38,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ImageBlock } from "./blocks/image-block";
 import { FileBlock } from "./blocks/file-block";
+import { EmbedBlock } from "./blocks/embed-block";
 import { resizeImageIfNeeded } from "@/lib/brief-board/resize-image";
+
+const EMBED_URL_RE = /^\s*(https?:\/\/\S+)\s*$/i;
 
 // Per SPEC §4.B2 / §4.B3: image cap 50MB, file cap 200MB. The SQL CHECK
 // constraint enforces 200MB at the byte_size column; the image cap is
@@ -107,6 +111,7 @@ export function BriefBoardEditor({
       }),
       ImageBlock,
       FileBlock,
+      EmbedBlock,
     ],
     content: initialContent ?? EMPTY_DOC,
     editable,
@@ -132,6 +137,19 @@ export function BriefBoardEditor({
         event.preventDefault();
         const files = Array.from(dt.files);
         void handleFilesUpload(files);
+        return true;
+      },
+      // Paste: when the clipboard payload is a single URL on its own
+      // line, intercept and turn it into an embed block (placeholder
+      // first, then swap once fetchEmbed resolves). Multi-line and rich
+      // clipboard pastes fall through to TipTap's default handling.
+      handlePaste(_view, event) {
+        if (!editable) return false;
+        const text = event.clipboardData?.getData("text/plain") ?? "";
+        const m = text.match(EMBED_URL_RE);
+        if (!m) return false;
+        event.preventDefault();
+        void handleEmbedPaste(m[1]);
         return true;
       },
     },
@@ -246,6 +264,64 @@ export function BriefBoardEditor({
       }
     };
   }, []);
+
+  // Paste handler — single-URL clipboard payload becomes an embed.
+  // We insert a generic placeholder immediately so the user sees
+  // feedback, then resolve via fetchEmbed and replace its attrs.
+  const handleEmbedPaste = useCallback(
+    async (url: string) => {
+      if (!editor) return;
+      // Insert a placeholder generic embed first.
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "embed",
+          attrs: {
+            url,
+            provider: "generic",
+            title: null,
+            thumbnail_url: null,
+            fetched_at: new Date().toISOString(),
+          },
+        })
+        .run();
+
+      const result = await fetchEmbed({ url });
+      if (!("ok" in result) || !result.ok) {
+        toast.error(t("block_embed_failed"));
+        return;
+      }
+
+      // Replace the placeholder by walking the doc for the most recent
+      // embed node with this URL and `provider='generic'` AND no title.
+      // Walking the doc is O(n) but n is small (single brief).
+      const doc = editor.state.doc;
+      let pos: number | null = null;
+      doc.descendants((node, p) => {
+        if (
+          node.type.name === "embed" &&
+          node.attrs.url === url &&
+          node.attrs.provider === "generic" &&
+          !node.attrs.title
+        ) {
+          pos = p;
+          // Don't break early — last match wins (most recent insertion).
+        }
+        return true;
+      });
+      if (pos === null) return;
+      const tr = editor.state.tr.setNodeMarkup(pos, undefined, {
+        url: result.data.url,
+        provider: result.data.provider,
+        title: result.data.title,
+        thumbnail_url: result.data.thumbnail_url,
+        fetched_at: new Date().toISOString(),
+      });
+      editor.view.dispatch(tr);
+    },
+    [editor, t]
+  );
 
   // Drop handler pipeline: validate → resize (images) → uploadAsset →
   // PUT to R2 → insert node. Each file is processed serially to avoid
