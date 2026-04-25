@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ChallengeState, SubmissionRequirements } from "@/lib/challenges/types";
 import { getChallengeBySlug } from "@/lib/challenges/queries";
+import { getSponsorCompanyName } from "@/lib/commission/queries";
 import { computeUrgencyTier } from "@/lib/challenges/urgency";
 import { statusPillClass } from "@/lib/ui/status-pill";
 import { statusLabel } from "@/lib/ui/status-labels";
@@ -65,6 +66,10 @@ export default async function ChallengeDetailPage({ params }: Props) {
     daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
 
+  const sponsorName = challenge.sponsor_client_id
+    ? await getSponsorCompanyName(challenge.sponsor_client_id)
+    : null;
+
   return (
     <div className="max-w-3xl mx-auto px-6 md:px-8 py-12 space-y-10">
       {/* [1] Hero */}
@@ -111,6 +116,12 @@ export default async function ChallengeDetailPage({ params }: Props) {
           {state === "open" && daysRemaining !== null && (
             <span className="text-sm text-muted-foreground">
               마감까지 {daysRemaining}일
+            </span>
+          )}
+          {sponsorName && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="opacity-60">Sponsored by</span>
+              <span className="font-medium text-foreground">{sponsorName}</span>
             </span>
           )}
         </div>

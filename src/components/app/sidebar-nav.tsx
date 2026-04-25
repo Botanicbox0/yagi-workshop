@@ -140,13 +140,11 @@ const GROUPS: NavGroup[] = [
       { key: "settings", href: "/app/settings", icon: Settings },
       { key: "admin", href: "/app/admin", icon: ShieldCheck, roles: ["yagi_admin"] },
       {
-        // disabled until G3 ships /app/admin/commissions. Sidebar entry now,
-        // route in G3 (admin queue + response form). Codex K-05 Finding 3.
+        // G3 lands /app/admin/commissions queue + [id] response form.
         key: "admin_commissions",
         href: "/app/admin/commissions",
         icon: Mailbox,
         roles: ["yagi_admin"],
-        disabled: true,
       },
     ],
   },

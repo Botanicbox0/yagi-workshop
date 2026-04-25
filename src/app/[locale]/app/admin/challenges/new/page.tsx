@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SubmissionRequirementsBuilder } from "@/components/admin/challenges/submission-requirements-builder";
 import { JudgingConfigBuilder } from "@/components/admin/challenges/judging-config-builder";
+import { ChallengeSponsorPicker } from "@/components/admin/challenges/sponsor-picker";
 import { createChallengeAction } from "@/app/[locale]/app/admin/challenges/actions";
 import type { SubmissionRequirements, JudgingConfig } from "@/lib/challenges/types";
 
@@ -35,6 +36,7 @@ export default function NewChallengePage() {
     DEFAULT_SUBMISSION_REQUIREMENTS,
   );
   const [judgingConfig, setJudgingConfig] = useState<JudgingConfig>(DEFAULT_JUDGING_CONFIG);
+  const [sponsorClientId, setSponsorClientId] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,6 +51,7 @@ export default function NewChallengePage() {
         announce_at: announceAt || undefined,
         submission_requirements: submissionRequirements,
         judging_config: judgingConfig,
+        sponsor_client_id: sponsorClientId,
       });
 
       if (!result.ok) {
@@ -156,6 +159,11 @@ export default function NewChallengePage() {
         <div className="rounded-lg border border-border p-4 space-y-2">
           <JudgingConfigBuilder value={judgingConfig} onChange={setJudgingConfig} />
         </div>
+
+        <ChallengeSponsorPicker
+          value={sponsorClientId}
+          onChange={setSponsorClientId}
+        />
 
         <div className="flex justify-end">
           <Button type="submit" size="pill" disabled={isPending}>

@@ -21,6 +21,10 @@ type CreateInput = {
   announce_at?: string;
   submission_requirements: SubmissionRequirements;
   judging_config: JudgingConfig;
+  // Phase 2.7: optional sponsor (B2B sponsored challenge). Must be a
+  // valid clients.id; FK ON DELETE SET NULL preserves the challenge if
+  // the client account is later removed.
+  sponsor_client_id?: string | null;
 };
 
 type UpdateInput = {
@@ -40,6 +44,21 @@ function revalidateChallenges(slug?: string) {
     revalidatePath(`/${locale}/app/admin/challenges`);
     if (slug) revalidatePath(`/${locale}/app/admin/challenges/${slug}/edit`);
   }
+}
+
+export async function listSponsorCandidatesAction(): Promise<
+  { ok: true; clients: { id: string; company_name: string }[] } | { ok: false; error: string }
+> {
+  const auth = await getAuthenticatedAdmin();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const { supabase } = auth;
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id, company_name")
+    .order("company_name", { ascending: true })
+    .limit(500);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, clients: data ?? [] };
 }
 
 async function getAuthenticatedAdmin() {
@@ -81,6 +100,7 @@ export async function createChallengeAction(
     announce_at: input.announce_at ?? null,
     submission_requirements: reqParse.data as unknown as Json,
     judging_config: judgeParse.data as unknown as Json,
+    sponsor_client_id: input.sponsor_client_id ?? null,
     created_by: user.id,
   });
 

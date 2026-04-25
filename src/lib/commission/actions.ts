@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import {
+  commissionAdminResponseSchema,
   commissionIntakeFormSchema,
+  type CommissionAdminResponseInput,
   type CommissionIntakeFormInput,
   type CommissionIntakeFormParsed,
 } from "./schemas";
@@ -71,6 +73,53 @@ export async function submitCommissionIntakeAction(
 
   revalidatePath("/app/commission");
   return { ok: true, id: inserted.id };
+}
+
+export async function respondToCommissionIntakeAction(
+  input: CommissionAdminResponseInput,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const parsed = commissionAdminResponseSchema.safeParse(input);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return {
+      ok: false,
+      error: `${issue.path.join(".") || "form"}:${issue.message}`,
+    };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "not_authenticated" };
+
+  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
+    uid: user.id,
+  });
+  if (!isAdmin) return { ok: false, error: "not_admin" };
+
+  // Atomic transition: only succeeds when the row is still in 'submitted'.
+  // The state-machine trigger (G1) also enforces submitted → admin_responded
+  // at the row level — this UPDATE filter prevents stomping a response
+  // that another admin posted concurrently.
+  const { error } = await supabase
+    .from("commission_intakes")
+    .update({
+      admin_response_md: parsed.data.response_md,
+      admin_responded_at: new Date().toISOString(),
+      admin_responded_by: user.id,
+      state: "admin_responded",
+    })
+    .eq("id", parsed.data.intake_id)
+    .eq("state", "submitted");
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/app/admin/commissions");
+  revalidatePath(`/app/admin/commissions/${parsed.data.intake_id}`);
+  revalidatePath("/app/commission");
+  revalidatePath(`/app/commission/${parsed.data.intake_id}`);
+  return { ok: true };
 }
 
 export async function archiveOwnIntakeAction(

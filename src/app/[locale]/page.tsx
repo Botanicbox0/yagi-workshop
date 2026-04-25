@@ -4,6 +4,7 @@ import { ApproachBlock } from "@/components/home/approach-block";
 import { SelectedWork } from "@/components/home/selected-work";
 import { JournalPreview } from "@/components/home/journal-preview";
 import { ContactBlock } from "@/components/home/contact-block";
+import { CommissionCtaBlock } from "@/components/home/commission-cta-block";
 import { SiteFooter } from "@/components/home/site-footer";
 import { WorkSection } from "@/components/marketing/work-section";
 
@@ -26,6 +27,7 @@ export default async function HomePage({ params }: Props) {
       <ApproachBlock />
       <SelectedWork locale={locale} />
       <WorkSection locale={locale} />
+      <CommissionCtaBlock locale={locale} />
       <JournalPreview locale={locale} />
       <ContactBlock />
       <SiteFooter locale={locale} pathname="/" />
