@@ -89,6 +89,17 @@ export const commissionIntakeFormSchema = z.object({
 export type CommissionIntakeFormInput = z.input<typeof commissionIntakeFormSchema>;
 export type CommissionIntakeFormParsed = z.output<typeof commissionIntakeFormSchema>;
 
+// Empty-string → null normalizer for the optional client fields.
+// The DB columns enforce CHECK (col IS NULL OR char_length(col) BETWEEN 1 AND ...),
+// so passing "" through Zod and into the INSERT would fail at the row
+// level and leave the user with a half-created profile (Codex K-05 Loop 2
+// Finding F1). This transform aligns Zod with the DB CHECK semantics.
+const emptyToNull = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((v) => (v === "" || v == null ? null : v));
+
 export const clientSignupSchema = z.object({
   // Auth email (Supabase auth.users.email). May differ from contact_email
   // (company-side contact may not be the account holder).
@@ -98,9 +109,15 @@ export const clientSignupSchema = z.object({
   company_type: z.enum(COMPANY_TYPES),
   contact_name: z.string().min(1).max(60),
   contact_email: z.string().email().max(254),
-  contact_phone: z.string().max(40).nullable().optional(),
-  website_url: z.string().url().max(500).nullable().optional(),
-  instagram_handle: z.string().max(60).nullable().optional(),
+  contact_phone: emptyToNull.pipe(
+    z.string().min(1).max(40).nullable(),
+  ),
+  website_url: emptyToNull.pipe(
+    z.string().url().max(500).nullable(),
+  ),
+  instagram_handle: emptyToNull.pipe(
+    z.string().min(1).max(60).nullable(),
+  ),
 });
 
 export type ClientSignupInput = z.infer<typeof clientSignupSchema>;
