@@ -30,10 +30,20 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   saveBrief,
+  uploadAsset,
   type BriefActionResult,
 } from "@/app/[locale]/app/projects/[id]/brief/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ImageBlock } from "./blocks/image-block";
+import { FileBlock } from "./blocks/file-block";
+import { resizeImageIfNeeded } from "@/lib/brief-board/resize-image";
+
+// Per SPEC §4.B2 / §4.B3: image cap 50MB, file cap 200MB. The SQL CHECK
+// constraint enforces 200MB at the byte_size column; the image cap is
+// app-layer (browser resize usually keeps files well under 50MB).
+const IMAGE_MAX_BYTES = 50 * 1024 * 1024;
+const FILE_MAX_BYTES = 200 * 1024 * 1024;
 
 const AUTOSAVE_DEBOUNCE_MS = 3000;
 
@@ -95,6 +105,8 @@ export function BriefBoardEditor({
         // Disable extensions we don't ship in v1.
         // (Code/CodeBlock/Strike are kept — small surface, useful for briefs.)
       }),
+      ImageBlock,
+      FileBlock,
     ],
     content: initialContent ?? EMPTY_DOC,
     editable,
@@ -108,6 +120,19 @@ export function BriefBoardEditor({
           editable ? "" : "opacity-80 cursor-default"
         ),
         "aria-label": t("title"),
+      },
+      // Drag-drop: intercept files on the editor area, run them through
+      // the upload pipeline, then insert image/file nodes when the R2 PUT
+      // completes. ProseMirror requires a synchronous return — we kick
+      // the async work and return true (handled).
+      handleDrop(_view, event) {
+        if (!editable) return false;
+        const dt = (event as DragEvent).dataTransfer;
+        if (!dt || !dt.files || dt.files.length === 0) return false;
+        event.preventDefault();
+        const files = Array.from(dt.files);
+        void handleFilesUpload(files);
+        return true;
       },
     },
     // onUpdate fires on every keystroke (and IME composition end). We
@@ -221,6 +246,97 @@ export function BriefBoardEditor({
       }
     };
   }, []);
+
+  // Drop handler pipeline: validate → resize (images) → uploadAsset →
+  // PUT to R2 → insert node. Each file is processed serially to avoid
+  // racing against the auto-save concurrency window — typical drops
+  // are 1–3 files.
+  const handleFilesUpload = useCallback(
+    async (files: File[]) => {
+      for (const original of files) {
+        const isImage = original.type.startsWith("image/");
+
+        // Size guard before any upload work. Images get 50MB, others 200MB.
+        if (isImage && original.size > IMAGE_MAX_BYTES) {
+          toast.error(t("asset_too_large_image"));
+          continue;
+        }
+        if (!isImage && original.size > FILE_MAX_BYTES) {
+          toast.error(t("asset_too_large_file"));
+          continue;
+        }
+
+        const file = isImage ? await resizeImageIfNeeded(original) : original;
+
+        // Re-check size post-resize for the rare case that resize made
+        // a file LARGER (shouldn't happen but defensive).
+        if (file.size > FILE_MAX_BYTES) {
+          toast.error(t("asset_too_large_file"));
+          continue;
+        }
+
+        const upload = await uploadAsset({
+          projectId,
+          filename: file.name,
+          mimeType: file.type || "application/octet-stream",
+          byteSize: file.size,
+        });
+
+        if (!("ok" in upload) || !upload.ok) {
+          toast.error(t("asset_upload_failed"));
+          continue;
+        }
+
+        try {
+          const putResp = await fetch(upload.data.presignedPutUrl, {
+            method: "PUT",
+            body: file,
+            headers: { "Content-Type": file.type || "application/octet-stream" },
+          });
+          if (!putResp.ok) {
+            toast.error(t("asset_upload_failed"));
+            continue;
+          }
+        } catch {
+          toast.error(t("asset_upload_failed"));
+          continue;
+        }
+
+        // Insert node. The NodeView fetches a presigned GET URL on mount.
+        if (!editor) continue;
+        if (isImage) {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "image",
+              attrs: {
+                asset_id: upload.data.assetId,
+                alt: file.name,
+              },
+            })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "file",
+              attrs: {
+                asset_id: upload.data.assetId,
+                filename: file.name,
+                mime_type: file.type || "application/octet-stream",
+                byte_size: file.size,
+              },
+            })
+            .run();
+        }
+        // Inserting via the chain triggers onUpdate → debounced auto-save,
+        // so the new asset_id ends up in content_json on the next idle.
+      }
+    },
+    [editor, projectId, t]
+  );
 
   // If the parent re-mounts with a fresh updated_at (e.g., post-restore
   // or after a conflict reload), refresh our CAS token.

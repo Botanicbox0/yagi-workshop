@@ -15,10 +15,15 @@
 // getAssetUrl (G_B-3) is colocated with uploadAsset and lands at G_B-3.
 // =============================================================================
 
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database.types";
+import {
+  createBriefAssetGetUrl,
+  createBriefAssetPutUrl,
+} from "@/lib/r2/client";
 
 // -----------------------------------------------------------------------------
 // Shared result discriminated union
@@ -403,25 +408,139 @@ export async function unlockBrief(
 }
 
 // -----------------------------------------------------------------------------
-// 6. uploadAsset — presigned PUT URL + project_brief_assets row
+// 6. uploadAsset — full impl (G_B-3): presigned PUT URL + project_brief_assets row
 // -----------------------------------------------------------------------------
-// G_B-1 lands the validated input + DB row INSERT, but the R2 presign step
-// is wired in G_B-3 (where browser-side resize and the dedicated
-// project-briefs bucket are also introduced). For now this returns
-// not_implemented to keep the action surface stable for callers.
+// Flow: validate → derive storage_key → INSERT asset row (RLS gates project
+// membership + binds uploaded_by to caller) → presign PUT URL → return.
+// The browser then PUTs the blob directly to R2 with the returned URL.
+//
+// Orphan note (SPEC §3.3): the asset row is committed before the R2 PUT
+// completes, so a failed PUT leaves a metadata row pointing at a key with
+// no underlying object. v1 accepts this — Phase 2.8.1 GC sweeps stale rows.
+
+const SAFE_EXT = /^[a-z0-9]{1,8}$/;
+function safeExtFromFilename(filename: string): string {
+  const dot = filename.lastIndexOf(".");
+  if (dot < 0 || dot === filename.length - 1) return "bin";
+  const ext = filename.slice(dot + 1).toLowerCase();
+  return SAFE_EXT.test(ext) ? ext : "bin";
+}
 
 export async function uploadAsset(
   input: unknown
 ): Promise<
-  BriefActionResult<{ assetId: string; presignedPutUrl: string; storageKey: string }>
+  BriefActionResult<{
+    assetId: string;
+    storageKey: string;
+    presignedPutUrl: string;
+  }>
 > {
   const parsed = UploadAssetInput.safeParse(input);
   if (!parsed.success) {
     return { error: "validation", issues: parsed.error.issues };
   }
 
-  const { user } = await requireUser();
+  const { supabase, user } = await requireUser();
   if (!user) return { error: "unauthenticated" };
 
-  return { error: "not_implemented", gate: "G_B-3" };
+  const assetId = randomUUID();
+  const ext = safeExtFromFilename(parsed.data.filename);
+  const storageKey = `project-briefs/${parsed.data.projectId}/${assetId}.${ext}`;
+
+  // INSERT first so RLS gates project membership + uploaded_by attribution.
+  // If this fails with RLS denial, we never expose a presigned URL.
+  const { data: row, error: insErr } = await supabase
+    .from("project_brief_assets")
+    .insert({
+      id: assetId,
+      project_id: parsed.data.projectId,
+      storage_key: storageKey,
+      mime_type: parsed.data.mimeType,
+      byte_size: parsed.data.byteSize,
+      original_name: parsed.data.filename,
+      uploaded_by: user.id,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (insErr) {
+    console.error("[uploadAsset] insert error", insErr);
+    if (/row-level security|new row violates/i.test(insErr.message)) {
+      return { error: "forbidden", reason: "not a project member" };
+    }
+    return { error: "db", message: insErr.message };
+  }
+  if (!row) return { error: "forbidden", reason: "RLS denied" };
+
+  let presignedPutUrl: string;
+  try {
+    presignedPutUrl = await createBriefAssetPutUrl(
+      storageKey,
+      parsed.data.mimeType
+    );
+  } catch (err) {
+    // Presign failed (likely env misconfig). Roll back the metadata row
+    // so we don't accumulate orphans on infra outage.
+    console.error("[uploadAsset] presign error", err);
+    await supabase.from("project_brief_assets").delete().eq("id", assetId);
+    return { error: "db", message: err instanceof Error ? err.message : "presign failed" };
+  }
+
+  return {
+    ok: true,
+    data: { assetId, storageKey, presignedPutUrl },
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 7. getAssetUrl — presigned GET URL for inline render / download
+// -----------------------------------------------------------------------------
+// SELECT through SSR Supabase client honors project_brief_assets_select
+// RLS (caller must be a project member or yagi_admin). On success the
+// presigned URL is returned; the asset itself is fetched from R2 by the
+// browser. 1h expiry covers a typical edit session.
+
+const GetAssetUrlInput = z.object({
+  assetId: z.string().uuid(),
+});
+
+export async function getAssetUrl(
+  input: unknown
+): Promise<BriefActionResult<{ url: string; mimeType: string; filename: string | null }>> {
+  const parsed = GetAssetUrlInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: "validation", issues: parsed.error.issues };
+  }
+
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "unauthenticated" };
+
+  const { data: asset, error: selErr } = await supabase
+    .from("project_brief_assets")
+    .select("storage_key, mime_type, original_name")
+    .eq("id", parsed.data.assetId)
+    .maybeSingle();
+
+  if (selErr) {
+    console.error("[getAssetUrl] select error", selErr);
+    return { error: "db", message: selErr.message };
+  }
+  if (!asset) return { error: "not_found" };
+
+  let url: string;
+  try {
+    url = await createBriefAssetGetUrl(asset.storage_key);
+  } catch (err) {
+    console.error("[getAssetUrl] presign error", err);
+    return { error: "db", message: err instanceof Error ? err.message : "presign failed" };
+  }
+
+  return {
+    ok: true,
+    data: {
+      url,
+      mimeType: asset.mime_type,
+      filename: asset.original_name,
+    },
+  };
 }

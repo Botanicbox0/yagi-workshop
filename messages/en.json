@@ -1128,6 +1128,16 @@
     "save_db_error": "Save error. Please try again",
     "empty_title": "Start your brief however you like",
     "empty_hint": "Type / to insert a block, or just start typing.",
-    "locked_banner": "This board is locked. Contact admin to unlock"
+    "locked_banner": "This board is locked. Contact admin to unlock",
+    "block_image_uploading": "Uploading image...",
+    "block_image_alt_ph": "Image description",
+    "block_file_download": "Download",
+    "block_embed_loading": "Loading embed...",
+    "block_embed_failed": "Could not load embed. Check the URL",
+    "block_embed_unsupported": "This site is not yet supported for embeds. Showing as link",
+    "asset_too_large_image": "Image exceeds 50MB limit",
+    "asset_too_large_file": "File exceeds 200MB limit",
+    "asset_unsupported": "Unsupported file type",
+    "asset_upload_failed": "Upload failed. Please try again"
   }
 }

@@ -36,6 +36,21 @@
 2026-04-26T00:41:00Z G_B_2 IME_SMOKE_DEFERRED reason=builder_cannot_exercise_OS_level_IME followup=FU-2.8-ime-smoke-manual owner=yagi_pre_ship
 2026-04-26T00:42:00Z G_B_2 GATE_EXIT ok=4/4 elapsed=540s exits_met=deps_pinned,editor_file,tsc_clean,lint_clean exits_deferred=ime_smoke_manual,slash_command
 2026-04-26T00:42:01Z G_B_3 GATE_ENTER
+2026-04-26T00:45:00Z G_B_3 R2_BUCKET_LIST yagi-challenge-submissions,yagi-commission-files,yagi-models project-briefs=NOT_FOUND
+2026-04-26T00:45:30Z G_B_3 SPEC_VS_KICKOFF_DRIFT topic=r2_bucket_choice resolution=spec_3_3_reuse_yagi-commission-files_with_prefix followup=FU-2.8-r2-bucket-name-drift no_halt=existing_bucket_used
+2026-04-26T00:46:00Z G_B_3 R2_HELPERS_AUTHORED file=src/lib/r2/client.ts BRIEF_BUCKET=yagi-commission-files put_expiry=600s get_expiry=3600s
+2026-04-26T00:47:00Z G_B_3 ACTIONS_EXTENDED uploadAsset=full_impl getAssetUrl=full_impl roll_back_on_presign_error=yes
+2026-04-26T00:48:00Z G_B_3 RESIZE_UTIL_AUTHORED file=src/lib/brief-board/resize-image.ts max_longest=2400px quality=0.85 skip=svg,gif,non-image
+2026-04-26T00:49:00Z G_B_3 BLOCK_NODES_AUTHORED image=src/components/brief-board/blocks/image-block.tsx file=src/components/brief-board/blocks/file-block.tsx node_view_strategy=react
+2026-04-26T00:50:00Z G_B_3 EDITOR_DROP_HANDLER_WIRED size_caps=image_50MB_file_200MB pipeline=resize_uploadAsset_PUT_insertNode
+2026-04-26T00:51:00Z G_B_3 DEP_ADDED tiptap_core=3.22.4 reason=Node_mergeAttributes_required_pnpm_strict_blocks_transitive followup=FU-2.8-tiptap-core-spec-amendment
+2026-04-26T00:52:00Z G_B_3 I18N_BLOCK_KEYS_ADDED ko=10 en=10 parity=ok namespace=brief_board
+2026-04-26T00:53:00Z G_B_3 TSC_NOEMIT errors_total=58 brief_files=0 net_new=0
+2026-04-26T00:53:30Z G_B_3 ESLINT files=g-b-3_set errors=0 warnings=0
+2026-04-26T00:54:00Z G_B_3 PRESIGN_ROUNDTRIP_DEFERRED reason=runtime_network_test_requires_e2e followup=FU-2.8-r2-presign-roundtrip-test owner=g_b_7_playwright_or_2_8_1
+2026-04-26T00:55:00Z G_B_3 GATE_EXIT ok=4/4 elapsed=720s exits_met=r2_bucket_reachable,blocks_authored,tsc_clean,lint_clean exits_deferred=presign_roundtrip,drag_drop_smoke
+2026-04-26T00:55:01Z G_B_4 GATE_ENTER
+
 
 
 

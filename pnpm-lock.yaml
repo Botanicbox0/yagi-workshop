@@ -89,6 +89,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.99.2
         version: 5.99.2(@tanstack/react-query@5.99.2(react@19.1.0))(react@19.1.0)
+      '@tiptap/core':
+        specifier: 3.22.4
+        version: 3.22.4(@tiptap/pm@3.22.4)
       '@tiptap/pm':
         specifier: 3.22.4
         version: 3.22.4

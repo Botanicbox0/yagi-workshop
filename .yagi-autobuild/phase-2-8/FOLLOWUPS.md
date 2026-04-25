@@ -135,3 +135,82 @@ otherwise Phase 2.8.1.
 
 **Registered:** 2026-04-26 (G_B-2 scope decision documenting deviation
 from SPEC §4.5 mechanism while honoring §7 stack constraint).
+
+---
+
+## FU-2.8-tiptap-core-spec-amendment
+
+**Trigger:** G_B-3 needed `Node.create` and `mergeAttributes` for the
+ImageBlock and FileBlock node extensions. These live in `@tiptap/core`,
+a transitive dep of `@tiptap/starter-kit` but blocked from direct import
+under pnpm strict-mode hoisting. Added as a 4th exact-pinned `@tiptap/*`
+package (3.22.4 to match the rest).
+
+**Risk:** Strict reading of FORBIDDEN ("new dep not in SPEC §7 stack list
+→ HALT E_DEP_UNLISTED") would treat this as a halt. Pragmatic reading:
+`@tiptap/core` is the *foundation* package that `@tiptap/react` and
+`@tiptap/starter-kit` both depend on — it's the same library, not a
+new functional dependency. SPEC §7 references "TipTap" generically and
+lists three packages by name; the stack-name spirit is honored.
+
+**Action:** Amend SPEC §7 in v3 (or 2.8.1) to enumerate `@tiptap/core`
+explicitly alongside the other three @tiptap/* packages.
+
+**Owner:** Web Claude on next SPEC pass.
+
+**Status:** Open (informational — code already ships).
+
+**Registered:** 2026-04-26 (G_B-3 dep addition).
+
+---
+
+## FU-2.8-r2-bucket-name-drift
+
+**Trigger:** KICKOFF G_B-3 EXIT/FAIL referenced an R2 bucket literally
+named `project-briefs`; that bucket does not exist (Cloudflare R2 API
+returned `yagi-challenge-submissions`, `yagi-commission-files`,
+`yagi-models`). SPEC §3.3 v2 specifies "기존 R2 SDK 통합... 새 prefix
+project-briefs/{project_id}/{uuid}.{ext}. 신규 dependency 0" — i.e.,
+reuse an existing bucket with a new path prefix, no new bucket.
+
+**Risk:** None (resolved during G_B-3). Adopted SPEC §3.3 over KICKOFF
+literal: brief assets land in `yagi-commission-files` under
+`project-briefs/<project_id>/<uuid>.<ext>`. Bucket override env:
+`CLOUDFLARE_R2_BRIEF_BUCKET`.
+
+**Action:** Update KICKOFF G_B-3 EXIT wording to match SPEC. Optional:
+provision a dedicated `yagi-brief-assets` bucket if storage policies
+need to diverge from commission-files (lifecycle, CORS, public/private
+access). Not v1 scope.
+
+**Owner:** Web Claude on next KICKOFF revision.
+
+**Status:** Open (informational — code ships pointing at
+yagi-commission-files via env-overridable constant).
+
+**Registered:** 2026-04-26 (G_B-3 bucket selection).
+
+---
+
+## FU-2.8-r2-presign-roundtrip-test
+
+**Trigger:** KICKOFF G_B-3 EXIT specifies `scripts/test-r2-brief-asset.ts
+(5MB jpeg, exit 0)`. Authoring a non-trivial round-trip test requires
+provisioning an authenticated user, project, brief row, then exercising
+the full uploadAsset → R2 PUT → getAssetUrl → R2 GET path. The current
+G_B-1 RLS smoke covers structural integrity; the actual presign +
+network round-trip is best validated through the G_B-7 Playwright e2e
+which drag-drops a real PNG.
+
+**Risk:** Latent breakage if R2 SDK args drift; caught at G_B-7 e2e and
+manual QA. Server-action logic verified by tsc + lint.
+
+**Action:** Either (a) defer to G_B-7 e2e coverage; (b) add a tiny
+node script in 2.8.1 that uses service-role + a fixture user. Not v1
+scope.
+
+**Owner:** Phase 2.8.1 builder.
+
+**Status:** Open.
+
+**Registered:** 2026-04-26 (G_B-3 EXIT acknowledgment).
