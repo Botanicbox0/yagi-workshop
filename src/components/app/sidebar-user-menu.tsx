@@ -11,15 +11,49 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/app/signout-action";
+import type { ProfileRole, WorkspaceRole } from "@/lib/app/context";
 
 type Profile = {
   id: string;
   handle: string;
   display_name: string;
   avatar_url: string | null;
+  role: ProfileRole | null;
 };
 
-export function SidebarUserMenu({ profile }: { profile: Profile }) {
+function getRoleLabel(
+  profile: Profile,
+  workspaceRoles: WorkspaceRole[],
+  isYagiInternalMember: boolean,
+): string {
+  // Workspace roles take precedence over profile.role for the badge —
+  // an admin/internal user is identified by their staff capacity even if
+  // they also carry a creator/studio profile. Phase 2.7.1 visibility pass.
+  if (workspaceRoles.includes("yagi_admin")) return "YAGI Admin";
+  if (isYagiInternalMember) return "Internal";
+  switch (profile.role) {
+    case "creator":
+      return "Creator";
+    case "studio":
+      return "Studio";
+    case "client":
+      return "Client";
+    case "observer":
+      return "Observer";
+    default:
+      return "";
+  }
+}
+
+export function SidebarUserMenu({
+  profile,
+  workspaceRoles,
+  isYagiInternalMember,
+}: {
+  profile: Profile;
+  workspaceRoles: WorkspaceRole[];
+  isYagiInternalMember: boolean;
+}) {
   const c = useTranslations("common");
   const initials = profile.display_name
     .split(/\s+/)
@@ -28,6 +62,7 @@ export function SidebarUserMenu({ profile }: { profile: Profile }) {
     .slice(0, 2)
     .join("")
     .toUpperCase() || profile.handle.slice(0, 2).toUpperCase();
+  const roleLabel = getRoleLabel(profile, workspaceRoles, isYagiInternalMember);
 
   return (
     <DropdownMenu>
@@ -38,7 +73,12 @@ export function SidebarUserMenu({ profile }: { profile: Profile }) {
         </Avatar>
         <div className="flex-1 text-left min-w-0">
           <p className="text-[13px] truncate">{profile.display_name}</p>
-          <p className="text-[11px] text-muted-foreground truncate">@{profile.handle}</p>
+          <p className="text-[11px] text-muted-foreground truncate">
+            @{profile.handle}
+            {roleLabel && (
+              <span className="text-foreground/70"> · {roleLabel}</span>
+            )}
+          </p>
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="min-w-[180px]">

@@ -3,6 +3,7 @@ import { fetchAppContext } from "@/lib/app/context";
 import { Sidebar, MobileSidebarSheet } from "@/components/app/sidebar";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { PageHelpLink } from "@/components/app/page-help-link";
+import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserScopes } from "@/lib/app/scopes";
 import { UserScopesProvider } from "@/lib/app/use-user-scopes";
@@ -59,6 +60,7 @@ export default async function AppLayout({
             <MobileSidebarSheet context={ctx} />
             <div className="flex-1" />
             <PageHelpLink />
+            <LanguageSwitcher />
             <NotificationBell
               initialUnreadCount={initialUnreadCount ?? 0}
               locale={bellLocale}

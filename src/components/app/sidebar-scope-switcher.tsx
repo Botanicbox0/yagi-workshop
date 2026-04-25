@@ -7,9 +7,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Briefcase, ChevronsUpDown, ShieldCheck, User } from "lucide-react";
+import {
+  Briefcase,
+  Check,
+  ChevronsUpDown,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserScopes } from "@/lib/app/use-user-scopes";
 import type { Scope } from "@/lib/app/scopes";
@@ -114,11 +122,36 @@ function MultiScopeSwitcher({
     }
   };
 
-  const ordered: Scope[] = [
-    ...scopes.filter((s) => s.kind === "workspace"),
-    ...scopes.filter((s) => s.kind === "profile"),
-    ...scopes.filter((s) => s.kind === "admin"),
-  ];
+  const workspaceScopes = scopes.filter((s) => s.kind === "workspace");
+  const adminScopes = scopes.filter((s) => s.kind === "admin");
+  const profileScopes = scopes.filter((s) => s.kind === "profile");
+
+  function scopeKey(scope: Scope): string {
+    return scope.kind === "workspace"
+      ? `workspace:${scope.id}`
+      : scope.kind === "profile"
+        ? `profile:${scope.handle}`
+        : "admin";
+  }
+
+  function renderItem(scope: Scope) {
+    return (
+      <DropdownMenuItem
+        key={scopeKey(scope)}
+        onSelect={() => onSelect(scope)}
+        className="flex items-center gap-2"
+      >
+        <ScopeIcon kind={scope.kind} />
+        <span className="truncate flex-1">{scopeLabel(scope)}</span>
+        {scope.active && (
+          <Check className="w-3.5 h-3.5 text-foreground shrink-0" />
+        )}
+      </DropdownMenuItem>
+    );
+  }
+
+  const sectionLabelClass =
+    "text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 font-medium px-2 py-1";
 
   return (
     <div className="relative">
@@ -134,28 +167,35 @@ function MultiScopeSwitcher({
           </span>
           <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-[220px]">
-          {ordered.map((scope) => {
-            const key =
-              scope.kind === "workspace"
-                ? `workspace:${scope.id}`
-                : scope.kind === "profile"
-                  ? `profile:${scope.handle}`
-                  : `admin`;
-            return (
-              <DropdownMenuItem
-                key={key}
-                onSelect={() => onSelect(scope)}
-                className={cn(
-                  "flex items-center gap-2",
-                  scope.active && "bg-accent",
-                )}
-              >
-                <ScopeIcon kind={scope.kind} />
-                <span className="truncate">{scopeLabel(scope)}</span>
-              </DropdownMenuItem>
-            );
-          })}
+        <DropdownMenuContent align="start" className="min-w-[240px]">
+          {workspaceScopes.length > 0 && (
+            <>
+              <DropdownMenuLabel className={sectionLabelClass}>
+                Workspaces
+              </DropdownMenuLabel>
+              {workspaceScopes.map(renderItem)}
+            </>
+          )}
+          {adminScopes.length > 0 && (
+            <>
+              {workspaceScopes.length > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuLabel className={sectionLabelClass}>
+                Admin
+              </DropdownMenuLabel>
+              {adminScopes.map(renderItem)}
+            </>
+          )}
+          {profileScopes.length > 0 && (
+            <>
+              {(workspaceScopes.length > 0 || adminScopes.length > 0) && (
+                <DropdownMenuSeparator />
+              )}
+              <DropdownMenuLabel className={sectionLabelClass}>
+                Profile
+              </DropdownMenuLabel>
+              {profileScopes.map(renderItem)}
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       {tooltipOpen && (

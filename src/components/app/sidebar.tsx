@@ -47,7 +47,11 @@ function SidebarBody({
         />
       </div>
       <div className="p-3 border-t border-border space-y-1">
-        <SidebarUserMenu profile={context.profile} />
+        <SidebarUserMenu
+          profile={context.profile}
+          workspaceRoles={context.workspaceRoles}
+          isYagiInternalMember={internalMember}
+        />
         <SidebarPublicExit />
       </div>
     </div>

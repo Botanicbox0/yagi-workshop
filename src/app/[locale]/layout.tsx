@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { routing } from "@/i18n/routing";
 import { fraunces, inter } from "../fonts";
+import { PublicChromeHeader } from "@/components/app/public-chrome-header";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default async function LocaleLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <NextIntlClientProvider messages={messages}>
+            <PublicChromeHeader />
             {children}
             <Toaster position="top-center" />
           </NextIntlClientProvider>
