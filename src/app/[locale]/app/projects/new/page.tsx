@@ -50,7 +50,7 @@ export default async function NewProjectPage({ params }: Props) {
       {/* Page header */}
       <div className="px-6 pt-10 pb-0 max-w-2xl mx-auto">
         <h1 className="font-display text-3xl tracking-tight mb-1">
-          <em>{t("new")}</em>
+          {t("new")}
         </h1>
       </div>
 

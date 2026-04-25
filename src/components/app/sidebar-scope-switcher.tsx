@@ -62,7 +62,7 @@ export function SidebarScopeSwitcher({
     return (
       <p className="font-display text-base tracking-tight flex items-center gap-2">
         <ScopeIcon kind={active.kind} className="text-muted-foreground" />
-        <em>{scopeLabel(active)}</em>
+        <span>{scopeLabel(active)}</span>
       </p>
     );
   }
@@ -130,7 +130,7 @@ function MultiScopeSwitcher({
         <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
           <span className="font-display text-base tracking-tight flex items-center gap-2 min-w-0">
             <ScopeIcon kind={active.kind} className="text-muted-foreground" />
-            <em className="truncate">{scopeLabel(active)}</em>
+            <span className="truncate">{scopeLabel(active)}</span>
           </span>
           <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
         </DropdownMenuTrigger>

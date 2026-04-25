@@ -113,7 +113,7 @@ export default async function AdminDashboardPage({ params }: Props) {
       {/* Header */}
       <div className="mb-10">
         <h1 className="font-display text-3xl tracking-tight mb-1">
-          <em>{t("title")}</em>
+          {t("title")}
         </h1>
       </div>
 

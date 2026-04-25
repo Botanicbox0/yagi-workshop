@@ -118,7 +118,7 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-3xl tracking-tight mb-1">
-          <em>{tAdmin("title")}</em>
+          {tAdmin("title")}
         </h1>
         <p className="text-sm text-muted-foreground">{tAdmin("cross_workspace_projects")}</p>
       </div>

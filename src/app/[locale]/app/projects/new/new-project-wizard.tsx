@@ -284,7 +284,7 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
       <div className="space-y-6">
         <div className="space-y-2">
           <h2 className="font-display text-xl tracking-tight keep-all">
-            <em>{t("intake_mode_label")}</em>
+            {t("intake_mode_label")}
           </h2>
         </div>
 
@@ -359,15 +359,18 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
             control={control}
             name="brand_id"
             render={({ field }) => (
+              // Radix Select rejects "" as an item value (used internally for
+              // the cleared/placeholder state). Use a sentinel "__none" and
+              // map it to "" on the form side.
               <Select
-                onValueChange={field.onChange}
-                value={field.value ?? ""}
+                onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}
+                value={field.value ? field.value : "__none"}
               >
                 <SelectTrigger id="brand_id">
                   <SelectValue placeholder={t("brand_none")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t("brand_none")}</SelectItem>
+                  <SelectItem value="__none">{t("brand_none")}</SelectItem>
                   {brands.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
                       {b.name}
@@ -503,7 +506,7 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
       <div className="space-y-6">
         <div className="border border-dashed border-border rounded-lg py-16 flex flex-col items-center justify-center text-center gap-3">
           <p className="font-display text-lg tracking-tight keep-all">
-            <em>{t("refs_step")}</em>
+            {t("refs_step")}
           </p>
         </div>
         <div className="flex items-center justify-between pt-2">

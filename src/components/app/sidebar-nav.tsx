@@ -5,18 +5,13 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import {
-  FolderKanban,
   CalendarDays,
-  Clapperboard,
-  Frame,
-  Store,
   Receipt,
   Settings,
   ShieldCheck,
   MessageSquare,
   Bell,
   Trophy,
-  Presentation,
   Briefcase,
   Mailbox,
   ChevronDown,
@@ -57,28 +52,14 @@ const GROUPS: NavGroup[] = [
     key: "work",
     items: [
       {
-        // G2 lands /app/commission + /app/commission/new + /app/commission/[id].
-        // Sidebar entry now visible to client persona; admin queue still gated
-        // until G3 (admin_commissions entry below remains disabled).
+        // Phase 2.7: client persona's primary surface.
         key: "commission",
         href: "/app/commission",
         icon: Briefcase,
         profileRoles: ["client"],
       },
       {
-        key: "projects",
-        href: "/app/projects",
-        icon: FolderKanban,
-        roles: ["workspace_admin", "workspace_member"],
-      },
-      { key: "preprod", href: "/app/preprod", icon: Frame, roles: ["yagi_admin"] },
-      {
-        key: "showcases",
-        href: "/app/showcases",
-        icon: Presentation,
-        roles: ["workspace_admin", "workspace_member"],
-      },
-      {
+        // Phase 2.5 admin challenge console — yagi_admin only.
         key: "challenges",
         icon: Trophy,
         roles: ["yagi_admin"],
@@ -88,20 +69,9 @@ const GROUPS: NavGroup[] = [
           { key: "challenges_open", href: "/app/admin/challenges?state=open" },
         ],
       },
-      {
-        key: "storyboards",
-        href: "/app/storyboards",
-        icon: Clapperboard,
-        disabled: true,
-        roles: ["workspace_admin", "workspace_member"],
-      },
-      {
-        key: "brands",
-        href: "/app/brands",
-        icon: Store,
-        disabled: true,
-        roles: ["workspace_admin"],
-      },
+      // Phase 2.7.1: projects / preprod / showcases / storyboards / brands
+      // removed from the active sidebar. Routes still work for direct
+      // navigation; phasing out from primary IA per visibility pass.
     ],
   },
   {

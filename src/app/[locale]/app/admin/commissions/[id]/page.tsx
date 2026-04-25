@@ -67,7 +67,7 @@ export default async function AdminCommissionDetailPage({ params }: Props) {
           <CommissionIntakeStatePill state={intake.state} locale={locale} />
         </div>
         <h1 className="font-display text-3xl md:text-4xl tracking-tight keep-all">
-          <em>{intake.title}</em>
+          {intake.title}
         </h1>
         <p className="text-xs text-muted-foreground">
           {tC(`category_${intake.category}` as "category_music_video")}
@@ -197,7 +197,7 @@ export default async function AdminCommissionDetailPage({ params }: Props) {
 
       <section className="space-y-3 pt-4 border-t border-border">
         <h2 className="font-display text-xl tracking-tight">
-          <em>{t("response_section_title")}</em>
+          {t("response_section_title")}
         </h2>
         {intake.state === "submitted" ? (
           <CommissionAdminResponseForm intakeId={intake.id} />
