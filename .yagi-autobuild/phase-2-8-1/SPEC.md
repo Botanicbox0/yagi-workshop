@@ -1,10 +1,25 @@
-# Phase 2.8.1 — Hardening (Workshop polish + product strategy realignment)
+# Phase 2.8.1 — Hardening (Workshop polish + product strategy realignment + K-PUX integrity)
 
-**Status:** v1 draft (web Claude 2026-04-26, post Phase 2.8 SHIPPED)
-**Duration target:** 4–5 working days (single worktree, no parallel)
-**Predecessor:** Phase 2.8 G_B SHIPPED (commit a969aa7) + post-SHIPPED form-action fix (current commit)
-**Successor:** Phase 2.10 (Workshop 본체 완성 — status machine + 승인/마감 flow)
+**Status:** v2 (web Claude 2026-04-27 00:30 KST, post Codex K-PUX absorption)
+**Duration target:** 6–7 working days (single worktree, no parallel)
+**Predecessor:** Phase 2.8 G_B SHIPPED (commit a969aa7) + auth/role/RSC catch-up (commit 1273356) + K-PUX findings doc (commit pending)
+**Successor:** Phase 2.8.2 (Brief Board 본질 재설계 + 프로젝트 첫 인상 — 별 SPEC 존재)
 **Branch:** `g-b-1-hardening` (single worktree, linear)
+
+## v2 changelog (vs v1)
+
+v1 (5d, 7 sub-gates) was scoped before Codex K-PUX-1 ran. After absorbing all 19 K-PUX findings (per founder direction 2026-04-27 00:25 KST), v2 adds three new sub-gates and one bundled polish gate:
+
+- **G_B1-H** (NEW) — Commission flow integrity. Absorbs F-PUX-002 (commission challenge CTA removal), F-PUX-003 (anonymous→signup intent preservation), F-PUX-004 (admin "Create Project Workshop" action — vertical workflow missing link), F-PUX-019 (locale routing inconsistency).
+- **G_B1-I** (NEW) — Projects hub IA. Absorbs F-PUX-007 (Contest tab removal from /app/projects) and F-PUX-012 (Brief Board default tab promotion).
+- **G_B1-J** (NEW) — Wizard polish bundle. Absorbs F-PUX-010 (deliverable tags raw render), F-PUX-015 (slash hint cleanup), F-PUX-016 (YAGI request modal copy split).
+- **G_B1-D** (EXTENDED) — Terminology sweep now also covers F-PUX-005 sidebar group rename (Work → Workshop).
+
+Findings deferred to Phase 2.10 (already covered there): F-PUX-001 (public landing), F-PUX-006 (scope switcher beyond G_B1-D scope), F-PUX-009 (wizard cycle rail), F-PUX-011 (status machine), F-PUX-013 (Host/Client blocks), F-PUX-014 (block-anchored comments), F-PUX-018 (settings cleanup).
+
+Finding deferred to Phase 3.0+: F-PUX-017 (admin challenges i18n).
+
+Finding self-resolved this session (commit 1273356): signup dead-end UX, role 4→2 simplification.
 
 ---
 
@@ -25,17 +40,24 @@ Phase 2.8 G_B (Brief Board) SHIPPED 직후 발견된 두 종류의 갭:
 
 ## §1 — Scope (sub-gates)
 
-| Sub | Theme | Effort |
-|---|---|---|
-| **G_B1-A** | Form action ESLint rule + sweep | 0.5 day |
-| **G_B1-B** | Wizard Step 3 → BriefBoardEditor (draft mode) 통합 | 1.5 days |
-| **G_B1-C** | SSRF defense-in-depth (3 FU 묶음) | 0.5 day |
-| **G_B1-D** | "Workspace" → "Workshop" terminology sweep | 0.5 day |
-| **G_B1-E** | Phase 2.7.2 + 2.8 dead code 정리 | 0.5 day |
-| **G_B1-F** | Trivial UX polish (tabs i18n, saveVersion RPC, R2 round-trip test) | 0.5 day |
-| **G_B1-G** | Korean IME e2e + Playwright wiring | 1 day |
+| Sub | Theme | Effort | Source |
+|---|---|---|---|
+| **G_B1-A** | Form action ESLint rule + sweep | 0.5 day | FU-2.8 |
+| **G_B1-B** | Wizard Step 3 → BriefBoardEditor (draft mode) 통합 | 1.5 days | FU-2.8, F-PUX-008 |
+| **G_B1-C** | SSRF defense-in-depth (3 FU 묶음) | 0.5 day | FU-2.8 (K-05 LOOP3) |
+| **G_B1-D** | "Workspace" → "Workshop" terminology sweep + sidebar group rename | 1 day | Q-084, F-PUX-005 |
+| **G_B1-E** | Phase 2.7.2 + 2.8 dead code 정리 | 0.5 day | FU-2.7.2 |
+| **G_B1-F** | Trivial UX polish (tabs i18n, saveVersion RPC, R2 round-trip test) | 0.5 day | FU-2.8 |
+| **G_B1-G** | Korean IME e2e + Playwright wiring | 1 day | FU-2.8 |
+| **G_B1-H** ⭐ | Commission flow integrity (CTA + intent + admin convert + locale) | 1.5 days | F-PUX-002/003/004/019 |
+| **G_B1-I** | Projects hub IA (Contest tab off + Brief Board default) | 0.5 day | F-PUX-007, F-PUX-012 |
+| **G_B1-J** | Wizard polish bundle (deliverable tags + slash hint + modal copy) | 0.5 day | F-PUX-010/015/016 |
 
-**총합:** 5 days. Phase 2.10 진입 직전 buffer 0 (한 주 안에 SHIPPED).
+**총합:** 8 working days target. SOFT_CAP 9d. HARD_CAP 11d → HALT.
+
+**왜 길어졌나:** v1 의 5d 는 K-PUX 전 추정. F-PUX-004 (Admin "Create Project Workshop" — L effort) 단독으로 1.5d 추가. 나머지 신규 gate 들은 XS-S effort 라 묶어서 1d. Total +3d.
+
+**Phase 2.8.2 ETA:** Phase 2.8.1 SHIPPED 후 즉시 진입. Phase 3 ETA = Phase 2.8.1 (8d) + Phase 2.8.2 (5-6d) + Phase 2.10 (~7d) + buffer = **약 3.5주 후 Phase 3 진입.**
 
 ---
 
@@ -242,20 +264,137 @@ Manual smoke는 1회성. 자동화 인프라가 다음 phase 의 회귀 catch.
 
 ---
 
+## §8.5 — G_B1-H — Commission flow integrity ⭐
+
+### Trigger
+Codex K-PUX 가 vertical workflow 의 결정적 갭 4개를 잡음. 모두 commission intake → project workshop 진입 path 깨짐 또는 Workshop ↔ Contest 분리 위반. monday MVP launch 까지 반드시 ship.
+
+### Scope
+
+#### F-PUX-002 — `/commission` 의 challenge CTA 제거 (XS)
+- `src/app/[locale]/commission/page.tsx` 의 "Browse challenges" 보조 CTA 삭제
+- 해당 위치 → "Workshop 작품 사례 보기" 또는 비워두기 (일관된 hero focus)
+
+#### F-PUX-003 — Anonymous → signup → intent preservation (M)
+- `/commission` 에서 anonymous user 가 "의뢰하기" 클릭 시 `/{locale}/signup?next=/app/commission/new` 로 redirect
+- signup page 에서 `next` query 보존 (기존 useSearchParams 패턴)
+- 이메일 confirm callback 후 `/app/commission/new` 로 직진 (현재 `/onboarding` 으로만 가짐)
+- onboarding role 선택 → client 만 가는 경우는 자동 skip 후 commission 진입 (이미 의도 있음)
+- 이메일 confirm 안 되면 "이메일 확인 후 의뢰서 작성하기" 안내 (현재 만든 check-email panel 에 next URL 보존)
+
+#### F-PUX-004 ⭐ — Admin "Create Project Workshop" action (L)
+- `src/app/[locale]/app/admin/commissions/[id]/page.tsx` 에 새 server action `convertCommissionToProject(commissionId)`:
+  - `commissions` row → `projects` INSERT (status='draft' 또는 'submitted', workspace_id 클라이언트 workspace, brand_id 자동 매핑)
+  - `commissions.title/description/budget/deadline` → `project_briefs` INSERT 으로 mapping (TipTap content_json, 텍스트는 paragraph node)
+  - `commissions.references[]` → `project_references` INSERT bulk
+  - `commissions.client_id` → `projects.client_id`
+  - 기존 `commissions.status` → `'converted'` flip + `commissions.converted_to_project_id` FK 저장 (새 column 필요, migration 작성)
+- Admin UI 에 "Workshop 생성" primary button 추가 (response 보내기 보다 위쪽). 결과: `/app/projects/[id]?tab=brief` 로 redirect
+- 클라이언트에게 자동 알림 (`notifications` row): "YAGI 가 의뢰를 받고 작업실을 열었습니다 → [link]"
+- RLS: yagi_admin only
+
+#### F-PUX-019 — Locale routing 일관성 (S)
+- `/commission` 의 challenge link 제거 (F-PUX-002 와 함께 사라짐)
+- `src/middleware.ts` 의 locale-free `/challenges` exclude 그대로 유지 (Phase 3.0+ 까지 deferred 의도)
+- `src/app/challenges/layout.tsx` Korean-only message seeding 은 informational FU 로 deferred (Phase 3.0)
+
+### EXIT
+- [ ] `/commission` 에서 challenge CTA 사라짐
+- [ ] anonymous user → submit click → signup → confirm → `/app/commission/new` 자동 도착
+- [ ] admin queue 에서 commission 1건 → "Workshop 생성" 클릭 → projects/project_briefs/project_references row 정상 생성
+- [ ] 생성된 project 의 Brief Board 에 commission 원본 텍스트 + reference 모두 보임
+- [ ] 클라이언트에게 알림 도착
+- [ ] migration `add commissions.converted_to_project_id` 적용 + rollback 검증
+- [ ] tsc + lint + build exit 0
+- [ ] e2e 1개 추가 (commission intake → admin convert → client view)
+
+### FAIL on
+- commission → project conversion 시 reference 손실
+- RLS 누락으로 비-admin 이 convert 호출 가능
+- migration이 기존 commissions 데이터 깨뜨림
+
+### Rationale
+야기 framing 의 핵심 vertical workflow: "클라이언트가 의뢰 → YAGI 가 받음 → 작업실 열림 → 협업 시작". 현재 v1 은 "받음" 까지만 ship 됨. "작업실 열림" 은 admin 이 손으로 SQL INSERT 해야 함 = 야기 본인 손맛 떨어짐 + monday launch 후 첫 클라이언트 받았을 때 위기. 이 gate 가 Phase 2.8.1 의 가장 큰 사용자 가치.
+
+---
+
+## §8.6 — G_B1-I — Projects hub IA
+
+### Trigger
+F-PUX-007 + F-PUX-012. `/app/projects` 가 Workshop ↔ Contest 분리 위반 + Brief Board 가 보조 tab.
+
+### Scope
+1. `src/app/[locale]/app/projects/page.tsx` 에서 "Contest brief" tab 제거. Phase 3.0+ 까지 admin/challenges 안에서만 contest 관리.
+2. `src/app/[locale]/app/projects/[id]/page.tsx` default tab 을 `tab=overview` → `tab=brief` 로 변경 (`searchParams.tab ?? 'brief'`).
+3. Overview tab 자체는 유지하되 simplify: project metadata + status badge + cycle position (Phase 2.10 에서 채울 자리). 현재 Overview 안에 있는 brief text / references / preprod / thread 는 brief tab 이 메인이 되므로 중복 제거.
+
+### EXIT
+- [ ] `/app/projects` 에 "Contest brief" tab 안 보임
+- [ ] `/app/projects/[id]` 진입 시 default 가 Brief Board
+- [ ] Overview tab 은 metadata-only 로 slim
+- [ ] tsc + lint + build exit 0
+
+### FAIL on
+- legacy bookmark `?tab=overview` 가 깨짐 (URL 자체는 동작해야 함)
+- 기존 사용자가 Overview 내용 못 찾음 (UX regression)
+
+### Rationale
+Brief Board 가 Phase 2.8 의 본질. 보조 tab 으로 두면 product framing 깨짐.
+
+---
+
+## §8.7 — G_B1-J — Wizard polish bundle
+
+### Trigger
+F-PUX-010 + F-PUX-015 + F-PUX-016. 모두 XS effort, 한 commit.
+
+### Scope
+1. **F-PUX-010 deliverable tags raw render**: `src/app/[locale]/app/projects/[id]/page.tsx` 의 `t(\`deliverable_${dt}\`)` → 사용자 입력 raw 그대로 렌더 (free-text chips). i18n key `deliverable_*` 들 deprecated.
+2. **F-PUX-015 slash hint cleanup**: `src/components/brief-board/editor.tsx` 의 "Type / to insert a block" 빈 상태 카피 → "이미지 / 파일 / 링크를 끌어다 놓으세요" (실제 작동하는 interaction 만 안내).
+3. **F-PUX-016 YAGI request modal copy split**: `messages/*.json` 에 새 key `yagi_request_explainer` 추가 ("YAGI 가 이 의뢰를 검토하고 1-2 영업일 내 답변 드립니다"). modal description 은 explainer 사용. submit 후 toast 만 `yagi_request_sent` 사용.
+
+### EXIT
+- [ ] deliverable tags 가 사용자 입력 그대로 보임
+- [ ] Brief Board 빈 상태 카피가 작동하는 interaction 만 안내
+- [ ] YAGI request modal 의 description = explainer, submit toast = sent
+- [ ] tsc + lint + build exit 0
+
+### Rationale
+3개 모두 1-2 줄 변경 / i18n key 1개 추가. 한 commit 으로 정리.
+
+---
+
 ## §9 — Out of scope (deferred)
 
+### → Phase 2.8.2 (Brief Board 본질 재설계 — 별 SPEC 존재)
+- 사이드바 채팅 우선순위 (야기 manual K-PUX)
+- Comment author visual hierarchy (avatar + role badge — 야기 manual K-PUX)
+- /app/projects 첫 인상 (카테고리 워크플로우 안내 + admin delete + 3-day undelete — 야기 manual K-PUX)
+- Brief Board toolbar + slash command discoverability
+- Canvas mode evaluation (TipTap stay vs tldraw/excalidraw)
+- /ko/commission 전체 deletion 검토
+
 ### → Phase 2.10
+- **F-PUX-001 Public landing rewrite** — Workshop OS framing
+- **F-PUX-006 Scope switcher rename** — Workshop / Client Portal / YAGI Host (G_B1-D 의 sidebar 만 처리, scope switcher 는 Phase 2.10)
+- **F-PUX-009 Wizard 5-action cycle rail** — 시각적 cycle position 표시
+- **F-PUX-011 Status model AI collaboration cycle 노출**
+- **F-PUX-013 Participants → Host/Client blocks**
+- **F-PUX-014 Block-anchored comments** (TipTap stable block id + threads.anchor_block_id)
+- **F-PUX-018 Settings cleanup** (creator profile fields 게이트 + Workshop 라벨)
 - **Status machine 완성** — draft → submitted → in_discovery → in_production → delivered → approved → archived 모든 transition + UI
 - **Brief Board status='locked' UX 강화** — lock 후 변경 요청 → fork 패턴
 - **Approval flow** — 클라이언트의 명시 승인 action + 알림
 - **Invoicing surface** — `invoices` 테이블 + UI (existing skeleton)
 - **글로벌 search 에 brief 본문 인덱싱**
-- **Block 단위 inline comment** (TipTap stable block id + threads anchor_block_id)
 
 ### → Phase 3.0
 - Contest surface 본격 (admin console 외 클라이언트 view + creator-facing public surface)
+- **F-PUX-017 admin challenges console i18n + 위치 정리**
 - Creator Profile (`/c/{handle}` public pages)
 - Workshop ↔ Contest **별 product** 운영 인프라
+- ProfileRole type narrow (4 → 2) + DB migration + studio/observer 분기 코드 12개 파일 cleanup (Q-088 deferred work)
+- Anonymous OTP voting infrastructure (Q-089) + `contest_voters` table
 
 ### → Phase 3.1+
 - Real-time co-editing (Yjs / Liveblocks)
@@ -297,40 +436,46 @@ Phase 3 = Contest 본격 = 별 product. SPEC 분량 큼.
 
 ## §11 — Definition of Done
 
-전체 7개 sub-gate EXIT 모두 통과 + Codex K-05 review 통과 + main merge.
+전체 10개 sub-gate EXIT 모두 통과 + Codex K-05 review 통과 + main merge.
 
 - [ ] G_B1-A: ESLint rule + sweep
 - [ ] G_B1-B: wizard 통합
 - [ ] G_B1-C: SSRF 3개
-- [ ] G_B1-D: terminology sweep
+- [ ] G_B1-D: terminology sweep + sidebar group rename
 - [ ] G_B1-E: dead code 정리
 - [ ] G_B1-F: tabs i18n + saveVersion RPC + R2 test
 - [ ] G_B1-G: Playwright e2e
+- [ ] G_B1-H: ⭐ Commission flow integrity (CTA + intent + admin convert + locale)
+- [ ] G_B1-I: Projects hub IA
+- [ ] G_B1-J: Wizard polish bundle
 - [ ] tsc + lint + build exit 0 (전체)
 - [ ] Codex K-05 (gpt-5.5) PASS, 0 HIGH-A, 0 unhandled HIGH-B
-- [ ] manual smoke (5분)
+- [ ] manual smoke (10분 — G_B1-H 변환 흐름 포함)
 
 ---
 
 ## §12 — Timeline budget
 
 ```
-TARGET   = 5 working days
-SOFT_CAP = 6 days
-HARD_CAP = 8 days → HALT E_TIMELINE_OVERRUN
+TARGET   = 8 working days
+SOFT_CAP = 9 days
+HARD_CAP = 11 days → HALT E_TIMELINE_OVERRUN
 
 PER GATE (target h):
-  G_B1-A = 4
+  G_B1-A =  4
   G_B1-B = 12
-  G_B1-C = 4
-  G_B1-D = 4
-  G_B1-E = 4
-  G_B1-F = 4
-  G_B1-G = 8
-  REVIEW = 2 (+ 4 per loop)
+  G_B1-C =  4
+  G_B1-D =  8 (extended w/ sidebar group rename)
+  G_B1-E =  4
+  G_B1-F =  4
+  G_B1-G =  8
+  G_B1-H = 12 ⭐ (admin convert is L effort)
+  G_B1-I =  4
+  G_B1-J =  4
+  REVIEW =  2 (+ 4 per loop)
 ```
 
-Total ≈ 42h work + 2h review = 5.5d. Buffer 0.5d → 5d 안에 SHIPPED 가능.
+Total ≈ 64h work + 2h review = 8d. Buffer 0d → 8d 안에 SHIPPED 가능. SOFT_CAP 까지 1d buffer.
 
 ---
 

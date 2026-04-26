@@ -40,7 +40,8 @@ If any line above outputs a non-zero exit code or an error, transition to `HALT_
 ## §1 — STATE MACHINE
 
 ```
-STATES = [INIT, G_B1_A, G_B1_B, G_B1_C, G_B1_D, G_B1_E, G_B1_F, G_B1_G, REVIEW, SHIPPED, HALT]
+STATES = [INIT, G_B1_A, G_B1_B, G_B1_C, G_B1_D, G_B1_E, G_B1_F, G_B1_G, G_B1_H, G_B1_I, G_B1_J, REVIEW, SHIPPED, HALT]
+Sequence: A → B → C → D → E → F → G → H → I → J → REVIEW → SHIPPED
 ```
 
 | From | Event | To | Action |
@@ -52,7 +53,7 @@ STATES = [INIT, G_B1_A, G_B1_B, G_B1_C, G_B1_D, G_B1_E, G_B1_F, G_B1_G, REVIEW, 
 | G_B1_n | fail_loop_2 | G_B1_n | re-attempt with second strategy |
 | G_B1_n | fail_loop_3 | HALT | escalate E_n_LOOP_EXHAUSTED |
 | G_B1_n | halt_trigger_match | HALT | escalate per §6 trigger code |
-| G_B1_G | exit_passed | REVIEW | invoke Codex K-05 (gpt-5.5) |
+| G_B1_J | exit_passed | REVIEW | invoke Codex K-05 (gpt-5.5) |
 | REVIEW | codex_PASS | SHIPPED | merge worktree to main, telegram SHIPPED |
 | REVIEW | codex_HIGH | G_B1_(matched) | re-enter gate; loop budget 2 |
 | REVIEW | codex_loop_3 | HALT | escalate E_REVIEW_LOOP |
@@ -236,6 +237,92 @@ LOG: GATE_EXIT G_B1_G e2e_pass=3/3 build_size_delta_kb=<n>
 COMMIT: test(phase-2-8-1 g-b1-g): playwright e2e + korean ime smoke
 ```
 
+### G_B1_H — Commission flow integrity ⭐
+
+```
+ENTRY: G_B1_J SHIPPED
+EXIT:
+  F-PUX-002:
+    - src/app/[locale]/commission/page.tsx no longer renders the challenge CTA
+    - grep -ri 'challenge' src/app/\[locale\]/commission/page.tsx → 0 results
+  F-PUX-003:
+    - Anonymous click on "의뢰하기" → redirects to /{locale}/signup?next=/app/commission/new
+    - signup page preserves the `next` query through email confirm callback
+    - check-email panel preserves next URL in the resend resubmit
+    - onboarding role page auto-skips for client role when intent is commission
+  F-PUX-004 (the L gate):
+    - new server action convertCommissionToProject(commissionId)
+    - migration: ALTER TABLE commissions ADD COLUMN converted_to_project_id uuid REFERENCES projects(id) ON DELETE SET NULL
+    - migration: ALTER TABLE commissions ADD CHECK (status IN ('pending','responded','converted','closed'))
+    - INSERT into projects + project_briefs + project_references in a single PG transaction
+    - notifications row created for client (kind='commission_converted')
+    - admin UI: "Workshop 생성" primary button visible; clicking redirects to /app/projects/[id]?tab=brief
+    - RLS verified: only yagi_admin can call convertCommissionToProject (run as workspace_admin and as anonymous → must fail)
+    - reference upload bucket: same R2 bucket used by Brief Board, no new bucket
+  F-PUX-019:
+    - challenge link removed from /commission (covered by F-PUX-002)
+    - middleware locale-free /challenges exclude untouched
+  e2e (extends existing brief-board.spec.ts):
+    - submit commission as anonymous → signup → confirm → lands on /app/commission/new with prefill
+    - admin convert → client receives notification → brief board has commission text + references
+  tsc + lint + build exit 0
+FAIL on:
+  - reference loss on conversion (count(project_references) != count(commissions.references[]))
+  - non-admin role can call convertCommissionToProject
+  - migration breaks existing commissions data (test on staging copy first)
+  - notification not delivered
+ON_FAIL_LOOP:
+  - loop 1: wrap conversion in BEGIN/SAVEPOINT; add reference count assertion
+  - loop 2: split migration into two (column add, then constraint) to isolate failure
+LOG: GATE_EXIT G_B1_H converted=<n> rls_pass=true ref_loss=0 notif_delivered=true
+COMMIT: feat(phase-2-8-1 g-b1-h): commission flow integrity (CTA + intent + admin convert)
+```
+
+### G_B1_I — Projects hub IA
+
+```
+ENTRY: G_B1_H SHIPPED
+EXIT:
+  - src/app/[locale]/app/projects/page.tsx: "Contest brief" tab removed (i18n key kept for Phase 3.0+)
+  - src/app/[locale]/app/projects/[id]/page.tsx: default tab = brief (searchParams.tab ?? 'brief')
+  - Overview tab simplified to metadata only; brief text / references / preprod / thread blocks removed from Overview (now exclusive to Brief tab)
+  - legacy ?tab=overview URL still works (not 404)
+  - tsc + lint + build exit 0
+FAIL on:
+  - bookmark URL break
+  - content lost from Overview without being available on Brief tab
+ON_FAIL_LOOP:
+  - loop 1: keep deprecated Overview blocks behind ?legacy=1 query for one phase
+  - loop 2: re-audit content placement in Brief tab
+LOG: GATE_EXIT G_B1_I default_tab=brief overview_kb_delta=<n>
+COMMIT: refactor(phase-2-8-1 g-b1-i): projects hub IA (Brief default + contest tab off)
+```
+
+### G_B1_J — Wizard polish bundle
+
+```
+ENTRY: G_B1_I SHIPPED
+EXIT:
+  F-PUX-010:
+    - src/app/[locale]/app/projects/[id]/page.tsx: deliverable_types render as raw user input
+    - i18n keys deliverable_* marked deprecated (comment in messages/*.json), no usages remain
+  F-PUX-015:
+    - src/components/brief-board/editor.tsx: empty hint replaced; no "Type / to insert" copy
+  F-PUX-016:
+    - new i18n key yagi_request_explainer (ko + en) — modal description uses this
+    - yagi_request_sent reserved for post-submit toast only
+    - YagiRequestModal description uses explainer; submit success uses sent
+  tsc + lint + build exit 0
+FAIL on:
+  - missing translation (en) for new key
+  - deliverable_* removed but still referenced somewhere
+ON_FAIL_LOOP:
+  - loop 1: grep for residual usages, fix
+  - loop 2: keep keys for one phase, mark @deprecated in code comment only
+LOG: GATE_EXIT G_B1_J keys_added=1 keys_deprecated=<n>
+COMMIT: fix(phase-2-8-1 g-b1-j): wizard polish bundle (tags + slash hint + modal copy)
+```
+
 ---
 
 ## §3 — REVIEW (Codex K-05)
@@ -246,9 +333,9 @@ PROTOCOL: .yagi-autobuild/codex-review-protocol.md
 MODEL: gpt-5.5 (high reasoning effort) per .codex/config.toml
 SCOPE:
   - all files changed since main
-  - migration sql files
-  - RLS policies
-  - new server actions (ensureDraftProject, submitDraftProject)
+  - migration sql files (commissions.converted_to_project_id, save_brief_version RPC)
+  - RLS policies (especially convertCommissionToProject)
+  - new server actions (ensureDraftProject, submitDraftProject, convertCommissionToProject)
 INVOKE (Windows PowerShell — verified pattern from DECISIONS_CACHE Q-081):
   cd ../yagi-workshop-g-b-1-hardening
   [Console]::InputEncoding = [System.Text.Encoding]::UTF8
@@ -281,7 +368,7 @@ pnpm build
 git push origin main
 
 # emit telegram (single line)
-# format: "Phase 2.8.1 SHIPPED · 7 gates · <total_elapsed>h · workshop hardened"
+# format: "Phase 2.8.1 SHIPPED · 10 gates · <total_elapsed>h · workshop hardened"
 ```
 
 Then transition to STOP. Do not start Phase 2.8.2.
@@ -308,13 +395,15 @@ No prose. No "I think". No "Let me know". Key=value only.
 | E_G_B1_A_LINT_FALSE_POSITIVE | rule false-flags 10+ legit servers | rule definition + samples |
 | E_G_B1_B_DRAFT_RACE | multiple drafts created same user | DB rows + repro |
 | E_G_B1_F_RPC_MIGRATION | RPC migration touches non-spec table | sql diff |
+| E_G_B1_H_RLS_LEAK | non-admin role can call convertCommissionToProject | RLS test repro |
+| E_G_B1_H_REF_LOSS | reference count mismatch on conversion | sql diff + counts |
 | E_G_B1_n_LOOP_EXHAUSTED | gate fails 3x | last 3 attempt diffs |
 | E_REVIEW_LOOP | Codex review fails 3x | findings JSON |
 | E_HIGH_A_FOUND | non-schema-only HIGH-A | finding location |
 | E_SCHEMA_DRIFT | migration affects table outside SPEC §2 | sql diff |
 | E_DEP_UNLISTED | new package not in SPEC §7 + not Q-083 sibling | package name |
 | E_PROD_TABLE_MUTATION | ALTER/DROP on Phase 1.x tables | sql snippet |
-| E_TIMELINE_OVERRUN | total elapsed > HARD_CAP 8d | _run.log timeline |
+| E_TIMELINE_OVERRUN | total elapsed > HARD_CAP 11d | _run.log timeline |
 
 No HALT trigger requires interpretation. If ambiguous, treat as non-trigger and continue. Telegram-ping on confirmed match only.
 
@@ -352,9 +441,11 @@ Active cache entries this phase will reference:
 - Q-082 HIGH-A-SCHEMA-ONLY (mandatory for §3 SEVERITY)
 - Q-083 Library-monorepo sibling dep rule (mandatory for §7 FORBIDDEN)
 - Q-084 Workshop terminology (mandatory for G_B1-D)
-- Q-085 Workshop ↔ Contest separation (informational)
+- Q-085 Workshop ↔ Contest separation (mandatory for G_B1-H + G_B1-I)
 - Q-086 Contest MVP surface (informational)
 - Q-087 Creator Profile MVP=NO (informational)
+- Q-088 ProfileRole 4→2 simplification (informational — do NOT touch sidebar/email/challenges studio/observer branches in this phase; deferred to Phase 3.0)
+- Q-089 Anonymous OTP voting (informational — do NOT add contest_voters in this phase)
 
 ---
 
@@ -365,6 +456,7 @@ WORKTREES = 1 (single)
 TEAMMATES = 0
 RATIONALE: Phase 2.8.1 has linear dep chain. G_B1-A (lint rule) before G_B1-B (wizard).
            G_B1-D terminology sweep must happen after G_B1-B/E to avoid double-edit.
+           G_B1-H (admin convert) needs DB migration which must land before G_B1-I/J read DB.
 ```
 
 ---
@@ -372,22 +464,25 @@ RATIONALE: Phase 2.8.1 has linear dep chain. G_B1-A (lint rule) before G_B1-B (w
 ## §10 — TIMELINE BUDGET
 
 ```
-TARGET   = 5 working days
-SOFT_CAP = 6 days
-HARD_CAP = 8 days → HALT E_TIMELINE_OVERRUN
+TARGET   = 8 working days
+SOFT_CAP = 9 days
+HARD_CAP = 11 days → HALT E_TIMELINE_OVERRUN
 
 PER GATE (target h):
-  G_B1_A = 4
+  G_B1_A =  4
   G_B1_B = 12
-  G_B1_C = 4
-  G_B1_D = 4
-  G_B1_E = 4
-  G_B1_F = 4
-  G_B1_G = 8
-  REVIEW = 2 (+ 4 per loop)
+  G_B1_C =  4
+  G_B1_D =  8
+  G_B1_E =  4
+  G_B1_F =  4
+  G_B1_G =  8
+  G_B1_H = 12
+  G_B1_I =  4
+  G_B1_J =  4
+  REVIEW =  2 (+ 4 per loop)
 ```
 
-Total ≈ 42h work + 2h review = 5.5d. Buffer 0.5d → 5d 안에 SHIPPED.
+Total ≈ 64h work + 2h review = 8d. SOFT_CAP buffer 1d.
 
 ---
 
