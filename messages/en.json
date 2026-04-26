@@ -434,6 +434,8 @@
     "empty_direct_sub": "Start your first project",
     "empty_contest": "No contests yet",
     "brief_step": "Project brief",
+    "tab_overview": "Overview",
+    "tab_brief": "Brief board",
     "refs_step": "Brief board",
     "refs_step_placeholder_title": "Brief board — coming soon",
     "refs_step_placeholder_sub": "Soon you'll be able to combine text, images, video, and files in one collaborative space. For now, please skip this step.",

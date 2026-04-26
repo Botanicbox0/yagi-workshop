@@ -434,6 +434,8 @@
     "empty_direct_sub": "새 프로젝트를 시작해 주세요",
     "empty_contest": "아직 챌린지가 없습니다",
     "brief_step": "프로젝트 요약",
+    "tab_overview": "개요",
+    "tab_brief": "기획 보드",
     "refs_step": "기획 보드",
     "refs_step_placeholder_title": "기획 보드 — 준비 중",
     "refs_step_placeholder_sub": "곧 만나보실 수 있어요. 텍스트·이미지·영상·파일을 자유롭게 결합해 기획을 다듬는 공간이에요. 지금은 건너뛰어 주세요.",

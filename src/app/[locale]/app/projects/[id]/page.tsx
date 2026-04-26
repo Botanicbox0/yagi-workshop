@@ -176,9 +176,13 @@ function BriefBreadcrumb({
 function BriefTabsNav({
   id,
   active,
+  overviewLabel,
+  briefLabel,
 }: {
   id: string;
   active: "overview" | "brief";
+  overviewLabel: string;
+  briefLabel: string;
 }) {
   return (
     <div className="mb-6 flex items-center gap-1 border-b border-border" role="tablist">
@@ -193,7 +197,7 @@ function BriefTabsNav({
             : "border-transparent text-muted-foreground hover:text-foreground"
         )}
       >
-        Overview
+        {overviewLabel}
       </Link>
       <Link
         href={`?tab=brief`}
@@ -208,7 +212,7 @@ function BriefTabsNav({
         // Mark the link unused for prop typing — id is implicit via current route.
         data-project={id}
       >
-        Brief board
+        {briefLabel}
       </Link>
     </div>
   );
@@ -422,7 +426,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
     return (
       <div className="px-6 md:px-10 py-10 max-w-6xl">
         <BriefBreadcrumb workspaceName={workspaceName} brandName={brandName} title={project.title} />
-        <BriefTabsNav id={project.id} active="brief" />
+        <BriefTabsNav
+          id={project.id}
+          active="brief"
+          overviewLabel={t("tab_overview")}
+          briefLabel={t("tab_brief")}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-4">
@@ -648,7 +657,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         </span>
       </nav>
 
-      <BriefTabsNav id={project.id} active="overview" />
+      <BriefTabsNav
+        id={project.id}
+        active="overview"
+        overviewLabel={t("tab_overview")}
+        briefLabel={t("tab_brief")}
+      />
 
       {/* Title row: status badge + action dropdown */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">

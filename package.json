@@ -11,6 +11,8 @@
     "check:rsc-form-action": "bash scripts/check-rsc-form-action.sh",
     "verify:rsc-form-action": "pnpm check:rsc-form-action && pnpm lint:rsc-form-action",
     "test:ssrf-defense": "node scripts/test-ssrf-defense.mjs",
+    "test:saveversion-race": "node scripts/test-saveversion-race.mjs",
+    "test:r2-brief-asset": "node scripts/test-r2-brief-asset.mjs",
     "prepare": "husky"
   },
   "dependencies": {

@@ -273,55 +273,48 @@ export async function saveVersion(
   const { supabase, user } = await requireUser();
   if (!user) return { error: "unauthenticated" };
 
-  const { data: brief, error: briefErr } = await supabase
-    .from("project_briefs")
-    .select("content_json, status, current_version")
-    .eq("project_id", parsed.data.projectId)
-    .maybeSingle();
+  // Phase 2.8.1 G_B1-F: atomic snapshot+bump via the save_brief_version
+  // RPC. The pre-2.8.1 path was INSERT-then-UPDATE which raced on
+  // UNIQUE (project_id, version_n) when two saves landed in the same
+  // debounce window. The RPC takes FOR UPDATE on project_briefs and
+  // serializes concurrent callers.
+  // The supabase typed client doesn't know about save_brief_version
+  // until `supabase gen types typescript` runs against the post-apply
+  // schema. The runtime call shape is stable; cast through the
+  // untyped rpc surface so TS doesn't reject the function name.
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )("save_brief_version", {
+    p_project_id: parsed.data.projectId,
+    p_label: parsed.data.label ?? null,
+  });
 
-  if (briefErr) {
-    console.error("[saveVersion] read error", briefErr);
-    return { error: "db", message: briefErr.message };
+  if (error) {
+    // PG raises with custom messages: 'unauthenticated', 'forbidden',
+    // 'locked', 'not_found'. Map to the BriefActionResult union so
+    // callers see structured errors.
+    const msg = (error.message ?? "").toLowerCase();
+    if (msg.includes("unauthenticated")) return { error: "unauthenticated" };
+    if (msg.includes("forbidden")) return { error: "forbidden", reason: "non_member" };
+    if (msg.includes("locked")) return { error: "locked" };
+    if (msg.includes("not_found")) return { error: "not_found" };
+    console.error("[saveVersion] rpc error", error);
+    return { error: "db", message: error.message };
   }
-  if (!brief) return { error: "not_found" };
-  if (brief.status === "locked") return { error: "locked" };
 
-  const nextN = brief.current_version + 1;
-
-  const { data: inserted, error: insErr } = await supabase
-    .from("project_brief_versions")
-    .insert({
-      project_id: parsed.data.projectId,
-      version_n: nextN,
-      content_json: brief.content_json,
-      label: parsed.data.label ?? null,
-      created_by: user.id,
-    })
-    .select("id, version_n")
-    .single();
-
-  if (insErr) {
-    console.error("[saveVersion] insert error", insErr);
-    return { error: "db", message: insErr.message };
-  }
-
-  // Bump current_version. CAS on previous value to avoid clobbering a
-  // racing save.
-  const { error: bumpErr } = await supabase
-    .from("project_briefs")
-    .update({ current_version: nextN, updated_by: user.id })
-    .eq("project_id", parsed.data.projectId)
-    .eq("current_version", brief.current_version);
-
-  if (bumpErr) {
-    console.error("[saveVersion] bump error", bumpErr);
-    // The version row was inserted but bump failed; return success with
-    // the inserted row — the next save will re-derive current_version.
-    // (FU candidate: tighten by deleting the version row on bump failure.)
-  }
+  // RPC returns jsonb { versionId, versionN }. Cast through unknown
+  // because the supabase typed client cannot infer a freshly added
+  // function return shape until generate-types runs.
+  const result = data as unknown as { versionId: string; versionN: number };
 
   revalidatePath(`/[locale]/app/projects/${parsed.data.projectId}`, "page");
-  return { ok: true, data: { versionId: inserted.id, versionN: inserted.version_n } };
+  return {
+    ok: true,
+    data: { versionId: result.versionId, versionN: result.versionN },
+  };
 }
 
 // -----------------------------------------------------------------------------
