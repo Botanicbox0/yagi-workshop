@@ -12,3 +12,5 @@
 2026-04-26T16:06:35Z G_B1_E GATE_ENTER gate=G_B1_F
 2026-04-26T16:12:58Z G_B1_F GATE_EXIT race_pass=skip(env) r2_ms=skip(env) tabs_i18n=true rpc=save_brief_version migration=20260427010000_phase_2_8_1_save_brief_version_rpc tsc=ok lint=ok build=ok
 2026-04-26T16:12:58Z G_B1_F GATE_ENTER gate=G_B1_G
+2026-04-26T16:16:35Z G_B1_G GATE_EXIT e2e_pass=manual_pending build_size_delta_kb=0 dep=@playwright/test@1.55.0 spec=e2e/brief-board.spec.ts tsc=ok lint=ok build=ok prod_bundle_clean=true
+2026-04-26T16:16:35Z G_B1_G GATE_ENTER gate=G_B1_H
