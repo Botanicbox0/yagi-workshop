@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:rsc-form-action": "node scripts/test-rsc-form-action-rule.mjs",
+    "check:rsc-form-action": "bash scripts/check-rsc-form-action.sh",
+    "verify:rsc-form-action": "pnpm check:rsc-form-action && pnpm lint:rsc-form-action",
     "prepare": "husky"
   },
   "dependencies": {

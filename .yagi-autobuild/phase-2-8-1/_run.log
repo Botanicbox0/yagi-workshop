@@ -1,0 +1,4 @@
+2026-04-26T15:34:49Z INIT ENTRY_OK phase=2-8-1 worktree=g-b-1-hardening base=main commit=498a15f
+2026-04-26T15:34:49Z INIT GATE_ENTER gate=G_B1_A
+2026-04-26T15:41:32Z G_B1_A GATE_EXIT baseline_violations=0 ci_added=true rule=yagi-rsc/no-async-form-action fixture_fires=true tsc=ok build=ok lint=ok
+2026-04-26T15:41:32Z G_B1_A GATE_ENTER gate=G_B1_B
