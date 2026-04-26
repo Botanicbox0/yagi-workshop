@@ -6,3 +6,5 @@
 2026-04-26T15:49:38Z G_B1_B GATE_ENTER gate=G_B1_C
 2026-04-26T15:55:41Z G_B1_C GATE_EXIT ssrf_vectors_blocked=3 og_fetch_ok=true assertions_pass=19 redirect_mode=manual hops_max=5 tsc=ok lint=ok build=ok
 2026-04-26T15:55:41Z G_B1_C GATE_ENTER gate=G_B1_D
+2026-04-26T16:02:37Z G_B1_D GATE_EXIT ui_workspace_count=0 db_workspace_id_intact=true sidebar_group=workshop scope_switcher=workshops i18n_keys_unchanged=true tsc=ok lint=ok build=ok
+2026-04-26T16:02:37Z G_B1_D GATE_ENTER gate=G_B1_E

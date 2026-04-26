@@ -146,9 +146,9 @@
     "bio": "Bio",
     "bio_placeholder": "A short intro",
     "avatar": "Profile image",
-    "workspace_title": "Create your workspace",
+    "workspace_title": "Create your workshop",
     "workspace_sub": "Invite your team and manage projects",
-    "workspace_name": "Workspace name",
+    "workspace_name": "Workshop name",
     "workspace_name_ph": "e.g., Concrete Works",
     "workspace_slug": "URL",
     "workspace_slug_help": "studio.yagiworkshop.xyz/w/",
@@ -240,7 +240,7 @@
   },
   "nav": {
     "groups": {
-      "work": "Work",
+      "work": "Workshop",
       "communication": "Communication",
       "billing": "Billing",
       "system": "System"
@@ -348,9 +348,9 @@
     "coming_soon": "Coming in next phase"
   },
   "workspace": {
-    "current": "Current workspace",
-    "switch": "Switch workspace",
-    "no_workspace": "No workspace"
+    "current": "Current workshop",
+    "switch": "Switch workshop",
+    "no_workspace": "No workshop"
   },
   "invite": {
     "pending": "Pending",
@@ -531,7 +531,7 @@
   "settings": {
     "title": "Settings",
     "profile_tab": "Profile",
-    "workspace_tab": "Workspace",
+    "workspace_tab": "Workshop",
     "team_tab": "Team",
     "billing_tab": "Billing",
     "profile_save": "Save profile",
@@ -565,10 +565,10 @@
   "admin": {
     "title": "Admin dashboard",
     "projects_tab": "Projects",
-    "workspaces_tab": "Workspaces",
+    "workspaces_tab": "Workshops",
     "cross_workspace_projects": "All projects",
     "filter_status": "Filter by status",
-    "filter_workspace": "Filter by workspace",
+    "filter_workspace": "Filter by workshop",
     "filter_all": "All",
     "google": {
       "title": "Google integration",
@@ -601,7 +601,7 @@
       "status_breakdown_title": "Status breakdown (YTD)",
       "col_invoice_number": "Invoice no.",
       "col_project": "Project",
-      "col_workspace": "Workspace",
+      "col_workspace": "Workshop",
       "col_total": "Total",
       "col_status": "Status",
       "col_issue_date": "Issued",
@@ -781,7 +781,7 @@
     "mock_dashboard_count": "{count} mock invoices — reissue required",
     "mock_pdf_watermark": "MOCK / NOT FILED",
     "reissue_button": "Reissue",
-    "buyer_registration_missing": "This workspace has no business registration number set",
+    "buyer_registration_missing": "This workshop has no business registration number set",
     "invoice_number_label": "Invoice number",
     "project_label": "Project",
     "buyer_label": "Buyer",
@@ -909,7 +909,7 @@
     "unarchive_channel_confirm_body": "Members will be able to post again.",
     "unarchive_channel_confirm_action": "Unarchive",
     "members_dialog_title": "Channel members",
-    "members_dialog_intro": "All YAGI internal workspace members can see and post in this channel.",
+    "members_dialog_intro": "All YAGI internal workshop members can see and post in this channel.",
     "members_dialog_joined_at": "Joined {date}",
     "error_send_failed": "Failed to send message",
     "success_channel_created": "Channel created",
@@ -1110,7 +1110,7 @@
   },
   "app": {
     "scopeSelector": {
-      "firstUseTooltip": "Switch between workspaces, profile, and admin."
+      "firstUseTooltip": "Switch between workshops, profile, and admin."
     },
     "publicExit": "Back to public site",
     "help": {

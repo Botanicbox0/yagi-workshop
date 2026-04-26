@@ -171,7 +171,7 @@ function MultiScopeSwitcher({
           {workspaceScopes.length > 0 && (
             <>
               <DropdownMenuLabel className={sectionLabelClass}>
-                Workspaces
+                Workshops
               </DropdownMenuLabel>
               {workspaceScopes.map(renderItem)}
             </>

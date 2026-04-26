@@ -146,9 +146,9 @@
     "bio": "소개",
     "bio_placeholder": "간단하게 소개해 주세요",
     "avatar": "프로필 이미지",
-    "workspace_title": "워크스페이스를 만들어 주세요",
+    "workspace_title": "워크샵을 만들어 주세요",
     "workspace_sub": "회사 단위로 팀을 초대하고 프로젝트를 관리합니다",
-    "workspace_name": "워크스페이스 이름",
+    "workspace_name": "워크샵 이름",
     "workspace_name_ph": "예: 콘크리트웍스",
     "workspace_slug": "URL",
     "workspace_slug_help": "studio.yagiworkshop.xyz/w/",
@@ -240,7 +240,7 @@
   },
   "nav": {
     "groups": {
-      "work": "작업",
+      "work": "워크샵",
       "communication": "소통",
       "billing": "결제",
       "system": "시스템"
@@ -348,9 +348,9 @@
     "coming_soon": "다음 단계에서 제공됩니다"
   },
   "workspace": {
-    "current": "현재 워크스페이스",
-    "switch": "워크스페이스 전환",
-    "no_workspace": "워크스페이스 없음"
+    "current": "현재 워크샵",
+    "switch": "워크샵 전환",
+    "no_workspace": "워크샵 없음"
   },
   "invite": {
     "pending": "대기중인 초대",
@@ -531,7 +531,7 @@
   "settings": {
     "title": "설정",
     "profile_tab": "프로필",
-    "workspace_tab": "워크스페이스",
+    "workspace_tab": "워크샵",
     "team_tab": "팀",
     "billing_tab": "청구",
     "profile_save": "프로필 저장",
@@ -565,10 +565,10 @@
   "admin": {
     "title": "관리자 대시보드",
     "projects_tab": "프로젝트",
-    "workspaces_tab": "워크스페이스",
+    "workspaces_tab": "워크샵",
     "cross_workspace_projects": "전체 프로젝트",
     "filter_status": "상태 필터",
-    "filter_workspace": "워크스페이스 필터",
+    "filter_workspace": "워크샵 필터",
     "filter_all": "전체",
     "google": {
       "title": "Google 연동",
@@ -601,7 +601,7 @@
       "status_breakdown_title": "상태별 건수 (올해)",
       "col_invoice_number": "송장 번호",
       "col_project": "프로젝트",
-      "col_workspace": "워크스페이스",
+      "col_workspace": "워크샵",
       "col_total": "합계",
       "col_status": "상태",
       "col_issue_date": "발행일",
@@ -781,7 +781,7 @@
     "mock_dashboard_count": "MOCK 송장 {count}건 — 재발행 필요",
     "mock_pdf_watermark": "MOCK / 미신고",
     "reissue_button": "재발행",
-    "buyer_registration_missing": "이 워크스페이스에 사업자등록번호가 설정되지 않았습니다",
+    "buyer_registration_missing": "이 워크샵에 사업자등록번호가 설정되지 않았습니다",
     "invoice_number_label": "송장 번호",
     "project_label": "프로젝트",
     "buyer_label": "공급받는자",
@@ -909,7 +909,7 @@
     "unarchive_channel_confirm_body": "멤버들이 다시 메시지를 게시할 수 있게 됩니다.",
     "unarchive_channel_confirm_action": "보관 해제",
     "members_dialog_title": "채널 멤버",
-    "members_dialog_intro": "모든 YAGI 내부 워크스페이스 멤버가 이 채널을 보고 게시할 수 있습니다.",
+    "members_dialog_intro": "모든 YAGI 내부 워크샵 멤버가 이 채널을 보고 게시할 수 있습니다.",
     "members_dialog_joined_at": "참여일 {date}",
     "error_send_failed": "메시지 보내기에 실패했습니다",
     "success_channel_created": "채널이 생성되었습니다",
