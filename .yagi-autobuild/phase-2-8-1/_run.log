@@ -27,3 +27,6 @@
 2026-04-26T16:43:30Z REVIEW LOOP=2_PASS verdict=LOOP_2_PASS high_a=0 high_b=0 new_findings=0
 2026-04-26T16:43:30Z REVIEW GATE_EXIT review_pass=true
 2026-04-26T16:43:30Z REVIEW GATE_ENTER gate=SHIPPED
+2026-04-26T16:46:18Z SHIPPED MERGE_FF g-b-1-hardening->main commits=12 base=498a15f head=0c0ea9f
+2026-04-26T16:46:18Z SHIPPED tsc=ok build=ok push=ok remote=origin/main
+2026-04-26T16:46:18Z SHIPPED PHASE_DONE phase=2-8-1 elapsed_clock=~1h12m target=8d gates=10 review_loops=2
