@@ -20,3 +20,7 @@
 2026-04-26T16:29:45Z G_B1_I GATE_ENTER gate=G_B1_J
 2026-04-26T16:33:08Z G_B1_J GATE_EXIT keys_added=1(yagi_request_explainer) keys_deprecated=6(deliverable_*) deliverable_render=raw slash_hint=updated tsc=ok lint=ok build=ok
 2026-04-26T16:33:08Z G_B1_J GATE_ENTER gate=REVIEW
+2026-04-26T16:39:18Z REVIEW LOOP=1 codex_findings=3 high_a=0 high_a_schema_only=0 high_b=2 med=1 verdict=HIGH_B=2,MED=1
+2026-04-26T16:41:25Z REVIEW LOOP=1_FIX g-b1-h_seed_brief_content high_b#1=fixed migration_amend
+2026-04-26T16:41:25Z REVIEW LOOP=1_FIX g-b1-b_status_draft_guard high_b#2=fixed
+2026-04-26T16:41:25Z REVIEW LOOP=1_FIX FU-2.8.1-ensuredraft-race-brief-poll med#3=deferred

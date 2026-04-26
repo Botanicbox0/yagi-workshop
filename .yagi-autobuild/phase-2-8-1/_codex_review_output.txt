@@ -1,0 +1,19 @@
+﻿1. **Severity**: HIGH-B  
+   **Location**: `supabase/migrations/20260427020000_phase_2_8_1_commission_convert.sql:176`  
+   **Observation**: Converted commissions create `project_briefs` with default empty `content_json`; the intake `brief_md` is only copied to `projects.brief`. The project page now defaults to Brief and renders `project_briefs.content_json`, while the Overview brief text was removed.  
+   **Exploit / regression scenario**: Admin converts a commission, client follows the `?tab=brief` notification, and sees an empty Brief Board instead of the submitted commission brief.  
+   **Proposed fix**: Seed `project_briefs.content_json` from `v_intake.brief_md` as a valid TipTap doc, or explicitly render/import the legacy `projects.brief` content on converted projects.
+
+2. **Severity**: HIGH-B  
+   **Location**: `src/app/[locale]/app/projects/new/actions.ts:411`  
+   **Observation**: `submitDraftProject` does not require `target.status === "draft"` before updating fields and setting status to `"draft"` or `"submitted"`.  
+   **Exploit / regression scenario**: A project creator/workspace admin can call this server action for an already submitted/in-production/delivered project they created and demote it to draft or overwrite wizard fields, bypassing the transition matrix enforced in `projects/[id]/actions.ts`.  
+   **Proposed fix**: Reject unless the selected row is still `status = 'draft'`, and include `.eq("status", "draft")` on the update.
+
+3. **Severity**: MED  
+   **Location**: `src/app/[locale]/app/projects/new/actions.ts:345`  
+   **Observation**: The `23505` race path re-selects the winning draft once, but if the winner has committed `projects` and not yet inserted `project_briefs`, `fetchDraftBootstrap` returns null and the loser reports a DB error.  
+   **Exploit / regression scenario**: Double-click / double-mounted wizard can surface a generic error even though the winning request is still creating the valid draft.  
+   **Proposed fix**: Make project+brief creation atomic via RPC, or retry/poll briefly for the sibling brief before failing.
+
+**Verdict**: `HIGH_B=2, MED=1`

@@ -174,8 +174,43 @@ BEGIN
   -- 2. project_briefs sibling. Trigger validate_project_brief_change
   --    enforces status='editing' / current_version=0 for non-admin
   --    INSERTs; this RPC is yagi_admin so the bypass branch applies.
-  INSERT INTO public.project_briefs (project_id, updated_by)
-  VALUES (v_project_id, v_caller);
+  --
+  -- Codex K-05 finding 1 (HIGH-B) — seed content_json from brief_md so
+  -- the client lands on a non-empty Brief Board when they follow the
+  -- commission_converted notification. The pre-fix migration left
+  -- content_json at the column DEFAULT (empty doc), so /app/projects/[id]
+  -- (Brief default tab in G_B1-I) read empty even though the original
+  -- brief lived on `projects.brief`. We expand brief_md line-by-line
+  -- into TipTap paragraph nodes — empty lines become empty paragraphs,
+  -- which preserves visual spacing without forcing the client to
+  -- re-author the content on first view.
+  INSERT INTO public.project_briefs (project_id, updated_by, content_json)
+  VALUES (
+    v_project_id,
+    v_caller,
+    jsonb_build_object(
+      'type', 'doc',
+      'content', coalesce(
+        (
+          SELECT jsonb_agg(
+            CASE
+              WHEN line = '' THEN
+                jsonb_build_object('type', 'paragraph')
+              ELSE
+                jsonb_build_object(
+                  'type', 'paragraph',
+                  'content', jsonb_build_array(
+                    jsonb_build_object('type', 'text', 'text', line)
+                  )
+                )
+            END
+          )
+          FROM regexp_split_to_table(coalesce(v_intake.brief_md, ''), E'\n') AS line
+        ),
+        '[]'::jsonb
+      )
+    )
+  );
 
   -- 3. project_references — one row per URL in reference_urls jsonb.
   --    Same R2 bucket as Brief Board uploads; reference_uploads (R2 keys)

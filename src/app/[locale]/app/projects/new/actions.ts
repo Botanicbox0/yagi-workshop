@@ -409,6 +409,13 @@ export async function submitDraftProject(
   if (!target) return { error: "not_found" };
   if (target.created_by !== user.id) return { error: "forbidden" };
 
+  // Codex K-05 finding 2 (HIGH-B) — restrict to status='draft'. Without
+  // this guard the wizard's submit path becomes a backdoor that demotes
+  // any project owned by the caller (submitted / in_production /
+  // delivered etc.) back to 'draft' or stomps on its fields, bypassing
+  // the transition matrix in projects/[id]/actions.ts.
+  if (target.status !== "draft") return { error: "forbidden" };
+
   const status = intent === "submit" ? "submitted" : "draft";
 
   const { data: updated, error } = await supabase
@@ -424,6 +431,7 @@ export async function submitDraftProject(
     })
     .eq("id", projectId)
     .eq("created_by", user.id)
+    .eq("status", "draft")
     .select("id, status")
     .single();
 
