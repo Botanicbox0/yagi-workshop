@@ -8,3 +8,5 @@
 2026-04-26T15:55:41Z G_B1_C GATE_ENTER gate=G_B1_D
 2026-04-26T16:02:37Z G_B1_D GATE_EXIT ui_workspace_count=0 db_workspace_id_intact=true sidebar_group=workshop scope_switcher=workshops i18n_keys_unchanged=true tsc=ok lint=ok build=ok
 2026-04-26T16:02:37Z G_B1_D GATE_ENTER gate=G_B1_E
+2026-04-26T16:06:35Z G_B1_E GATE_EXIT i18n_keys_deleted=14 components_deleted=2 legacy_render_ok=true intake_mode_col=kept tsc=ok lint=ok build=ok
+2026-04-26T16:06:35Z G_B1_E GATE_ENTER gate=G_B1_F

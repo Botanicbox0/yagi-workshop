@@ -665,19 +665,15 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           >
             {t(statusI18nKey)}
           </span>
-          {/* Intake mode badge */}
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium keep-all",
-              project.intake_mode === "proposal_request"
-                ? "border-transparent bg-lime-100 text-lime-800"
-                : "border-border bg-transparent text-muted-foreground"
-            )}
-          >
-            {project.intake_mode === "proposal_request"
-              ? t("intake_mode_proposal_title")
-              : t("intake_mode_brief_title")}
-          </span>
+          {/* Phase 2.8.1 G_B1-E: legacy proposal_request projects keep a
+              read-only marker. New projects are always brief-mode after
+              Phase 2.7.2 wizard cleanup, so the badge collapses to a
+              muted notice rather than an active state. */}
+          {project.intake_mode === "proposal_request" && (
+            <span className="inline-flex items-center rounded-full border border-border bg-transparent px-2.5 py-0.5 text-xs font-medium text-muted-foreground keep-all">
+              {t("legacy_proposal_banner")}
+            </span>
+          )}
         </div>
 
         {/* Action dropdown — only rendered when transitions are available */}
@@ -720,44 +716,46 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left: main content — col-span-2 */}
         <div className="md:col-span-2 space-y-8">
-          {/* Client context — only for proposal_request projects */}
+          {/* Phase 2.8.1 G_B1-E: legacy proposal_request projects retain
+              their stored client-context fields in a read-only banner.
+              New writes go through the brief-mode wizard only — there is
+              no editor for these fields anymore. */}
           {project.intake_mode === "proposal_request" && (
-            <section className="border border-border rounded-lg p-4 space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {t("intake_mode_proposal_title")}
-              </h3>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {t("proposal_goal_label")}
-                </p>
-                <p className="text-sm whitespace-pre-wrap keep-all">
-                  {project.proposal_goal || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {t("proposal_audience_label")}
-                </p>
-                <p className="text-sm whitespace-pre-wrap keep-all">
-                  {project.proposal_audience || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {t("proposal_budget_range_label")}
-                </p>
-                <p className="text-sm whitespace-pre-wrap keep-all">
-                  {project.proposal_budget_range || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {t("proposal_timeline_label")}
-                </p>
-                <p className="text-sm whitespace-pre-wrap keep-all">
-                  {project.proposal_timeline || "—"}
-                </p>
-              </div>
+            <section className="border border-dashed border-border rounded-lg p-4 space-y-2 bg-muted/30">
+              <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                {t("legacy_proposal_banner")}
+              </p>
+              {(project.proposal_goal ||
+                project.proposal_audience ||
+                project.proposal_budget_range ||
+                project.proposal_timeline) && (
+                <dl className="text-sm space-y-1.5">
+                  {project.proposal_goal && (
+                    <div className="grid grid-cols-[120px_1fr] gap-2">
+                      <dt className="text-xs text-muted-foreground">goal</dt>
+                      <dd className="whitespace-pre-wrap keep-all">{project.proposal_goal}</dd>
+                    </div>
+                  )}
+                  {project.proposal_audience && (
+                    <div className="grid grid-cols-[120px_1fr] gap-2">
+                      <dt className="text-xs text-muted-foreground">audience</dt>
+                      <dd className="whitespace-pre-wrap keep-all">{project.proposal_audience}</dd>
+                    </div>
+                  )}
+                  {project.proposal_budget_range && (
+                    <div className="grid grid-cols-[120px_1fr] gap-2">
+                      <dt className="text-xs text-muted-foreground">budget</dt>
+                      <dd className="whitespace-pre-wrap keep-all">{project.proposal_budget_range}</dd>
+                    </div>
+                  )}
+                  {project.proposal_timeline && (
+                    <div className="grid grid-cols-[120px_1fr] gap-2">
+                      <dt className="text-xs text-muted-foreground">timeline</dt>
+                      <dd className="whitespace-pre-wrap keep-all">{project.proposal_timeline}</dd>
+                    </div>
+                  )}
+                </dl>
+              )}
             </section>
           )}
 

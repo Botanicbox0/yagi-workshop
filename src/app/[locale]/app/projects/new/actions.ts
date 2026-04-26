@@ -45,24 +45,14 @@ const sharedFields = {
   intent: z.enum(["draft", "submit"]).default("draft"),
 };
 
-const briefSchema = z.object({
+// Phase 2.8.1 G_B1-E: proposalSchema + discriminatedUnion deleted —
+// proposal_request intake mode is no longer authored. The legacy
+// `projects.intake_mode` column stays; existing rows still render via
+// the read-only banner on /app/projects/[id].
+const createProjectSchema = z.object({
   ...sharedFields,
   intake_mode: z.literal("brief"),
 });
-
-const proposalSchema = z.object({
-  ...sharedFields,
-  intake_mode: z.literal("proposal_request"),
-  proposal_goal: z.string().trim().min(1, "required").max(800),
-  proposal_audience: z.string().max(400).optional().or(z.literal("")),
-  proposal_budget_range: z.string().max(100).optional().or(z.literal("")),
-  proposal_timeline: z.string().max(200).optional().or(z.literal("")),
-});
-
-const createProjectSchema = z.discriminatedUnion("intake_mode", [
-  briefSchema,
-  proposalSchema,
-]);
 
 type ActionResult =
   | { ok: true; id: string; status: string }
@@ -117,20 +107,6 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     estimated_budget_range: data.estimated_budget_range ?? null,
     target_delivery_at: data.target_delivery_at ?? null,
     intake_mode: data.intake_mode,
-    proposal_goal:
-      data.intake_mode === "proposal_request" ? data.proposal_goal : null,
-    proposal_audience:
-      data.intake_mode === "proposal_request"
-        ? data.proposal_audience || null
-        : null,
-    proposal_budget_range:
-      data.intake_mode === "proposal_request"
-        ? data.proposal_budget_range || null
-        : null,
-    proposal_timeline:
-      data.intake_mode === "proposal_request"
-        ? data.proposal_timeline || null
-        : null,
   };
 
   const { data: project, error } = await supabase

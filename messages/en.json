@@ -262,7 +262,6 @@
     "challenges_all": "All",
     "challenges_new": "New challenge",
     "challenges_open": "Open now",
-    "commission": "My commissions",
     "admin_commissions": "Commission queue"
   },
   "commission": {
@@ -478,19 +477,7 @@
     "transition_mark_delivered": "Mark delivered",
     "transition_approve": "Approve",
     "transition_archive": "Archive",
-    "intake_mode_label": "How would you like to start?",
-    "intake_mode_brief_title": "I already have a brief",
-    "intake_mode_brief_desc": "Walk through the brief you've prepared",
-    "intake_mode_proposal_title": "I want YAGI to propose",
-    "intake_mode_proposal_desc": "Share your goal and we'll outline a direction",
-    "proposal_goal_label": "Project goal",
-    "proposal_goal_ph": "e.g., Awareness for a new product launch",
-    "proposal_audience_label": "Primary audience",
-    "proposal_audience_ph": "e.g., Women 20–30, urban",
-    "proposal_budget_range_label": "Budget range",
-    "proposal_budget_range_ph": "e.g., $20k – $50k",
-    "proposal_timeline_label": "Preferred timeline",
-    "proposal_timeline_ph": "e.g., First cut within 6 weeks"
+    "legacy_proposal_banner": "This project was created in legacy proposal mode"
   },
   "refs": {
     "title": "References",
