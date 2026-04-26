@@ -4,6 +4,25 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import type { Json } from "@/lib/supabase/database.types";
+
+// -----------------------------------------------------------------------------
+// Phase 2.8.1 G_B1-B — Wizard draft mode
+// -----------------------------------------------------------------------------
+// The wizard now creates the projects row early (status='draft') so Step 2
+// can mount BriefBoardEditor against a real project_id and the user can
+// drop images / paste embeds before "submit". Submit flips the status from
+// 'draft' to 'submitted' rather than INSERTing a fresh row.
+//
+// Server actions exposed:
+//   - createProject       : pre-2.8.1 single-shot INSERT path (kept for
+//                           backwards compatibility; wizard no longer calls
+//                           it but tests / direct callers still do)
+//   - ensureDraftProject  : find-or-create the user's wizard draft. Returns
+//                           project + brief bootstrap for the editor.
+//   - submitDraftProject  : UPDATE the existing draft with the latest
+//                           wizard fields and (optionally) flip to 'submitted'.
+// -----------------------------------------------------------------------------
 
 const sharedFields = {
   title: z.string().trim().min(1).max(200),
@@ -173,4 +192,275 @@ export async function createProject(input: unknown): Promise<ActionResult> {
 
   revalidatePath("/[locale]/app/projects", "page");
   return { ok: true, id: project.id, status };
+}
+
+// =============================================================================
+// Phase 2.8.1 G_B1-B — wizard draft mode
+// =============================================================================
+
+const wizardDraftFields = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().max(4000).optional().nullable(),
+  brand_id: z.string().uuid().nullable().optional(),
+  tone: z.string().max(500).optional().nullable(),
+  deliverable_types: z
+    .array(z.string().trim().min(1).max(60))
+    .max(10)
+    .default([]),
+  estimated_budget_range: z.string().max(100).optional().nullable(),
+  target_delivery_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
+});
+
+const ensureDraftInput = z.object({
+  initial: wizardDraftFields,
+});
+
+const submitDraftInput = z.object({
+  projectId: z.string().uuid(),
+  fields: wizardDraftFields,
+  intent: z.enum(["draft", "submit"]),
+});
+
+export type WizardDraftFields = z.infer<typeof wizardDraftFields>;
+
+type DraftBootstrap = {
+  projectId: string;
+  status: "draft" | "submitted" | string;
+  brief: {
+    contentJson: Json;
+    updatedAt: string;
+    status: "editing" | "locked";
+  };
+};
+
+export type EnsureDraftResult =
+  | { ok: true; data: DraftBootstrap }
+  | { error: "validation"; issues: z.ZodIssue[] }
+  | { error: "unauthenticated" }
+  | { error: "no_workspace" }
+  | { error: "db"; message: string };
+
+export type SubmitDraftResult =
+  | { ok: true; id: string; status: "draft" | "submitted" }
+  | { error: "validation"; issues: z.ZodIssue[] }
+  | { error: "unauthenticated" }
+  | { error: "not_found" }
+  | { error: "forbidden" }
+  | { error: "db"; message: string };
+
+const PG_UNIQUE_VIOLATION = "23505";
+
+async function fetchDraftBootstrap(
+  supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
+  projectId: string,
+): Promise<DraftBootstrap | null> {
+  const { data: project, error: projectErr } = await supabase
+    .from("projects")
+    .select("id, status")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (projectErr || !project) return null;
+
+  const { data: brief, error: briefErr } = await supabase
+    .from("project_briefs")
+    .select("content_json, updated_at, status")
+    .eq("project_id", projectId)
+    .maybeSingle();
+  if (briefErr || !brief) return null;
+
+  return {
+    projectId: project.id,
+    status: project.status,
+    brief: {
+      contentJson: brief.content_json,
+      updatedAt: brief.updated_at,
+      status: brief.status as "editing" | "locked",
+    },
+  };
+}
+
+export async function ensureDraftProject(
+  input: unknown,
+): Promise<EnsureDraftResult> {
+  const parsed = ensureDraftInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: "validation", issues: parsed.error.issues };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "unauthenticated" };
+
+  const { data: membership } = await supabase
+    .from("workspace_members")
+    .select("workspace_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!membership?.workspace_id) return { error: "no_workspace" };
+
+  // 1. SELECT existing draft (intake_mode='brief'). Phase 2.8.1 migration
+  //    guarantees at most one row matches per (workspace, user) via the
+  //    projects_wizard_draft_uniq partial index.
+  const { data: existing } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("workspace_id", membership.workspace_id)
+    .eq("created_by", user.id)
+    .eq("status", "draft")
+    .eq("intake_mode", "brief")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing?.id) {
+    const bootstrap = await fetchDraftBootstrap(supabase, existing.id);
+    if (bootstrap) return { ok: true, data: bootstrap };
+    // If brief row is missing for an existing draft project we treat it as
+    // corrupt — fall through and create a fresh draft. (DELETE the orphan
+    // first so the unique index does not block the new INSERT.)
+    const service = createSupabaseService();
+    await service.from("projects").delete().eq("id", existing.id);
+  }
+
+  // 2. INSERT new draft. The unique index makes concurrent INSERTs from a
+  //    double-mounted wizard converge — one wins, the other catches 23505
+  //    and re-SELECTs.
+  const fields = parsed.data.initial;
+  const insertPayload = {
+    workspace_id: membership.workspace_id,
+    created_by: user.id,
+    project_type: "direct_commission" as const,
+    status: "draft" as const,
+    intake_mode: "brief" as const,
+    title: fields.title,
+    brief: fields.description ?? null,
+    brand_id: fields.brand_id ?? null,
+    deliverable_types: fields.deliverable_types,
+    estimated_budget_range: fields.estimated_budget_range ?? null,
+    target_delivery_at: fields.target_delivery_at ?? null,
+  };
+
+  const { data: project, error } = await supabase
+    .from("projects")
+    .insert(insertPayload)
+    .select("id, status")
+    .single();
+
+  if (error || !project) {
+    if (error?.code === PG_UNIQUE_VIOLATION) {
+      // A concurrent ensureDraftProject won the race. Re-SELECT and return
+      // the surviving row.
+      const { data: winner } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("workspace_id", membership.workspace_id)
+        .eq("created_by", user.id)
+        .eq("status", "draft")
+        .eq("intake_mode", "brief")
+        .limit(1)
+        .maybeSingle();
+      if (winner?.id) {
+        const bootstrap = await fetchDraftBootstrap(supabase, winner.id);
+        if (bootstrap) return { ok: true, data: bootstrap };
+      }
+    }
+    console.error("[ensureDraftProject] insert error:", error);
+    return { error: "db", message: error?.message ?? "insert failed" };
+  }
+
+  // 3. Sibling project_briefs row. Same atomic-rollback pattern as
+  //    createProject — if the sibling INSERT fails we roll back via service
+  //    role so the wizard can retry without an orphan blocking the unique
+  //    index.
+  const { error: briefErr } = await supabase
+    .from("project_briefs")
+    .insert({
+      project_id: project.id,
+      updated_by: user.id,
+    });
+  if (briefErr) {
+    console.error(
+      "[ensureDraftProject] brief insert failed (rolling back project):",
+      briefErr,
+    );
+    const service = createSupabaseService();
+    await service.from("projects").delete().eq("id", project.id);
+    return {
+      error: "db",
+      message: `brief insert failed: ${briefErr.message}`,
+    };
+  }
+
+  const bootstrap = await fetchDraftBootstrap(supabase, project.id);
+  if (!bootstrap) {
+    return { error: "db", message: "bootstrap fetch after insert failed" };
+  }
+
+  revalidatePath("/[locale]/app/projects", "page");
+  return { ok: true, data: bootstrap };
+}
+
+export async function submitDraftProject(
+  input: unknown,
+): Promise<SubmitDraftResult> {
+  const parsed = submitDraftInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: "validation", issues: parsed.error.issues };
+  }
+  const { projectId, fields, intent } = parsed.data;
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "unauthenticated" };
+
+  // Confirm draft exists and is owned by caller. RLS already filters but
+  // an explicit check lets us return `forbidden` distinct from `not_found`.
+  const { data: target } = await supabase
+    .from("projects")
+    .select("id, status, created_by")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (!target) return { error: "not_found" };
+  if (target.created_by !== user.id) return { error: "forbidden" };
+
+  const status = intent === "submit" ? "submitted" : "draft";
+
+  const { data: updated, error } = await supabase
+    .from("projects")
+    .update({
+      title: fields.title,
+      brief: fields.description ?? null,
+      brand_id: fields.brand_id ?? null,
+      deliverable_types: fields.deliverable_types,
+      estimated_budget_range: fields.estimated_budget_range ?? null,
+      target_delivery_at: fields.target_delivery_at ?? null,
+      status,
+    })
+    .eq("id", projectId)
+    .eq("created_by", user.id)
+    .select("id, status")
+    .single();
+
+  if (error || !updated) {
+    console.error("[submitDraftProject] update error:", error);
+    return { error: "db", message: error?.message ?? "update failed" };
+  }
+
+  revalidatePath("/[locale]/app/projects", "page");
+  revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
+  return {
+    ok: true,
+    id: updated.id,
+    status: updated.status as "draft" | "submitted",
+  };
 }

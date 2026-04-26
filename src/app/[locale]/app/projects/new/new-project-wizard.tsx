@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-import { createProject } from "./actions";
+import {
+  ensureDraftProject,
+  submitDraftProject,
+  type WizardDraftFields,
+} from "./actions";
+import { BriefBoardEditor } from "@/components/brief-board/editor";
+import type { JSONContent } from "@tiptap/react";
+import type { Json } from "@/lib/supabase/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,20 +39,12 @@ import {
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Schema — Phase 2.7.2 single-flow brief
+// Schema — Phase 2.7.2 single-flow brief, Phase 2.8.1 wizard draft mode
 // ---------------------------------------------------------------------------
-// The Step 0 intake-mode picker (brief vs proposal_request) was removed in
-// Phase 2.7.2: every project starts as a brief, and the "I do not have a
-// brief yet — help me draft one" affordance moves into the Brief Board
-// empty-state CTA shipping in Phase 2.8. `intake_mode` stays on the payload
-// as the literal "brief" so the existing `projects.intake_mode` column keeps
-// receiving a valid value without migration.
-//
-// `deliverable_types` was a closed enum (film/still/campaign/...). It is now
-// a free-text tag list mapped to the same `text[]` Postgres column — labels
-// in the wizard read "Where it will be used" so users describe surface
-// intent (e.g. "Meta ads", "OOH", "SNS content") rather than picking a
-// fixed format.
+// Phase 2.8.1: Step 2 ("refs") now mounts BriefBoardEditor against a real
+// project_briefs row — wizard creates the projects row early as status='draft'
+// the moment the user clicks Continue from Step 1, so brief content can be
+// authored mid-wizard.  Submit flips status='draft' → 'submitted'.
 const formSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().max(4000).optional(),
@@ -77,6 +76,15 @@ interface NewProjectWizardProps {
 }
 
 const STEP_ORDER: Step[] = ["brief", "refs", "review"];
+
+type DraftBootstrap = {
+  projectId: string;
+  brief: {
+    contentJson: Json;
+    updatedAt: string;
+    status: "editing" | "locked";
+  };
+};
 
 // ---------------------------------------------------------------------------
 // Tag input — free-text chip input for `deliverable_types`
@@ -239,6 +247,8 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdvancing, startAdvance] = useTransition();
+  const [draft, setDraft] = useState<DraftBootstrap | null>(null);
 
   const {
     register,
@@ -257,10 +267,10 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
   // -------------------------------------------------------------------------
   // Helpers
   // -------------------------------------------------------------------------
-  function buildPayload(intent: "draft" | "submit") {
+  function buildFields(): WizardDraftFields {
     const vals = getValues();
     return {
-      title: vals.title ?? "",
+      title: (vals.title ?? "").trim(),
       description: vals.description || null,
       brand_id: vals.brand_id || null,
       tone: vals.tone || null,
@@ -270,9 +280,37 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
         vals.target_delivery_at && vals.target_delivery_at !== ""
           ? vals.target_delivery_at
           : null,
-      intent,
-      intake_mode: "brief" as const,
     };
+  }
+
+  // ensureDraftProject is the find-or-create entry. We call it the moment
+  // the user clicks Continue out of Step 1 so Step 2 has a real project_id
+  // for BriefBoardEditor to autosave against. Subsequent calls are
+  // idempotent thanks to the projects_wizard_draft_uniq partial index.
+  async function ensureDraft(): Promise<DraftBootstrap | null> {
+    if (draft) return draft;
+    const fields = buildFields();
+    if (!fields.title) {
+      toast.error(tErrors("validation"));
+      return null;
+    }
+    const res = await ensureDraftProject({ initial: fields });
+    if ("error" in res) {
+      if (res.error === "unauthenticated") {
+        toast.error(tErrors("unauthorized"));
+      } else if (res.error === "no_workspace") {
+        toast.error(tErrors("generic"));
+      } else {
+        toast.error(tErrors("generic"));
+      }
+      return null;
+    }
+    const next: DraftBootstrap = {
+      projectId: res.data.projectId,
+      brief: res.data.brief,
+    };
+    setDraft(next);
+    return next;
   }
 
   async function handleSaveDraft() {
@@ -283,7 +321,13 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
     }
     setIsSaving(true);
     try {
-      const res = await createProject(buildPayload("draft"));
+      const bootstrap = await ensureDraft();
+      if (!bootstrap) return;
+      const res = await submitDraftProject({
+        projectId: bootstrap.projectId,
+        fields: buildFields(),
+        intent: "draft",
+      });
       if ("error" in res) {
         if (res.error === "unauthenticated") {
           toast.error(tErrors("unauthorized"));
@@ -301,7 +345,16 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
   async function handleSubmitProject() {
     setIsSubmitting(true);
     try {
-      const res = await createProject(buildPayload("submit"));
+      const bootstrap = await ensureDraft();
+      if (!bootstrap) {
+        setConfirmOpen(false);
+        return;
+      }
+      const res = await submitDraftProject({
+        projectId: bootstrap.projectId,
+        fields: buildFields(),
+        intent: "submit",
+      });
       if ("error" in res) {
         if (res.error === "unauthenticated") {
           toast.error(tErrors("unauthorized"));
@@ -312,14 +365,26 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
         return;
       }
       setConfirmOpen(false);
-      router.push(`/app/projects/${res.id}` as `/app/projects/${string}`);
+      router.push(
+        `/app/projects/${res.id}?tab=brief` as `/app/projects/${string}`,
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  // Step 1 → Step 2 transition: validate Step 1 fields, then ensure the
+  // wizard draft exists before moving on. The transition lets us keep the
+  // Continue button semantics ("submit" the form to validate) while still
+  // running a server action before we change step.
   const onBriefNext = handleSubmit(() => {
-    setStep("refs");
+    startAdvance(() => {
+      void (async () => {
+        const bootstrap = await ensureDraft();
+        if (!bootstrap) return;
+        setStep("refs");
+      })();
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -454,13 +519,14 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
             variant="ghost"
             className="rounded-full uppercase tracking-[0.12em] text-xs"
             onClick={handleSaveDraft}
-            disabled={isSaving}
+            disabled={isSaving || isAdvancing}
           >
             {t("save_draft")}
           </Button>
           <Button
             type="submit"
             className="rounded-full uppercase tracking-[0.12em]"
+            disabled={isAdvancing}
           >
             {tCommon("continue")}
           </Button>
@@ -470,18 +536,44 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
   }
 
   // -------------------------------------------------------------------------
-  // Step 2 — Refs (Phase 2.7.2 placeholder; full Brief Board ships Phase 2.8)
+  // Step 2 — Brief Board (Phase 2.8.1: real editor on draft project)
   // -------------------------------------------------------------------------
   function RefsStep() {
+    if (!draft) {
+      // Defensive: onBriefNext awaits ensureDraft before navigating so this
+      // branch should not render in practice. If it does, the user can hop
+      // back to Step 1 to retry.
+      return (
+        <div className="space-y-6">
+          <div className="border border-dashed border-border rounded-lg py-16 px-6 flex flex-col items-center justify-center text-center gap-3">
+            <p className="text-sm text-muted-foreground keep-all max-w-md">
+              {tErrors("generic")}
+            </p>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-full uppercase tracking-[0.12em] text-xs"
+              onClick={() => setStep("brief")}
+            >
+              {tCommon("back")}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
-        <div className="border border-dashed border-border rounded-lg py-16 px-6 flex flex-col items-center justify-center text-center gap-3">
-          <p className="font-display text-lg tracking-tight keep-all">
-            {t("refs_step_placeholder_title")}
-          </p>
-          <p className="text-sm text-muted-foreground keep-all max-w-md">
-            {t("refs_step_placeholder_sub")}
-          </p>
+        <div className="border border-border rounded-lg p-4">
+          <BriefBoardEditor
+            projectId={draft.projectId}
+            initialContent={draft.brief.contentJson as JSONContent | null}
+            initialUpdatedAt={draft.brief.updatedAt}
+            initialStatus={draft.brief.status}
+            mode="wizard"
+          />
         </div>
         <div className="flex items-center justify-between pt-2">
           <Button
@@ -497,7 +589,7 @@ export function NewProjectWizard({ brands }: NewProjectWizardProps) {
             className="rounded-full uppercase tracking-[0.12em]"
             onClick={() => setStep("review")}
           >
-            {tCommon("skip")}
+            {tCommon("next")}
           </Button>
         </div>
       </div>
