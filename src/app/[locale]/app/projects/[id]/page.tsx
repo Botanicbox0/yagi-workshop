@@ -695,7 +695,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             <DropdownMenuContent align="end" className="min-w-[180px]">
               {availableTransitions.map((item) => (
                 <DropdownMenuItem key={item.newStatus} asChild>
-                  <form action={async (fd: FormData) => { await transitionStatus(fd); }}>
+                  <form action={transitionStatus}>
                     <input type="hidden" name="projectId" value={project.id} />
                     <input
                       type="hidden"
