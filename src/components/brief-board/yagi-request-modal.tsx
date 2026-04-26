@@ -75,7 +75,12 @@ export function YagiRequestModal({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("yagi_request_modal_title")}</DialogTitle>
-          <DialogDescription>{t("yagi_request_sent")}</DialogDescription>
+          {/* Phase 2.8.1 G_B1-J (F-PUX-016): the description used the
+              post-submit success copy by mistake. Split into a dedicated
+              explainer so the user reads "what happens next" BEFORE
+              submitting; yagi_request_sent stays reserved for the toast
+              after a successful send. */}
+          <DialogDescription>{t("yagi_request_explainer")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>

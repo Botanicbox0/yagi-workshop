@@ -255,13 +255,12 @@ type StatusI18nKey =
   | "status_approved"
   | "status_archived";
 
-type DeliverableKey =
-  | "deliverable_film"
-  | "deliverable_still"
-  | "deliverable_campaign"
-  | "deliverable_editorial"
-  | "deliverable_social"
-  | "deliverable_other";
+// Phase 2.8.1 G_B1-J (F-PUX-010): DeliverableKey is no longer used —
+// deliverable_types renders raw since Phase 2.7.2 turned it into a
+// free-text tag list. The legacy `deliverable_*` i18n keys remain in
+// messages/{ko,en}.json for translation continuity but have no runtime
+// callers. Type is kept here as a doc-only reminder for the deprecated
+// enum surface; remove once messages also drop the keys.
 
 export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
@@ -1021,12 +1020,18 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                   {t("deliverable_types_label")}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
+                  {/* Phase 2.8.1 G_B1-J (F-PUX-010): deliverable_types is a
+                      free-text tag list since Phase 2.7.2 — render the
+                      user's input verbatim instead of mapping to a closed
+                      enum. The legacy `deliverable_*` i18n keys are kept
+                      for translation continuity but no longer referenced
+                      from runtime code. */}
                   {project.deliverable_types.map((dt) => (
                     <span
                       key={dt}
-                      className="inline-flex rounded-full border border-border px-2.5 py-0.5 text-xs text-foreground"
+                      className="inline-flex rounded-full border border-border px-2.5 py-0.5 text-xs text-foreground keep-all"
                     >
-                      {t(`deliverable_${dt}` as DeliverableKey)}
+                      {dt}
                     </span>
                   ))}
                 </div>

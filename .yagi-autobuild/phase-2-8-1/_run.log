@@ -18,3 +18,5 @@
 2026-04-26T16:25:40Z G_B1_H GATE_ENTER gate=G_B1_I
 2026-04-26T16:29:45Z G_B1_I GATE_EXIT default_tab=brief overview_kb_delta=-23(brief_section_removed) contest_tab=removed legacy_overview_url=ok i18n_keys=preserved tsc=ok lint=ok build=ok
 2026-04-26T16:29:45Z G_B1_I GATE_ENTER gate=G_B1_J
+2026-04-26T16:33:08Z G_B1_J GATE_EXIT keys_added=1(yagi_request_explainer) keys_deprecated=6(deliverable_*) deliverable_render=raw slash_hint=updated tsc=ok lint=ok build=ok
+2026-04-26T16:33:08Z G_B1_J GATE_ENTER gate=REVIEW
