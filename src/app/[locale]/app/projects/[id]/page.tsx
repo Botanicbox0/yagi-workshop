@@ -266,7 +266,12 @@ type DeliverableKey =
 export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
   const sp = await searchParams;
-  const activeTab = sp.tab === "brief" ? "brief" : "overview";
+  // Phase 2.8.1 G_B1-I: Brief Board is the default landing tab for a
+  // project — Overview is now metadata-only and serves as a deep-link
+  // alias rather than the canonical entry point. Legacy `?tab=overview`
+  // bookmarks still resolve (UI just hides per-section blocks that have
+  // moved to the Brief tab); any other / missing value defaults to brief.
+  const activeTab = sp.tab === "overview" ? "overview" : "brief";
   const versionParam = sp.version ? Number(sp.version) : null;
 
   // Load namespaces — projects for most strings; threads/dashboard/settings/preprod
@@ -773,19 +778,12 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             </section>
           )}
 
-          {/* Brief section */}
-          <section>
-            <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">
-              {t("brief_step")}
-            </h2>
-            {project.brief ? (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap keep-all text-foreground">
-                {project.brief}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">—</p>
-            )}
-          </section>
+          {/* Phase 2.8.1 G_B1-I: redundant Brief text section removed from
+              Overview — the Brief Board on ?tab=brief is the canonical
+              surface for brief content (Phase 2.8 G_B). References /
+              pre-production / thread sections below remain on Overview
+              until Phase 2.10 relocates them under the Brief Board surface
+              (FU-2.10-overview-consolidation). */}
 
           {/* References section — subtask 08 */}
           <section>

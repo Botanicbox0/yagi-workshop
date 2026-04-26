@@ -45,7 +45,11 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("projects");
 
-  const tab = sp.tab === "contest" ? "contest" : "direct";
+  // Phase 2.8.1 G_B1-I (F-PUX-007): Contest tab removed from the projects
+  // hub. Workshop and Contest are separate products (DECISIONS_CACHE
+  // Q-085); contest management lives in admin/challenges until Phase 3.0+.
+  // Legacy ?tab=contest bookmarks now resolve to the direct-commission
+  // list rather than 404.
 
   const supabase = await createSupabaseServer();
 
@@ -63,7 +67,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
       brand:brands(id, name, logo_url)
     `
     )
-    .eq("project_type", tab === "contest" ? "contest" : "direct_commission")
+    .eq("project_type", "direct_commission")
     .order("updated_at", { ascending: false });
 
   if (sp.status) query = query.eq("status", sp.status);
@@ -85,16 +89,8 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
   // Build URL helper for filter removal
   const removeFilter = (key: "status" | "brand_id") => {
     const params = new URLSearchParams();
-    if (tab !== "direct") params.set("tab", tab);
     if (key !== "status" && sp.status) params.set("status", sp.status);
     if (key !== "brand_id" && sp.brand_id) params.set("brand_id", sp.brand_id);
-    const qs = params.toString();
-    return `/app/projects${qs ? `?${qs}` : ""}`;
-  };
-
-  const tabHref = (value: "direct" | "contest") => {
-    const params = new URLSearchParams();
-    if (value !== "direct") params.set("tab", value);
     const qs = params.toString();
     return `/app/projects${qs ? `?${qs}` : ""}`;
   };
@@ -114,31 +110,10 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
         </Link>
       </div>
 
-      {/* Tab nav — URL-based, Server Component safe */}
-      <div className="flex gap-1 mb-6 border-b border-border">
-        <Link
-          href={tabHref("direct")}
-          className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-            tab === "direct"
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {t("direct_tab")}
-        </Link>
-        <Link
-          href={tabHref("contest")}
-          className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-            tab === "contest"
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {t("contest_tab")}
-        </Link>
-      </div>
+      {/* Phase 2.8.1 G_B1-I: tab nav collapsed to a single (default) view —
+          Contest is no longer surfaced from the projects hub. The
+          contest_tab i18n key is preserved for the Phase 3.0+
+          re-introduction (per DECISIONS_CACHE Q-086). */}
 
       {/* Active filter chips */}
       {(sp.status || (sp.brand_id && activeBrand)) && (
@@ -164,18 +139,8 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* Contest tab — always empty / coming soon */}
-      {tab === "contest" && (
-        <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
-          <p className="font-display text-xl tracking-tight mb-2 keep-all">
-            <em>{t("empty_contest")}</em>
-          </p>
-          <p className="text-sm text-muted-foreground">Coming soon</p>
-        </div>
-      )}
-
       {/* Direct tab — empty state */}
-      {tab === "direct" && projects.length === 0 && (
+      {projects.length === 0 && (
         <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
           <p className="font-display text-xl tracking-tight mb-2 keep-all">
             <em>{t("empty_direct")}</em>
@@ -193,7 +158,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
       )}
 
       {/* Direct tab — project grid */}
-      {tab === "direct" && projects.length > 0 && (
+      {projects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {projects.map((project) => (
             <Link

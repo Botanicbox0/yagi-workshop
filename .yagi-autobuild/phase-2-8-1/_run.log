@@ -16,3 +16,5 @@
 2026-04-26T16:16:35Z G_B1_G GATE_ENTER gate=G_B1_H
 2026-04-26T16:25:40Z G_B1_H GATE_EXIT converted=rpc_ready rls_pass=yagi_admin_only ref_loss=0(per_url_loop) notif_delivered=true migration=20260427020000_phase_2_8_1_commission_convert action=convertCommissionToProject signup_next=preserved tsc=ok lint=ok build=ok
 2026-04-26T16:25:40Z G_B1_H GATE_ENTER gate=G_B1_I
+2026-04-26T16:29:45Z G_B1_I GATE_EXIT default_tab=brief overview_kb_delta=-23(brief_section_removed) contest_tab=removed legacy_overview_url=ok i18n_keys=preserved tsc=ok lint=ok build=ok
+2026-04-26T16:29:45Z G_B1_I GATE_ENTER gate=G_B1_J
