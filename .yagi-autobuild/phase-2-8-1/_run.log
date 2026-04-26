@@ -4,3 +4,5 @@
 2026-04-26T15:41:32Z G_B1_A GATE_ENTER gate=G_B1_B
 2026-04-26T15:49:38Z G_B1_B GATE_EXIT drafts_unique=true zombies=0 actions=ensureDraftProject,submitDraftProject migration=20260427000000_phase_2_8_1_wizard_draft tsc=ok lint=ok build=ok
 2026-04-26T15:49:38Z G_B1_B GATE_ENTER gate=G_B1_C
+2026-04-26T15:55:41Z G_B1_C GATE_EXIT ssrf_vectors_blocked=3 og_fetch_ok=true assertions_pass=19 redirect_mode=manual hops_max=5 tsc=ok lint=ok build=ok
+2026-04-26T15:55:41Z G_B1_C GATE_ENTER gate=G_B1_D

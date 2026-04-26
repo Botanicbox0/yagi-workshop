@@ -26,6 +26,7 @@ import {
   createBriefAssetGetUrl,
   createBriefAssetPutUrl,
 } from "@/lib/r2/client";
+import { validateHost } from "@/lib/ip-classify";
 
 // -----------------------------------------------------------------------------
 // Shared result discriminated union
@@ -706,130 +707,82 @@ async function fetchOEmbedJson(endpoint: string): Promise<EmbedPayload | null> {
 // fetches a user-supplied URL directly; without an IP filter, signed-in
 // users could probe loopback / private networks / cloud metadata.
 //
-// v1 mitigation: parse hostname, resolve via dns.lookup (both A + AAAA),
-// reject if any resolved IP falls in private / loopback / link-local
-// ranges. Does NOT re-check after redirects — `redirect: 'follow'` can
-// still chase a 302 to a private IP. Redirect-time re-check (manual
-// redirect handling) is FU-2.8-ssrf-redirect-rewrite.
-function normalizeIp(ipRaw: string): string {
-  // Strip RFC 3986 IPv6 brackets if present.
-  let ip = ipRaw.trim();
-  if (ip.startsWith("[") && ip.endsWith("]")) ip = ip.slice(1, -1);
-  return ip.toLowerCase();
-}
+// Phase 2.8.1 G_B1-C — bundles three SSRF defense-in-depth fixes:
+//   - FU-2.8-ssrf-redirect-rewrite : `redirect: 'manual'` + per-hop
+//     validateHost re-check up to 5 hops (no more redirect-chase to
+//     169.254.169.254 metadata).
+//   - FU-2.8-ssrf-cgn-prefix : full CGN range 100.64.0.0/10 (was
+//     100.64.0.0/16 only). Handled by `validateHost` → `isPrivateIPv4`
+//     in `src/lib/ip-classify.ts` (`a===100 && b∈[64,127]`).
+//   - FU-2.8-ssrf-ipv6-compat-hex : hex-form IPv4-compatible IPv6 such
+//     as `::7f00:1` → 127.0.0.1. Handled by the binary parseIPv6 in
+//     `src/lib/ip-classify.ts` which expands every textual form before
+//     classification.
+//
+// We delegate IP classification + per-hop validation to the centralized
+// `validateHost` so this file has no parallel implementation that can
+// drift. validateHost: parses URL, blocks non-http(s), rejects literal
+// localhost, classifies IP literals via isPrivateIpLiteral, and runs
+// dns.lookup (verbatim) on hostnames — every resolved record must be
+// public. validateHost is sync-aware (returns null on any reason to
+// block).
 
-function isPrivateIpv4Octets(ip: string): boolean {
-  if (ip === "0.0.0.0" || ip.startsWith("127.")) return true;
-  if (ip.startsWith("10.")) return true;
-  if (ip.startsWith("192.168.")) return true;
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
-  if (ip.startsWith("169.254.")) return true; // link-local + AWS/GCP metadata
-  // Multicast 224/4 + reserved 240/4
-  if (/^(22[4-9]|2[3-4]\d|2[5-9]\d)\./.test(ip)) return true;
-  if (ip.startsWith("100.64.")) return true; // CGN
-  return false;
-}
-
-// K05-PHASE-2-8-LOOP2-02 fix: detect IPv4-mapped IPv6 (::ffff:1.2.3.4
-// or hex form ::ffff:7f00:1 = 127.0.0.1). Without this, an attacker
-// could request http://[::ffff:127.0.0.1]/ and our IPv4 range checks
-// would never run.
-function isPrivateIp(ipRaw: string): boolean {
-  const ip = normalizeIp(ipRaw);
-
-  // IPv4 dotted-quad
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
-    return isPrivateIpv4Octets(ip);
-  }
-
-  // IPv4-mapped IPv6 in dotted form
-  const mappedDotted = ip.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
-  if (mappedDotted) {
-    return isPrivateIpv4Octets(mappedDotted[1]);
-  }
-
-  // IPv4-mapped IPv6 in hex form: ::ffff:abcd:efef = a.b.c.d
-  const mappedHex = ip.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
-  if (mappedHex) {
-    const high = parseInt(mappedHex[1], 16);
-    const low = parseInt(mappedHex[2], 16);
-    const a = (high >> 8) & 0xff;
-    const b = high & 0xff;
-    const c = (low >> 8) & 0xff;
-    const d = low & 0xff;
-    return isPrivateIpv4Octets(`${a}.${b}.${c}.${d}`);
-  }
-
-  // IPv4-compatible IPv6 (deprecated but reject for safety): ::a.b.c.d
-  const compat = ip.match(/^::(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
-  if (compat) {
-    return isPrivateIpv4Octets(compat[1]);
-  }
-
-  // Bare IPv6 forms.
-  if (ip === "::1" || ip === "::") return true; // loopback / unspecified
-  if (ip === "::ffff:0:0" || ip === "::ffff") return true;
-  if (ip.startsWith("fc") || ip.startsWith("fd")) return true; // fc00::/7 ULA
-  if (ip.startsWith("fe80") || ip.startsWith("fec0")) return true; // link-local + site-local
-  if (ip.startsWith("ff")) return true; // multicast ff00::/8
-  if (ip === "100::" || ip.startsWith("100::")) return true; // discard prefix
-
-  return false;
-}
-
-async function isHostnameSafe(hostname: string): Promise<boolean> {
-  const { lookup } = await import("node:dns/promises");
-  const { isIP } = await import("node:net");
-
-  const norm = normalizeIp(hostname);
-
-  if (isIP(norm)) {
-    return !isPrivateIp(norm);
-  }
-
-  // Reject obvious non-public suffixes; .local / .internal / etc.
-  const lower = norm.toLowerCase();
-  if (lower === "localhost" || lower.endsWith(".localhost")) return false;
-  if (lower.endsWith(".local") || lower.endsWith(".internal")) return false;
-
-  try {
-    const addrs = await lookup(hostname, { all: true });
-    if (!addrs || addrs.length === 0) return false;
-    for (const a of addrs) {
-      if (isPrivateIp(a.address)) return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
+const SSRF_REDIRECT_MAX_HOPS = 5;
 
 async function fetchOgFallback(url: string): Promise<EmbedPayload | null> {
-  let parsedHost: string;
-  try {
-    parsedHost = new URL(url).hostname;
-  } catch {
-    return null;
-  }
-  if (!(await isHostnameSafe(parsedHost))) {
-    return null;
+  // Per-hop manual redirect walk. `redirect: 'manual'` makes Node's
+  // fetch return the 3xx response intact (status + Location header) so
+  // we can re-validate the next URL before we ever issue the follow-up
+  // request. `redirect: 'follow'` (the prior behavior) would let the
+  // runtime chase a 302 to 169.254.169.254 / 127.0.0.1 / 10.0.0.1
+  // without any further check.
+  let currentUrl = url;
+  let resp: Response | null = null;
+
+  for (let hop = 0; hop <= SSRF_REDIRECT_MAX_HOPS; hop++) {
+    const validated = await validateHost(currentUrl);
+    if (!validated) {
+      // Either the initial URL or a redirect target resolved to a
+      // private/reserved address. Refuse silently — this matches the
+      // behavior of the rest of the OG path (return null on any failure).
+      return null;
+    }
+
+    try {
+      resp = await fetch(currentUrl, {
+        method: "GET",
+        headers: {
+          "User-Agent": EMBED_USER_AGENT,
+          Accept: "text/html,application/xhtml+xml",
+        },
+        signal: AbortSignal.timeout(EMBED_FETCH_TIMEOUT_MS),
+        redirect: "manual",
+      });
+    } catch {
+      return null;
+    }
+
+    // Treat 3xx as a redirect we must validate before following.
+    if (resp.status >= 300 && resp.status < 400) {
+      const location = resp.headers.get("location");
+      if (!location) return null;
+      let nextUrl: string;
+      try {
+        nextUrl = new URL(location, currentUrl).toString();
+      } catch {
+        return null;
+      }
+      // Loop guard: if we've hit max hops, refuse rather than follow.
+      if (hop >= SSRF_REDIRECT_MAX_HOPS) return null;
+      currentUrl = nextUrl;
+      continue;
+    }
+
+    // Non-redirect response — fall through to OG parsing.
+    break;
   }
 
-  let resp: Response;
-  try {
-    resp = await fetch(url, {
-      method: "GET",
-      headers: {
-        "User-Agent": EMBED_USER_AGENT,
-        Accept: "text/html,application/xhtml+xml",
-      },
-      signal: AbortSignal.timeout(EMBED_FETCH_TIMEOUT_MS),
-      redirect: "follow",
-    });
-  } catch {
-    return null;
-  }
-  if (!resp.ok) return null;
+  if (!resp || !resp.ok) return null;
   let html: string;
   try {
     html = await resp.text();
