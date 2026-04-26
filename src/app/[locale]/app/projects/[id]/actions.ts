@@ -98,3 +98,11 @@ export async function transitionStatus(formData: FormData) {
   revalidatePath(`/[locale]/app/projects`, "page");
   return { ok: true as const };
 }
+
+// Form-action-compatible wrapper (Promise<void>). Server Components pass
+// this directly to <form action={...}> which requires void return per
+// React 19 / Next.js 15 RSC type rules. The result-returning version above
+// is kept for callers that want to handle errors programmatically.
+export async function transitionStatusFormAction(formData: FormData): Promise<void> {
+  await transitionStatus(formData);
+}

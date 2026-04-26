@@ -27,10 +27,18 @@ export default async function OnboardingRolePage({ params }: Props) {
   // If profile already set up, route to final destination.
   if (profile && profile.handle) {
     const role = profile.role as ProfileRole | null;
+    // Phase 2.8.1 G_B1-X: viewer/voter (observer) is deferred to Phase 3.0+
+    // Contest surface where it becomes anonymous-OTP, not a profile role.
+    // Legacy observer profiles are routed to the same destination as a
+    // generic logged-in user — challenges public surface — but new signups
+    // can no longer pick observer. See DECISIONS_CACHE Q-088.
     if (role === "observer") {
       redirect({ href: "/challenges", locale });
       return null;
     }
+    // Phase 2.8.1 G_B1-X: "studio" merged into "creator" at the UI level
+    // (single card labeled "AI 크리에이터/스튜디오"). Legacy studio profiles
+    // continue to land on their handle page exactly like creators do.
     if (role === "creator" || role === "studio") {
       redirect({ href: `/u/${profile.handle}`, locale });
       return null;
@@ -46,21 +54,15 @@ export default async function OnboardingRolePage({ params }: Props) {
 
   const t = await getTranslations({ locale, namespace: "onboarding" });
 
+  // Phase 2.8.1 G_B1-X: simplified to two roles per founder decision
+  // 2026-04-26 (DECISIONS_CACHE Q-088). Studio merged into creator under
+  // the label "AI 크리에이터/스튜디오". Observer (viewer/voter) is moved to
+  // Phase 3.0+ Contest as anonymous-OTP and removed from profile signup.
   const roles: Array<{ key: ProfileRole; title: string; desc: string }> = [
     {
       key: "creator",
       title: t("role_v2_creator_title"),
       desc: t("role_v2_creator_desc"),
-    },
-    {
-      key: "studio",
-      title: t("role_v2_studio_title"),
-      desc: t("role_v2_studio_desc"),
-    },
-    {
-      key: "observer",
-      title: t("role_v2_observer_title"),
-      desc: t("role_v2_observer_desc"),
     },
     {
       key: "client",
@@ -88,8 +90,6 @@ export default async function OnboardingRolePage({ params }: Props) {
             href={
               `/onboarding/profile/${role.key}` as
                 | "/onboarding/profile/creator"
-                | "/onboarding/profile/studio"
-                | "/onboarding/profile/observer"
                 | "/onboarding/profile/client"
             }
             className="block rounded-lg border border-border p-5 hover:border-foreground transition-colors"

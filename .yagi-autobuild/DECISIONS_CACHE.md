@@ -862,3 +862,201 @@ Admin override 항상 가능.
 **Rationale:** Scope creep 방지.
 **Applies:** G9 closeout.
 
+---
+
+### Q-081: Codex CLI 호출 방식 (gpt-5.5 / 0.125.0+)
+
+**Asked context:** Phase 2.8 G_B-1 Loop 2 — KICKOFF §3 INVOKE 블록의 `codex --model ... --prompt ...` 패턴이 22분 hang. Builder가 spec 그대로 호출 → `codex` (no subcommand) = interactive TUI 진입 → stdin 영원히 대기.
+**Question:** Codex CLI 를 non-interactive 로 호출할 때 정확한 invocation pattern?
+**Answer:** 다음 3개 규칙 강제:
+1. Subcommand `exec` 필수 (`codex exec`, NEVER bare `codex`). Bare `codex` 는 interactive TUI 진입 → stdin 무한 대기.
+2. Prompt 전달은 stdin pipe 또는 positional argument. `--prompt` flag 는 **존재 안 함**.
+3. Reasoning effort 는 `-c model_reasoning_effort=high` config override (CLI shortcut flag `--reasoning-effort` 는 버전별로 unreliable).
+4. gpt-5.5 model 은 Codex CLI 0.125.0+ 필수. 0.122.0 미지원.
+
+표준 PowerShell pattern (UTF-8 강제 필수 — 한국어/이모지/non-ASCII 깨짐 방지):
+```powershell
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+Get-Content prompt.md -Encoding UTF8 -Raw | codex exec --model gpt-5.5 -c model_reasoning_effort=high > output.txt
+```
+
+또는 positional argument 패턴 (stdin 회피, 안전):
+```powershell
+$prompt = Get-Content prompt.md -Raw -Encoding UTF8
+codex exec --model gpt-5.5 -c model_reasoning_effort=high $prompt > output.txt
+```
+표준 bash pattern:
+```bash
+cat prompt.md | codex exec --model gpt-5.5 -c model_reasoning_effort=high > output.txt
+```
+**Rationale:** 공식 OpenAI Codex docs (developers.openai.com/codex/cli/reference + /noninteractive) 직접 검증. PR #15917 에서 prompt-plus-stdin 패턴 도입. `--prompt` flag 는 모든 0.12x 버전에서 invalid.
+**Applies when:** 향후 모든 phase 의 K-05 review invocation, 또는 Codex 를 non-interactive 로 부르는 모든 자동화 코드. KICKOFF §3 작성 시 자동 참조.
+**Confidence:** HIGH (공식 docs + 실전 확인 + encoding incident 2026-04-26 K-PUX 1차 시도)
+**Registered:** 2026-04-26 (Phase 2.8 G_B-1 Loop 2 incident, web Claude verification against developers.openai.com)
+**Updated:** 2026-04-26 (K-PUX-1 1차 시도에서 PowerShell cp949 → UTF-8 fix 추가. 한국어 prompt 가 ?로 변환되는 incident.)
+
+**추가 주의:** Codex 사용량 한도 (token limit) 도달 시 "You've hit your usage limit" 오류. high reasoning + 큰 prompt 는 토큰 빠르게 소모. 한도 초과 시 reset 시각까지 대기 또는 다른 model (gpt-5.4) 시도.
+
+---
+
+### Q-082: HIGH-A-SCHEMA-ONLY severity 분류 (K-05 review)
+
+**Asked context:** Phase 2.8 G_B-1 Loop 1 — Codex 가 K05-G_B_1-01 을 HIGH-A (privilege escalation) 로 표시. KICKOFF §3 spec 상 HIGH-A 는 "loop 카운트와 무관 즉시 HALT". Builder 가 auto-fix 결정 (spec 위반). 야기 검토 결과 fix 정확 + production data 0건이라 retroactively reasonable.
+**Question:** K-05 가 HIGH-A 로 분류한 finding 중 "schema/RLS only, no prod data, additive fix" 케이스를 어떻게 다룰까?
+**Answer:** 새 severity sub-category `HIGH-A-SCHEMA-ONLY` 도입. 정의:
+- privilege escalation 또는 RLS 우회가 schema/RLS layer 에만 존재
+- production data 노출 0 (migration not yet applied to prod, 또는 빈 테이블)
+- 제안된 fix 가 precise + additive (기존 정상 흐름 영향 X)
+
+위 3 조건 모두 만족 시 처리:
+- Loop 1 auto-fix 허용 (HALT 안 함)
+- Loop 2 mandatory re-verify 필수 (Codex 재호출)
+- Loop 2 에서 같은 severity 재발견 시 즉시 HALT
+
+조건 1개라도 미충족 → 그냥 HIGH-A 로 처리, KICKOFF §3 원본 spec (즉시 HALT) 따름.
+**Rationale:** Pure HIGH-A 는 prod 손상 위험 즉시 차단해야. 그러나 schema-only 는 prod 미노출 + fix 정확 시 auto-fix 가 stop-the-world 보다 안전. Phase 2.8 KICKOFF §3 retrofit 으로 spec 화 (web Claude, 2026-04-25).
+**Applies when:** 다음 phase 의 K-05 review 에서 HIGH-A finding 발생 시 Builder triage. KICKOFF §3 작성 시 SEVERITY HANDLING 블록에 자동 포함.
+**Confidence:** HIGH (Phase 2.8 G_B-1 실전 + spec retrofit 완료)
+**Registered:** 2026-04-26 (Phase 2.8 G_B-1 Loop 1 retrofit, KICKOFF v2 §3 patched)
+
+---
+
+### Q-083: 라이브러리 monorepo 의 transitive dep 직접 추가
+
+**Asked context:** Phase 2.8 G_B-3 — `Node.create` / `mergeAttributes` 가 `@tiptap/core` 에 있음. SPEC §7 stack list 는 `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/pm` 3개만 명시. pnpm strict-mode hoisting 으로 transitive 직접 import 차단. 4번째 `@tiptap/*` 추가가 KICKOFF §7 FORBIDDEN "new dep not in SPEC §7 → HALT E_DEP_UNLISTED" 위반인가?
+**Question:** SPEC §7 에 명시된 라이브러리 family 의 같은 monorepo 내 sibling package 추가 시 HALT 처리?
+**Answer:** NO HALT. 다음 조건 모두 만족 시 "informational addition" 으로 ship + FU 등록:
+- 추가하려는 package 가 SPEC §7 명시 package 들과 같은 monorepo / 같은 publisher (예: `@tiptap/*`, `@radix-ui/*`, `@supabase/*`)
+- 같은 major.minor 버전 pin (예: 기존 3.22.4 면 새 sibling 도 3.22.4)
+- 새 functional dependency 가 아닌 foundation/utility 성격 (다른 공식 package 들의 base)
+
+조건 미충족 (다른 publisher / 다른 product / functional 변경) → KICKOFF §7 FORBIDDEN 그대로 HALT E_DEP_UNLISTED.
+**Rationale:** SPEC §7 의 "stack list" 는 라이브러리 family identity 를 정의하는 게 목적. 같은 monorepo sibling 은 같은 라이브러리의 다른 entry point — 기능 확장 아님. Strict reading 은 false-positive HALT 만 양산.
+**Applies when:** 향후 모든 phase 의 dep 추가 결정. KICKOFF §7 FORBIDDEN 작성 시 "new dep" 정의에 자동 참조 ("new dep = different publisher OR different product, NOT same-monorepo sibling").
+**Confidence:** HIGH (Phase 2.8 G_B-3 실전 + FU-2.8-tiptap-core-spec-amendment 일반화)
+**Registered:** 2026-04-26 (Phase 2.8 G_B-3 dep addition decision)
+
+---
+
+### Q-084: Product 정체성 — Workspace 가 아니라 Workshop
+
+**Asked context:** Phase 2.8 SHIPPED 후 product strategy 재정리. 야기가 "YAGI Workspace" 라는 단어 사용 했는데, 이건 Notion/Slack/Linear 의 평등한 멤버십 모델 연상. 우리 product 본질은 비대칭 — YAGI = vendor/host, 클라이언트 = visiting client. "Workshop" 이 더 정확.
+**Question:** Product 정체성 / 모든 사용자 노출 라벨을 무엇으로?
+**Answer:** **YAGI Workshop**. 다음 라벨링 규칙:
+- 회사명 + product 명 일치 (㈜야기워크숍 = YAGI Workshop)
+- 영문 라벨 "YAGI Workshop" 한국어 UI 에서도 그대로 (또는 "YAGI 작업실")
+- 클라이언트가 만드는 단위 = `Project` (under YAGI Workshop)
+- repo / Next.js app 이름 `yagi-workshop` 그대로 (이미 일치)
+- 어떤 surface 에서도 "Workspace" 단어 노출 금지
+
+Mental model 명시:
+- YAGI = Workshop host (vendor, asymmetric host권한)
+- 클라이언트 = visiting client (guest, project-scoped 권한)
+- 크리에이터 (Phase 3.0+) = Contest 참여자 (Workshop 본체 미노출)
+**Rationale:** "Workspace" 는 평등한 멤버십 SaaS (Notion/Slack/Linear) mental model 강제. 우리 product 는 agency/vendor model (Frame.io/Webflow client portal) 이므로 "Workshop" 단어가 정확한 매핑. 회사명 + product 일치는 마케팅 비용 절감.
+**Applies when:** 모든 카피/SPEC/i18n key/마케팅 자료에서 product 라벨링 결정. "Workspace" 단어 등장 시 "Workshop" 또는 "Project" 로 치환.
+**Confidence:** HIGH (야기 직접 확정 2026-04-26)
+**Registered:** 2026-04-26 (post Phase 2.8 SHIPPED, product strategy realignment)
+
+---
+
+### Q-085: Workshop ↔ Contest 관계 모델
+
+**Asked context:** Phase 3.0+ 에 Contest surface 본격 출시 예정. Workshop 본체와 Contest 의 관계 정의 필요. 두 모델 비교:
+- 모델 X: 완전 별 product, schema/UI/auth 강한 분리, Contest winner ↔ Workshop project 자동 binding 없음
+- 모델 Y: Workshop이 Contest 의 backend, Contest 자체가 Workshop 합의 cycle 의 한 진입점
+**Question:** Workshop ↔ Contest 관계?
+**Answer:** **모델 X — 완전 분리.** 함의:
+- Workshop 과 Contest 는 별개 product 처럼 운영
+- DB 테이블 중첩 없음 (`projects` ↔ `challenges` schema 독립, FK 없음)
+- UI 진입 흐름 분리 (사이드바 그룹 분리, navigation 분리)
+- Auth/role 모델 분리 (Workshop = workspace_admin/member + yagi_*; Contest = challenge_sponsor + creator + viewer/voter)
+- Sponsor 가 Contest 만들 때 Workshop project 자동 생성 X
+- Contest winner 가 Workshop project 의 deliverable 로 자동 binding X
+- 우연한 사용자 cross (sponsor 가 클라이언트 이기도 하면) 는 같은 user account 쓰지만 surface 는 분리
+**Rationale:** 두 product 의 권한/auth 모델이 너무 다름. 통합하면 RLS 복잡도 폭증 + IA 흐림. "AI 제작 합의 시스템" 가치는 Workshop 만으로 충분히 전달 가능. Contest 는 별 카테고리 product (캠페인 marketplace).
+**Applies when:** Phase 3.0+ Contest SPEC 작성. Workshop 의 Phase 2.x feature 가 Contest 와 연결될 가능성 검토 시 "별 product" 가정 우선.
+**Confidence:** HIGH (야기 직접 확정 2026-04-26)
+**Registered:** 2026-04-26 (post Phase 2.8 SHIPPED, Phase 3 prep)
+
+---
+
+### Q-086: monday MVP launch Contest surface 노출
+
+**Asked context:** g3-challenges worktree 의 admin console (`/app/admin/challenges*`) 가 main 에 SHIPPED. main 에 `/app/challenges` (creator-facing public surface) 미존재. 사이드바의 "챌린지" 메뉴는 `yagi_admin only`. monday MVP launch 시 Contest 노출 어떻게?
+**Question:** Contest surface MVP launch 노출 정도?
+**Answer:** **(c) 일부 surface 작동** — 현재 g3 SHIPPED scope 그대로:
+- `/app/admin/challenges*` admin console 작동 (yagi_admin 만 접근)
+- 사이드바 "챌린지" 메뉴 yagi_admin only 그대로 (변경 없음)
+- 클라이언트 view / creator-facing public surface 는 의도적 hidden (Phase 3.0+ 출시)
+- 추가 작업 0 — 현재 상태 그대로 ship
+**Rationale:** Workshop 본체와 Contest 의 강한 분리 (Q-085) 에 자연 부합. yagi_admin only 노출은 internal tooling 으로 분류, 클라이언트 view 미노출로 Workshop client portal 정체성 보존. 별 work 추가 없이 ship 가능 = monday launch 일정 압박 0.
+**Applies when:** monday MVP launch 직전 사이드바 / admin surface 점검. Phase 3.0+ Contest 본격 SHIPPED 까지 유지.
+**Confidence:** HIGH (야기 직접 확정 2026-04-26 + main repo 검증)
+**Registered:** 2026-04-26 (Phase 3 prep)
+
+---
+
+### Q-087: Creator Profile MVP 노출
+
+**Asked context:** Creator Profile (`/c/{handle}` public profile pages) 는 Contest 참여자의 공개 정체성. Workshop 본체에 노출 시 "client portal" → "marketplace" 정체성 흔들림. 야기는 Phase 3 까지 빠르게 진행 의도.
+**Question:** Creator Profile MVP 포함?
+**Answer:** **NO — Phase 3.0+ 에 Contest 와 같이 노출.** 함의:
+- main 에 `/c/{handle}` 라우트 미존재 또는 hidden
+- Workshop 사이드바에 creator profile 진입 link 없음
+- 클라이언트가 크리에이터를 직접 매칭하는 "marketplace" 모델 명시적 거부
+- Phase 3 에 Contest 본격 출시 시 같이 노출
+- Phase 3 ETA: 야기 의도 "빠르게 진행" → 약 4-6주 (Phase 2.8.1 hardening + Phase 2.10 Workshop 본체 완성 후 곧바로 Phase 3 진입)
+**Rationale:** Workshop 의 정체성은 "private 작업실 포탈" (Q-084). Creator Profile 노출은 product 카테고리를 client portal → marketplace 로 자동 이동시킴. MVP 단계에서 이 흔들림 회피 필수.
+**Applies when:** MVP launch 까지 모든 카피/UI/사이드바에서 creator profile 또는 "크리에이터 매칭" 단어 노출 결정. Phase 3.0 SPEC 진입 시 이 결정 unlock.
+**Confidence:** HIGH (야기 직접 확정 2026-04-26)
+**Registered:** 2026-04-26 (Phase 3 prep)
+
+---
+
+### Q-088: ProfileRole 모델 단순화 (4 → 2)
+
+**Asked context:** Phase 2.8.1 G_B1-X (signup 후 manual K-PUX) — 야기가 onboarding role 선택 화면을 보고 4개 로을 "AI 크리에이터/스튜디오 + 의뢰인" 2개로 압축 결정. 결정 근거:
+- "스튜디오 + 크리에이터" = 둘 다 제작자 그룹
+- "의뢰인" = AI VFX 의뢰하는 해당 계층의 카테고리
+- "관찰자 (viewer/voter)"는 가입 강제 자체가 too heavy — 이메일 OTP 으로만 투표 가능해야 함 (Q-089)
+**Question:** ProfileRole 모델 재구조 범위 및 방식?
+**Answer:** 다음 규칙 적용:
+1. UI surface (onboarding role page) 에서 카드 2개만 노출: `creator` (label "AI 크리에이터/스튜디오") + `client`. `studio` / `observer` 카드 제거.
+2. TypeScript ProfileRole type은 4개 그대로 유지 (`'creator' | 'studio' | 'observer' | 'client'`) — legacy 프로필 데이터 보호.
+3. Legacy 데이터 처리:
+   - 기존 `studio` profile: redirect / display 로직에서 `creator` 와 동일하게 취급 (이미 onboarding/role/page.tsx 에 `role === "creator" || role === "studio"` 분기 존재).
+   - 기존 `observer` profile: `/challenges` 로 redirect (legacy escape hatch).
+   - 새 가입자는 `creator` 또는 `client` 만 선택 가능.
+4. DB migration 안 함 — `profiles.role` text column 그대로, legacy 값 보존.
+5. Type narrow 는 Phase 3.0 진입 시 — 그 시점에 challenges surface 재구성과 함께 cleanup. 그때까지 challenges/sidebar/email template 등 기존 `studio`/`observer` 분기 코드 12개 파일 그대로 작동.
+
+**Rationale:** "관찰자 가입 강제는 too heavy" 관점 — viewer/voter 는 "일회성 가벼운 사용자" 라 가입 마찰이 signal이 아니라 noise. anonymous OTP 가 맞음. "크리에이터 vs 스튜디오" 분리는 product 레벨에서 의미 있으나 onboarding signup 수준의 의제는 아님 — 둘 다 "제작자" 그룹.
+
+DB migration 안 하는 이유: monday MVP launch 직전에 prod 데이터 터치는 것은 risk too high. Phase 3.0 에서 challenges 재구성과 함께 cleanup 시 가치 회수.
+
+**Applies when:** 향후 onboarding / sidebar / email template 의 role 분기 코드 작성 시. Phase 3.0 진입 시 이 결정 unlock + DB migration + type narrow 일괄 실행.
+**Confidence:** HIGH (야기 직접 확정 2026-04-26)
+**Registered:** 2026-04-26 (Phase 2.8.1 G_B1-X simplification)
+
+---
+
+### Q-089: viewer/voter (관찰자) 는 anonymous OTP
+
+**Asked context:** Q-088 의 관점 확장 — viewer/voter 에게 가입 강제는 마찰이 높아 product mental cost 과합. Phase 3.0+ Contest 출시 시 투표 surface 의 적절한 auth 패턴은?
+**Question:** Contest 투표 사용자 auth 패턴?
+**Answer:** Anonymous OTP 패턴:
+- 투표 시 이메일 입력 → 6자리 OTP 코드 링크 발송 → 투표
+- profile 생성 안 함, `profiles.role` 값 안 넘김
+- 대신 `contest_voters` 테이블 도입 예정 (Phase 3.0 SPEC 도입)
+  - 필수 컬럼: `email`, `verified_at`, `ip_hash` (rate limit)
+  - vote table 은 `contest_voters.id` FK 또는 hashed email
+- 관찰 (단순 열람) 은 가입 / 투표 다 불필요 — public read 만으로 충분
+- 이메일 rate limit (시간당 5표 / IP), 같은 contest 에 동일 이메일 재사용 차단
+
+**Rationale:** "Role 4 viewer/voter는 후순위" framing 과 일치. Contest sponsor 관점에서도 "투표 수 높이는 게 목표" → 가입 과정 마찰 제거 = 더 많은 vote. anonymous OTP 는 이미 한국 투표 surface (아이돌 투표 등) 에서 증명된 패턴.
+**Applies when:** Phase 3.0 Contest SPEC 작성 시 voting auth 설계. profile 기반 투표 완전 차단.
+**Confidence:** HIGH (야기 직접 확정 2026-04-26)
+**Registered:** 2026-04-26 (Phase 2.8.1 G_B1-X side-effect, Phase 3.0 prep)
+

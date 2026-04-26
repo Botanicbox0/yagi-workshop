@@ -216,3 +216,10 @@ export async function removeReference(formData: FormData) {
   revalidatePath(`/[locale]/app/projects/${ref.project_id}`, "page");
   return { ok: true as const };
 }
+
+// Form-action-compatible wrapper (Promise<void>). Server Components pass
+// this directly to <form action={...}> which requires void return per
+// React 19 / Next.js 15 RSC type rules.
+export async function removeReferenceFormAction(formData: FormData): Promise<void> {
+  await removeReference(formData);
+}

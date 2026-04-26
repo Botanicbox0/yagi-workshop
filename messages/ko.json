@@ -121,7 +121,15 @@
     "sending": "보내는 중...",
     "link_sent": "메일함을 확인해 주세요",
     "no_account": "아직 계정이 없으신가요?",
-    "have_account": "이미 계정이 있으신가요?"
+    "have_account": "이미 계정이 있으신가요?",
+    "check_your_email_title": "이메일을 확인해주세요",
+    "check_your_email_sub": "가입을 마치려면 이메일의 링크를 클릭하세요.",
+    "sent_to_label": "받는 이메일",
+    "check_email_hint_inbox": "받은편지함 / 첨부 필터 확인",
+    "check_email_hint_spam": "스팸 또는 광고 폴더에 들어갈 수 있어요",
+    "check_email_hint_link": "링크를 눌러야 가입이 완료됩니다",
+    "resend_email": "이메일 다시 보내기",
+    "use_different_email": "다른 이메일로 가입하기"
   },
   "onboarding": {
     "role_title": "어떻게 YAGI Workshop을 사용하시나요?",
@@ -157,8 +165,8 @@
     "role_v2_title": "어떤 역할로 활동하실 건가요?",
     "role_v2_sub": "YAGI Workshop에서의 역할을 선택해 주세요. 나중에 설정에서 변경할 수 있습니다.",
     "role_v2_select": "선택",
-    "role_v2_creator_title": "크리에이터",
-    "role_v2_creator_desc": "챌린지에 참여하고 작품을 발표합니다",
+    "role_v2_creator_title": "AI 크리에이터/스튜디오",
+    "role_v2_creator_desc": "AI VFX 작업을 직접 만들고 발표합니다",
     "role_v2_studio_title": "스튜디오",
     "role_v2_studio_desc": "팀으로 참여하고 상업적 활동을 합니다",
     "role_v2_observer_title": "관찰자",

@@ -121,7 +121,15 @@
     "sending": "Sending...",
     "link_sent": "Check your email",
     "no_account": "Don't have an account?",
-    "have_account": "Already have an account?"
+    "have_account": "Already have an account?",
+    "check_your_email_title": "Check your email",
+    "check_your_email_sub": "Click the link in the email to finish signing up.",
+    "sent_to_label": "Sent to",
+    "check_email_hint_inbox": "Check your inbox and the Promotions / Updates tab",
+    "check_email_hint_spam": "It may have landed in spam or junk",
+    "check_email_hint_link": "Click the link to complete signup",
+    "resend_email": "Resend email",
+    "use_different_email": "Use a different email"
   },
   "onboarding": {
     "role_title": "How will you use YAGI Workshop?",
@@ -157,8 +165,8 @@
     "role_v2_title": "How will you participate?",
     "role_v2_sub": "Choose your role on YAGI Workshop. You can change it later in settings.",
     "role_v2_select": "Select",
-    "role_v2_creator_title": "AI Creator",
-    "role_v2_creator_desc": "Enter challenges and showcase your work",
+    "role_v2_creator_title": "AI Creator / Studio",
+    "role_v2_creator_desc": "Make and publish AI VFX work",
     "role_v2_studio_title": "AI Studio",
     "role_v2_studio_desc": "Participate as a team for commercial projects",
     "role_v2_observer_title": "Observer",

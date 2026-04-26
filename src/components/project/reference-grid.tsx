@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link as LinkIcon, FileText } from "lucide-react";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { removeReference } from "@/app/[locale]/app/projects/[id]/ref-actions";
+import { removeReferenceFormAction } from "@/app/[locale]/app/projects/[id]/ref-actions";
 import { VideoPlayer } from "@/components/project/video-player";
 
 interface ReferenceGridProps {
@@ -192,11 +192,7 @@ export async function ReferenceGrid({ projectId }: ReferenceGridProps) {
 
             {/* Remove button — visible on hover */}
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <form
-                action={async (fd: FormData) => {
-                  await removeReference(fd);
-                }}
-              >
+              <form action={removeReferenceFormAction}>
                 <input type="hidden" name="referenceId" value={ref.id} />
                 <button
                   type="submit"

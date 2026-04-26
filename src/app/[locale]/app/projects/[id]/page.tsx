@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { transitionStatus } from "./actions";
+import { transitionStatusFormAction } from "./actions";
 import { ThreadPanelServer } from "@/components/project/thread-panel-server";
 import { ReferenceUploader } from "@/components/project/reference-uploader";
 import { ReferenceGrid } from "@/components/project/reference-grid";
@@ -695,7 +695,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             <DropdownMenuContent align="end" className="min-w-[180px]">
               {availableTransitions.map((item) => (
                 <DropdownMenuItem key={item.newStatus} asChild>
-                  <form action={transitionStatus}>
+                  <form action={transitionStatusFormAction}>
                     <input type="hidden" name="projectId" value={project.id} />
                     <input
                       type="hidden"

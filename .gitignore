@@ -56,10 +56,13 @@ next-env.d.ts
 # Transient codex/telegram prompt dumps (noisy, not useful history)
 .yagi-autobuild/_codex_review_*.txt
 .yagi-autobuild/_telegram_*.txt
+# Codex K-PUX (Product/UX) review artifacts — transient like K-05
+.yagi-autobuild/**/_codex_kpux_output.txt
 
 # Local verification logs (tsc/lint/build outputs at repo root)
 .build.log
 .lint.log
+.tsc.log
 
 # Content Collections generated files
 .content-collections/

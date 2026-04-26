@@ -30,6 +30,8 @@ export default function SignUpPage() {
   const c = useTranslations("common");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
   const {
     register,
     handleSubmit,
@@ -51,12 +53,94 @@ export default function SignUpPage() {
       return;
     }
     if (data.session) {
+      // Email confirmation disabled in Supabase auth settings — auto-login path.
       router.push("/onboarding");
     } else {
-      toast.success(t("signup_email_sent"));
+      // Email confirmation enabled — switch the page over to the sent-state view
+      // instead of leaving the user on the form with only a toast.
+      setSentToEmail(values.email);
     }
   }
 
+  async function onResend() {
+    if (!sentToEmail) return;
+    setResending(true);
+    const supabase = createSupabaseBrowser();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: sentToEmail,
+      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+    });
+    setResending(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(t("signup_email_sent"));
+  }
+
+  // ---- Sent state — shown after successful signUp() when email confirmation
+  // is required by the project. The user stays on this view and follows the
+  // mailbox link. This replaces the "toast-only and the form stays put"
+  // behavior that read as a dead-end.
+  if (sentToEmail) {
+    return (
+      <div className="space-y-8">
+        <div className="space-y-3 text-center">
+          <h1 className="font-display text-3xl tracking-tight">
+            <em>{t("check_your_email_title")}</em>
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("check_your_email_sub")}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-muted/40 px-5 py-4 text-sm space-y-3">
+          <p className="text-foreground">
+            <span className="text-muted-foreground">{t("sent_to_label")}: </span>
+            <span className="font-medium break-all">{sentToEmail}</span>
+          </p>
+          <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+            <li>{t("check_email_hint_inbox")}</li>
+            <li>{t("check_email_hint_spam")}</li>
+            <li>{t("check_email_hint_link")}</li>
+          </ul>
+        </div>
+
+        <div className="space-y-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={onResend}
+            disabled={resending}
+          >
+            {resending ? t("sending") : t("resend_email")}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full"
+            size="lg"
+            onClick={() => setSentToEmail(null)}
+          >
+            {t("use_different_email")}
+          </Button>
+        </div>
+
+        <p className="text-center text-sm text-muted-foreground">
+          {t("have_account")}{" "}
+          <Link href="/signin" className="text-foreground hover:underline">
+            {c("signin")}
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  // ---- Default state — signup form.
   return (
     <div className="space-y-8">
       <div className="space-y-2 text-center">

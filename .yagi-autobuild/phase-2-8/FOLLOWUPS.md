@@ -5,6 +5,29 @@ prior phases (`Trigger / Risk / Action / Owner / Status / Registered`).
 
 ---
 
+## FU-2.8-form-action-rsc-sweep
+
+**Trigger:** Phase 2.8 SHIPPED 후 admin 진입 시 Server Component 안의 `<form action={async (fd) => await fn(fd)}>` 패턴이 Next.js 15 RSC 직렬화 규칙 위반 → Runtime Error (`Functions cannot be passed directly to Client Components`). 2개 위치 발견해서 fix:
+  - `src/app/[locale]/app/projects/[id]/page.tsx:695` (transitionStatus)
+  - `src/components/project/reference-grid.tsx:195` (removeReference)
+
+전체 `src/` sweep 결과 잔존 anti-pattern 0건. 둘 다 server action signature가 `(formData: FormData)` 이므로 래퍼 제거 + 직접 전달로 fix.
+
+**Risk:** 미래 contributor 가 같은 anti-pattern 도입 가능. type-check 을 통과하지만 runtime 에서만 터짐 (defense-in-depth 필요).
+
+**Action:** Phase 2.8.1 자동 차단 추가:
+1. ESLint custom rule 작성 — `JSXAttribute[name.name='action'][value.expression.type='ArrowFunctionExpression'][value.expression.async=true]` 을 Server Component 파일에서 설계 의도 의심하는 에러 레벨로 차단.
+2. 대안: `eslint-plugin-react-server-components` 가 있으면 그 rule 적용.
+3. CI step 에 `grep -r 'action=\{async' src/` exit code 0 점검.
+
+**Owner:** Phase 2.8.1 builder.
+
+**Status:** Open (immediate fix shipped, prevention deferred).
+
+**Registered:** 2026-04-26 (post-SHIPPED admin smoke).
+
+---
+
 ## FU-2.8-comment-kind
 
 **Trigger:** SPEC §3.5 prescribed `ALTER TYPE thread_kind ADD VALUE 'project_brief'`,
