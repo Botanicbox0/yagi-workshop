@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { CommissionIntakeStatePill } from "@/components/commission/intake-state-pill";
 import { CommissionAdminResponseForm } from "@/components/commission/admin-response-form";
+import { CommissionConvertButton } from "./convert-button";
 import type { CommissionIntake } from "@/lib/commission/types";
 
 type Props = {
@@ -36,7 +37,7 @@ export default async function AdminCommissionDetailPage({ params }: Props) {
   const { data } = await supabase
     .from("commission_intakes")
     .select(
-      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at, clients!inner(company_name, contact_name, contact_email, contact_phone, website_url)",
+      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at, converted_to_project_id, clients!inner(company_name, contact_name, contact_email, contact_phone, website_url)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -69,6 +70,33 @@ export default async function AdminCommissionDetailPage({ params }: Props) {
         <h1 className="font-display text-3xl md:text-4xl tracking-tight keep-all">
           {intake.title}
         </h1>
+        {/* Phase 2.8.1 G_B1-H — Workshop 생성 (admin convert) primary CTA.
+            Visible while the intake is in {submitted, admin_responded}. Once
+            converted, the same row shows a deep link to the resulting Brief
+            Board so admin can return to it easily. */}
+        {(intake.state === "submitted" || intake.state === "admin_responded") && (
+          <div className="pt-3">
+            <CommissionConvertButton
+              commissionId={intake.id}
+              label={t("convert_button")}
+              successText={t("convert_success")}
+              errorText={t("convert_error")}
+            />
+            <p className="text-xs text-muted-foreground mt-2 keep-all">
+              {t("convert_hint")}
+            </p>
+          </div>
+        )}
+        {intake.state === "converted" && intake.converted_to_project_id && (
+          <div className="pt-3">
+            <Link
+              href={`/${locale}/app/projects/${intake.converted_to_project_id}?tab=brief`}
+              className="inline-block text-sm underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+            >
+              → {t("converted_link")}
+            </Link>
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">
           {tC(`category_${intake.category}` as "category_music_video")}
           {" · "}

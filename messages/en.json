@@ -336,7 +336,13 @@
     "response_submitting": "Sending...",
     "response_success": "Response sent.",
     "response_error": "Failed to send.",
-    "response_too_short": "Response must be at least 20 characters."
+    "response_too_short": "Response must be at least 20 characters.",
+    "filter_converted": "Converted",
+    "convert_button": "Create Workshop",
+    "convert_hint": "Open the project workshop and seed the Brief Board from this commission.",
+    "convert_success": "Workshop opened.",
+    "convert_error": "Conversion failed. Please try again.",
+    "converted_link": "Open the converted workshop"
   },
   "dashboard": {
     "empty_title": "No active projects yet",

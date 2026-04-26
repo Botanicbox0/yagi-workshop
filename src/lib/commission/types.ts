@@ -8,7 +8,8 @@ export type CommissionIntakeState =
   | "submitted"
   | "admin_responded"
   | "closed"
-  | "archived";
+  | "archived"
+  | "converted";
 
 export type ClientCompanyType =
   | "label"
@@ -58,6 +59,7 @@ export type CommissionIntake = {
   admin_responded_by: string | null;
   created_at: string;
   updated_at: string;
+  converted_to_project_id: string | null;
 };
 
 export type Client = {

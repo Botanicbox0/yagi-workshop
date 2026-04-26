@@ -6,6 +6,7 @@ const KO_LABELS: Record<CommissionIntakeState, string> = {
   admin_responded: "답변 완료",
   closed: "완료됨",
   archived: "보관됨",
+  converted: "워크샵 전환됨",
 };
 
 const EN_LABELS: Record<CommissionIntakeState, string> = {
@@ -13,6 +14,7 @@ const EN_LABELS: Record<CommissionIntakeState, string> = {
   admin_responded: "Responded",
   closed: "Closed",
   archived: "Archived",
+  converted: "Converted",
 };
 
 const STATE_TONES: Record<CommissionIntakeState, string> = {
@@ -20,6 +22,7 @@ const STATE_TONES: Record<CommissionIntakeState, string> = {
   admin_responded: "bg-emerald-50 text-emerald-900 border-emerald-200",
   closed: "bg-slate-50 text-slate-700 border-slate-200",
   archived: "bg-slate-100 text-slate-500 border-slate-200",
+  converted: "bg-violet-50 text-violet-900 border-violet-200",
 };
 
 export function CommissionIntakeStatePill({

@@ -336,7 +336,13 @@
     "response_submitting": "전송 중...",
     "response_success": "답변을 보냈습니다.",
     "response_error": "전송에 실패했습니다.",
-    "response_too_short": "답변은 20자 이상이어야 합니다."
+    "response_too_short": "답변은 20자 이상이어야 합니다.",
+    "filter_converted": "워크샵 전환됨",
+    "convert_button": "Workshop 생성",
+    "convert_hint": "프로젝트 작업실을 열고 의뢰 내용을 Brief Board 로 옮깁니다.",
+    "convert_success": "작업실을 열었습니다.",
+    "convert_error": "전환에 실패했습니다. 다시 시도해 주세요.",
+    "converted_link": "전환된 작업실로 이동"
   },
   "dashboard": {
     "empty_title": "아직 진행 중인 프로젝트가 없습니다",

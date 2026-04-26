@@ -80,9 +80,13 @@ export default async function CommissionLandingPage({ params }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  // Phase 2.8.1 G_B1-H (F-PUX-003): preserve commission intent across the
+  // signup → email-confirm hop. Anonymous visitors land on signup with a
+  // `next` param pointing back at /app/commission/new; the auth callback
+  // honors it after the email link round-trip.
   const ctaHref = user
     ? `/${locale}/app/commission/new`
-    : `/${locale}/signup`;
+    : `/${locale}/signup?next=${encodeURIComponent(`/${locale}/app/commission/new`)}`;
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -111,15 +115,14 @@ export default async function CommissionLandingPage({ params }: Props) {
               ? "엔터 레이블, 광고 에이전시, 아티스트를 위한 AI 비주얼 이펙트 플랫폼. 의뢰 작성에서 납품까지 야기가 직접 책임집니다."
               : "AI visual effects, made for music labels, agencies, and artists. From brief to delivery — handled personally."}
           </p>
+          {/* Phase 2.8.1 G_B1-H (F-PUX-002): challenge "Browse challenges"
+              CTA removed — Workshop and Contest are separate products
+              (DECISIONS_CACHE Q-085). The hero now keeps a single primary
+              CTA so the commission intake intent stays focused. */}
           <div className="mt-12 flex flex-col sm:flex-row gap-3">
             <Button asChild size="lg" className="text-base">
               <Link href={ctaHref}>
                 {isKr ? "지금 의뢰 작성하기 →" : "Submit a commission →"}
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost" className="text-base">
-              <Link href={`/${locale}/challenges`}>
-                {isKr ? "챌린지 둘러보기" : "Browse challenges"}
               </Link>
             </Button>
           </div>

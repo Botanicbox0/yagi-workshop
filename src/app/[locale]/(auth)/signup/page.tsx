@@ -6,11 +6,27 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useRouter } from "@/i18n/routing";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+
+// Phase 2.8.1 G_B1-H (F-PUX-003): commission flow uses `?next=` to bring
+// the user back to /app/commission/new after the email-confirm round-trip.
+// We accept any same-origin path that starts with `/` and is not the auth
+// confirm endpoint itself (avoids the trivial loop). Cross-origin URLs
+// are rejected outright so a malicious caller can't bounce the user off
+// the platform.
+function sanitizeNext(raw: string | null): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith("/")) return null;
+  if (raw.startsWith("//")) return null; // protocol-relative
+  if (raw.startsWith("/auth/callback")) return null;
+  if (raw.length > 500) return null;
+  return raw;
+}
 
 const schema = z
   .object({
@@ -29,6 +45,8 @@ export default function SignUpPage() {
   const t = useTranslations("auth");
   const c = useTranslations("common");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = sanitizeNext(searchParams.get("next"));
   const [submitting, setSubmitting] = useState(false);
   const [sentToEmail, setSentToEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
@@ -38,6 +56,11 @@ export default function SignUpPage() {
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
+  function buildEmailRedirect(siteUrl: string): string {
+    const base = `${siteUrl}/auth/callback`;
+    return next ? `${base}?next=${encodeURIComponent(next)}` : base;
+  }
+
   async function onSubmit(values: FormValues) {
     setSubmitting(true);
     const supabase = createSupabaseBrowser();
@@ -45,7 +68,7 @@ export default function SignUpPage() {
     const { error, data } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+      options: { emailRedirectTo: buildEmailRedirect(siteUrl) },
     });
     setSubmitting(false);
     if (error) {
@@ -54,7 +77,9 @@ export default function SignUpPage() {
     }
     if (data.session) {
       // Email confirmation disabled in Supabase auth settings — auto-login path.
-      router.push("/onboarding");
+      // Honor `next` here too so the in-product redirect mirrors the
+      // email-confirm path.
+      router.push((next ?? "/onboarding") as "/onboarding");
     } else {
       // Email confirmation enabled — switch the page over to the sent-state view
       // instead of leaving the user on the form with only a toast.
@@ -70,7 +95,7 @@ export default function SignUpPage() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: sentToEmail,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+      options: { emailRedirectTo: buildEmailRedirect(siteUrl) },
     });
     setResending(false);
     if (error) {

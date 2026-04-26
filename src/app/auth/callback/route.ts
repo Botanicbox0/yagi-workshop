@@ -41,13 +41,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/${locale}/reset-password`);
   }
 
+  // Phase 2.8.1 G_B1-H (F-PUX-003): preserve the commission intent across
+  // the entire signup → confirm → onboarding chain. If the user just
+  // confirmed their email and still needs to onboard, hand the next URL
+  // off so onboarding can either auto-skip (commission intent) or finish
+  // and resume.
+  const safeNext =
+    next && next.startsWith("/") && !next.startsWith("//")
+      ? next
+      : null;
+
   if (!profile) {
-    return NextResponse.redirect(`${origin}/${locale}/onboarding`);
+    const onboardingUrl = safeNext
+      ? `${origin}/${locale}/onboarding?next=${encodeURIComponent(safeNext)}`
+      : `${origin}/${locale}/onboarding`;
+    return NextResponse.redirect(onboardingUrl);
   }
 
-  // Optional `next` param support (e.g., /app/projects/abc)
-  if (next && next.startsWith("/")) {
-    return NextResponse.redirect(`${origin}${next}`);
+  if (safeNext) {
+    return NextResponse.redirect(`${origin}${safeNext}`);
   }
 
   return NextResponse.redirect(`${origin}/${locale}/app`);
