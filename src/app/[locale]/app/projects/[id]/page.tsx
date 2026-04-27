@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { transitionStatusFormAction } from "./actions";
+import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ThreadPanelServer } from "@/components/project/thread-panel-server";
 import { ReferenceUploader } from "@/components/project/reference-uploader";
 import { ReferenceGrid } from "@/components/project/reference-grid";
@@ -695,39 +696,46 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         </div>
 
         {/* Action dropdown — only rendered when transitions are available */}
-        {availableTransitions.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full uppercase tracking-[0.12em] text-xs"
-              >
-                {t(statusI18nKey)} ▾
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[180px]">
-              {availableTransitions.map((item) => (
-                <DropdownMenuItem key={item.newStatus} asChild>
-                  <form action={transitionStatusFormAction}>
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <input
-                      type="hidden"
-                      name="newStatus"
-                      value={item.newStatus}
-                    />
-                    <button
-                      type="submit"
-                      className="w-full text-left cursor-pointer text-sm"
-                    >
-                      {t(item.transitionKey as TransitionKey)}
-                    </button>
-                  </form>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <div className="flex items-center gap-2">
+          {availableTransitions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full uppercase tracking-[0.12em] text-xs"
+                >
+                  {t(statusI18nKey)} ▾
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[180px]">
+                {availableTransitions.map((item) => (
+                  <DropdownMenuItem key={item.newStatus} asChild>
+                    <form action={transitionStatusFormAction}>
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <input
+                        type="hidden"
+                        name="newStatus"
+                        value={item.newStatus}
+                      />
+                      <button
+                        type="submit"
+                        className="w-full text-left cursor-pointer text-sm"
+                      >
+                        {t(item.transitionKey as TransitionKey)}
+                      </button>
+                    </form>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          {/* Phase 2.8.2 G_B2_A — yagi_admin soft-delete trigger. The detail
+              page already renders soft-deleted rows because yagi_admin RLS
+              path bypasses the deleted_at IS NULL filter; the trash console
+              owns restore + permanent delete. */}
+          {isYagiAdmin && <AdminDeleteButton projectId={project.id} />}
+        </div>
       </div>
 
       {/* Main grid */}

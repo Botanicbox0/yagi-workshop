@@ -4,6 +4,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { statusPillClass } from "@/lib/ui/status-pill";
+import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -139,23 +140,13 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* Direct tab — empty state */}
-      {projects.length === 0 && (
-        <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
-          <p className="font-display text-xl tracking-tight mb-2 keep-all">
-            <em>{t("empty_direct")}</em>
-          </p>
-          <p className="text-sm text-muted-foreground mb-6 keep-all">
-            {t("empty_direct_sub")}
-          </p>
-          <Link
-            href="/app/projects/new"
-            className="rounded-full uppercase tracking-[0.12em] px-6 py-3 bg-foreground text-background hover:bg-foreground/90 text-sm font-medium transition-colors"
-          >
-            {t("new")}
-          </Link>
-        </div>
-      )}
+      {/* Phase 2.8.2 G_B2_A — empty-state hero replaces the dashed-border
+          placeholder. Hero shows 3 value props + primary CTA + 4-step
+          workflow flow. The legacy empty_direct / empty_direct_sub keys
+          are preserved for the dashboard's compact empty state and any
+          future re-introduction; key names are non-negotiable per the
+          phase kickoff §7. */}
+      {projects.length === 0 && <ProjectsHubHero locale={locale} />}
 
       {/* Direct tab — project grid */}
       {projects.length > 0 && (

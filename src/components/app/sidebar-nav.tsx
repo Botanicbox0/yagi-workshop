@@ -121,6 +121,13 @@ const GROUPS: NavGroup[] = [
         icon: Mailbox,
         roles: ["yagi_admin"],
       },
+      {
+        // Phase 2.8.2 G_B2_A — yagi_admin trash console for soft-deleted
+        // projects. 3-day undelete window + permanent delete action.
+        key: "admin_trash",
+        href: "/app/admin/trash",
+        roles: ["yagi_admin"],
+      },
     ],
   },
 ];

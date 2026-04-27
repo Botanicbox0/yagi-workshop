@@ -360,6 +360,7 @@ export type Database = {
           budget_range: string
           category: string
           client_id: string
+          converted_to_project_id: string | null
           created_at: string
           deadline_preference: string | null
           id: string
@@ -378,6 +379,7 @@ export type Database = {
           budget_range: string
           category: string
           client_id: string
+          converted_to_project_id?: string | null
           created_at?: string
           deadline_preference?: string | null
           id?: string
@@ -396,6 +398,7 @@ export type Database = {
           budget_range?: string
           category?: string
           client_id?: string
+          converted_to_project_id?: string | null
           created_at?: string
           deadline_preference?: string | null
           id?: string
@@ -419,6 +422,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_intakes_converted_to_project_id_fkey"
+            columns: ["converted_to_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1545,6 +1555,7 @@ export type Database = {
           brief: string | null
           created_at: string
           created_by: string
+          deleted_at: string | null
           deliverable_types: string[]
           estimated_budget_range: string | null
           id: string
@@ -1565,6 +1576,7 @@ export type Database = {
           brief?: string | null
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
           id?: string
@@ -1585,6 +1597,7 @@ export type Database = {
           brief?: string | null
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
           id?: string
@@ -2340,6 +2353,10 @@ export type Database = {
         Returns: string
       }
       change_handle: { Args: { new_handle_input: string }; Returns: undefined }
+      convert_commission_to_project: {
+        Args: { p_commission_id: string }
+        Returns: Json
+      }
       create_meeting_with_attendees: {
         Args: {
           p_attendees: Json
@@ -2372,6 +2389,10 @@ export type Database = {
           email: string
           user_id: string
         }[]
+      }
+      save_brief_version: {
+        Args: { p_label?: string; p_project_id: string }
+        Returns: Json
       }
     }
     Enums: {
