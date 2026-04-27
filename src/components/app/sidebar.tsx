@@ -37,20 +37,19 @@ function SidebarBody({
         if (target.closest("a")) onNavigate();
       }}
     >
-      {/* Phase 2.9 G_B9_B — brand + workspace as a single unbroken
-          block. Yagi: "단차가 보이는데 이거 없애야 할 듯" — the seam
-          between the brand block and the workspace label was reading
-          as a navigation chrome step. Removed both border-b lines;
-          the bottom border under the workspace section still exists
-          on the *nav* container below to mark the start of nav. */}
-      <div className="px-5 pt-5 pb-4">
+      {/* Phase 2.9 G_B9_B + Phase 2.9 hotfix — brand + workspace +
+          nav as one continuous flow. Yagi visual smoke 2026-04-27:
+          the explicit border-b after the workspace block was reading
+          as a horizontal seam between the sidebar header and body.
+          Removed entirely; nav items have enough vertical rhythm to
+          stand on their own without a divider line. */}
+      <div className="px-5 pt-5 pb-3">
         <SidebarBrand />
         <div className="mt-3">
           <SidebarScopeSwitcher onNavigate={onNavigate} />
         </div>
       </div>
-      <div className="border-b border-border" />
-      <div className="flex-1 overflow-y-auto py-3">
+      <div className="flex-1 overflow-y-auto pt-1 pb-3">
         <SidebarNav
           roles={context.workspaceRoles}
           profileRole={context.profile.role}
