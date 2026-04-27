@@ -140,53 +140,61 @@ export default function OnboardingClientPage() {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="contact_name">{t("client_contact_name_label")}</Label>
-          <Input
-            id="contact_name"
-            {...register("contact_name")}
-            placeholder={t("client_contact_name_ph")}
-            autoComplete="name"
-          />
-          {errors.contact_name && (
-            <p className="text-xs text-destructive">
-              {errors.contact_name.message}
-            </p>
-          )}
-        </div>
+        {/* Contact section — grouped under a section header so the three
+            related fields (name, email, phone) read as one mental unit. */}
+        <fieldset className="space-y-4 rounded-lg border border-border/50 bg-muted/20 p-4">
+          <legend className="px-2 text-sm font-medium text-foreground">
+            {t("client_contact_section_label")}
+          </legend>
 
-        <div className="space-y-2">
-          <Label htmlFor="contact_email">
-            {t("client_contact_email_label")}
-          </Label>
-          <Input
-            id="contact_email"
-            type="email"
-            {...register("contact_email")}
-            placeholder={t("client_contact_email_ph")}
-            autoComplete="email"
-          />
-          {errors.contact_email && (
-            <p className="text-xs text-destructive">
-              {errors.contact_email.message}
-            </p>
-          )}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="contact_name">{t("client_contact_name_label")}</Label>
+            <Input
+              id="contact_name"
+              {...register("contact_name")}
+              placeholder={t("client_contact_name_ph")}
+              autoComplete="name"
+            />
+            {errors.contact_name && (
+              <p className="text-xs text-destructive">
+                {errors.contact_name.message}
+              </p>
+            )}
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="contact_phone">
-            {t("client_contact_phone_label")}{" "}
-            <span className="text-xs text-muted-foreground">
-              ({t("optional_label")})
-            </span>
-          </Label>
-          <Input
-            id="contact_phone"
-            {...register("contact_phone")}
-            placeholder={t("client_contact_phone_ph")}
-            autoComplete="tel"
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="contact_email">
+              {t("client_contact_email_label")}
+            </Label>
+            <Input
+              id="contact_email"
+              type="email"
+              {...register("contact_email")}
+              placeholder={t("client_contact_email_ph")}
+              autoComplete="email"
+            />
+            {errors.contact_email && (
+              <p className="text-xs text-destructive">
+                {errors.contact_email.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contact_phone">
+              {t("client_contact_phone_label")}{" "}
+              <span className="text-xs text-muted-foreground">
+                ({t("optional_label")})
+              </span>
+            </Label>
+            <Input
+              id="contact_phone"
+              {...register("contact_phone")}
+              placeholder={t("client_contact_phone_ph")}
+              autoComplete="tel"
+            />
+          </div>
+        </fieldset>
 
         <div className="space-y-2">
           <Label htmlFor="website_url">
@@ -218,7 +226,7 @@ export default function OnboardingClientPage() {
           className="w-full"
           disabled={submitting}
         >
-          {submitting ? t("saving") : t("continue")}
+          {submitting ? t("saving") : t("next_step")}
         </Button>
       </form>
     </div>
