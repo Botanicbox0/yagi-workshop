@@ -316,6 +316,8 @@ Get-Content .yagi-autobuild\phase-2-8-1\_codex_kpux_prompt.md -Encoding UTF8 -Ra
 - **Invoicing surface** — `invoices` 테이블 + UI
 - **Lock 후 변경 요청 fork 패턴**
 - **Block 단위 inline comment** (TipTap stable block id + threads anchor_block_id)
+- **Canvas mode (tldraw 기반 freeform 시각 보드)** — 원래 §4 / G_B2-C scope. Phase 2.8.2 SHIPPED 시점 §2.5 honest evaluation 적용으로 defer 결정 (kickoff §6 DEFER_G_B2_C, _run.log 2026-04-27T02:40Z). 16h 단일 게이트가 5게이트 phase 의 잔여 budget 을 압도, 그리고 Workshop 본체 정의 100% 도달 phase 인 2.10 의 자연 anchor (status machine + approval flow 와 함께 합의 cycle 의 시각 surface). primary_mode column / content_json.canvas_state 데이터 모델, mode 토글 UX, mobile read-only fallback, K-05 partial-pass 모두 2.10 SPEC 에 흡수.
+- **8 category workflow popovers (wizard Step 1)** — 원래 G_B2-A scope. Phase 2.8.2 G_B2_A SHIPPED 시점 deferral (run.log 2026-04-27T01:45Z + 2026-04-27T02:00Z): 현재 wizard Step 1 에 카테고리 picker 자체가 없고, SPEC §2 가 선택 메커니즘을 미정의로 남김. 정보-only card grid vs 실제 입력 picker 둘 중 어느 쪽을 채택할지는 status machine UX 와 함께 결정 (Phase 2.10 wizard 재구조 시).
 
 ### → Phase 3.0
 - Contest surface 본격
