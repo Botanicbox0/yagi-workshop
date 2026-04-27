@@ -1317,6 +1317,10 @@
     "lock_button": "기획 잠그기",
     "lock_success": "보드를 잠갔어요",
     "unlock_button": "잠금 해제",
-    "unlock_success": "잠금을 해제했어요"
+    "unlock_success": "잠금을 해제했어요",
+    "sidepanel_tab_messages": "메시지",
+    "sidepanel_tab_versions": "버전 기록",
+    "sidepanel_unread_aria": "새 메시지 {n}개",
+    "new_message_toast": "새 메시지가 도착했어요"
   }
 }

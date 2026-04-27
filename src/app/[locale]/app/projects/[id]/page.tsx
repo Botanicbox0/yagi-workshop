@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { transitionStatusFormAction } from "./actions";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
+import { BriefSidePanel } from "@/components/brief-board/side-panel";
 import { ThreadPanelServer } from "@/components/project/thread-panel-server";
 import { ReferenceUploader } from "@/components/project/reference-uploader";
 import { ReferenceGrid } from "@/components/project/reference-grid";
@@ -428,6 +429,17 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       (briefRow?.status as "editing" | "locked" | undefined) ?? "editing";
     const editorMode = viewerSnapshot ? "viewer" : "full";
 
+    // Phase 2.8.2 G_B2_D — fetch the project's thread id (if any) so the
+    // side panel can scope its unread-counter realtime channel by
+    // thread_id (defense-in-depth atop RLS — kickoff §2 G_B2_D loop 2).
+    const { data: threadRow } = await supabase
+      .from("project_threads")
+      .select("id")
+      .eq("project_id", project.id)
+      .limit(1)
+      .maybeSingle();
+    const sidePanelThreadId = threadRow?.id ?? null;
+
     return (
       <div className="px-6 md:px-10 py-10 max-w-6xl">
         <BriefBreadcrumb workspaceName={workspaceName} brandName={brandName} title={project.title} />
@@ -459,21 +471,26 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
               viewerVersionN={viewerSnapshot?.version_n}
               viewerBackHref={`/${locale}/app/projects/${project.id}?tab=brief`}
             />
-            <section className="mt-8">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-                {tThreads("title")}
-              </h3>
-              <BriefCommentPanel projectId={project.id} />
-            </section>
           </div>
 
-          <VersionHistorySidebar
+          {/* Phase 2.8.2 G_B2_D — right-column tabs: messages (primary,
+              realtime) + version history (secondary). Replaces the
+              previous layout where comment panel sat below the editor
+              and version history occupied the right column. */}
+          <BriefSidePanel
             projectId={project.id}
-            versions={versions}
-            currentVersion={briefRow?.current_version ?? 0}
-            viewingVersion={viewerSnapshot?.version_n ?? null}
-            locale={locale}
-            briefLocked={editorStatus === "locked"}
+            threadId={sidePanelThreadId}
+            messagesTab={<BriefCommentPanel projectId={project.id} />}
+            versionsTab={
+              <VersionHistorySidebar
+                projectId={project.id}
+                versions={versions}
+                currentVersion={briefRow?.current_version ?? 0}
+                viewingVersion={viewerSnapshot?.version_n ?? null}
+                locale={locale}
+                briefLocked={editorStatus === "locked"}
+              />
+            }
             className="md:col-span-1"
           />
         </div>

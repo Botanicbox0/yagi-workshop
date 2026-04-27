@@ -1252,6 +1252,10 @@
     "lock_button": "Lock brief",
     "lock_success": "Board locked",
     "unlock_button": "Unlock",
-    "unlock_success": "Board unlocked"
+    "unlock_success": "Board unlocked",
+    "sidepanel_tab_messages": "Messages",
+    "sidepanel_tab_versions": "Version history",
+    "sidepanel_unread_aria": "{n} new message(s)",
+    "new_message_toast": "New message"
   }
 }
