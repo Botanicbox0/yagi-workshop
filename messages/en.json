@@ -562,7 +562,74 @@
     "delete_confirm_body": "Deleted projects can be restored from trash within 3 days. After 3 days they are permanently removed.",
     "delete_confirm_cta": "Delete",
     "delete_success": "Project moved to trash.",
-    "delete_error": "Couldn't delete this project."
+    "delete_error": "Couldn't delete this project.",
+    "wizard": {
+      "step1": {
+        "eyebrow": "STEP 1 / 3",
+        "title": "Project summary"
+      },
+      "step2": {
+        "eyebrow": "STEP 2 / 3",
+        "title": "Project conditions"
+      },
+      "step3": {
+        "eyebrow": "STEP 3 / 3",
+        "title": "Final review"
+      },
+      "field": {
+        "name": {
+          "label": "Project name",
+          "placeholder": "e.g., Summer campaign"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "What is this project about? (min 30 chars)"
+        },
+        "references": {
+          "eyebrow": "REFERENCES",
+          "add_url": "Paste a URL",
+          "add_image": "Add image",
+          "add_pdf": "Add PDF",
+          "memo_placeholder": "Memo (optional)",
+          "empty": "No references yet. Paste a URL or add an image / PDF."
+        },
+        "deliverable_types": {
+          "label": "Deliverable types",
+          "video": "Video",
+          "image": "Image",
+          "motion_graphics": "Motion graphics",
+          "illustration": "Illustration",
+          "vfx": "VFX",
+          "branding": "Branding",
+          "other": "Other"
+        },
+        "budget": {
+          "label": "Budget",
+          "under_1m": "Under 1M KRW",
+          "1m_to_5m": "1M–5M KRW",
+          "5m_to_10m": "5M–10M KRW",
+          "negotiable": "Negotiable"
+        },
+        "delivery_date": {
+          "label": "Delivery date (optional)"
+        }
+      },
+      "actions": {
+        "continue": "Continue",
+        "back": "Back",
+        "submit": "Submit project",
+        "edit": "Edit"
+      },
+      "summary": {
+        "references_count": "{count} reference{count, plural, one {} other {s}}"
+      },
+      "errors": {
+        "name_required": "Project name is required.",
+        "description_too_short": "Description must be at least 30 characters.",
+        "budget_required": "Please select a budget.",
+        "deliverable_required": "Please select at least one deliverable type."
+      }
+    }
   },
   "admin_trash": {
     "title": "Trash",

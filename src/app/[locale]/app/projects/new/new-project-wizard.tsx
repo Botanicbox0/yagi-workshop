@@ -1,231 +1,173 @@
 "use client";
 
-import { useState, useTransition } from "react";
+// =============================================================================
+// Phase 3.0 task_03 — New Project Wizard (3-step rewrite)
+//
+// Steps:
+//   1. 프로젝트 요약 (Project Summary) — name + description + references
+//   2. 조건 (Conditions)               — deliverable_types + budget_band + delivery_date
+//   3. 최종 확인 (Final review)         — summary card, re-editable refs, submit
+//
+// Design rules applied:
+//   - font-suit for step titles (L-010, PRINCIPLES §4.1)
+//   - Achromatic only (L-011, PRINCIPLES §4.2)
+//   - No border-b between header + form (L-012, ANTI_PATTERNS §10.1)
+//   - Soft layered shadow on cards (L-013, PRINCIPLES §4.3)
+//   - No <em>/<i> (L-014)
+//
+// oEmbed: paste a YouTube/Vimeo URL → fetchVideoMetadataAction → thumbnail card
+// File uploads: R2 presigned PUT via existing uploadAsset pattern (image + PDF)
+// Autosave: debounced 500ms, reuses ensureDraftProject find-or-create pattern
+// Submit placeholder: TODO(task_04) comment — submitProjectAction not wired here
+// =============================================================================
+
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useTransition,
+  type ChangeEvent,
+} from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
+// crypto.randomUUID() is available in Node 19+ and modern browsers
+function uuidv4(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  // Fallback for environments without crypto.randomUUID
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+import { Link2, ImageIcon, FileText, X, Pencil, Loader2 } from "lucide-react";
 import {
   ensureDraftProject,
-  submitDraftProject,
+  fetchVideoMetadataAction,
   type WizardDraftFields,
 } from "./actions";
-import { BriefBoardEditor } from "@/components/brief-board/editor";
-import type { JSONContent } from "@tiptap/react";
-import type { Json } from "@/lib/supabase/database.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-
-// ---------------------------------------------------------------------------
-// Schema — Phase 2.7.2 single-flow brief, Phase 2.8.1 wizard draft mode
-// ---------------------------------------------------------------------------
-// Phase 2.8.1: Step 2 ("refs") now mounts BriefBoardEditor against a real
-// project_briefs row — wizard creates the projects row early as status='draft'
-// the moment the user clicks Continue from Step 1, so brief content can be
-// authored mid-wizard.  Submit flips status='draft' → 'submitted'.
-const formSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  description: z.string().max(4000).optional(),
-  brand_id: z.string().optional(),
-  tone: z.string().max(500).optional(),
-  deliverable_types: z
-    .array(z.string().trim().min(1).max(60))
-    .max(10),
-  estimated_budget_range: z.string().max(100).optional(),
-  target_delivery_at: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .or(z.literal("")),
-  intake_mode: z.literal("brief"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import {
+  createBriefAssetPutUrl,
+  objectPublicUrl,
+} from "@/lib/r2/client";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-type Step = "brief" | "refs" | "review";
 
-type Brand = { id: string; name: string };
-
-interface NewProjectWizardProps {
-  brands: Brand[];
-}
-
-const STEP_ORDER: Step[] = ["brief", "refs", "review"];
-
-type DraftBootstrap = {
-  projectId: string;
-  brief: {
-    contentJson: Json;
-    updatedAt: string;
-    status: "editing" | "locked";
-  };
+export type WizardReference = {
+  id: string;
+  kind: "url" | "image" | "pdf" | "video";
+  url: string;
+  note: string;
+  title?: string;
+  thumbnailUrl?: string;
+  durationSeconds?: number;
 };
 
-// ---------------------------------------------------------------------------
-// Tag input — free-text chip input for `deliverable_types`
-// ---------------------------------------------------------------------------
-function TagInput({
-  value,
-  onChange,
-  placeholder,
-  helperText,
-  addLabel,
-  removeLabel,
-  maxItems = 10,
-  maxLength = 60,
-}: {
-  value: string[];
-  onChange: (next: string[]) => void;
-  placeholder?: string;
-  helperText?: string;
-  addLabel: string;
-  removeLabel: string;
-  maxItems?: number;
-  maxLength?: number;
-}) {
-  const [draft, setDraft] = useState("");
-  const trimmed = draft.trim();
-  const canAdd =
-    trimmed.length > 0 &&
-    value.length < maxItems &&
-    !value.includes(trimmed);
+type BudgetBand =
+  | "under_1m"
+  | "1m_to_5m"
+  | "5m_to_10m"
+  | "negotiable";
 
-  const addTag = () => {
-    const v = trimmed;
-    if (!v) return;
-    if (value.includes(v)) {
-      setDraft("");
-      return;
-    }
-    if (value.length >= maxItems) return;
-    onChange([...value, v.slice(0, maxLength)]);
-    setDraft("");
-  };
+const BUDGET_BANDS: BudgetBand[] = [
+  "under_1m",
+  "1m_to_5m",
+  "5m_to_10m",
+  "negotiable",
+];
 
+const DELIVERABLE_OPTIONS = [
+  "video",
+  "image",
+  "motion_graphics",
+  "illustration",
+  "vfx",
+  "branding",
+  "other",
+] as const;
+
+// ---------------------------------------------------------------------------
+// Form schema (step 1 + step 2 fields)
+// ---------------------------------------------------------------------------
+
+const wizardSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  description: z.string().trim().min(30).max(2000),
+  deliverable_types: z.array(z.string().trim().min(1)).min(1),
+  budget_band: z.enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"]),
+  delivery_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal("")),
+});
+
+type WizardFormData = z.infer<typeof wizardSchema>;
+
+type Step = 1 | 2 | 3;
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
+
+interface NewProjectWizardProps {
+  brands?: { id: string; name: string }[];
+}
+
+// ---------------------------------------------------------------------------
+// Eyebrow label component
+// ---------------------------------------------------------------------------
+
+function Eyebrow({ children }: { children: string }) {
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2 items-center">
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === ",") {
-              e.preventDefault();
-              addTag();
-            }
-          }}
-          placeholder={placeholder}
-          maxLength={maxLength}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addTag}
-          disabled={!canAdd}
-          className="rounded-full"
-        >
-          {addLabel}
-        </Button>
-      </div>
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {value.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs keep-all"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() =>
-                  onChange(value.filter((t) => t !== tag))
-                }
-                className="text-muted-foreground hover:text-foreground leading-none"
-                aria-label={removeLabel}
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      {helperText && (
-        <p className="text-xs text-muted-foreground keep-all">{helperText}</p>
-      )}
-    </div>
+    <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">
+      {children}
+    </p>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Progress indicator
+// Step indicator
 // ---------------------------------------------------------------------------
-function StepIndicator({
-  current,
-  tProjects,
-}: {
-  current: Step;
-  tProjects: ReturnType<typeof useTranslations<"projects">>;
-}) {
-  const steps: { key: Step; label: string }[] = [
-    { key: "brief", label: tProjects("brief_step") },
-    { key: "refs", label: tProjects("refs_step") },
-    { key: "review", label: tProjects("review_step") },
-  ];
 
-  const currentIndex = STEP_ORDER.indexOf(current);
-
+function StepIndicator({ current }: { current: Step }) {
   return (
-    <ol className="flex items-center gap-2 mb-8 text-sm flex-wrap">
-      {steps.map(({ key, label }, i) => {
-        const isActive = key === current;
-        const isCompleted = i < currentIndex;
+    <ol className="flex items-center gap-3 mb-10" aria-label="wizard progress">
+      {([1, 2, 3] as Step[]).map((s, i) => {
+        const isCompleted = s < current;
+        const isActive = s === current;
         return (
-          <li key={key} className="flex items-center gap-2">
+          <li key={s} className="flex items-center gap-3">
             {i > 0 && (
-              <span className="text-muted-foreground mx-1" aria-hidden>
-                &rsaquo;
-              </span>
+              <span className="w-8 h-px bg-border" aria-hidden />
             )}
             <span
               className={cn(
-                "keep-all",
-                isActive && "font-semibold text-foreground",
-                isCompleted && "text-muted-foreground",
-                !isActive && !isCompleted && "text-muted-foreground"
+                "flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold transition-colors",
+                isCompleted &&
+                  "bg-foreground text-background",
+                isActive &&
+                  "bg-foreground text-background",
+                !isCompleted &&
+                  !isActive &&
+                  "bg-muted text-muted-foreground"
               )}
+              aria-current={isActive ? "step" : undefined}
             >
-              {isCompleted && (
-                <span className="mr-1" aria-hidden>
-                  ✓
-                </span>
-              )}
-              {i + 1}. {label}
+              {isCompleted ? "✓" : s}
             </span>
           </li>
         );
@@ -235,493 +177,870 @@ function StepIndicator({
 }
 
 // ---------------------------------------------------------------------------
-// Main wizard
+// Reference card
 // ---------------------------------------------------------------------------
-export function NewProjectWizard({ brands }: NewProjectWizardProps) {
-  const t = useTranslations("projects");
-  const tCommon = useTranslations("common");
-  const tErrors = useTranslations("errors");
-  const router = useRouter();
 
-  const [step, setStep] = useState<Step>("brief");
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAdvancing, startAdvance] = useTransition();
-  const [draft, setDraft] = useState<DraftBootstrap | null>(null);
+function ReferenceCard({
+  ref: refItem,
+  onDelete,
+  onNoteChange,
+}: {
+  ref: WizardReference;
+  onDelete: (id: string) => void;
+  onNoteChange: (id: string, note: string) => void;
+}) {
+  const t = useTranslations("projects");
+
+  return (
+    <div
+      className="flex gap-3 rounded-lg border-border/40 p-3"
+      style={{
+        boxShadow:
+          "0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.04)",
+      }}
+    >
+      {/* Thumbnail / icon */}
+      <div className="flex-shrink-0 w-14 h-14 rounded bg-muted flex items-center justify-center overflow-hidden">
+        {refItem.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={refItem.thumbnailUrl}
+            alt={refItem.title ?? ""}
+            className="w-full h-full object-cover"
+          />
+        ) : refItem.kind === "image" ? (
+          <ImageIcon className="w-5 h-5 text-muted-foreground" />
+        ) : refItem.kind === "pdf" ? (
+          <FileText className="w-5 h-5 text-muted-foreground" />
+        ) : (
+          <Link2 className="w-5 h-5 text-muted-foreground" />
+        )}
+      </div>
+
+      {/* Info + memo */}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        {refItem.title && (
+          <p className="text-xs font-medium truncate keep-all">{refItem.title}</p>
+        )}
+        {!refItem.title && (
+          <p className="text-xs text-muted-foreground truncate">
+            {new URL(refItem.url).hostname}
+          </p>
+        )}
+        {refItem.durationSeconds != null && (
+          <p className="text-xs text-muted-foreground">
+            {Math.floor(refItem.durationSeconds / 60)}:
+            {String(refItem.durationSeconds % 60).padStart(2, "0")}
+          </p>
+        )}
+        <Input
+          value={refItem.note}
+          onChange={(e) => onNoteChange(refItem.id, e.target.value)}
+          placeholder={t("wizard.field.references.memo_placeholder")}
+          className="h-7 text-xs"
+          maxLength={200}
+        />
+      </div>
+
+      {/* Delete */}
+      <button
+        type="button"
+        onClick={() => onDelete(refItem.id)}
+        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label={t("wizard.actions.edit")}
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// References quick-add UI (used in Step 1 and inline in Step 3)
+// ---------------------------------------------------------------------------
+
+function ReferencesEditor({
+  refs,
+  onChange,
+}: {
+  refs: WizardReference[];
+  onChange: (next: WizardReference[]) => void;
+}) {
+  const t = useTranslations("projects");
+  const [urlDraft, setUrlDraft] = useState("");
+  const [fetchingUrl, setFetchingUrl] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      onChange(refs.filter((r) => r.id !== id));
+    },
+    [refs, onChange]
+  );
+
+  const handleNoteChange = useCallback(
+    (id: string, note: string) => {
+      onChange(refs.map((r) => (r.id === id ? { ...r, note } : r)));
+    },
+    [refs, onChange]
+  );
+
+  async function handleUrlCommit() {
+    const raw = urlDraft.trim();
+    if (!raw) return;
+    // Normalise — add https if no scheme
+    let url = raw;
+    if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+
+    setFetchingUrl(true);
+    try {
+      const meta = await fetchVideoMetadataAction(url);
+      if (meta) {
+        // YouTube or Vimeo — video reference
+        const ref: WizardReference = {
+          id: uuidv4(),
+          kind: "video",
+          url,
+          note: "",
+          title: meta.title,
+          thumbnailUrl: meta.thumbnailUrl,
+          durationSeconds: meta.durationSeconds,
+        };
+        onChange([...refs, ref]);
+      } else {
+        // Generic URL reference
+        let hostname = url;
+        try {
+          hostname = new URL(url).hostname;
+        } catch { /* ignore */ }
+        const ref: WizardReference = {
+          id: uuidv4(),
+          kind: "url",
+          url,
+          note: "",
+          title: hostname,
+        };
+        onChange([...refs, ref]);
+      }
+    } catch {
+      const ref: WizardReference = {
+        id: uuidv4(),
+        kind: "url",
+        url,
+        note: "",
+      };
+      onChange([...refs, ref]);
+    } finally {
+      setFetchingUrl(false);
+      setUrlDraft("");
+    }
+  }
+
+  async function handleFileUpload(
+    e: ChangeEvent<HTMLInputElement>,
+    kind: "image" | "pdf"
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset so re-selecting same file fires again
+    e.target.value = "";
+
+    setUploadingFile(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+      const storageKey = `project-wizard/${uuidv4()}.${ext}`;
+      const putUrl = await createBriefAssetPutUrl(storageKey, file.type, 600);
+      const uploadRes = await fetch(putUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (!uploadRes.ok) throw new Error("R2 upload failed");
+      const publicUrl = objectPublicUrl(storageKey);
+      const ref: WizardReference = {
+        id: uuidv4(),
+        kind,
+        url: publicUrl,
+        note: "",
+        title: file.name,
+        thumbnailUrl: kind === "image" ? publicUrl : undefined,
+      };
+      onChange([...refs, ref]);
+    } catch {
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setUploadingFile(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* URL paste row */}
+      <div className="flex gap-2">
+        <Input
+          value={urlDraft}
+          onChange={(e) => setUrlDraft(e.target.value)}
+          onPaste={(e) => {
+            // On paste, commit immediately
+            const pasted = e.clipboardData.getData("text").trim();
+            if (pasted) {
+              e.preventDefault();
+              setUrlDraft(pasted);
+              // commit after state update
+              setTimeout(() => {
+                setUrlDraft((prev) => {
+                  void (async () => {
+                    let url = prev;
+                    if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+                    setFetchingUrl(true);
+                    try {
+                      const meta = await fetchVideoMetadataAction(url);
+                      if (meta) {
+                        onChange([
+                          ...refs,
+                          {
+                            id: uuidv4(),
+                            kind: "video",
+                            url,
+                            note: "",
+                            title: meta.title,
+                            thumbnailUrl: meta.thumbnailUrl,
+                            durationSeconds: meta.durationSeconds,
+                          },
+                        ]);
+                      } else {
+                        let hostname = url;
+                        try { hostname = new URL(url).hostname; } catch { /* ignore */ }
+                        onChange([
+                          ...refs,
+                          { id: uuidv4(), kind: "url", url, note: "", title: hostname },
+                        ]);
+                      }
+                    } catch {
+                      onChange([...refs, { id: uuidv4(), kind: "url", url, note: "" }]);
+                    } finally {
+                      setFetchingUrl(false);
+                    }
+                  })();
+                  return ""; // clear
+                });
+              }, 0);
+            }
+          }}
+          onBlur={() => {
+            if (urlDraft.trim()) void handleUrlCommit();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void handleUrlCommit();
+            }
+          }}
+          placeholder={t("wizard.field.references.add_url")}
+          className="flex-1 text-sm"
+          disabled={fetchingUrl || uploadingFile}
+        />
+        {fetchingUrl && (
+          <Loader2 className="w-4 h-4 animate-spin self-center text-muted-foreground" />
+        )}
+      </div>
+
+      {/* File add buttons */}
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="rounded-full text-xs uppercase tracking-[0.08em]"
+          onClick={() => imageInputRef.current?.click()}
+          disabled={uploadingFile}
+        >
+          <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+          {t("wizard.field.references.add_image")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="rounded-full text-xs uppercase tracking-[0.08em]"
+          onClick={() => pdfInputRef.current?.click()}
+          disabled={uploadingFile}
+        >
+          <FileText className="w-3.5 h-3.5 mr-1.5" />
+          {t("wizard.field.references.add_pdf")}
+        </Button>
+        {uploadingFile && (
+          <Loader2 className="w-4 h-4 animate-spin self-center text-muted-foreground" />
+        )}
+      </div>
+
+      {/* Hidden file inputs */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => void handleFileUpload(e, "image")}
+        aria-label={t("wizard.field.references.add_image")}
+      />
+      <input
+        ref={pdfInputRef}
+        type="file"
+        accept="application/pdf"
+        className="sr-only"
+        onChange={(e) => void handleFileUpload(e, "pdf")}
+        aria-label={t("wizard.field.references.add_pdf")}
+      />
+
+      {/* Reference list */}
+      {refs.length === 0 && (
+        <p className="text-xs text-muted-foreground py-2 keep-all">
+          {t("wizard.field.references.empty")}
+        </p>
+      )}
+      {refs.length > 0 && (
+        <div className="space-y-2 mt-1">
+          {refs.map((r) => (
+            <ReferenceCard
+              key={r.id}
+              ref={r}
+              onDelete={handleDelete}
+              onNoteChange={handleNoteChange}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Budget radio
+// ---------------------------------------------------------------------------
+
+function BudgetRadio({
+  value,
+  onChange,
+}: {
+  value: BudgetBand | "";
+  onChange: (v: BudgetBand) => void;
+}) {
+  const t = useTranslations("projects");
+  return (
+    <div className="grid grid-cols-2 gap-2" role="radiogroup">
+      {BUDGET_BANDS.map((band) => {
+        const selected = value === band;
+        return (
+          <button
+            key={band}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(band)}
+            className={cn(
+              "rounded-lg px-3 py-2.5 text-sm text-left transition-colors keep-all",
+              selected
+                ? "bg-foreground text-background"
+                : "border border-border/40 hover:border-border"
+            )}
+            style={
+              !selected
+                ? {
+                    boxShadow:
+                      "0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.04)",
+                  }
+                : undefined
+            }
+          >
+            {t(`wizard.field.budget.${band}` as Parameters<typeof t>[0])}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Deliverable chips
+// ---------------------------------------------------------------------------
+
+function DeliverableChips({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const t = useTranslations("projects");
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {DELIVERABLE_OPTIONS.map((opt) => {
+        const selected = value.includes(opt);
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() =>
+              onChange(
+                selected
+                  ? value.filter((v) => v !== opt)
+                  : [...value, opt]
+              )
+            }
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-medium transition-colors keep-all",
+              selected
+                ? "bg-foreground text-background"
+                : "border border-border/40 hover:border-border"
+            )}
+            aria-pressed={selected}
+          >
+            {t(`wizard.field.deliverable_types.${opt}` as Parameters<typeof t>[0])}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main wizard component
+// ---------------------------------------------------------------------------
+
+export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps) {
+  const t = useTranslations("projects");
+  // TODO(task_04): router will be used to navigate after submit
+  const _router = useRouter();
+
+  const [step, setStep] = useState<Step>(1);
+  const [refs, setRefs] = useState<WizardReference[]>([]);
+  // TODO(task_04): draftProjectId is passed to submitProjectAction
+  const [_draftProjectId, setDraftProjectId] = useState<string | null>(null);
+  const [isSubmitting, startSubmit] = useTransition();
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRender = useRef(true);
 
   const {
     register,
     control,
-    handleSubmit,
     getValues,
+    watch,
+    trigger,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  } = useForm<WizardFormData>({
+    resolver: zodResolver(wizardSchema),
     defaultValues: {
-      intake_mode: "brief",
+      name: "",
+      description: "",
       deliverable_types: [],
+      budget_band: undefined,
+      delivery_date: "",
     },
   });
 
   // -------------------------------------------------------------------------
-  // Helpers
+  // Autosave helpers
   // -------------------------------------------------------------------------
-  function buildFields(): WizardDraftFields {
-    const vals = getValues();
+
+  function buildDraftFields(): WizardDraftFields {
+    const v = getValues();
     return {
-      title: (vals.title ?? "").trim(),
-      description: vals.description || null,
-      brand_id: vals.brand_id || null,
-      tone: vals.tone || null,
-      deliverable_types: vals.deliverable_types ?? [],
-      estimated_budget_range: vals.estimated_budget_range || null,
+      title: v.name.trim(),
+      description: v.description || null,
+      brand_id: null,
+      tone: null,
+      deliverable_types: v.deliverable_types ?? [],
+      estimated_budget_range: v.budget_band || null,
       target_delivery_at:
-        vals.target_delivery_at && vals.target_delivery_at !== ""
-          ? vals.target_delivery_at
-          : null,
+        v.delivery_date && v.delivery_date !== "" ? v.delivery_date : null,
     };
   }
 
-  // ensureDraftProject is the find-or-create entry. We call it the moment
-  // the user clicks Continue out of Step 1 so Step 2 has a real project_id
-  // for BriefBoardEditor to autosave against. Subsequent calls are
-  // idempotent thanks to the projects_wizard_draft_uniq partial index.
-  async function ensureDraft(): Promise<DraftBootstrap | null> {
-    if (draft) return draft;
-    const fields = buildFields();
-    if (!fields.title) {
-      toast.error(tErrors("validation"));
-      return null;
-    }
-    const res = await ensureDraftProject({ initial: fields });
-    if ("error" in res) {
-      if (res.error === "unauthenticated") {
-        toast.error(tErrors("unauthorized"));
-      } else if (res.error === "no_workspace") {
-        toast.error(tErrors("generic"));
-      } else {
-        toast.error(tErrors("generic"));
-      }
-      return null;
-    }
-    const next: DraftBootstrap = {
-      projectId: res.data.projectId,
-      brief: res.data.brief,
-    };
-    setDraft(next);
-    return next;
-  }
+  const triggerAutosave = useCallback(() => {
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      void (async () => {
+        const fields = buildDraftFields();
+        if (!fields.title) return;
+        try {
+          const res = await ensureDraftProject({ initial: fields });
+          if ("ok" in res && res.ok) {
+            setDraftProjectId(res.data.projectId);
+          }
+        } catch {
+          // autosave failures are silent
+        }
+      })();
+    }, 500);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleSaveDraft() {
-    const vals = getValues();
-    if (!vals.title?.trim()) {
-      toast.error(tErrors("validation"));
+  // Watch form fields + refs for autosave. Skip the very first render.
+  const watchedValues = watch();
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
-    setIsSaving(true);
-    try {
-      const bootstrap = await ensureDraft();
-      if (!bootstrap) return;
-      const res = await submitDraftProject({
-        projectId: bootstrap.projectId,
-        fields: buildFields(),
-        intent: "draft",
-      });
-      if ("error" in res) {
-        if (res.error === "unauthenticated") {
-          toast.error(tErrors("unauthorized"));
-        } else {
-          toast.error(tErrors("generic"));
-        }
-        return;
-      }
-      router.push(`/app/projects/${res.id}` as `/app/projects/${string}`);
-    } finally {
-      setIsSaving(false);
-    }
-  }
+    triggerAutosave();
+  }, [watchedValues, refs, triggerAutosave]);
 
-  async function handleSubmitProject() {
-    setIsSubmitting(true);
-    try {
-      const bootstrap = await ensureDraft();
-      if (!bootstrap) {
-        setConfirmOpen(false);
-        return;
-      }
-      const res = await submitDraftProject({
-        projectId: bootstrap.projectId,
-        fields: buildFields(),
-        intent: "submit",
-      });
-      if ("error" in res) {
-        if (res.error === "unauthenticated") {
-          toast.error(tErrors("unauthorized"));
-        } else {
-          toast.error(tErrors("generic"));
-        }
-        setConfirmOpen(false);
-        return;
-      }
-      setConfirmOpen(false);
-      router.push(
-        `/app/projects/${res.id}?tab=brief` as `/app/projects/${string}`,
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  // Step 1 → Step 2 transition: validate Step 1 fields, then ensure the
-  // wizard draft exists before moving on. The transition lets us keep the
-  // Continue button semantics ("submit" the form to validate) while still
-  // running a server action before we change step.
-  const onBriefNext = handleSubmit(() => {
-    startAdvance(() => {
-      void (async () => {
-        const bootstrap = await ensureDraft();
-        if (!bootstrap) return;
-        setStep("refs");
-      })();
-    });
-  });
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    };
+  }, []);
 
   // -------------------------------------------------------------------------
-  // Step 1 — Brief
+  // Step navigation
   // -------------------------------------------------------------------------
-  function BriefStep() {
-    return (
-      <form onSubmit={onBriefNext} className="space-y-6">
-        {/* Title */}
-        <div className="space-y-1.5">
-          <Label htmlFor="title">
-            {t("title_label")} <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="title"
-            placeholder={t("title_ph")}
-            {...register("title")}
-          />
-          {errors.title && (
-            <p className="text-xs text-destructive">{tErrors("validation")}</p>
-          )}
-        </div>
 
-        {/* Description */}
-        <div className="space-y-1.5">
-          <Label htmlFor="description">{t("description_label")}</Label>
-          <Textarea
-            id="description"
-            placeholder={t("description_ph")}
-            rows={4}
-            {...register("description")}
-          />
-          {errors.description && (
-            <p className="text-xs text-destructive">{tErrors("validation")}</p>
-          )}
-        </div>
+  async function goToStep2() {
+    const valid = await trigger(["name", "description"]);
+    if (!valid) return;
+    setStep(2);
+  }
 
-        {/* Brand */}
-        <div className="space-y-1.5">
-          <Label htmlFor="brand_id">{t("brand_label")}</Label>
-          <Controller
-            control={control}
-            name="brand_id"
-            render={({ field }) => (
-              <Select
-                onValueChange={(v) =>
-                  field.onChange(v === "__none" ? "" : v)
-                }
-                value={field.value ? field.value : "__none"}
-              >
-                <SelectTrigger id="brand_id">
-                  <SelectValue placeholder={t("brand_none")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none">{t("brand_none")}</SelectItem>
-                  {brands.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-
-        {/* Tone */}
-        <div className="space-y-1.5">
-          <Label htmlFor="tone">{t("tone_label")}</Label>
-          <Input
-            id="tone"
-            placeholder={t("tone_ph")}
-            {...register("tone")}
-          />
-          {errors.tone && (
-            <p className="text-xs text-destructive">{tErrors("validation")}</p>
-          )}
-        </div>
-
-        {/* Deliverable types — free input tags */}
-        <div className="space-y-2">
-          <Label>{t("deliverable_types_label")}</Label>
-          <Controller
-            control={control}
-            name="deliverable_types"
-            render={({ field }) => (
-              <TagInput
-                value={field.value ?? []}
-                onChange={field.onChange}
-                placeholder={t("deliverable_types_ph")}
-                helperText={t("deliverable_types_helper")}
-                addLabel={t("deliverable_types_add")}
-                removeLabel={t("deliverable_types_remove")}
-              />
-            )}
-          />
-          {errors.deliverable_types && (
-            <p className="text-xs text-destructive">{tErrors("validation")}</p>
-          )}
-        </div>
-
-        {/* Budget */}
-        <div className="space-y-1.5">
-          <Label htmlFor="estimated_budget_range">{t("budget_label")}</Label>
-          <Input
-            id="estimated_budget_range"
-            placeholder={t("budget_ph")}
-            {...register("estimated_budget_range")}
-          />
-          {errors.estimated_budget_range && (
-            <p className="text-xs text-destructive">{tErrors("validation")}</p>
-          )}
-        </div>
-
-        {/* Delivery date */}
-        <div className="space-y-1.5">
-          <Label htmlFor="target_delivery_at">{t("delivery_label")}</Label>
-          <Input
-            id="target_delivery_at"
-            type="date"
-            {...register("target_delivery_at")}
-          />
-          {errors.target_delivery_at && (
-            <p className="text-xs text-destructive">{tErrors("validation")}</p>
-          )}
-        </div>
-
-        {/* Action row — first step has no back, save_draft + continue */}
-        <div className="flex items-center justify-between pt-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-full uppercase tracking-[0.12em] text-xs"
-            onClick={handleSaveDraft}
-            disabled={isSaving || isAdvancing}
-          >
-            {t("save_draft")}
-          </Button>
-          <Button
-            type="submit"
-            className="rounded-full uppercase tracking-[0.12em]"
-            disabled={isAdvancing}
-          >
-            {tCommon("continue")}
-          </Button>
-        </div>
-      </form>
-    );
+  async function goToStep3() {
+    const valid = await trigger(["deliverable_types", "budget_band"]);
+    if (!valid) return;
+    setStep(3);
   }
 
   // -------------------------------------------------------------------------
-  // Step 2 — Brief Board (Phase 2.8.1: real editor on draft project)
+  // Step 1 — Project summary
   // -------------------------------------------------------------------------
-  function RefsStep() {
-    if (!draft) {
-      // Defensive: onBriefNext awaits ensureDraft before navigating so this
-      // branch should not render in practice. If it does, the user can hop
-      // back to Step 1 to retry.
-      return (
-        <div className="space-y-6">
-          <div className="border border-dashed border-border rounded-lg py-16 px-6 flex flex-col items-center justify-center text-center gap-3">
-            <p className="text-sm text-muted-foreground keep-all max-w-md">
-              {tErrors("generic")}
+
+  const step1Content = (
+    <div className="space-y-6">
+      {/* Name */}
+      <div className="space-y-1.5">
+        <Label htmlFor="name">
+          {t("wizard.field.name.label")}{" "}
+          <span className="text-destructive" aria-hidden>
+            *
+          </span>
+        </Label>
+        <Input
+          id="name"
+          placeholder={t("wizard.field.name.placeholder")}
+          maxLength={80}
+          {...register("name")}
+        />
+        {errors.name && (
+          <p className="text-xs text-destructive" role="alert">
+            {t("wizard.errors.name_required")}
+          </p>
+        )}
+      </div>
+
+      {/* Description */}
+      <div className="space-y-1.5">
+        <Label htmlFor="description">
+          {t("wizard.field.description.label")}{" "}
+          <span className="text-destructive" aria-hidden>
+            *
+          </span>
+        </Label>
+        <Textarea
+          id="description"
+          placeholder={t("wizard.field.description.placeholder")}
+          rows={5}
+          maxLength={2000}
+          {...register("description")}
+        />
+        {errors.description && (
+          <p className="text-xs text-destructive" role="alert">
+            {t("wizard.errors.description_too_short")}
+          </p>
+        )}
+      </div>
+
+      {/* References */}
+      <div className="space-y-3">
+        <Eyebrow>{t("wizard.field.references.eyebrow")}</Eyebrow>
+        <ReferencesEditor refs={refs} onChange={setRefs} />
+      </div>
+
+      <div className="flex items-center justify-end pt-2">
+        <Button
+          type="button"
+          className="rounded-full uppercase tracking-[0.10em] text-sm"
+          onClick={() => void goToStep2()}
+        >
+          {t("wizard.actions.continue")}
+        </Button>
+      </div>
+    </div>
+  );
+
+  // -------------------------------------------------------------------------
+  // Step 2 — Conditions
+  // -------------------------------------------------------------------------
+
+  const step2Content = (
+    <div className="space-y-6">
+      {/* Deliverable types */}
+      <div className="space-y-2">
+        <Label>{t("wizard.field.deliverable_types.label")}</Label>
+        <Controller
+          control={control}
+          name="deliverable_types"
+          render={({ field }) => (
+            <DeliverableChips
+              value={field.value ?? []}
+              onChange={field.onChange}
+            />
+          )}
+        />
+        {errors.deliverable_types && (
+          <p className="text-xs text-destructive" role="alert">
+            {t("wizard.errors.deliverable_required")}
+          </p>
+        )}
+      </div>
+
+      {/* Budget */}
+      <div className="space-y-2">
+        <Label>{t("wizard.field.budget.label")}</Label>
+        <Controller
+          control={control}
+          name="budget_band"
+          render={({ field }) => (
+            <BudgetRadio
+              value={(field.value as BudgetBand) ?? ""}
+              onChange={field.onChange}
+            />
+          )}
+        />
+        {errors.budget_band && (
+          <p className="text-xs text-destructive" role="alert">
+            {t("wizard.errors.budget_required")}
+          </p>
+        )}
+      </div>
+
+      {/* Delivery date */}
+      <div className="space-y-1.5">
+        <Label htmlFor="delivery_date">
+          {t("wizard.field.delivery_date.label")}
+        </Label>
+        <Input
+          id="delivery_date"
+          type="date"
+          min={new Date().toISOString().slice(0, 10)}
+          {...register("delivery_date")}
+        />
+      </div>
+
+      <div className="flex items-center justify-between pt-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-full uppercase tracking-[0.10em] text-xs"
+          onClick={() => setStep(1)}
+        >
+          {t("wizard.actions.back")}
+        </Button>
+        <Button
+          type="button"
+          className="rounded-full uppercase tracking-[0.10em] text-sm"
+          onClick={() => void goToStep3()}
+        >
+          {t("wizard.actions.continue")}
+        </Button>
+      </div>
+    </div>
+  );
+
+  // -------------------------------------------------------------------------
+  // Step 3 — Final review
+  // -------------------------------------------------------------------------
+
+  const vals = getValues();
+
+  const budgetLabel = vals.budget_band
+    ? t(`wizard.field.budget.${vals.budget_band}` as Parameters<typeof t>[0])
+    : "—";
+
+  const step3Content = (
+    <div className="space-y-6">
+      {/* Summary card */}
+      <div
+        className="rounded-lg border-border/40 divide-y divide-border/40 overflow-hidden"
+        style={{
+          boxShadow:
+            "0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.04)",
+        }}
+      >
+        {/* Block 1: name + description */}
+        <div className="px-4 py-3 space-y-1">
+          <div className="flex items-start justify-between gap-2">
+            <Eyebrow>
+              {t("wizard.field.name.label")}
+            </Eyebrow>
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em]"
+              aria-label={t("wizard.actions.edit")}
+            >
+              <Pencil className="w-3 h-3" />
+              {t("wizard.actions.edit")}
+            </button>
+          </div>
+          <p className="text-sm font-medium keep-all">{vals.name || "—"}</p>
+          {vals.description && (
+            <p className="text-sm text-muted-foreground keep-all whitespace-pre-line line-clamp-3">
+              {vals.description}
             </p>
-          </div>
-          <div className="flex items-center justify-between pt-2">
-            <Button
+          )}
+        </div>
+
+        {/* Block 2: references */}
+        <div className="px-4 py-3 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <Eyebrow>{t("wizard.field.references.eyebrow")}</Eyebrow>
+            <button
               type="button"
-              variant="ghost"
-              className="rounded-full uppercase tracking-[0.12em] text-xs"
-              onClick={() => setStep("brief")}
+              onClick={() => setStep(1)}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em]"
+              aria-label={t("wizard.actions.edit")}
             >
-              {tCommon("back")}
-            </Button>
+              <Pencil className="w-3 h-3" />
+              {t("wizard.actions.edit")}
+            </button>
           </div>
+          {refs.length > 0 ? (
+            <p className="text-xs text-muted-foreground mb-2">
+              {t("wizard.summary.references_count", { count: refs.length })}
+            </p>
+          ) : null}
+          {/* Re-editable references in Step 3 */}
+          <ReferencesEditor refs={refs} onChange={setRefs} />
         </div>
-      );
-    }
 
-    return (
-      <div className="space-y-6">
-        <div className="border border-border rounded-lg p-4">
-          <BriefBoardEditor
-            projectId={draft.projectId}
-            initialContent={draft.brief.contentJson as JSONContent | null}
-            initialUpdatedAt={draft.brief.updatedAt}
-            initialStatus={draft.brief.status}
-            mode="wizard"
-          />
-        </div>
-        <div className="flex items-center justify-between pt-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-full uppercase tracking-[0.12em] text-xs"
-            onClick={() => setStep("brief")}
-          >
-            {tCommon("back")}
-          </Button>
-          <Button
-            type="button"
-            className="rounded-full uppercase tracking-[0.12em]"
-            onClick={() => setStep("review")}
-          >
-            {tCommon("next")}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // -------------------------------------------------------------------------
-  // Step 3 — Review
-  // -------------------------------------------------------------------------
-  function ReviewStep() {
-    const vals = getValues();
-    const selectedBrand = brands.find((b) => b.id === vals.brand_id);
-
-    function ReviewRow({
-      label,
-      value,
-    }: {
-      label: string;
-      value: string | null | undefined;
-    }) {
-      return (
-        <div className="grid grid-cols-[140px_1fr] gap-4 py-3 border-b border-border last:border-0">
-          <dt className="text-sm text-muted-foreground keep-all">{label}</dt>
-          <dd className="text-sm keep-all break-words">{value || "—"}</dd>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        <dl className="border border-border rounded-lg px-4">
-          <ReviewRow label={t("title_label")} value={vals.title} />
-          <ReviewRow
-            label={t("description_label")}
-            value={vals.description || null}
-          />
-          <ReviewRow
-            label={t("brand_label")}
-            value={selectedBrand?.name ?? null}
-          />
-          <ReviewRow label={t("tone_label")} value={vals.tone || null} />
-          <div className="grid grid-cols-[140px_1fr] gap-4 py-3 border-b border-border">
-            <dt className="text-sm text-muted-foreground keep-all">
-              {t("deliverable_types_label")}
-            </dt>
-            <dd className="flex flex-wrap gap-1.5">
-              {vals.deliverable_types && vals.deliverable_types.length > 0 ? (
-                vals.deliverable_types.map((v) => (
-                  <span
-                    key={v}
-                    className="rounded-full border border-border px-2.5 py-0.5 text-xs keep-all"
-                  >
-                    {v}
-                  </span>
-                ))
-              ) : (
-                <span className="text-sm">&mdash;</span>
-              )}
-            </dd>
-          </div>
-          <ReviewRow
-            label={t("budget_label")}
-            value={vals.estimated_budget_range || null}
-          />
-          <ReviewRow
-            label={t("delivery_label")}
-            value={vals.target_delivery_at || null}
-          />
-        </dl>
-
-        {/* Action row */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-2">
-            <Button
+        {/* Block 3: conditions */}
+        <div className="px-4 py-3 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <Eyebrow>{t("wizard.field.deliverable_types.label")}</Eyebrow>
+            <button
               type="button"
-              variant="ghost"
-              className="rounded-full uppercase tracking-[0.12em] text-xs"
-              onClick={() => setStep("refs")}
+              onClick={() => setStep(2)}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em]"
+              aria-label={t("wizard.actions.edit")}
             >
-              {tCommon("back")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full uppercase tracking-[0.12em] text-xs"
-              onClick={handleSaveDraft}
-              disabled={isSaving}
-            >
-              {t("save_draft")}
-            </Button>
+              <Pencil className="w-3 h-3" />
+              {t("wizard.actions.edit")}
+            </button>
           </div>
-
-          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-            <AlertDialogTrigger asChild>
-              <Button
-                type="button"
-                className="rounded-full uppercase tracking-[0.12em]"
+          <div className="flex flex-wrap gap-1.5">
+            {(vals.deliverable_types ?? []).map((dt) => (
+              <span
+                key={dt}
+                className="rounded-full border border-border/40 px-2.5 py-0.5 text-xs keep-all"
               >
-                {t("submit_project")}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("submit_project")}</AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleSubmitProject}
-                  disabled={isSubmitting}
-                  className="rounded-full uppercase tracking-[0.12em]"
-                >
-                  {t("submit_project")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                {t(
+                  `wizard.field.deliverable_types.${dt}` as Parameters<
+                    typeof t
+                  >[0]
+                )}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-4 pt-1 text-sm">
+            <span>
+              <span className="text-xs text-muted-foreground mr-1 uppercase tracking-[0.08em]">
+                {t("wizard.field.budget.label")}
+              </span>
+              {budgetLabel}
+            </span>
+            {vals.delivery_date && vals.delivery_date !== "" && (
+              <span>
+                <span className="text-xs text-muted-foreground mr-1 uppercase tracking-[0.08em]">
+                  {t("wizard.field.delivery_date.label")}
+                </span>
+                {vals.delivery_date}
+              </span>
+            )}
+          </div>
         </div>
       </div>
-    );
-  }
+
+      {/* Action row */}
+      <div className="flex items-center justify-between pt-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-full uppercase tracking-[0.10em] text-xs"
+          onClick={() => setStep(2)}
+        >
+          {t("wizard.actions.back")}
+        </Button>
+
+        {/* TODO(task_04): wire submitProjectAction here.
+            When task_04 ships, replace this onClick body with:
+              const result = await submitProjectAction({ projectId: draftProjectId, ... });
+              if (result.ok) router.push(`/app/projects/${result.id}`);
+        */}
+        <Button
+          type="button"
+          className="rounded-full uppercase tracking-[0.10em] text-sm"
+          disabled={isSubmitting}
+          onClick={() => {
+            startSubmit(() => {
+              // TODO(task_04): wire submitProjectAction
+              toast.info("Submit action will be wired by task_04.");
+            });
+          }}
+        >
+          {isSubmitting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            t("wizard.actions.submit")
+          )}
+        </Button>
+      </div>
+    </div>
+  );
 
   // -------------------------------------------------------------------------
   // Render
   // -------------------------------------------------------------------------
-  return (
-    <div className="px-6 py-10 max-w-2xl mx-auto">
-      <StepIndicator current={step} tProjects={t} />
 
-      {step === "brief" && <BriefStep />}
-      {step === "refs" && <RefsStep />}
-      {step === "review" && <ReviewStep />}
+  const stepTitleKey = (
+    {
+      1: "wizard.step1.title",
+      2: "wizard.step2.title",
+      3: "wizard.step3.title",
+    } as const
+  )[step];
+
+  const stepEyebrowKey = (
+    {
+      1: "wizard.step1.eyebrow",
+      2: "wizard.step2.eyebrow",
+      3: "wizard.step3.eyebrow",
+    } as const
+  )[step];
+
+  return (
+    <div className="px-6 py-8 max-w-2xl mx-auto">
+      <StepIndicator current={step} />
+
+      {/* Step header — no border-b below (L-012) */}
+      <div className="mb-8">
+        <Eyebrow>{t(stepEyebrowKey)}</Eyebrow>
+        <h2 className="font-suit text-3xl font-bold tracking-tight mt-1 keep-all">
+          {t(stepTitleKey)}
+        </h2>
+      </div>
+
+      {step === 1 && step1Content}
+      {step === 2 && step2Content}
+      {step === 3 && step3Content}
     </div>
   );
 }

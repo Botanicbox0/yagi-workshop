@@ -562,7 +562,74 @@
     "delete_confirm_body": "삭제 후 3일 이내에는 휴지통에서 복구할 수 있습니다. 3일이 지나면 자동으로 영구 삭제됩니다.",
     "delete_confirm_cta": "삭제하기",
     "delete_success": "프로젝트를 휴지통으로 옮겼습니다.",
-    "delete_error": "삭제에 실패했습니다."
+    "delete_error": "삭제에 실패했습니다.",
+    "wizard": {
+      "step1": {
+        "eyebrow": "STEP 1 / 3",
+        "title": "프로젝트 요약"
+      },
+      "step2": {
+        "eyebrow": "STEP 2 / 3",
+        "title": "조건"
+      },
+      "step3": {
+        "eyebrow": "STEP 3 / 3",
+        "title": "최종 확인"
+      },
+      "field": {
+        "name": {
+          "label": "프로젝트 이름",
+          "placeholder": "예: 여름 캠페인"
+        },
+        "description": {
+          "label": "프로젝트 설명",
+          "placeholder": "어떤 프로젝트인가요? (최소 30자)"
+        },
+        "references": {
+          "eyebrow": "REFERENCES",
+          "add_url": "URL 붙여넣기",
+          "add_image": "이미지 추가",
+          "add_pdf": "PDF 추가",
+          "memo_placeholder": "메모 (선택)",
+          "empty": "레퍼런스가 없습니다. URL을 붙여넣거나 이미지 · PDF를 추가해 주세요."
+        },
+        "deliverable_types": {
+          "label": "결과물 유형",
+          "video": "영상",
+          "image": "이미지",
+          "motion_graphics": "모션 그래픽",
+          "illustration": "일러스트",
+          "vfx": "VFX",
+          "branding": "브랜딩",
+          "other": "기타"
+        },
+        "budget": {
+          "label": "예산",
+          "under_1m": "100만원 미만",
+          "1m_to_5m": "100–500만원",
+          "5m_to_10m": "500–1000만원",
+          "negotiable": "협의"
+        },
+        "delivery_date": {
+          "label": "납기일 (선택)"
+        }
+      },
+      "actions": {
+        "continue": "다음",
+        "back": "이전",
+        "submit": "의뢰 보내기",
+        "edit": "수정"
+      },
+      "summary": {
+        "references_count": "레퍼런스 {count}개"
+      },
+      "errors": {
+        "name_required": "프로젝트 이름을 입력해 주세요.",
+        "description_too_short": "프로젝트 설명은 30자 이상 입력해 주세요.",
+        "budget_required": "예산을 선택해 주세요.",
+        "deliverable_required": "결과물 유형을 하나 이상 선택해 주세요."
+      }
+    }
   },
   "admin_trash": {
     "title": "휴지통",

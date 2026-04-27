@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import type { Json } from "@/lib/supabase/database.types";
+import { fetchVideoMetadata, type OEmbedResult } from "@/lib/oembed";
 
 // -----------------------------------------------------------------------------
 // Phase 2.8.1 G_B1-B — Wizard draft mode
@@ -447,4 +448,24 @@ export async function submitDraftProject(
     id: updated.id,
     status: updated.status as "draft" | "submitted",
   };
+}
+
+// =============================================================================
+// Phase 3.0 task_03 — fetchVideoMetadataAction
+// =============================================================================
+// Server action wrapper around the oEmbed lib. Validates the URL with Zod,
+// calls fetchVideoMetadata, and returns the result (or null on any error).
+// The "use server" directive at the top of this file covers this action.
+// =============================================================================
+
+const videoUrlSchema = z.string().url().max(2000);
+
+export type VideoMetadataResult = OEmbedResult | null;
+
+export async function fetchVideoMetadataAction(
+  url: unknown,
+): Promise<VideoMetadataResult> {
+  const parsed = videoUrlSchema.safeParse(url);
+  if (!parsed.success) return null;
+  return fetchVideoMetadata(parsed.data);
 }
