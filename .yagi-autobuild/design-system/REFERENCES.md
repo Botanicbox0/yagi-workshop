@@ -8,7 +8,7 @@
 
 ## Core calibration set (always relevant)
 
-These are the five products whose design philosophy most closely matches YAGI's. Any YAGI screen should be defensible against what these products ship for a similar problem.
+These are the six products whose design philosophy most closely matches YAGI's. Any YAGI screen should be defensible against what these products ship for a similar problem.
 
 ### 1. Linear (light mode) — `linear.app`
 **Why reference:** Density without clutter. State clarity at glance. Keyboard-first. Restrained motion. Single warm-neutral accent in a mostly achromatic palette.
@@ -73,6 +73,22 @@ These are the five products whose design philosophy most closely matches YAGI's.
 **Avoid copying:**
 - These are portfolio sites, not tools. Don't import their sparseness into dense admin surfaces.
 
+### 6. isomeet — `isomeet.com` *(added v0.2.0)*
+**Why reference:** The single most precise calibration anchor for the Editorial Hub frame (UI_FRAMES.md §Frame 6). Combines an asymmetric two-zone hero, photography-as-content, hairline borders + soft layered shadows on cards, and a seamless top-to-bottom composition with no internal section dividers. The 9 editorial integration patterns codified in `PRINCIPLES.md §4` were derived from a close reading of isomeet's hub layout during Phase 2.9.
+
+**Study for:**
+- Editorial Hub frame composition (Frame 6)
+- Asymmetric hero — informational left zone + emotional right zone
+- Layout-changing transitions (1:1 ↔ 5:2 aspect-ratio swaps with spring physics)
+- Workflow strip cards using soft layered shadow instead of 1px hard borders
+- Inverted CTA banner with depth (inner highlight + soft shadow), not a flat black slab
+- Eyebrow-as-section-header (uppercase tracked label demoted from h2)
+- Photography selection — tonal range, no illustrations or icons in this register
+
+**Avoid copying:**
+- isomeet's specific photography subjects — we curate our own.
+- Their occasional secondary accent — we remain achromatic on product surfaces.
+- Their landing-page-only motion patterns (parallax, scroll-driven reveals) — those don't enter our product surfaces.
 
 ---
 
@@ -89,6 +105,11 @@ These are the five products whose design philosophy most closely matches YAGI's.
 ### For Workflow frames
 - **Stripe Atlas** — `stripe.com/atlas`. Multi-step onboarding with progress dots and save-and-exit.
 - **Tally.so** — form wizards with exemplary step pacing.
+
+### For Editorial Hub frames *(v0.2.0)*
+- **isomeet** — see Core #6 above. Primary anchor.
+- **Vercel home (logged-out)** — `vercel.com`. Asymmetric hero, restrained motion, achromatic CTA discipline.
+- **Stripe home (logged-out)** — `stripe.com`. Editorial typography on a working-tool brand.
 
 ### For showcase public pages (Phase 1.9, expanding)
 - **Read.cv** (original) — portfolio editorial.
@@ -158,4 +179,4 @@ accent instead of Linear's blue.
 - Re-verify links quarterly — product sites change.
 - If a reference drifts away from the YAGI direction (e.g., goes dark-only, adds heavy motion), move it to the "What NOT to reference" list with a note.
 
-Last updated: 2026-04-22 (initial draft).
+Last updated: 2026-04-28 (v0.2.0 — added isomeet to Core calibration set, added Editorial Hub problem-specific section).

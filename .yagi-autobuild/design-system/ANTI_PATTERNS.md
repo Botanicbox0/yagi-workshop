@@ -15,7 +15,7 @@ If an anti-pattern belongs to a single spec, it lives in that spec — not here.
 
 Why this rule matters: an anti-pattern documented in two places drifts. If you're unsure where to put one, put it in the spec — moving it to this file later is cheap; un-duplicating two spec entries later is not.
 
-A redirect table for spec-specific anti-patterns lives in §9.
+A redirect table for spec-specific anti-patterns lives in §9. Composition-level anti-patterns introduced by Phase 2.9 → v0.2.0 live in §10.
 
 ---
 
@@ -176,7 +176,52 @@ Do not duplicate these here. If you're tempted to, add a one-liner pointer in §
 
 ---
 
-## 10. How to add a new anti-pattern
+## 10. Composition anti-patterns (v0.2.0)
+
+These are forbidden at Design Review starting Phase 2.10. They codify the integration discipline that emerged from Phase 2.9 hotfix-2 (isomeet.com calibration). Cross-ref: `PRINCIPLES.md §4` (editorial integration patterns).
+
+### 10.1 Visible internal seams
+
+- `border-b` between page header and hero
+- `border-t` above workflow strips
+- `border-b` between sidebar brand block and workspace label
+- Background color shift between sections without an editorial reason
+- "Section dividers" implemented as 1px lines spanning the full content width
+
+**Why these fail:** they make a single page read as N stacked SaaS panels instead of one editorial composition. Section structure should come from typography rhythm and vertical spacing, not chrome. Positive form: `PRINCIPLES.md §4.9`.
+
+### 10.2 Heavy section headers
+
+- h2 in 24-28px bold for in-page section markers
+- "Section title" components with all-caps + bold + large size
+- Header treatments that compete with the page's primary headline
+
+**Why:** in-page section labels are eyebrows (`PRINCIPLES.md §4.4`), not headlines. The page has one h1 — everything else is supportive. Phase 2.9 hotfix-2 demoted "진행 과정" from h2 to eyebrow exactly for this reason.
+
+### 10.3 Equal-weight card grid for "value props"
+
+- Three or four equal-sized cards laid out in a row, each with an icon + title + 1-line description
+- The "feature pillars" SaaS template
+
+**Why:** it splits attention. The user can't tell which card matters most. YAGI uses asymmetric weight (`PRINCIPLES.md §4.5`) — one dominant story, supporting context.
+
+### 10.4 Hard 1px black-ish borders on cards
+
+- `border border-border` (the default 1px solid border)
+- `border-zinc-200` or similar single-shade hairline at full opacity
+
+**Why:** reads as SaaS panel chrome. Use `PRINCIPLES.md §4.3` (hairline-faded `border-border/40` OR soft layered shadow) — never the harsh default.
+
+### 10.5 Flat black CTA banner without depth
+
+- `bg-foreground` solid black band at the bottom of a page
+- No padding bump, no gradient, no rounded corners differentiating it from a footer
+
+**Why:** it reads as page footer chrome instead of a "ready to start" destination moment. Use `PRINCIPLES.md §4.8` inverted CTA pattern: gradient `from-zinc-950 to-zinc-900` + larger top padding (≥py-16) + rounded-3xl corners.
+
+---
+
+## 11. How to add a new anti-pattern
 
 Decision tree:
 
@@ -193,7 +238,7 @@ When adding here:
 
 ---
 
-## 11. Reference cross-links
+## 12. Reference cross-links
 
 - Aesthetic direction (positive principles) → `PRINCIPLES.md`
 - Workflow gates that enforce these rules → `ARCHITECTURE.md`

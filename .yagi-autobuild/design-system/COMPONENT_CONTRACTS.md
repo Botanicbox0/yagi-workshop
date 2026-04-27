@@ -948,6 +948,355 @@ Properties:
 
 ---
 
+### 5.11 SidebarBrand
+
+> **Phase 2.9 / v0.2.0** — workspace identity slot at the top of the app shell sidebar. Replaces the previous logo+title block and the seam-creating border-bottom that separated it from the navigation list.
+
+#### Role
+Communicates current workspace identity in a way that reads as continuous with the navigation below it (no seam, no internal divider).
+
+#### Usage contexts
+- app shell sidebar (top slot, above primary nav)
+
+#### Anatomy
+- workspace mark (square avatar / monogram, 32px)
+- workspace name (Pretendard semibold)
+- optional role label (muted, smaller)
+
+#### Variants
+- single-workspace (no switcher affordance)
+- multi-workspace (switcher dropdown attached)
+
+#### States
+- default
+- hover (when interactive — switcher variant only)
+- focus-visible (switcher variant only)
+- loading (skeleton block matching final dimensions)
+
+#### Properties
+- workspace name
+- workspace mark (image or monogram fallback)
+- role label optional
+- switcher variant on/off
+
+#### Behavior rules
+- **No bottom border, no `border-b`, no horizontal rule** between this block and the nav list — this is the seam removed in Phase 2.9 hotfix-1 (see ANTI_PATTERNS.md §10.1)
+- visual separation from nav comes from spacing (gap), not from a line
+- monogram fallback is mandatory when no workspace mark image is provided
+
+#### Content rules
+- workspace name: 1 line, truncate with ellipsis if exceeding container width
+- monogram: first 1–2 characters of workspace name, achromatic
+- role label is optional; when present, it sits below the name in muted color
+
+#### Accessibility rules
+- if interactive (switcher variant), the entire block is one focusable trigger
+- workspace name and role label both available to assistive tech
+
+#### Localization rules
+- Korean workspace names typically narrower than English at the same character count; reserve width based on character count, not pixel measurement of English source
+- monogram derivation rule must work for both Latin and Hangul
+
+#### Responsive rules
+- collapsed sidebar: monogram only, name + role hidden
+- expanded sidebar: full block visible
+
+#### Implementation notes (Next.js)
+- Server Component by default
+- Switcher variant becomes a Client Component (popover state)
+
+#### QA checklist
+- no border or hairline between this block and the nav list
+- monogram fallback renders when image absent
+- Korean workspace names truncate cleanly
+- collapsed-sidebar variant verified
+
+---
+
+### 5.12 InteractiveVisualStack
+
+> **Phase 2.9 / v0.2.0** — the photographic surface on the right zone of the editorial hero. Cross-fades between sample images while the surrounding frame springs between two aspect ratios. Canonical implementation of the layout-changing transition pattern in INTERACTION_SPEC.md §10.
+
+#### Role
+Carries the emotional weight of the editorial hero. Demonstrates the product's tonal range through curated photography, not through illustration or icons.
+
+#### Usage contexts
+- editorial hero — right zone (`UI_FRAMES.md` Frame 6)
+- not for general data display, not for UI screenshots
+
+#### Anatomy
+- frame (animated aspect ratio)
+- image surface
+- card-1 metadata overlay (eyebrow + title + body)
+- card-2 metadata overlay (eyebrow + title + title-sub + body)
+
+#### Variants
+- 2-card stack (current canonical — Phase 2.9 hub)
+- N-card stack (future — requires ADR; performance budget §10.7 of INTERACTION_SPEC.md applies)
+
+#### States
+- resting (1:1 frame, card-1 visible)
+- expanded (5:2 frame, card-2 visible)
+- transitioning (spring-driven layout change)
+- reduced-motion (jumps between states without animation; see INTERACTION_SPEC.md §10.5)
+
+#### Properties
+- card-1 strings (eyebrow, title, body, alt)
+- card-2 strings (eyebrow, title, titleSub, body, alt)
+- image sources (resolved at render; do not expose to instance editors)
+
+#### Behavior rules
+- **Client Component required** — this component uses Framer Motion (`<motion.div layout>` + `<AnimatePresence>`); must be marked `"use client"`
+- spring config is exactly `{ type: "spring", stiffness: 80, damping: 22, mass: 0.9 }` — the `spring-natural` token from INTERACTION_SPEC.md §3.2; any deviation requires an ADR
+- aspect ratios are 1:1 (resting) and 5:2 (expanded); other ratios require an ADR
+- image cross-fade uses `AnimatePresence mode="wait"` with `duration-normal` + `ease-out` (INTERACTION_SPEC.md §10.4)
+- hover-gated via `@media (hover: hover)`; touch devices show resting state and do not animate (INTERACTION_SPEC.md §10.6)
+- maximum one InteractiveVisualStack per viewport (INTERACTION_SPEC.md §10.7)
+
+#### Content rules
+- photography only — illustrations, icons, or UI screenshots are anti-pattern (PRINCIPLES.md §4.6)
+- card text is editorial (eyebrow + title + body); avoid CTA-shaped copy here — the CTA lives in the left zone of the hero
+- alt text required for both images (a11y baseline)
+
+#### Accessibility rules
+- image `alt` attributes provided per slot
+- layout animation respects `prefers-reduced-motion: reduce` (collapses to instant state change)
+- card metadata is in the DOM as readable text, not baked into the image
+
+#### Localization rules
+- card eyebrow / title / body all sourced from i18n keys (`hero_sample_*`)
+- Korean copy uses `keep-all` for word-break (TYPOGRAPHY_SPEC.md §9.5)
+
+#### Responsive rules
+- desktop (lg+): full 1:1 ↔ 5:2 spring
+- tablet/mobile: degrades to static card stack (no spring); aspect-ratio fixed at 1:1
+- the layout transition is a desktop-affordance, not a core feature
+
+#### Implementation notes (Next.js)
+- `"use client"` mandatory
+- Framer Motion is the only approved animation engine for this contract
+- the spring config and easing tokens are imported (or inlined) from a single source — do not redefine per usage
+
+#### QA checklist
+- spring config matches `spring-natural` exactly
+- image cross-fade timing matches INTERACTION_SPEC.md §10.4
+- reduced-motion path verified
+- touch path (no animation) verified
+- only one instance per viewport
+- 60fps held during transition on baseline hardware
+
+---
+
+### 5.13 ProjectsHubHero
+
+> **Phase 2.9 / v0.2.0** — the editorial hero composition on the projects hub. Two-zone asymmetric layout: decision-zone (left, informational) + emotional-zone (right, photographic via InteractiveVisualStack).
+
+#### Role
+Onboards a user to the projects hub when no projects exist. Carries the brand promise of the studio, not just a CTA.
+
+#### Usage contexts
+- `/app/projects` empty state (current canonical placement)
+- not for project detail, not for dashboard summaries
+
+#### Anatomy
+- left zone:
+  - eyebrow (uppercase, tracked)
+  - SUIT headline (3 lines)
+  - sub copy
+  - 3 value bullets (32px circle icons, achromatic)
+  - CTA pill (inverted, ArrowUpRight icon)
+  - social-proof row (avatar stack + small caption)
+- right zone:
+  - InteractiveVisualStack (§5.12)
+
+#### Variants
+- single canonical layout (no variants in v0.2.0)
+
+#### States
+- static (no motion in this composition itself — motion is delegated to InteractiveVisualStack)
+
+#### Properties
+- locale (passed to next-intl `getTranslations`)
+- all copy resolved server-side via i18n keys
+
+#### Behavior rules
+- left zone is asymmetrically heavier than right zone in informational density (PRINCIPLES.md §4.5)
+- CTA pill uses inverted treatment (`bg-foreground text-background`) per PRINCIPLES.md §4.8
+- value bullets use 32px black-fill circle icons; the icon glyph itself is white (mono, no accent color)
+- vertical padding is `py-8 lg:py-12` — tightened from the original `py-16 lg:py-24` so the page-header → hero transition reads as one editorial scroll (Phase 2.9 hotfix-2)
+- no horizontal rule, no border-b, no border-t separating from page-header above or workflow-strip below (ANTI_PATTERNS.md §10.1)
+
+#### Content rules
+- eyebrow: 1 short uppercase phrase, e.g. "PROJECTS"
+- headline: 3 lines, SUIT bold, `tracking-[-0.02em]`, `leading-[1.1]`
+- sub copy: ≤2 sentences, body weight, muted color
+- value bullets: 1 line each, noun-phrase or short imperative
+- CTA: verb-first ("Start a project" / "프로젝트 시작하기"), trailing ArrowUpRight icon
+- social-proof caption: small muted text, no emoji
+
+#### Accessibility rules
+- single `<h1>` (the headline); other text levels are `<p>` or `<li>`
+- avatar stack is decorative (`aria-hidden`); social-proof communication carried by the caption text
+
+#### Localization rules
+- all strings in `messages/{ko,en}.json` under `projects` namespace, keys prefixed `hero_*`
+- Korean headline uses `keep-all` for word-break
+- avoid forcing line breaks via `<br>` — use `whitespace-pre-line` on the headline so translation can determine line breaks via `\n` in the i18n string
+
+#### Responsive rules
+- mobile: single column, right-zone (InteractiveVisualStack) below left-zone
+- desktop (lg+): two-column grid, gap-20
+
+#### Implementation notes (Next.js)
+- Server Component (uses `getTranslations` from `next-intl/server`)
+- delegates all motion to InteractiveVisualStack (which is the only Client Component child)
+
+#### QA checklist
+- single h1, headline reads as 3 lines on lg+
+- CTA pill is inverted, ArrowUpRight trailing icon present
+- value bullets render with 32px circles, mono glyphs
+- vertical padding matches `py-8 lg:py-12`
+- no border-b separating from sections above/below
+- Korean headline wraps cleanly without orphan syllables
+
+---
+
+### 5.14 ProjectsHubWorkflowStrip
+
+> **Phase 2.9 / v0.2.0** — the 4-step workflow strip on the projects hub. Sits below the hero with no visible seam. Cards use soft layered shadow (not a hard border), and the section header is demoted to a small uppercase eyebrow so it reads as a magazine label, not a SaaS section title.
+
+#### Role
+Communicates the 4-step shape of the project workflow at a glance, in a register that complements the editorial hero rather than competing with it.
+
+#### Usage contexts
+- `/app/projects` (below ProjectsHubHero)
+- not for general feature explanations elsewhere — this composition is workflow-specific
+
+#### Anatomy
+- eyebrow label (uppercase, tracked, muted)
+- 4-card grid (1 col mobile / 2 col tablet / 4 col desktop)
+- per card:
+  - icon (top-left, 20px, mono)
+  - step number (`01` / `02` / `03` / `04`, SUIT bold, tabular-nums, tight tracking)
+  - step title (SUIT bold, `keep-all`)
+  - step body (small, muted, leading-relaxed, `keep-all`)
+
+#### Variants
+- 4-step canonical (current — no variants in v0.2.0)
+
+#### States
+- static
+
+#### Properties
+- locale
+
+#### Behavior rules
+- cards use **soft layered shadow** `shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]` — never a hard 1px border (ANTI_PATTERNS.md §10.4)
+- section transitions in/out without a horizontal rule (ANTI_PATTERNS.md §10.1)
+- section header is the small uppercase eyebrow only — no large `<h2>` (ANTI_PATTERNS.md §10.2)
+- step numbers use `tabular-nums` (TYPOGRAPHY_SPEC.md §9.6) for consistent width across 01-99
+
+#### Content rules
+- eyebrow: short uppercase label, e.g. "WORKFLOW"
+- step number: zero-padded 2 digits (`01`-`99` range)
+- step title: 1 line, noun-phrase
+- step body: 1-2 sentences, descriptive
+
+#### Accessibility rules
+- section uses `<section>` not `<div>`
+- step title is a meaningful heading (`<h3>`), not a styled `<p>`
+
+#### Localization rules
+- all step copy in `messages/{ko,en}.json` under `projects.hero_step_*`
+- Korean copy uses `keep-all`
+
+#### Responsive rules
+- mobile: 1 column
+- tablet (md): 2 columns
+- desktop (lg): 4 columns
+
+#### Implementation notes (Next.js)
+- Server Component
+- step icons from `lucide-react`, mono treatment
+
+#### QA checklist
+- card shadow matches the soft layered token, not a 1px border
+- no border-t separating from hero above
+- eyebrow is the only section heading in this strip
+- step numbers render at consistent width (tabular-nums)
+- 4-column grid on lg+
+
+---
+
+### 5.15 ProjectsHubCtaBanner
+
+> **Phase 2.9 / v0.2.0** — the bottom CTA banner on the projects hub. Inverted (black-on-white-page → white-on-black panel), but with depth via inner highlight + soft shadow rather than a flat black slab.
+
+#### Role
+Final commitment surface on the hub: a user who has scrolled past hero + workflow without converting gets one more inverted-tone moment to act.
+
+#### Usage contexts
+- `/app/projects` (below ProjectsHubWorkflowStrip)
+- not for mid-page CTAs; this is the closing register only
+
+#### Anatomy
+- panel container (rounded, dark fill)
+- title (SUIT bold, light)
+- sub copy (muted-light)
+- CTA pill (inverted-of-inverted: white pill on black panel, with ArrowUpRight)
+
+#### Variants
+- single canonical (no variants in v0.2.0)
+
+#### States
+- static
+- pill hover/focus per Button §5.1 rules
+
+#### Properties
+- locale
+
+#### Behavior rules
+- panel uses depth treatment: subtle inner highlight + outer soft shadow — **not** a flat solid black slab (ANTI_PATTERNS.md §10.5)
+- the CTA pill on this panel is the *inverse* of the hero pill (white on black, where the hero pill is black on white)
+- panel sits on a transparent page background — no full-bleed black bar
+
+#### Content rules
+- title: short, action-leaning ("Start your first project" / "첫 프로젝트를 시작하세요")
+- sub copy: 1-2 sentences, supportive, muted-light
+- CTA label: verb-first, ≤4 words ideally
+
+#### Accessibility rules
+- contrast: white text on dark panel must meet 4.5:1 minimum
+- pill is a real link (`<Link href>`), not a button mimic
+
+#### Localization rules
+- all strings in `messages/{ko,en}.json` under `projects.cta_*`
+- Korean copy uses `keep-all`
+
+#### Responsive rules
+- panel padding scales mobile → desktop (less generous on mobile to keep visible-on-screen)
+- pill remains 44×44 minimum tap target
+
+#### Implementation notes (Next.js)
+- Server Component
+- depth treatment via Tailwind shadow utilities + a subtle inset ring; no JS needed
+
+#### QA checklist
+- panel reads with depth (inner highlight + outer shadow), not as a flat black slab
+- contrast ratio ≥ 4.5:1
+- pill is a `<Link>`, not a `<button>`
+- Korean copy renders with `keep-all`
+
+---
+
+### 5.16 Loading convention for client-only components (v0.2.0)
+
+When a component contract requires Framer Motion or any other browser-only dependency (e.g., InteractiveVisualStack §5.12), the component MUST be marked `"use client"` and is excluded from streaming SSR optimization. Server Components do not animate; if motion is required, the motion-bearing element must itself be a Client Component while parent containers remain Server Components where possible. This minimizes the client-bundle footprint of editorial pages where most of the surface is static.
+
+The loading-state convention from §11 still applies, but with one addition: **client-only components must render a skeleton that matches the resting state's intrinsic dimensions** so that hydration does not cause layout shift. For InteractiveVisualStack specifically, the skeleton is a 1:1 frame at the rest aspect ratio.
+
+---
+
 ## 6. CMS-aware rules
 
 For CMS-driven components:

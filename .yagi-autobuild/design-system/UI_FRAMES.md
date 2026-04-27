@@ -1,6 +1,6 @@
 # YAGI UI Frames
 
-> **Role:** Five frame blueprints. Before any screen is designed or implemented, pick exactly one frame. The frame determines skeleton, hierarchy, and primary interactions. Aesthetic is applied on top — never the other way around.
+> **Role:** Six frame blueprints. Before any screen is designed or implemented, pick exactly one frame. The frame determines skeleton, hierarchy, and primary interactions. Aesthetic is applied on top — never the other way around.
 > **Pair with:** `PRINCIPLES.md` (philosophy), `COMPONENT_CONTRACTS.md` (building blocks).
 
 ---
@@ -14,8 +14,9 @@
 | Deep view of one thing, with actions on it | **Detail** |
 | Creating a new thing or editing an existing one | **Create / Edit** |
 | Multi-step process with ordered progress | **Workflow** |
+| Onboarding a user to a hub *with brand voice* (empty / pre-conversion state of a major surface) | **Editorial Hub** *(v0.2.0)* |
 
-If a screen feels like "all five at once," you have a composition problem. Split into sub-screens or tabs, each with one frame.
+If a screen feels like "all six at once," you have a composition problem. Split into sub-screens or tabs, each with one frame.
 
 
 ---
@@ -371,6 +372,134 @@ For fields that are safe to edit without a dedicated edit page (title, descripti
 ### Exit
 - Close button (`×`) is top-left. Confirms before closing if there are unsaved changes.
 - Saves are auto-persisted per step, so closing mid-wizard shows: "Resume later" with a one-line summary.
+
+---
+
+## Frame 6 — Editorial Hub *(v0.2.0)*
+
+**Purpose:** Welcome a user to a major product surface with brand voice intact. Replaces the generic empty-state pattern when the surface itself carries identity weight (e.g., the projects hub on first arrival, marketing-adjacent product surfaces).
+
+> **Origin:** Phase 2.9 Projects hub redesign + isomeet.com calibration. The codified pattern collected the 9 editorial integration principles (PRINCIPLES.md §4) into one frame so future hubs can reuse the composition without re-deriving it.
+
+**When to use:**
+- `/app/projects` first-arrival state (canonical instance)
+- Future hub surfaces where the user is being onboarded to a *capability*, not just a list (e.g., a future Storyboards hub, References hub, Showcases hub)
+- Any surface where empty/onboarding deserves brand voice rather than utilitarian copy
+
+**When NOT to use:**
+- Once the surface has data, switch to Browse (or Overview, depending on density). Editorial Hub is the empty-or-pre-conversion register.
+- Forms, detail pages, dashboards, settings — these have their own frames.
+- Pure marketing pages outside the app shell — those are landing surfaces (use the landing display type per TYPOGRAPHY_SPEC.md §3.1).
+
+### Anatomy
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ [page header: small, no border-b, no seam below]                   │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│ ┌─ Hero (asymmetric two-zone, py-8 lg:py-12) ────────────────────┐ │
+│ │                                                                  │ │
+│ │  LEFT ZONE — decision (informational, ~heavier weight)          │ │
+│ │  ─────────────────────────────────────                          │ │
+│ │  EYEBROW (uppercase, tracked)                                   │ │
+│ │  SUIT headline                                                  │ │
+│ │  spanning 3 lines                                               │ │
+│ │  Sub copy, ≤2 sentences, muted.                                 │ │
+│ │  • value bullet 1                                               │ │
+│ │  • value bullet 2                                               │ │
+│ │  • value bullet 3                                               │ │
+│ │  [● CTA pill, inverted ↗]                                       │ │
+│ │  (●●●●●) trusted by N studios                                   │ │
+│ │                                                                  │ │
+│ │  RIGHT ZONE — emotional (photographic, lighter informational)   │ │
+│ │  ─────────────────────────────────────                          │ │
+│ │  InteractiveVisualStack (1:1 ↔ 5:2 spring, image cross-fade)    │ │
+│ │                                                                  │ │
+│ └──────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│ ┌─ Workflow strip (no border-t separating; pt-16 lg:pt-20) ──────┐ │
+│ │  WORKFLOW (eyebrow only, no h2)                                  │ │
+│ │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐                    │ │
+│ │  │ icon   │ │ icon   │ │ icon   │ │ icon   │  soft layered      │ │
+│ │  │ 01     │ │ 02     │ │ 03     │ │ 04     │  shadow, no border │ │
+│ │  │ title  │ │ title  │ │ title  │ │ title  │                    │ │
+│ │  │ body   │ │ body   │ │ body   │ │ body   │                    │ │
+│ │  └────────┘ └────────┘ └────────┘ └────────┘                    │ │
+│ └──────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+│ ┌─ CTA banner (inverted panel with depth, not flat slab) ────────┐ │
+│ │  Title (SUIT bold, light)                                        │ │
+│ │  Sub copy (muted-light)        [○ CTA pill, white-on-black ↗]   │ │
+│ └──────────────────────────────────────────────────────────────────┘ │
+│                                                                     │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### Composition rules
+
+The frame is the canonical assembly of three component contracts:
+- ProjectsHubHero (`COMPONENT_CONTRACTS.md §5.13`)
+- ProjectsHubWorkflowStrip (§5.14)
+- ProjectsHubCtaBanner (§5.15)
+
+When generalizing this frame to a surface other than `projects` (e.g., a future `/app/storyboards`), the contracts are renamed (`StoryboardsHubHero`, etc.) but the structural rules below stay identical. The composition is the frame; the contracts are interchangeable.
+
+#### Seamless composition
+- **No border-b under the page header.** No `<hr>`, no horizontal rule, no seam between page header and hero.
+- **No border-t between hero → workflow → cta-banner.** Sections are separated by spacing only.
+- This is the rule the existing five frames *don't* enforce — most product frames are happy with subtle separators. Editorial Hub forbids them. (See ANTI_PATTERNS.md §10.1.)
+
+#### Asymmetric weight
+- Hero is two-zone: decision (left) + emotional (right). The decision zone carries more informational density; the emotional zone carries one InteractiveVisualStack.
+- Equal-weight 50/50 splits are forbidden in this frame — they read as a SaaS feature page, not editorial.
+- Recommended grid: `lg:grid-cols-2 gap-12 lg:gap-20`.
+
+#### Typography
+- Hero headline uses **SUIT Variable** (TYPOGRAPHY_SPEC.md §3.2 editorial-headline scale), not Pretendard.
+- All other body / UI copy stays Pretendard.
+- Eyebrows everywhere use the canonical pattern: `text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground` (TYPOGRAPHY_SPEC.md §3.2.x).
+
+#### Achromatic
+- The frame uses zero accent color. Any color exceptions (e.g., status badges) must come from outside this frame's responsibility — they belong in Browse / Detail surfaces *after* the user has converted past this frame.
+- Amber accent is reserved for landing/marketing surfaces (PRINCIPLES.md §3) and is forbidden inside Editorial Hub instances on product routes.
+
+#### Cards & shadows
+- Workflow strip cards use **soft layered shadow** `shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]`, never a 1px hard border.
+- The CTA banner is an inverted panel with depth (inner highlight + outer soft shadow), never a flat black slab.
+
+#### Motion
+- Only motion in this frame comes from InteractiveVisualStack (spring layout transition + image cross-fade per INTERACTION_SPEC.md §10).
+- The other two strips (workflow, cta-banner) are static.
+- One spring-driven layout transition per viewport; the workflow strip and cta banner do not gain springs (INTERACTION_SPEC.md §10.7).
+
+#### Photography
+- Photography is content (PRINCIPLES.md §4.6). It carries tonal information that copy alone can't carry on the empty-state surface.
+- Illustrations, icons, or 3D renders in place of photography are anti-pattern for this frame.
+
+### Localization
+- All copy in `messages/{ko,en}.json` under the surface namespace (e.g., `projects.hero_*`, `projects.cta_*`).
+- Korean headline uses `keep-all` for word-break.
+- Headline line breaks via `whitespace-pre-line` + `\n` in i18n strings, not `<br>`.
+
+### Responsive
+- Mobile: single column, right-zone (visual stack) below left-zone, spring degrades to static.
+- Tablet (md): hero two-column begins, workflow grid 2-col.
+- Desktop (lg+): full canonical layout.
+
+### Empty state
+This frame *is* the empty state. Once the surface has data, switch the page composition to Browse (with a smaller editorial hero kept as a header band only if the surface continues to need brand voice; otherwise drop it entirely).
+
+### Permissions
+If the user lacks access to the underlying capability, do **not** render this frame — fall back to the standard "no access" page composition (see Composition rules → Permissions below). Editorial voice is wasted on a 403.
+
+### Cross-references
+- Component contracts → `COMPONENT_CONTRACTS.md §5.11`–`§5.15`
+- Editorial integration principles → `PRINCIPLES.md §4`
+- Composition anti-patterns this frame avoids → `ANTI_PATTERNS.md §10`
+- Two-font system + headline scale → `TYPOGRAPHY_SPEC.md §3.2`
+- Layout-changing transition (visual stack) → `INTERACTION_SPEC.md §10`
+- Calibration reference (isomeet.com) → `REFERENCES.md`
 
 ---
 

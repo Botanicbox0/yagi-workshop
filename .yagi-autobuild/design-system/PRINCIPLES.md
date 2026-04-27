@@ -55,7 +55,7 @@ References: Linear (light mode) for density and state clarity. Webflow.com for e
 **What this looks like, concretely:**
 - Background: pure white `#FFFFFF` for primary surfaces, `#FAFAFA`–`#F5F5F5` for recessed panels. Never pure gray backgrounds with white cards — invert that.
 - Text: near-black `#0A0A0A` for body, `#1A1A1A` for headings, graded neutral for metadata.
-- Accent: a single restrained warm neutral (`#C8A96E` amber) used sparingly for active state + brand marker. Not for primary buttons.
+- Accent: a single restrained warm neutral (`#C8A96E` amber) reserved for **marketing / landing surfaces only** — brand marker, public-page active state, OG asset chrome. **Working tools (`/app/*` surfaces) are achromatic** — black, white, gray only. The amber accent is forbidden inside the product portal per §4.2 (achromatic). Earlier drafts of this doc applied amber to product active state; that pattern is now scoped to landing surfaces.
 - Primary action: solid black on white. Or white on solid black. No gradient buttons, ever.
 - Borders: `#EAEAEA` hairlines. Never double borders. Never shadows to simulate elevation.
 - Radius: 6px for inputs/buttons, 8px for cards/panels, 0 for table rows. Consistent, not playful.
@@ -71,7 +71,72 @@ References: Linear (light mode) for density and state clarity. Webflow.com for e
 
 ---
 
-## 4. Information hierarchy (L1–L5)
+## 4. Editorial integration patterns (Phase 2.9 → v0.2.0)
+
+These nine patterns codify the visual signature established in Phase 2.9 and the integration discipline added in hotfix-2 (isomeet.com-inspired). They are surface-level — they answer "how does it look on screen" — and they apply on top of §2's principles, not in place of them. Source-of-truth reasoning: `DECISIONS_CACHE.md` Q-092.
+
+### 4.1 Two-font system
+
+Pretendard Variable for body and UI. SUIT Variable for editorial headlines via the `font-suit` Tailwind utility. The legacy `font-display` (Fraunces) remains available for landing/marketing surfaces only — never use Fraunces for in-product headlines. Detailed scale and tokens live in `TYPOGRAPHY_SPEC.md §3.1` (font families) and `§5` (semantic roles).
+
+### 4.2 Achromatic only
+
+Black, white, and gray. Zero accent color in working tools. Visual hierarchy comes from contrast, weight, and scale — never from hue. The amber accent (§3) is reserved for marketing/landing surfaces and may not appear in product surfaces (`/app/*`).
+
+### 4.3 Hairline borders, soft shadows
+
+Cards use `border-border/40` (hairline) **OR** a layered soft shadow `shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]` — never both, never harder.
+
+Decision rule:
+- **Hairline border** when the card sits on a flat surface and structural separation is needed.
+- **Soft shadow** when the card needs to feel slightly lifted (hero zone, primary content cards).
+- Never the harsh 1px black-ish border of generic SaaS (see `ANTI_PATTERNS.md §10.4`).
+
+### 4.4 Editorial labels (eyebrow pattern)
+
+Section markers use small uppercase letter-spaced labels:
+
+```
+text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground
+```
+
+Not heavy section headers. Magazine convention. Use this for both content sections (e.g., "PROJECT", "VIDEO PRODUCTION") and structural section starts (e.g., "진행 과정" demoted from h2 to eyebrow per Phase 2.9 hotfix-2).
+
+### 4.5 Asymmetric visual weight
+
+Decision zone (text + CTA) and emotion zone (photography) get different weights. 50/50 column split on desktop (≥1024px), stacked on mobile/tablet. Decision zone is informational and reads quickly; emotion zone holds the user's attention with full-bleed imagery.
+
+Pattern document: `UI_FRAMES.md §Frame 6` (Editorial Hub).
+
+### 4.6 Photography as content
+
+Hero zone visuals are full-bleed photographs with editorial overlays — eyebrow + title + sub baked into the dark gradient at the bottom of the image. Photography is content, not decoration. No stock illustrations, no abstract gradients, no AI-generic blob art (see `ANTI_PATTERNS.md §2.1`).
+
+### 4.7 Spring physics for layout transitions
+
+Framer Motion `<motion.div layout>` with spring physics:
+
+```ts
+{ type: 'spring', stiffness: 80, damping: 22, mass: 0.9 }
+```
+
+Settles naturally with no bounce on hover-out. Used for any layout-changing transition (aspect ratio swap, card reflow, dimension changes). Reduced-motion preference disables the animation entirely. Token + reasoning: `INTERACTION_SPEC.md §11` (Layout-changing transitions).
+
+### 4.8 Inverted CTA
+
+Black pill button on white surface for primary actions. White pill button on dark surface for closing CTAs (e.g., bottom CTA banner). The dark CTA banner uses a subtle gradient `from-zinc-950 to-zinc-900` for editorial depth — flat black reads as a footer, gradient reads as a destination.
+
+### 4.9 Seamless composition (isomeet pattern, hotfix-2)
+
+No horizontal divider lines between page sections. The page reads as one editorial scroll, like a magazine article. Section transitions come from typography rhythm and vertical spacing (48-64px between sections, 32-40px between page-header and hero), not from `border-t` or `border-b` chrome.
+
+The exception: the bottom dark CTA band is intentionally a "destination moment" and may break the visual flow. The sidebar header is also seamless — no border between brand block, workspace label, and nav body (Phase 2.9 hotfix-1).
+
+Anti-pattern enforcement: `ANTI_PATTERNS.md §10.1` (visible internal seams).
+
+---
+
+## 5. Information hierarchy (L1–L5)
 
 Every screen has exactly these five levels, in order:
 
@@ -85,9 +150,9 @@ Every screen has exactly these five levels, in order:
 
 ---
 
-## 5. UI frames — pick one before designing
+## 6. UI frames — pick one before designing
 
-Every screen must be classified as one of five frames before work begins. The frame determines the layout skeleton. The aesthetic is applied on top.
+Every screen must be classified as one of six frames before work begins. The frame determines the layout skeleton. The aesthetic is applied on top.
 
 | Frame | When to use | YAGI Workshop examples |
 |-------|-------------|----------------------|
@@ -96,12 +161,13 @@ Every screen must be classified as one of five frames before work begins. The fr
 | **Detail** | Deep view of one object, its context, its actions | Individual project, meeting, invoice, showcase admin |
 | **Create / Edit** | Input, validate, submit | New project, invoice composer, showcase editor |
 | **Workflow** | Multi-step process with clear progress state | Intake wizard, payment flow, contract signing |
+| **Editorial Hub** *(v0.2.0)* | Onboarding to a hub with brand voice (empty / pre-conversion state of a major surface) | `/app/projects` first arrival; future hubs (Storyboards, References, Showcases) at empty state |
 
 Detailed spec for each frame: see `UI_FRAMES.md`.
 
 ---
 
-## 6. Typography as structure
+## 7. Typography as structure
 
 Type is not decoration. It is the primary hierarchy mechanism.
 
@@ -116,7 +182,7 @@ Full scale: `TYPOGRAPHY_SPEC.md`.
 
 ---
 
-## 7. Color as meaning
+## 8. Color as meaning
 
 Color is a semantic channel, not a decorative one.
 
@@ -136,7 +202,7 @@ Contrast: WCAG AA minimum (4.5:1 body, 3:1 large text). Near-black on white is t
 
 ---
 
-## 8. Density
+## 9. Density
 
 Three modes exist, user-selectable in settings:
 - **Compact**: 32px row height, 12px padding, 13px body. For power users on dense data.
@@ -147,7 +213,7 @@ Rule: density is set at page level via a CSS variable. Components read from the 
 
 ---
 
-## 9. Motion
+## 10. Motion
 
 Motion is a feedback system, not a delight mechanism.
 
@@ -167,7 +233,7 @@ Respect `prefers-reduced-motion`: disable all non-essential motion, keep only th
 
 ---
 
-## 10. Accessibility — baseline
+## 11. Accessibility — baseline
 
 Not a polish layer. Baseline from day one.
 
@@ -180,7 +246,7 @@ Not a polish layer. Baseline from day one.
 
 ---
 
-## 11. Language awareness (ko / en)
+## 12. Language awareness (ko / en)
 
 This product ships in Korean and English day one. Design never assumes English.
 
@@ -195,7 +261,7 @@ Enforcement: every screen must be checked in both locales before PR. Section in 
 
 ---
 
-## 12. Anti-patterns — recognize and reject
+## 13. Anti-patterns — recognize and reject
 
 If a spec, Builder output, or PR includes any of these, the Design Review rejects it:
 
@@ -216,7 +282,7 @@ If a spec, Builder output, or PR includes any of these, the Design Review reject
 
 ---
 
-## 13. How this gets enforced
+## 14. How this gets enforced
 
 - **Before coding:** Phase spec includes a "Screen structure" section that names the frame and the L1–L5 for each screen. Missing → spec rejected.
 - **During coding:** Builder reads `UI_FRAMES.md` + `COMPONENT_CONTRACTS.md` before implementing.
@@ -225,7 +291,7 @@ If a spec, Builder output, or PR includes any of these, the Design Review reject
 
 ---
 
-## 14. When in doubt
+## 15. When in doubt
 
 Three tiebreakers, in order:
 

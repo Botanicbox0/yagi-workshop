@@ -28,8 +28,16 @@ This system is product-first. We are designing **product UI**, not a marketing l
 
 ## 2. Core principles
 
-### 2.1 One font, two languages
-Pretendard Variable is the only typeface used across the product. It already incorporates Inter as its Roman subset, so Korean and English share a single, optically aligned font. Pairing a separate Latin font with a Korean font almost always produces baseline drift and weight mismatch — we avoid it.
+### 2.1 Two-font system (v0.2.0)
+Pretendard Variable is the body/UI typeface; SUIT Variable is the editorial-headline typeface. Both are Korean-first variable fonts that pair cleanly across KR + EN.
+
+- **Pretendard Variable** — body, labels, captions, UI chrome. Already incorporates Inter as its Roman subset, so Korean and English share a single, optically aligned font for body. Loaded via the existing CDN link tag (Phase 1.x).
+- **SUIT Variable** — editorial headlines (hero h1, in-page section h2). Self-hosted at `public/fonts/SUIT-Variable.woff2`, wired via `next/font/local` with the CSS variable `--font-suit`. Tailwind class: `font-suit` (defined in `tailwind.config.ts` as a separate family alongside `sans` and `display`). License: `public/fonts/SUIT-LICENSE.txt` (SIL Open Font License from sun-typeface/SUIT).
+
+The legacy `font-display` family points at Fraunces and is **landing/marketing-only** — it must not appear in `/app/*` product surfaces. Pairing a separate Latin font with a Korean font in body text almost always produces baseline drift and weight mismatch — we avoid it; both Pretendard and SUIT include Roman + Hangul on optically aligned baselines, so the pairing is safe.
+
+### 2.1.x Legacy: One font, two languages (pre-v0.2.0)
+Earlier drafts of this doc treated Pretendard as the only typeface across the product. Phase 2.9 G_B9_C added SUIT for editorial headlines on a deliberate, narrow surface; the body-font monoculture rule still holds.
 
 ### 2.2 Scale before style
 A small, predictable type scale beats a large, expressive one in a product context. We start from 16px base and a 1.125 modular scale because product surfaces (tables, forms, dashboards, lists) reward density and rhythm over drama.
@@ -53,18 +61,64 @@ We assume Korean labels take more horizontal space than equivalent English. We n
 ### 3.1 Font family
 
 ```
-Primary:   "Pretendard Variable", Pretendard, -apple-system,
-           BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue",
-           "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
-           "Malgun Gothic", sans-serif
+Body / UI    "Pretendard Variable", Pretendard, -apple-system,
+             BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue",
+             "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+             "Malgun Gothic", sans-serif
 
-Mono:      "JetBrains Mono", "SF Mono", Menlo, Consolas,
-           "Liberation Mono", monospace
+Editorial    var(--font-suit), "SUIT Variable", "Pretendard Variable",
+headline     ui-sans-serif, system-ui      [Tailwind class `font-suit`]
+
+Landing      var(--font-fraunces), "Pretendard Variable", ui-serif, Georgia
+display      [Tailwind class `font-display` — landing/marketing only]
+
+Mono         "JetBrains Mono", "SF Mono", Menlo, Consolas,
+             "Liberation Mono", monospace
 ```
 
-Pretendard Variable is loaded as a single variable font file. We never load static weights individually — all weight variations come from a single asset varying the `wght` axis.
+All three fonts load as single variable font files. We never load static weights individually — all weight variations come from a single asset varying the `wght` axis.
 
-### 3.2 Why no editorial serif
+**Loading strategy:**
+- Pretendard Variable: CDN link tag in `[locale]/layout.tsx` head.
+- SUIT Variable: self-hosted at `public/fonts/SUIT-Variable.woff2`, loaded via `next/font/local` (`src/app/fonts.ts`). Variable: `--font-suit`. License at `public/fonts/SUIT-LICENSE.txt`.
+- Fraunces: Google Fonts via `next/font/google` with `--font-fraunces`. **Landing-only** — Builders must not apply `font-display` inside `/app/*` surfaces.
+
+**Decision rule for headline type:**
+- In-product editorial headlines (`/app/projects` hero h1, in-page h2) → `font-suit`.
+- Body text everywhere → default Pretendard (no class needed).
+- Landing / marketing (`/[locale]/page.tsx`, `src/components/home/*`, `src/components/marketing/*`) → `font-display` (Fraunces) for English display moments; SUIT not used there.
+
+### 3.2 Editorial-headline scale (SUIT Variable, v0.2.0)
+
+Hero h1 (Editorial Hub frame, `UI_FRAMES.md §Frame 6`):
+
+```
+font-suit text-4xl md:text-5xl lg:text-[56px] leading-[1.1] tracking-[-0.02em] font-bold
+```
+
+Mobile 36px → tablet 48px → desktop 56px. Tracking pulled tight (-0.02em) because SUIT's Korean glyphs read slightly looser than Pretendard at large sizes. Bold (700) is the operating weight.
+
+In-page section h2 (e.g., a major editorial divider):
+
+```
+font-suit text-2xl lg:text-[28px] font-bold tracking-tight
+```
+
+Step number (`01`, `02` in workflow strip):
+
+```
+font-suit text-sm font-bold tabular-nums tracking-tight
+```
+
+**Editorial eyebrow pattern (canonical across the system):**
+
+```
+text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground
+```
+
+11px uppercase letter-spaced label. Used for both content section markers ("PROJECT", "BRAND CAMPAIGN", "VIDEO PRODUCTION") and structural section starts ("진행 과정"). This pattern lives operationally in `PRINCIPLES.md §4.4` — duplicated here only because typography spec is the natural place to look for the exact CSS values.
+
+### 3.3 Why no editorial serif
 Webflow's marketing site uses serif accents (a recent shift in 2025). For YAGI Workshop **product UI** we explicitly do not. Reasons:
 
 - Serifs add cognitive load in dense product surfaces (tables, forms, settings).
@@ -73,7 +127,7 @@ Webflow's marketing site uses serif accents (a recent shift in 2025). For YAGI W
 
 If marketing surfaces later require a serif accent (campaign pages, OG images), it is treated as a **brand asset**, not a system token.
 
-### 3.3 Mono usage
+### 3.4 Mono usage
 Mono is used only for:
 
 - code blocks
