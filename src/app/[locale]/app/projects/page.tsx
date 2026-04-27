@@ -101,7 +101,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("list_title")}</em>
+          {t("list_title")}
         </h1>
         <Link
           href="/app/projects/new"

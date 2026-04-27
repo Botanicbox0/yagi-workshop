@@ -27,7 +27,7 @@ export default async function AppDashboardPage({ params }: Props) {
     return (
       <div className="px-10 py-12 max-w-5xl">
         <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-2">
-          <em>All projects</em>
+          All projects
         </h1>
         <p className="text-sm text-muted-foreground">Across all workspaces</p>
         <div className="mt-10 text-sm text-muted-foreground">
@@ -42,7 +42,7 @@ export default async function AppDashboardPage({ params }: Props) {
     return (
       <div className="px-10 py-12 max-w-5xl">
         <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-2">
-          <em>Creator dashboard</em>
+          Creator dashboard
         </h1>
         <p className="text-sm text-muted-foreground">Contests &amp; submissions</p>
         <div className="mt-10 text-sm text-muted-foreground">
@@ -59,7 +59,7 @@ export default async function AppDashboardPage({ params }: Props) {
       <div className="flex items-end justify-between mb-8">
         <div>
           <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1">
-            <em>Projects</em>
+            Projects
           </h1>
           <p className="text-sm text-muted-foreground">
             {ctx?.workspaces[0]?.name}
@@ -83,7 +83,7 @@ export default async function AppDashboardPage({ params }: Props) {
 
       <div className="mt-16 flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-lg">
         <p className="font-display text-xl tracking-tight mb-2">
-          <em>{t("empty_title")}</em>
+          {t("empty_title")}
         </p>
         <p className="text-sm text-muted-foreground">{t("empty_sub")}</p>
       </div>

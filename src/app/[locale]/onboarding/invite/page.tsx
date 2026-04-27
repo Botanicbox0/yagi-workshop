@@ -56,7 +56,7 @@ export default function OnboardingInvitePage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight keep-all"><em>{t("invite_title")}</em></h1>
+        <h1 className="font-display text-3xl tracking-tight keep-all">{t("invite_title")}</h1>
         <p className="text-sm text-muted-foreground keep-all">{t("invite_sub")}</p>
       </div>
       <div className="space-y-3">

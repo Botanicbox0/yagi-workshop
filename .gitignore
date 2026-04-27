@@ -71,3 +71,8 @@ next-env.d.ts
 # Never commit — these are per-developer machine state.
 supabase/.temp/
 supabase/.branches/
+
+# Phase 2.8.4 — high-res source originals for brand/sample assets.
+# Optimized outputs land directly in public/brand/ and ship to the bundle;
+# sources stay on disk for re-export but are never committed.
+public/brand/sources/

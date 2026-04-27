@@ -49,7 +49,7 @@ export default function SignInPage() {
     <div className="space-y-8">
       <div className="space-y-2 text-center">
         <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("signin_title")}</em>
+          {t("signin_title")}
         </h1>
         <p className="text-sm text-muted-foreground">{t("signin_sub")}</p>
       </div>

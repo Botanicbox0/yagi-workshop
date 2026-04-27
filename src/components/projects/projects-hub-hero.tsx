@@ -1,5 +1,14 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+
+// Phase 2.8.4 — sample case imagery. Sharp-processed JPGs at 1200px max
+// width; hero card crops via aspect-[16/10] container + object-cover so
+// the visual framing stays in CSS (yagi: "crop 너무 강하게 하지는 말구").
+const SAMPLE_IMAGES: Record<1 | 2, { src: string; alt_key: "hero_sample_1_title" | "hero_sample_2_title" }> = {
+  1: { src: "/brand/sample-brand-campaign.jpg", alt_key: "hero_sample_1_title" },
+  2: { src: "/brand/sample-music-video.jpg", alt_key: "hero_sample_2_title" },
+};
 
 // Phase 2.8.2 G_B2_A — empty-state hero on /app/projects.
 // Shown only when the user has zero projects (handled by caller).
@@ -25,7 +34,7 @@ export async function ProjectsHubHero({ locale }: Props) {
                 contains a literal \n; whitespace-pre-line renders the
                 break without HTML so the i18n key stays a plain string. */}
             <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-[1.1] keep-all whitespace-pre-line">
-              <em>{t("hero_title")}</em>
+              {t("hero_title")}
             </h2>
             <p className="text-sm text-muted-foreground keep-all">
               {t("hero_sub")}
@@ -73,20 +82,33 @@ export async function ProjectsHubHero({ locale }: Props) {
             {t("hero_sample_label")}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="border border-border rounded-lg p-4 bg-muted/20"
-              >
-                <div className="aspect-[16/10] rounded-md bg-muted/50 mb-3" aria-hidden />
-                <p className="text-sm font-medium leading-snug keep-all">
-                  {t(`hero_sample_${i}_title` as "hero_sample_1_title")}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1 keep-all">
-                  {t(`hero_sample_${i}_sub` as "hero_sample_1_sub")}
-                </p>
-              </div>
-            ))}
+            {([1, 2] as const).map((i) => {
+              const sample = SAMPLE_IMAGES[i];
+              const titleKey = `hero_sample_${i}_title` as "hero_sample_1_title";
+              const subKey = `hero_sample_${i}_sub` as "hero_sample_1_sub";
+              return (
+                <div
+                  key={i}
+                  className="border border-border rounded-lg p-4 bg-muted/20"
+                >
+                  <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-muted/50 mb-3">
+                    <Image
+                      src={sample.src}
+                      alt={t(sample.alt_key)}
+                      fill
+                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="text-sm font-medium leading-snug keep-all">
+                    {t(titleKey)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 keep-all">
+                    {t(subKey)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -145,7 +145,7 @@ export default async function PreprodBoardsPage({ params, searchParams }: Props)
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("board_list_title")}</em>
+          {t("board_list_title")}
         </h1>
         <Link
           href="/app/preprod/new"
@@ -193,7 +193,7 @@ export default async function PreprodBoardsPage({ params, searchParams }: Props)
       {boards.length === 0 && (
         <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
           <p className="font-display text-xl tracking-tight mb-2 keep-all">
-            <em>{t("board_list_empty")}</em>
+            {t("board_list_empty")}
           </p>
           <Link
             href="/app/preprod/new"

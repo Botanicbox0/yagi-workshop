@@ -111,7 +111,7 @@ export default async function MeetingsPage({ params, searchParams }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("list_title")}</em>
+          {t("list_title")}
         </h1>
         <Link
           href="/app/meetings/new"
@@ -125,7 +125,7 @@ export default async function MeetingsPage({ params, searchParams }: Props) {
       {meetings.length === 0 && (
         <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
           <p className="font-display text-xl tracking-tight mb-2 keep-all">
-            <em>{t("list_empty")}</em>
+            {t("list_empty")}
           </p>
           <p className="text-sm text-muted-foreground mb-6 keep-all">
             {t("list_empty_sub")}

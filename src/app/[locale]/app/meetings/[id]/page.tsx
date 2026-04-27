@@ -179,7 +179,7 @@ export default async function MeetingDetailPage({ params }: Props) {
             </Badge>
           </div>
           <h1 className="font-display text-3xl tracking-tight keep-all">
-            <em>{meeting.title}</em>
+            {meeting.title}
           </h1>
         </div>
 

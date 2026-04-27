@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
     <div className="space-y-8">
       <div className="space-y-2 text-center">
         <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("new_password_title")}</em>
+          {t("new_password_title")}
         </h1>
       </div>
 

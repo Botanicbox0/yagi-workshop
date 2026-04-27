@@ -53,7 +53,7 @@ export default async function NewInvoicePage({ params }: Props) {
     <div className="min-h-dvh bg-background">
       <div className="px-6 pt-10 pb-0 max-w-2xl mx-auto">
         <h1 className="font-display text-3xl tracking-tight mb-1">
-          <em>{t("new_title")}</em>
+          {t("new_title")}
         </h1>
       </div>
       <NewInvoiceForm projects={projects} />

@@ -78,7 +78,7 @@ export default async function OnboardingRolePage({ params }: Props) {
     <div className="space-y-8">
       <div className="space-y-2">
         <h1 className="font-display text-3xl tracking-tight keep-all">
-          <em>{t("role_v2_title")}</em>
+          {t("role_v2_title")}
         </h1>
         <p className="text-sm text-muted-foreground keep-all">
           {t("role_v2_sub")}
@@ -98,7 +98,7 @@ export default async function OnboardingRolePage({ params }: Props) {
             className="block rounded-lg border border-border p-5 hover:border-foreground transition-colors"
           >
             <p className="font-display text-xl tracking-tight mb-1">
-              <em>{role.title}</em>
+              {role.title}
             </p>
             <p className="text-sm text-muted-foreground keep-all">
               {role.desc}

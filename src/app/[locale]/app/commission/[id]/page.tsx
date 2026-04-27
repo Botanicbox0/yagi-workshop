@@ -47,7 +47,7 @@ export default async function CommissionIntakeDetailPage({ params }: Props) {
           <CommissionIntakeStatePill state={intake.state} locale={locale} />
         </div>
         <h1 className="font-display text-3xl md:text-4xl tracking-tight keep-all">
-          <em>{intake.title}</em>
+          {intake.title}
         </h1>
         <p className="text-xs text-muted-foreground">
           {t(`category_${intake.category}` as "category_music_video")}

@@ -657,7 +657,7 @@ export function ShowcaseEditor({
           </NavLink>
           <div className="min-w-0">
             <h1 className="font-display text-xl tracking-tight truncate keep-all">
-              <em>{showcase.title || t("editor_field_title")}</em>
+              {showcase.title || t("editor_field_title")}
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
               <Badge
@@ -1167,7 +1167,7 @@ function Section({
   return (
     <section>
       <h2 className="font-display text-lg tracking-tight mb-4 keep-all">
-        <em>{title}</em>
+        {title}
       </h2>
       {children}
     </section>

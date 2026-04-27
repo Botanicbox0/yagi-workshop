@@ -109,7 +109,7 @@ export function CommissionIntakeForm({ locale }: { locale: "ko" | "en" }) {
     <div className="space-y-8">
       <header className="space-y-2">
         <h1 className="font-display text-3xl md:text-4xl tracking-tight keep-all">
-          <em>{t("new_title")}</em>
+          {t("new_title")}
         </h1>
         <p className="text-sm text-muted-foreground keep-all">
           {t("new_sub")}

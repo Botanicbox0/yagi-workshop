@@ -114,7 +114,7 @@ export default function SignUpPage() {
       <div className="space-y-8">
         <div className="space-y-3 text-center">
           <h1 className="font-display text-3xl tracking-tight">
-            <em>{t("check_your_email_title")}</em>
+            {t("check_your_email_title")}
           </h1>
           <p className="text-sm text-muted-foreground">
             {t("check_your_email_sub")}
@@ -170,7 +170,7 @@ export default function SignUpPage() {
     <div className="space-y-8">
       <div className="space-y-2 text-center">
         <h1 className="font-display text-3xl tracking-tight">
-          <em>{t("signup_title")}</em>
+          {t("signup_title")}
         </h1>
         <p className="text-sm text-muted-foreground">{t("signup_sub")}</p>
       </div>

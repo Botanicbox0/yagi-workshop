@@ -690,7 +690,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="font-display text-2xl md:text-3xl tracking-tight keep-all">
-            <em>{project.title}</em>
+            {project.title}
           </h1>
           {/* Status badge — inlined, no shared component */}
           <span

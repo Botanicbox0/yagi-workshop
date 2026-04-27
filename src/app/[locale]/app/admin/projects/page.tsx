@@ -207,7 +207,7 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
       {projects.length === 0 && (
         <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
           <p className="font-display text-xl tracking-tight mb-2 keep-all">
-            <em>—</em>
+            —
           </p>
         </div>
       )}

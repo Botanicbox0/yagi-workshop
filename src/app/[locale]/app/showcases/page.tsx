@@ -205,7 +205,7 @@ export default async function ShowcasesListPage({ params }: Props) {
       <div className="flex items-start justify-between mb-3 gap-6">
         <div>
           <h1 className="font-display text-3xl tracking-tight">
-            <em>{t("list_title")}</em>
+            {t("list_title")}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground keep-all max-w-lg">
             {t("list_intro")}
@@ -352,7 +352,7 @@ function renderEmpty({
       <div className="flex items-start justify-between mb-3 gap-6">
         <div>
           <h1 className="font-display text-3xl tracking-tight">
-            <em>{t("list_title")}</em>
+            {t("list_title")}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground keep-all max-w-lg">
             {t("list_intro")}
@@ -363,7 +363,7 @@ function renderEmpty({
 
       <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
         <p className="font-display text-xl tracking-tight mb-2 keep-all">
-          <em>{t("list_empty_title")}</em>
+          {t("list_empty_title")}
         </p>
         <p className="text-sm text-muted-foreground keep-all max-w-sm">
           {t("list_empty_body")}
