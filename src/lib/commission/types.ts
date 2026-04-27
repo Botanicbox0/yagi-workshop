@@ -12,10 +12,10 @@ export type CommissionIntakeState =
   | "converted";
 
 export type ClientCompanyType =
+  | "brand"
   | "label"
   | "agency"
-  | "studio"
-  | "independent"
+  | "startup"
   | "other";
 
 export type CommissionCategory =

@@ -21,10 +21,10 @@ const BUDGET_RANGES = [
 ] as const;
 
 const COMPANY_TYPES = [
+  "brand",
   "label",
   "agency",
-  "studio",
-  "independent",
+  "startup",
   "other",
 ] as const;
 

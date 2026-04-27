@@ -40,7 +40,7 @@ export type ClientOnboardingInput = {
   role: "client";
   locale: OnboardingLocale;
   company_name: string;
-  company_type: "label" | "agency" | "studio" | "independent" | "other";
+  company_type: "brand" | "label" | "agency" | "startup" | "other";
   contact_name: string;
   contact_email: string;
   contact_phone: string | null;

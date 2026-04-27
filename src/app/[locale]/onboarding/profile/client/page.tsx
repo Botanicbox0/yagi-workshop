@@ -20,10 +20,10 @@ import {
 import { completeProfileAction } from "../actions";
 
 const COMPANY_TYPES = [
+  "brand",
   "label",
   "agency",
-  "studio",
-  "independent",
+  "startup",
   "other",
 ] as const;
 
@@ -62,7 +62,7 @@ export default function OnboardingClientPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { company_type: "label" },
+    defaultValues: { company_type: "brand" },
   });
 
   const companyType = watch("company_type");
@@ -133,7 +133,7 @@ export default function OnboardingClientPage() {
             <SelectContent>
               {COMPANY_TYPES.map((opt) => (
                 <SelectItem key={opt} value={opt}>
-                  {t(`client_company_type_opt_${opt}` as "client_company_type_opt_label")}
+                  {t(`client_company_type_opt_${opt}` as "client_company_type_opt_brand")}
                 </SelectItem>
               ))}
             </SelectContent>
