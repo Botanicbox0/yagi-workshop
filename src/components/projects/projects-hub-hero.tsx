@@ -21,7 +21,10 @@ export async function ProjectsHubHero({ locale }: Props) {
         {/* Left — value props + primary CTA */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-[1.1] keep-all">
+            {/* Phase 2.8.3 G_B3_D — 2-line headline. hero_title value
+                contains a literal \n; whitespace-pre-line renders the
+                break without HTML so the i18n key stays a plain string. */}
+            <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-[1.1] keep-all whitespace-pre-line">
               <em>{t("hero_title")}</em>
             </h2>
             <p className="text-sm text-muted-foreground keep-all">
@@ -29,23 +32,31 @@ export async function ProjectsHubHero({ locale }: Props) {
             </p>
           </div>
 
+          {/* Phase 2.8.3 G_B3_D — 3 single-statement bullets per yagi.
+              hero_value_*_body keys persist (must not rename) but are
+              now allowed to be empty; render skips when blank. */}
           <ul className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <li key={i} className="flex gap-3">
-                <span
-                  aria-hidden
-                  className="mt-1.5 h-1.5 w-1.5 rounded-full bg-foreground flex-shrink-0"
-                />
-                <div>
-                  <p className="text-sm font-medium leading-snug keep-all">
-                    {t(`hero_value_${i}_title` as "hero_value_1_title")}
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed keep-all">
-                    {t(`hero_value_${i}_body` as "hero_value_1_body")}
-                  </p>
-                </div>
-              </li>
-            ))}
+            {[1, 2, 3].map((i) => {
+              const body = t(`hero_value_${i}_body` as "hero_value_1_body");
+              return (
+                <li key={i} className="flex gap-3">
+                  <span
+                    aria-hidden
+                    className="mt-1.5 h-1.5 w-1.5 rounded-full bg-foreground flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm font-medium leading-snug keep-all">
+                      {t(`hero_value_${i}_title` as "hero_value_1_title")}
+                    </p>
+                    {body && (
+                      <p className="text-xs text-muted-foreground leading-relaxed keep-all">
+                        {body}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
 
           <Link
