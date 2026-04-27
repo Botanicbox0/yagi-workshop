@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { Pencil, Users, MessageSquare, CheckCheck } from "lucide-react";
 
-// Phase 2.9 G_B9_E — workflow strip on /app/projects.
-// 4 cards: 의뢰 작성 / 디렉터 매칭 / 기획·피드백 / 납품·완료.
-// Hairline border, no shadow. SUIT bold for `01..04` and titles.
+// Phase 2.9 G_B9_E + Phase 2.9 hotfix-2 Task 3 — workflow strip on
+// /app/projects. Yagi reference (isomeet.com): no horizontal rule
+// between sections, soft layered shadow on cards instead of hard
+// border, section header demoted to a small uppercase eyebrow so it
+// reads as a magazine label rather than a heavy SaaS section title.
 
 type Props = { locale: string };
 
@@ -18,15 +20,15 @@ export async function ProjectsHubWorkflowStrip({ locale }: Props) {
   const t = await getTranslations({ locale, namespace: "projects" });
 
   return (
-    <section className="border-t border-border/60 py-16 lg:py-20 mt-12">
-      <h2 className="font-suit text-2xl lg:text-[28px] font-bold tracking-[-0.01em] mb-10 lg:mb-12">
+    <section className="pt-16 lg:pt-20">
+      <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-8">
         {t("hero_workflow_label")}
-      </h2>
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {STEPS.map(({ i, Icon }) => (
           <div
             key={i}
-            className="rounded-2xl border border-border/60 p-6 lg:p-8 bg-card"
+            className="rounded-2xl bg-card p-6 lg:p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]"
           >
             <Icon className="w-5 h-5 text-foreground mb-6" />
             <p className="font-suit text-sm font-bold tabular-nums tracking-tight text-foreground">

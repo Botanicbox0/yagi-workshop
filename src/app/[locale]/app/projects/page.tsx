@@ -118,10 +118,12 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
   };
 
   return (
-    <div className="px-10 py-12 max-w-5xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-3xl tracking-tight">
+    <div className="px-10 py-10 max-w-5xl">
+      {/* Header — Phase 2.9 hotfix-2 Task 1: SUIT bold, larger size,
+          tighter tracking. Reads as a real section title rather than a
+          tab label. CTA pairing with "프로젝트 의뢰하기" preserved. */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-suit text-3xl md:text-4xl font-bold tracking-tight text-foreground">
           {t("list_title")}
         </h1>
         <Link

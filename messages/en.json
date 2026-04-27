@@ -470,7 +470,7 @@
     "status_rescheduled": "Rescheduling"
   },
   "projects": {
-    "list_title": "Projects",
+    "list_title": "Create a project",
     "direct_tab": "Request a project",
     "contest_tab": "Contest brief",
     "new": "Request a project",
@@ -534,7 +534,7 @@
     "hero_value_3_title": "Matched with a YAGI studio team or creator that fits the project",
     "hero_value_3_body": "",
     "hero_cta": "Request a project",
-    "hero_social_proof": "+200 clients are already\nworking with YAGI",
+    "hero_social_proof": "+50 brands working\nwith YAGI",
     "hero_workflow_label": "Process",
     "hero_step_1_title": "Submit a request",
     "hero_step_1_body": "Share your goal and a few references.",

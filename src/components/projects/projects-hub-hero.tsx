@@ -22,7 +22,12 @@ export async function ProjectsHubHero({ locale }: Props) {
   const t = await getTranslations({ locale, namespace: "projects" });
 
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 py-16 lg:py-24">
+    // Phase 2.9 hotfix-2 Task 3.1 — sits directly under the page
+    // header with shared horizontal rhythm; vertical padding tightened
+    // from py-16/24 (64-96px) to py-8/12 (32-48px) so the page-header
+    // → hero transition reads as one editorial scroll, not two stacked
+    // sections.
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 py-8 lg:py-12">
       {/* LEFT — Decision zone */}
       <div className="flex flex-col gap-8">
         <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">
@@ -95,18 +100,29 @@ export async function ProjectsHubHero({ locale }: Props) {
   );
 }
 
-// 4 monochrome avatar placeholders — gray circles with 1px ring,
-// stacked with -8px overlap. No real photos until yagi provides
-// client logos / photos for social proof.
+// Phase 2.9 hotfix-2 Task 2 — 5 monochrome avatar placeholders.
+// 32px circles (h-8 w-8), -ml-2 overlap, ring-2 ring-background for
+// separation. Subtle gray-tint variation makes the stack feel less
+// robotic without breaking Q-092 #2 (no accent color). Real client
+// logos / avatars are a Phase 3.0 deliverable when YAGI publishes
+// the case-study list — placeholders only for now.
+const AVATAR_TINTS = [
+  "bg-zinc-200",
+  "bg-zinc-300",
+  "bg-zinc-200",
+  "bg-zinc-300",
+  "bg-zinc-200",
+] as const;
+
 function AvatarStack() {
   return (
-    <div className="flex -space-x-2">
-      {[0, 1, 2, 3].map((i) => (
+    <div className="flex">
+      {AVATAR_TINTS.map((tint, i) => (
         <span
           key={i}
           aria-hidden
-          className="w-7 h-7 rounded-full bg-muted ring-2 ring-background"
-          style={{ zIndex: 4 - i }}
+          className={`h-8 w-8 rounded-full ${tint} ring-2 ring-background ${i === 0 ? "" : "-ml-2"}`}
+          style={{ zIndex: AVATAR_TINTS.length - i }}
         />
       ))}
     </div>

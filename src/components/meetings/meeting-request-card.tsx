@@ -49,7 +49,7 @@ export function MeetingRequestCard({ workspaceId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <section className="mt-6 rounded-lg border border-border/60 bg-muted/30 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <section className="mt-6 rounded-2xl bg-muted/30 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]">
         <div className="space-y-1">
           <h3 className="text-base font-medium keep-all">
             {t("request_card_title")}

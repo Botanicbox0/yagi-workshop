@@ -470,7 +470,7 @@
     "status_rescheduled": "일정 재조정 중"
   },
   "projects": {
-    "list_title": "프로젝트",
+    "list_title": "프로젝트 생성",
     "direct_tab": "프로젝트 의뢰하기",
     "contest_tab": "챌린지 개설",
     "new": "프로젝트 의뢰하기",
@@ -534,7 +534,7 @@
     "hero_value_3_title": "프로젝트에 맞게 YAGI 스튜디오 제작 / 크리에이터 매칭",
     "hero_value_3_body": "",
     "hero_cta": "프로젝트 의뢰하기",
-    "hero_social_proof": "+200명 이상의 클라이언트가\nYAGI와 함께하고 있어요",
+    "hero_social_proof": "+50개 이상의 고객사가\nYAGI와 함께하고 있어요",
     "hero_workflow_label": "진행 과정",
     "hero_step_1_title": "의뢰 작성",
     "hero_step_1_body": "작업 목적과 레퍼런스를 간단히 남겨주세요.",
