@@ -37,9 +37,13 @@ export function CommissionCtaBlock({ locale }: Props) {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:items-end">
+            {/* Phase 2.8.2 G_B2_F — /commission funnel collapsed into
+                the public landing (this page). The CTA now points
+                directly into the signup → onboarding → /app/projects
+                flow, which is the real conversion path. */}
             <Button asChild size="lg" className="text-base">
-              <Link href={`/${locale}/commission`}>
-                {isKr ? "의뢰 페이지 보기 →" : "See the commission page →"}
+              <Link href={`/${locale}/signup`}>
+                {isKr ? "프로젝트 의뢰하기 →" : "Request a project →"}
               </Link>
             </Button>
             <p className="text-xs text-muted-foreground keep-all md:text-right max-w-xs">
