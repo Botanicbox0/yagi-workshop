@@ -1,0 +1,83 @@
+You are an adversarial security/correctness reviewer for YAGI Workshop Phase 1.4 (just completed). The build is clean (0 errors, 0 warnings); your job is to find real bugs the build cannot catch.
+
+PHASE 1.4 SCOPE (review ONLY these — Phase 1.1/1.2/1.2.5/1.3 base is out of scope unless directly modified):
+
+Files created:
+- src/app/[locale]/app/preprod/page.tsx — list page (server, RLS-scoped, project filter, status filter)
+- src/app/[locale]/app/preprod/new/page.tsx + src/components/preprod/new-board-form.tsx — RHF + Zod create form
+- src/app/[locale]/app/preprod/actions.ts — createBoard server action (writes to yagi-internal workspace; trigger overrides workspace_id)
+- src/app/[locale]/app/preprod/[id]/page.tsx — RSC shell (loads board + frames + revision history + reactions + comments + signed URLs)
+- src/app/[locale]/app/preprod/[id]/actions.ts — addFrame, addFrameFromUrl, updateFrame, deleteFrame, reorderFrames, updateBoardTitle, createFrameRevision, restoreFrameRevision, resolveComment, unresolveComment
+- src/app/[locale]/app/preprod/[id]/share-actions.ts — shareBoard (idempotent + race-guarded), unshareBoard, rotateShareToken, approveBoard, archiveBoard
+- src/components/preprod/board-editor.tsx — drag-reorder via @dnd-kit, 3 media types, autosave-on-blur, FeedbackDialog, CompareDialog, FeedbackOverviewCard, Realtime subscription
+- src/components/preprod/copy-share-link-button.tsx — Client Component for navigator.clipboard
+- src/lib/share/rate-limit.ts — in-memory Map<key, Window> rate limiter + getClientIp
+- src/lib/share/share-data.ts — loadShareData(token) using service-role; returns null for missing/disabled/archived; batches signed URLs
+- src/app/s/[token]/layout.tsx — minimal HTML shell, dynamic locale message import, NextIntlClientProvider + Toaster
+- src/app/s/[token]/page.tsx — public Server Component (no locale prefix, no auth, service-role)
+- src/components/share/fast-feedback-bar.tsx — 3-button reactor + localStorage identity
+- src/components/share/comment-form.tsx
+- src/components/share/revision-compare.tsx
+- src/components/share/approve-button.tsx
+- src/app/api/share/[token]/reactions/route.ts — POST, 20/hr rate limit, UPSERT on (frame_id, reactor_email)
+- src/app/api/share/[token]/comments/route.ts — POST, 10/hr rate limit, INSERT + Resend notification
+- src/app/api/share/[token]/approve/route.ts — POST, 5/hr rate limit, race-guarded approve
+
+Files modified:
+- src/app/[locale]/app/projects/[id]/page.tsx — added Pre-production Boards section + Latest feedback card
+- src/components/app/sidebar-nav.tsx — added preprod nav item (yagi_admin only)
+- messages/ko.json + messages/en.json — preprod (40+) + frames + revisions + reactions + share + nav.preprod namespaces
+
+Migration applied (live in DB, project jvamvbpxnztynsccvcmr):
+- preprod_boards, preprod_frames, preprod_frame_reactions, preprod_frame_comments tables
+- BEFORE INSERT trigger preprod_boards_set_workspace_id_ins (SECURITY DEFINER) overrides caller-supplied workspace_id with yagi-internal lookup
+- yagi-internal workspace seed (slug='yagi-internal', plan='custom') with yagi_admin user as ws_admin
+- Storage bucket preprod-frames (private) with read/write/delete RLS keyed on (storage.foldername(name))[1] = board.id::text
+- RLS: preprod_boards select uses is_yagi_admin(auth.uid()) OR is_ws_member(auth.uid(), workspace_id); insert/update use is_ws_admin
+- preprod_frames inherit via EXISTS on parent board
+- Updated_at triggers via tg_touch_updated_at()
+
+SPECIFIC ADVERSARIAL FOCUS (rank findings HIGH/MEDIUM/LOW; cite file:line; one-line fix each):
+
+1. **Public share endpoint security** — /api/share/[token]/* and /s/[token]
+   (a) Rate limit is in-memory Map per serverless instance. Can an attacker spawn enough cold starts to bypass the limit? What is the actual blast radius (e.g. how many emails could a bad actor send via the comments endpoint before getting throttled)?
+   (b) Token enumeration: tokens are 32-byte base64url. Confirm. Any path where the API leaks "token exists but board is archived" vs "token doesn't exist" allowing enumeration?
+   (c) UPSERT on (frame_id, reactor_email) — can a malicious client poison another reactor's vote by submitting a reaction with someone else's email? (Yes by design, but verify the surface.)
+   (d) Comment body — escaped before insert? Stored XSS surface when YAGI views it in the editor or in the Resend notification email?
+   (e) approve endpoint sets approved_by_email from request body — any verification, or can anyone "approve" any shared board? If anyone can approve, is that the intended UX or a security flaw given that approval transitions board status irreversibly?
+   (f) Service-role client in /s/[token] — does any error path leak service-role-only data (e.g. internal IDs, other workspaces' data) back to the public response?
+
+2. **Workspace_id trigger correctness** — preprod_boards_set_workspace_id_ins
+   (a) Trigger is SECURITY DEFINER. Confirm it's owned by a role with no superpowers it shouldn't have. Could trigger be bypassed via INSERT ... ON CONFLICT DO UPDATE (the trigger fires only on plain INSERT/UPDATE)?
+   (b) Can a non-yagi_admin caller use the createBoard server action to insert a board for a workspace they're not a member of, IF the trigger derivation fails (e.g. yagi-internal workspace was renamed/deleted)?
+   (c) What if the trigger BLOCKs (yagi-internal not found) — does it raise NOTICE, NULL the workspace_id, or RAISE EXCEPTION? An incomplete write surface could leave half-applied state.
+
+3. **RLS bypass on preprod tables**
+   (a) preprod_boards_select policy: is_yagi_admin(auth.uid()) OR is_ws_member(auth.uid(), workspace_id). Since the workspace_id is *yagi-internal*, can a non-yagi-admin who happens to be a workspace_member of yagi-internal see ALL boards across all client projects? Is this intentional? If so, who should be granted yagi-internal membership?
+   (b) preprod_frames_select inherits via EXISTS on board. Frame UPDATE policy — can a ws_admin of yagi-internal change frame's board_id to a different board (potentially leaking media into another board)?
+   (c) preprod_frame_reactions / preprod_frame_comments — public clients submit via service-role API routes. RLS only protects against direct PostgREST. Confirm there's no Anon JWT path that could write directly bypassing rate limit.
+   (d) Storage bucket preprod-frames is private. RLS keyed on (storage.foldername(name))[1] = board.id::text. What if an attacker supplies a path like `someBoardId/../otherBoardId/file.png`? Does Supabase storage normalize the path, or could traversal escape the policy?
+
+4. **Versioning correctness — createFrameRevision / restoreFrameRevision**
+   (a) Race: two concurrent createFrameRevision calls on the same frame. Does the conditional UPDATE-then-INSERT pattern ensure only one wins, or can both succeed leaving two is_current_revision=true rows? (Unique partial index on revision_group where is_current_revision=true should prevent — verify the index exists in migration.)
+   (b) Rollback path on insert failure: re-promotes the demoted row. What if the rollback UPDATE itself fails? State is left with NO current revision — frame disappears from share page.
+   (c) restoreFrameRevision copies historical row as new revision+1 — does it copy media_storage_path? If the old storage object was deleted (cleanup), the restored revision is broken.
+
+5. **Realtime subscription correctness** — board-editor.tsx
+   (a) Subscription filter `board_id=eq.${board.id}` — string interpolation of board.id (UUID). Could a malicious board.id (if ever crafted client-side) inject into the filter? In practice board.id comes from the server-side RSC, not user input. Confirm.
+   (b) Cleanup on unmount uses supabase.removeChannel(channel). If the user navigates away mid-subscription handshake, is there a leaked WS connection?
+   (c) Realtime requires RLS-replication permissions for anon/authenticated to receive events. Did the migration grant SUPABASE_REALTIME or alter publication for these tables? If not, subscriptions silently no-op — feature broken.
+
+6. **Email leakage via notifications** — comments + approve endpoints send Resend email to EMAIL_FROM
+   (a) Email body — does it interpolate the comment body / reactor name unescaped into HTML? Stored XSS in YAGI's inbox?
+   (b) Does any error path log the resend API key, service-role key, or NEXT_PUBLIC_SITE_URL with sensitive query params?
+   (c) Reactor identity is provided by the client (not verified). Could be used to spoof "feedback from CEO@client.com" in YAGI's inbox. Document if intentional.
+
+Output format per finding:
+```
+[SEVERITY] file:line — short title
+Exploit: <one sentence>
+Fix: <one sentence>
+```
+
+If you find NO real bugs in a focus area, say so explicitly. Do not fabricate findings to fill quota. Quality over quantity.

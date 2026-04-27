@@ -1,0 +1,75 @@
+You are Codex K-05, an adversarial security/correctness reviewer. Review Phase 1.5 (Invoicing, MOCK MODE) of the YAGI Workshop Next.js 15 / Supabase codebase at the current working directory. Find HIGH/CRITICAL bugs we'd regret shipping — be surgical, not nitpicky.
+
+## Files in scope
+- src/lib/popbill/client.ts
+- src/lib/popbill/build-taxinvoice.ts
+- src/lib/invoices/suggest-line-items.ts
+- src/lib/invoices/issue-email.ts
+- src/app/[locale]/app/invoices/page.tsx
+- src/app/[locale]/app/invoices/actions.ts
+- src/app/[locale]/app/invoices/new/page.tsx
+- src/app/[locale]/app/invoices/[id]/page.tsx
+- src/app/[locale]/app/invoices/[id]/actions.ts
+- src/app/[locale]/app/invoices/[id]/line-item-actions.ts
+- src/app/[locale]/app/invoices/[id]/print/page.tsx
+- src/app/[locale]/app/admin/invoices/page.tsx
+- src/components/invoices/new-invoice-form.tsx
+- src/components/invoices/invoice-editor.tsx
+- src/components/invoices/print-button.tsx
+- supabase/migrations/20260421094855_phase1_schema.sql (Phase 1.5 sections: invoices, invoice_line_items, supplier_profile, RLS, is_mock col, recalc_invoice_totals trigger)
+
+## Focus
+
+### Standard adversarial checks
+- Authorization: every Server Action and RSC page must gate by role (yagi_admin for mutations, ws_member for read). Cross-workspace leaks in RLS?
+- Race conditions in status transitions (draft→issued→paid/void). Use of `.eq("status","draft")` guard sufficient?
+- HTML injection / XSS in email templates (issue-email.ts) — any user-supplied fields interpolated into HTML without escaping?
+- Korean tax-invoice data integrity: totals math, BRN (business registration number) validation, NTS approval number format.
+- CSRF: any raw Route Handlers with mutations? (Server Actions have built-in protection.)
+- SSRF / open redirect in print URL construction.
+- Rate limiting / idempotency on issueInvoice.
+- Print page auth gate: is /app/invoices/[id]/print accessible without auth?
+
+### Phase 1.5 mock-mode specific (MUST VERIFY)
+
+**(a) Mock rejected in production:** Does `src/lib/popbill/client.ts` HALT module load when `POPBILL_MODE=mock` AND `NEXT_PUBLIC_VERCEL_ENV === "production"`? Anything bypass this guard (fallback path, env shim, runtime override)? Are env vars read at module top level (good) or deferred (could skip check on warm Vercel instances)?
+
+**(b) is_mock visual distinction:** Every surface rendering invoice data must visually mark mocks:
+- Invoice list (/app/invoices): mock badge per row?
+- Invoice detail/editor (/app/invoices/[id]): red banner?
+- Print page (/app/invoices/[id]/print): red watermark + banner?
+- Admin dashboard (/app/admin/invoices): "MOCK 송장" counter?
+- Email template (issue-email.ts): red disclosure banner, `(MOCK)` in subject?
+Flag any screen that could silently render a mock without distinction.
+
+**(c) Mock→production transition integrity:** When POPBILL_MODE flips mock→production:
+- is_mock=true rows remain visible + filterable ("재발행 필요" list)?
+- Issued mock invoices have nts_approval_number="MOCK-…" and popbill_mgt_key="mock-…" — anything prevent real popbill path from re-using those keys? Reissue collision possible?
+- popbill_response jsonb shape differences mock vs real that would break rendering?
+- RLS: do mock rows leak to non-yagi members? RESTRICTIVE policies should hide is_mock=true from non-yagi. Verify.
+
+### Other Phase 1.5 high-risk areas
+- invoice_line_items CRUD: yagi_admin gate enforced AND invoice.status='draft'? A workspace member (non-yagi) must not mutate line items directly.
+- buildTaxinvoice TOTALS_MISMATCH: trigger recalc_invoice_totals keeps totals consistent — any code path inserts line items without triggering recalc?
+- Double-issuance race: popbill call happens BEFORE DB update. Two concurrent issueInvoice calls could double-file. Is popbill_mgt_key used as idempotency key? Flag as HIGH if not.
+
+## Output format
+
+For each finding, produce:
+```
+[SEVERITY: CRITICAL|HIGH|MEDIUM|LOW] <short title>
+  File: <path:line>
+  Issue: <what's wrong>
+  Impact: <what attacker/bug can do>
+  Fix: <exact change>
+```
+
+Group by severity. End with:
+```
+## Mock-mode gate verdict
+(a) Production rejection: PASS | FAIL — <detail>
+(b) Visual distinction: PASS | FAIL — <surfaces>
+(c) Mock→prod transition: PASS | FAIL — <detail>
+```
+
+Be precise with file:line references. Don't invent issues — if a check passes, note it briefly and move on. Your job is to find the bugs that would cost us money or trust in production.

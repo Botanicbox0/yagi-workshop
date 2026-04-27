@@ -1,0 +1,20 @@
+🔧 Hotfix 완료. 사용자 브라우저 테스트 대기.
+
+Scope: Phase 1.1 onboarding 가드 regression (Phase 1.2 아님).
+
+수정된 파일 3개:
+- src/lib/onboarding/state.ts (workspace 멤버십 + 글로벌 롤 체크 추가)
+- src/app/[locale]/onboarding/page.tsx (profile만으로 /app 보내던 버그 해결)
+- src/app/[locale]/app/layout.tsx (workspace 없는 client 사용자 → /onboarding/workspace 가드)
+
+테스트 절차:
+1. /ko/signin 재로그인 (기존 yagi@yagiworkshop.xyz)
+2. /ko/onboarding/workspace 자동 진입 확인
+3. workspace 이름 입력 → 제출 → /ko/onboarding/brand 진입
+4. brand/invite skip → /ko/app 사이드바에 workspace 표시 확인
+
+build 미실행 (Phase 1.2 final build 때 검증). Dev server :3001 HMR 반영.
+
+상세: .yagi-autobuild/hotfix-onboarding-guard.md
+
+대기 중. "workspace 완료" 응답 시 yagi_admin SQL 실행.

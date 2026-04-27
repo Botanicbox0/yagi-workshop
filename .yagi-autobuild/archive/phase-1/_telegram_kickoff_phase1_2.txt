@@ -1,0 +1,11 @@
+🚀 YAGI Builder | Starting Phase 1.2.
+
+14 subtasks queued. Est 3–4 hours.
+- Wave A: 01 (Conventions)
+- Wave B: 02 ‖ 03 ‖ 04 → 🛑 KILL-SWITCH inside 03 (pnpm install)
+- Wave C: 05 → 06 → 07 (Projects chain)
+- Wave D: 08 ‖ 09 → 10 (Refs/Thread/Email)
+- Wave E: 11 ‖ 12 ‖ 13 (Admin/Settings/Storage; 13 may 🛑)
+- Wave F: 14 (E2E + 🛑 build + 🛑 complete)
+
+First Executor: subtask 01 (CLAUDE.md + yagi-nextjs-conventions skill, Haiku 4.5).

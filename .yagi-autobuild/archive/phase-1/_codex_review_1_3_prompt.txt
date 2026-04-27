@@ -1,0 +1,80 @@
+You are an adversarial security/correctness reviewer for YAGI Workshop Phase 1.3 (just completed). The build is clean (0 errors, 0 warnings); your job is to find real bugs the build cannot catch.
+
+PHASE 1.3 SCOPE (review ONLY these — Phase 1.1/1.2/1.2.5 base is out of scope unless directly modified):
+
+Files created:
+- src/lib/google/auth.ts — OAuth2Client singleton, getAccessToken
+- src/lib/google/calendar.ts — createCalendarEvent + cancelCalendarEvent with 10s AbortController timeout
+- src/lib/calendar/ics.ts — hand-rolled RFC 5545 buildIcs (UTF-8 byte-aware line folding, escapeText, toIcsUtc)
+- src/lib/email/meeting-template.ts — bilingual HTML+text renderer, dark theme tokens, inline markdown renderer that escapes first
+- src/lib/email/send-meeting.ts — sendIcsInvite/sendCancellation/sendSummary using Resend singleton
+- src/app/api/health/google/route.ts — yagi_admin-gated health check
+- src/app/[locale]/app/meetings/actions.ts — createMeeting, saveMeetingSummary, sendMeetingSummary, cancelMeeting, markMeetingCompleted, retryCalendarSync
+- src/app/[locale]/app/meetings/page.tsx — list page
+- src/app/[locale]/app/meetings/new/page.tsx — new form RSC
+- src/app/[locale]/app/meetings/[id]/page.tsx — detail page
+- src/components/meetings/new-meeting-form.tsx — RHF + Zod form
+- src/components/meetings/summary-editor.tsx — autosave-on-blur textarea
+- src/components/meetings/cancel-dialog.tsx — Radix dialog
+- src/components/meetings/meeting-actions-menu.tsx — dropdown gated by status
+- src/components/meetings/attendees-list.tsx — server-rendered
+- src/components/admin/google-integration-status.tsx — Client Component pill
+
+Files modified:
+- src/app/[locale]/app/admin/page.tsx — admin dashboard (Integrations + upcoming + attention)
+- src/components/app/sidebar-nav.tsx — +meetings nav item; admin link repointed
+- messages/ko.json + messages/en.json — meetings (40+) + admin (14) namespaces
+
+Migration applied (live in DB):
+- meetings table + meeting_attendees table
+- RLS: meetings_select (is_ws_member OR is_yagi_admin), meetings_insert (is_ws_admin OR is_yagi_admin), meetings_update (same as insert), meeting_attendees_select (via meetings chain), meeting_attendees_insert (via meetings chain)
+- Trigger: meetings_updated_at before update → tg_touch_updated_at()
+
+SPECIFIC ADVERSARIAL FOCUS (rank findings HIGH/MEDIUM/LOW; cite file:line; one-line fix each):
+
+1. **OAuth refresh token handling** — src/lib/google/auth.ts exports a module-level `OAuth2Client | null` singleton. In Next.js serverless/edge runtime, modules can be re-imported across isolates but the singleton assumes one process. Is there any path where the refresh token leaks into:
+   (a) an error message returned to the client (check getAccessToken → createCalendarEvent → createMeeting Server Action return value)?
+   (b) a Resend email body (e.g. if an error.message gets interpolated into a failure email)?
+   (c) a console.error log that could end up in Vercel logs accessible to non-admins?
+   (d) the client JavaScript bundle via accidental "use client" leakage or re-export?
+
+2. **Calendar API error paths** — src/app/[locale]/app/meetings/actions.ts createMeeting does: insert meeting row → insert attendees → try Google → on failure try ICS email.
+   (a) If Google returns 429 (rate limit), does the code correctly fall through to ICS, or does it throw and leave the meeting row orphaned with status='pending'?
+   (b) If Google returns 403 (calendar.events scope revoked), same question.
+   (c) If Google 500, same.
+   (d) What if the meeting row insert succeeds but the attendee batch insert fails partially (e.g. unique constraint on (meeting_id, email) if the caller sent duplicates)? Does the UI user see a confusing orphan?
+   (e) Does retryCalendarSync race with a user clicking "Cancel meeting" simultaneously? Can it double-create a Google event if the network slow-failed the first attempt but actually succeeded server-side?
+
+3. **ICS RFC 5545 correctness** — src/lib/calendar/ics.ts
+   (a) Are CRLF line endings emitted everywhere, not just LF? Test the output of buildIcs — does it use \r\n on every terminator including between sub-components?
+   (b) Korean characters in SUMMARY/DESCRIPTION: does the line folding in foldLine correctly count UTF-8 bytes (not UTF-16 code units) so a 75-octet boundary never splits a multi-byte character? Or does it split mid-code-point?
+   (c) escapeText order: \\ first, then ; , \\n — if done in wrong order, a literal \n in input would become \\n then \\\\n. Check the implementation.
+   (d) METHOD:CANCEL → when sent with UID matching the original event, does Google Calendar actually remove it from attendees' calendars? The spec assumed SEQUENCE increment; is SEQUENCE=0 sufficient for CANCEL, or does the existing event sequence need to be tracked and incremented?
+   (e) DTSTAMP format: YYYYMMDDTHHMMSSZ. Off-by-one errors in toIcsUtc (e.g. month zero-indexing from getUTCMonth)?
+
+4. **RLS bypass** — migration applied with `is_ws_member(auth.uid(), workspace_id)` etc.
+   (a) Can a non-yagi-admin member of workspace A see meetings from workspace B via /rest/v1/meetings?workspace_id=eq.X? (Should be blocked by RLS — verify policy actually evaluates correctly.)
+   (b) Can they insert a meeting_attendees row for a meeting whose workspace they're not an admin of? The `meeting_attendees_insert` policy uses EXISTS on meetings with is_ws_admin. If the exists subquery returns false, insert blocked. But: is there any SQL-injection or case where the exists subquery could be short-circuited?
+   (c) UPDATE on meetings: policy `meetings_update` uses `is_ws_admin OR is_yagi_admin`. USING clause only — no WITH CHECK. Can a ws_admin of workspace A UPDATE a meeting to move it to workspace B (by changing workspace_id)? The USING allows read, but does PostgreSQL prevent the UPDATE to change workspace_id if there's no WITH CHECK?
+   (d) The Server Actions hit Supabase with the user's session — so RLS applies. But createMeeting does `supabase.from('meetings').insert(...)` with `workspace_id` from the fetched project row. What if a malicious caller's projectId maps to a workspace they're NOT ws_admin of, but the server code still passes auth? The server-side check in actions.ts step 4 does `is_ws_admin OR is_yagi_admin` — verify this can't be bypassed by race condition (project re-parented between steps 3 and 4).
+
+5. **Email template XSS** — src/lib/email/meeting-template.ts
+   (a) The inline markdown renderer escapes `<`, `>`, `&` first then applies Markdown rules. Verify: does a summary input like `> <script>alert(1)</script>` get fully escaped to `&gt; &lt;script&gt;...` BEFORE blockquote conversion? Or does blockquote regex strip the `>` first, then escape applies to a now-unsafe fragment?
+   (b) `[link text](javascript:alert(1))` — does the renderer support Markdown links? If yes, is the URL scheme validated (http/https only)? If no, it won't be an issue but verify.
+   (c) In summary emails, the `projectName`, `meetingTitle`, `organizerName` fields — are THEY escaped before interpolation into the HTML? A project titled `<script>x</script>` would be fine in DB but should not execute in email clients.
+   (d) The cancel email includes `cancelReason` from the user — escaped in the HTML body?
+
+6. **Autopilot chain hazards** — Phase 1.3 createMeeting inserts meeting row, then attendees, then tries external. If the process dies between insert and update (e.g. Vercel timeout 60s triggered during Google Calendar 10s timeout retry), the meeting row stays with `calendar_sync_status='pending'` forever.
+   (a) Is there any reaper/sweeper for stale pending rows? (Spec says no cron — this is OK if UI handles it.)
+   (b) Does the UI (meeting detail page) show a usable state for `calendar_sync_status='pending'` so the user knows to retry? Is there a retryCalendarSync path that handles `pending` state same as `failed`? Check the retryCalendarSync guard — it accepts 'failed' and 'fallback_ics' only per spec; does `pending` need to be accepted too?
+   (c) Idempotency of retryCalendarSync: if the previous Google call actually succeeded but the response was lost (network partition), retrying will create a DUPLICATE Google event. The spec uses `requestId: randomUUID()` but that's a new UUID every retry. Should the code persist the requestId on first attempt and reuse it on retry to let Google dedupe?
+   (d) Resend idempotency for sendIcsInvite on retry: if first email succeeded but response was lost, retry sends a duplicate invite email. No dedup on Resend side typically.
+
+Output format per finding:
+```
+[SEVERITY] file:line — short title
+Exploit: <one sentence>
+Fix: <one sentence>
+```
+
+If you find NO real bugs in a focus area, say so explicitly. Do not fabricate findings to fill quota. Quality over quantity.

@@ -1,0 +1,16 @@
+🛑 YAGI Builder | Kill-switch (Subtask 03)
+
+Action: Install Phase 1.2 dependencies via pnpm.
+
+Commands (will run in this order, in C:\Users\yout4\yagi-studio\yagi-workshop):
+  pnpm add resend react-dropzone
+  pnpm add -D @types/react-dropzone
+
+Why: Subtask 10 (Resend email) needs the `resend` SDK. Subtask 08 (reference uploader) needs `react-dropzone` for drag-drop image upload. Latest versions, no pins. Will modify package.json + pnpm-lock.yaml. No other packages.
+
+Wave A (subtask 01 — CLAUDE.md + yagi-nextjs-conventions skill) ✅ pass.
+Wave B parallel siblings already running:
+  - 02 (i18n 6 namespaces) — Haiku Executor in flight
+  - 04 (OG unfurl utility + /api/unfurl route, native fetch only — no extra deps) — Haiku Executor in flight
+
+Reply 'continue' to proceed with pnpm install, or 'abort' to halt Wave B and stop the build.

@@ -58,11 +58,25 @@ next-env.d.ts
 .yagi-autobuild/_telegram_*.txt
 # Codex K-PUX (Product/UX) review artifacts — transient like K-05
 .yagi-autobuild/**/_codex_kpux_output.txt
+# Phase-level run logs + review outputs (per-Builder transient)
+.yagi-autobuild/**/_run.log
+.yagi-autobuild/**/_codex_review_output*.txt
+.yagi-autobuild/**/_codex_review_prompt*.md
+.yagi-autobuild/**/_codex_kpux_prompt*.md
+.yagi-autobuild/**/_codex_kpux_output*.txt
+# But preserve archived phase artifacts (intentional history under /archive/)
+!.yagi-autobuild/archive/**
 
 # Local verification logs (tsc/lint/build outputs at repo root)
 .build.log
 .lint.log
 .tsc.log
+# Migration list captures (transient diagnostic outputs)
+.migration-list.txt
+.migration-list-final.txt
+.migration-list-*.txt
+# Other ad-hoc diagnostic captures
+.bg-check.txt
 
 # Content Collections generated files
 .content-collections/

@@ -1,0 +1,38 @@
+[HIGH] `src/lib/google/auth.ts:24` — Raw OAuth refresh failures can leak the refresh token into logs  
+Exploit: on a bad refresh or revoked grant, `console.error('[google] refresh token failed', e)` logs the full `GaxiosError`, and `google-auth-library` builds that error from a POST body that includes `refresh_token`, so the secret can land in server/Vercel logs.  
+Fix: log only sanitized fields such as error code/status/message and never the raw refresh error object.
+
+[HIGH] `src/app/[locale]/app/meetings/actions.ts:643` — `retryCalendarSync` can recreate calendar events for cancelled meetings  
+Exploit: the retry action never loads or checks `meeting.status`, so a cancelled meeting with `calendar_sync_status='failed'` or `'fallback_ics'` can still be retried, creating a fresh Google event after cancellation or during a cancel/retry race.  
+Fix: select `status` and `google_event_id`, reject retries for `cancelled`/`completed`, and make the sync update conditional on the row still being active.
+
+[HIGH] `src/app/[locale]/app/meetings/actions.ts:150` — Meeting writes use a stale project workspace and are vulnerable to TOCTOU cross-workspace corruption  
+Exploit: if a project is re-parented between the project read and the meeting insert, the action writes `project_id` with the new project row but `workspace_id` from the old read, creating a meeting governed by the wrong workspace auth boundary.  
+Fix: enforce `meetings.workspace_id = projects.workspace_id` in the database and create meetings via one atomic SQL/RPC statement that reads the current project row at write time.
+
+[MEDIUM] `src/app/[locale]/app/meetings/actions.ts:196` — Attendee insert failures are reported as success and leave orphaned meetings  
+Exploit: duplicate attendee emails or any `meeting_attendees` insert error still return `ok: true`, redirect the user to the detail page, and leave a meeting row behind with no attendees and no calendar sync.  
+Fix: dedupe attendee emails before insert and either wrap meeting+attendee creation in one transaction or delete/mark the meeting failed before returning.
+
+[MEDIUM] `src/app/[locale]/app/meetings/actions.ts:663` — Stale `pending` meetings are not recoverable  
+Exploit: any crash/timeout after the initial `meetings` insert, or any path that never reaches a later status update, leaves `calendar_sync_status='pending'`, but retry only accepts `failed`/`fallback_ics`, so the row gets stuck permanently.  
+Fix: allow guarded retries for stale `pending` rows and/or run a reconciler that marks aged pending rows failed with an actionable error.
+
+[MEDIUM] `src/lib/google/calendar.ts:112` — Calendar sync retries blindly create new Google events  
+Exploit: if the first Google `POST /events` succeeds but the response or DB update is lost, the next retry issues another create call instead of reconciling the first event, producing duplicate attendee events/invites.  
+Fix: persist meeting-scoped external sync identity/state and retry by reconciling the same Google event rather than blind create calls.
+
+[MEDIUM] `src/app/[locale]/app/meetings/actions.ts:727` — Retrying from `fallback_ics` resends duplicate ICS invite emails  
+Exploit: every retry that still cannot sync Google calls `sendIcsInvite` again, so attendees can receive repeated identical invite emails with no explicit resend intent.  
+Fix: record invite-send state/idempotency and skip automatic ICS re-sends on retry unless the user explicitly requests re-notification.
+
+[LOW] `src/lib/email/meeting-template.ts:136` — Blockquote markdown never renders  
+Exploit: summary lines starting with `>` are escaped to `&gt;` before parsing, so the later `^> ` blockquote matcher is dead code and quoted text renders literally.  
+Fix: parse structural blockquote markers before escaping inner text, or special-case the leading `>` while keeping the content escaped.
+
+No confirmed bugs from the checked code in these areas:
+- Google `429`/`403`/`500` paths do fall through to ICS fallback instead of throwing out of `createMeeting`.
+- I did not find a path that returns the refresh token to the client, interpolates it into a Resend email body, or ships `auth.ts` into the client bundle; the confirmed leak is the raw server log path above.
+- `buildIcs()` uses CRLF line endings, UTF-8 byte-aware folding, correct escape order, and correct UTC date formatting.
+- I did not confirm HTML XSS in the email renderer: markdown links are not implemented, and `projectName`, `meetingTitle`, and `cancelReason` are HTML-escaped.
+- I could not verify direct `meetings`/`meeting_attendees` RLS policy bypasses from SQL because the Phase 1.3 meetings migration file itself was not present in this workspace snapshot.

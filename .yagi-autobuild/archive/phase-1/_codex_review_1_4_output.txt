@@ -1,0 +1,41 @@
+[HIGH] src/lib/share/rate-limit.ts:38 — Public rate limit is bypassable and effectively unbounded
+Exploit: Any scriptable caller can rotate `x-forwarded-for`/`x-real-ip` values, and per-instance `Map` buckets reset across cold starts, so `/api/share/[token]/comments` can drive essentially unlimited notification emails rather than the intended `10/hr/IP`.
+Fix: Move rate limiting to a shared store keyed from a trusted platform-provided client IP/header, and ignore caller-supplied forwarding headers.
+
+[HIGH] src/app/api/share/[token]/approve/route.ts:45 — Anyone with the share link can irreversibly approve and spoof the approver identity
+Exploit: The endpoint only checks `share_token` + `share_enabled` + `status='shared'`, then writes `approved_by_email` from request JSON, so any holder of the public link can finalize the board as `ceo@client.com`.
+Fix: Require a verified approval capability bound to the share session/token recipient, or treat public approval as non-final until confirmed by an authenticated YAGI user.
+
+[HIGH] src/app/[locale]/app/preprod/[id]/actions.ts:19, src/lib/share/share-data.ts:100 — Server actions trust arbitrary storage paths and the share page signs them with service role
+Exploit: A logged-in caller can invoke `addFrame`/`createFrameRevision` with someone else’s `media_storage_path`/`thumbnail_path`, and `/s/[token]` will service-sign and expose that private object.
+Fix: Derive storage paths server-side or reject any path that is not under the current board’s exact prefix before persisting it.
+
+[HIGH] src/app/[locale]/app/preprod/[id]/actions.ts:152, src/lib/share/share-data.ts:86 — Cross-project private references can be attached and leaked publicly
+Exploit: `updateFrame` accepts arbitrary `reference_ids`, and `loadShareData()` fetches/signs those references by ID only, so a crafted request can expose another project’s private reference assets on the public share page.
+Fix: Validate every `reference_id` against `board.project_id` on write and re-check `project_id` before fetching/signing references on read.
+
+[MEDIUM] src/app/[locale]/app/preprod/actions.ts:25 — `createBoard` authorizes the board workspace, not the target project
+Exploit: A caller who can insert into `preprod_boards` can submit any `projectId` UUID, creating a board attached to a project they may not be allowed to access because the action never verifies project visibility/ownership.
+Fix: Before insert, load the target project and require the caller to be allowed on that project (or require `is_yagi_admin` explicitly).
+
+[MEDIUM] src/app/[locale]/app/preprod/page.tsx:58, src/app/[locale]/app/preprod/[id]/page.tsx:28 — Any `yagi-internal` member gets global preprod visibility
+Exploit: The page guards explicitly allow `is_ws_member(uid, yagi-internal)` rather than `is_yagi_admin`, so adding one non-admin user to `yagi-internal` grants board-list/editor access across all client projects.
+Fix: Gate preprod pages/actions on `is_yagi_admin` or a dedicated preprod role, not generic membership in the internal workspace.
+
+[MEDIUM] src/app/api/share/[token]/reactions/route.ts:62 — Reaction identity is unverified and the UPSERT lets callers overwrite someone else’s vote
+Exploit: Because `(frame_id, reactor_email)` is the identity and `reactor_email` comes straight from the request body, anyone with the link can replace another participant’s reaction by posting their email.
+Fix: Bind reactions to a server-issued anonymous identity/session token instead of a self-asserted email address.
+
+[LOW] src/components/preprod/board-editor.tsx:456 — Editor feedback math drops all `needs_change` reactions
+Exploit: The public UI/posts use `needs_change`, but the editor aggregates/display logic still expects `hand`, so totals, badges, and sentiment are wrong for that reaction type.
+Fix: Normalize the enum to `needs_change` everywhere in the editor state and rendering.
+
+[LOW] src/components/share/fast-feedback-bar.tsx:129 — Clicking the same reaction twice falsely looks like “undo”
+Exploit: The client sets `selected` to `null` on a repeat click, but the backend only UPSERTs and never deletes, so the user sees their reaction removed while the stored vote remains.
+Fix: Either add a delete/unset endpoint or keep the button selected when the same reaction is re-submitted.
+
+No confirmed bug found for stored XSS: comment/approval emails escape HTML in `src/app/api/share/[token]/comments/route.ts:8` and `src/app/api/share/[token]/approve/route.ts:7`, and comment rendering on `src/app/s/[token]/page.tsx:260` and `src/components/preprod/board-editor.tsx:622` relies on React escaping rather than raw HTML injection.
+
+No practical token-enumeration bug found: tokens are `randomBytes(32).toString("base64url")` in `src/app/[locale]/app/preprod/[id]/share-actions.ts:28`, and `/s/[token]` collapses missing/unshared/archived boards to the same null path; the only distinct response I saw is `/approve` returning `409` for an already-valid approved token, which is not brute-forceable at 256-bit entropy.
+
+I could not verify migration-only claims such as trigger owner/`SECURITY DEFINER` role, partial unique indexes, table/storage RLS, or realtime publication grants because the Phase 1.4 SQL migration is not present in this checkout.

@@ -1,0 +1,66 @@
+You are an adversarial security/correctness reviewer for YAGI Workshop Phase 1.2.5 (just completed). The build is clean (0 errors, 0 warnings); your job is to find real bugs the build cannot catch.
+
+PHASE 1.2.5 SCOPE (review ONLY these areas — Phase 1.1/1.2 base is out of scope unless directly modified by 1.2.5):
+
+Files created:
+- src/lib/references/video.ts — validateVideoFile + readVideoMetadata (canvas poster + duration)
+- src/lib/references/pdf.ts — validatePdfFile + readPdfMetadata (dynamic pdfjs-dist + CDN worker)
+- src/lib/og-video-unfurl.ts — unfurlVideoUrl (YouTube/Vimeo/TikTok/Instagram oEmbed dispatch with inlined SSRF guard)
+- src/lib/thread-attachments.ts — kindForMime / validateAttachment / uploadAttachment helpers
+- src/components/project/intake-mode-picker.tsx — radio cards
+- src/components/project/proposal-fields.tsx — conditional field group
+- src/components/project/video-player.tsx — three render paths (upload/embed/external)
+
+Files modified:
+- src/components/project/reference-uploader.tsx — video tab + PDF branch + url tab calls addReferenceFromUrl
+- src/components/project/reference-grid.tsx — media_type dispatch + dual signed URLs (storage_path + thumbnail_path)
+- src/components/project/thread-panel.tsx — composer attachments chips + bubble attachment rendering
+- src/components/project/thread-panel-server.tsx — fetches attachments + signed URLs server-side
+- src/app/[locale]/app/projects/[id]/ref-actions.ts — addReference accepts media_type/duration/thumbnail/embed_provider/page_count + new addReferenceFromUrl + path-safety guard
+- src/app/[locale]/app/projects/[id]/thread-actions.ts — new sendMessageWithAttachments
+- src/app/[locale]/app/projects/new/new-project-wizard.tsx — 4-step wizard with intake-mode → brief → refs → review
+- src/app/[locale]/app/projects/new/actions.ts — z.discriminatedUnion('intake_mode', [briefSchema, proposalSchema])
+- src/app/[locale]/app/projects/[id]/page.tsx — intake mode badge + Client Context card
+
+Migrations applied (live in DB; not in supabase/migrations/ locally):
+- project_references: + media_type ('image'|'video'|'pdf') NOT NULL default 'image', + duration_seconds, + page_count, + thumbnail_path, + embed_provider ('youtube'|'vimeo'|'tiktok'|'instagram')
+- projects: + intake_mode ('brief'|'proposal_request') NOT NULL default 'brief', + proposal_goal/audience/budget_range/timeline
+- thread_message_attachments (new table): id, message_id (CASCADE), kind ('image'|'video'|'pdf'|'file'), storage_path, file_name, mime_type, size_bytes (CHECK ≤500MB), thumbnail_path, created_at
+  RLS: PERMISSIVE select (workspace membership via msg→thread→project chain) + PERMISSIVE insert (author_id matches auth.uid()) + RESTRICTIVE thread_attachments_hide_internal_from_clients (excludes attachments on internal-visibility messages from non-yagi_admin users)
+- thread_messages insert RLS tightened: visibility='internal' restricted to is_yagi_admin
+- Storage bucket thread-attachments (private) + RLS on storage.objects keyed by split_part(name, '/', 1)::project_id requiring is_ws_member of that workspace
+
+SPECIFIC ADVERSARIAL FOCUS (rank findings HIGH/MEDIUM/LOW; cite file:line; one-line fix each):
+
+1. **Internal-attachment RLS leakage** — can a workspace_member with role='member' (non-yagi_admin) SELECT a thread_message_attachments row whose parent message has visibility='internal'? The PERMISSIVE select policy + RESTRICTIVE hide-internal policy combine — verify the AND semantics actually exclude internal attachments. Also: does the storage RLS on thread-attachments bucket re-check internal visibility, or only workspace membership? If a member knows the storage_path of an internal attachment (e.g. leaked via timing/error message), can they get a signed URL for it via thread-panel-server.tsx's bulk signed-URL pass?
+
+2. **Signed URL TTL on large videos** — src/components/project/reference-grid.tsx and src/components/project/thread-panel-server.tsx use 1-hour signed URLs. For a 500 MB video on slow client networks (e.g. 1 Mbps = ~70 minutes), the URL can expire mid-stream. What happens? Does the user see a broken player with no error, or does it gracefully retry? Is there a visible error path?
+
+3. **Intake_mode discriminated union bypass** — src/app/[locale]/app/projects/new/actions.ts uses z.discriminatedUnion('intake_mode', [briefSchema, proposalSchema]). Can a malicious client POST `{intake_mode: 'brief', proposal_goal: '<XSS>'}` and have proposal_goal end up in the DB anyway? Does the brief branch strip extra fields, or does the discriminated union pass them through? Inspect the insert payload construction lines.
+
+4. **Storage path injection via attachment uploads** — src/lib/thread-attachments.ts builds `{projectId}/{threadId}/{messageId ?? 'pending'}/{uuid}__{safeFileName}`. The safeFileName replaces / and \ with _, caps length 200. But projectId and threadId come from React state — can a client browser-side modify these to write into another project's namespace? The storage RLS only verifies the FIRST path segment, so what if a client substitutes a different projectId at upload time but then references the row with the original projectId? Does sendMessageWithAttachments's path-safety guard (`storage_path must start with ${projectId}/`) actually prevent this?
+
+5. **Reference path-safety re addReference** — ref-actions.ts pathBelongsToProject() checks startsWith(`${projectId}/`). But projectId is also user-supplied. If the client sends `{projectId: 'A', storage_path: 'A/x.jpg'}` for a project A they don't actually have access to, does RLS on project_references INSERT reject it? Audit the insert path.
+
+6. **og-video-unfurl SSRF parity with og-unfurl** — src/lib/og-video-unfurl.ts inlines an SSRF guard. Compare carefully to src/lib/og-unfurl.ts (Phase 1.2 hardened): does it check IPv6 private ranges (::1, fc00::/7, fe80::/10, IPv4-mapped), DNS resolution, and re-validate on redirects? oEmbed endpoints are well-known (youtube.com, vimeo.com, etc.) but what if an attacker passes a youtube.com URL that the YouTube API redirects to an internal Google IP? Or what if hostname dispatch is fooled by `https://attacker.com#youtube.com`?
+
+7. **PDF worker CDN integrity** — src/lib/references/pdf.ts loads pdfjs worker from `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.6.205/build/pdf.worker.min.mjs` with no SRI. If jsdelivr is compromised or a network attacker swaps the worker, what's the blast radius? The worker runs in the user's browser context — can it exfiltrate the user's Supabase session token from localStorage or cookies?
+
+8. **Discriminated union in addReference media_type defaulting** — ref-actions.ts derives mediaType: if d.embed_provider set → 'video', else if d.storage_path → 'image', else 'image'. Can a client submit `{media_type: 'pdf', storage_path: '...mp4'}` and have a video file labeled as a PDF? media_type is user-supplied. Does anything cross-validate it against actual mime_type or file extension?
+
+9. **Attachment count cap enforcement** — thread-panel.tsx caps attachments at 5 client-side. sendMessageWithAttachments Zod schema also caps at 5 (per result file). Verify both layers actually enforce. What if a client sends 6 — does the Zod schema reject the whole request, or insert the first 5 and silently drop the rest?
+
+10. **Realtime + attachments** — thread-panel.tsx subscribes to thread_messages INSERT but doesn't subscribe to thread_message_attachments. The sender does a one-shot fetch after their own send. But what about OTHER clients in the same thread — do they see new messages with empty attachment lists when realtime fires? Is the next page revalidation sufficient, or do they sit with stale data until reload?
+
+11. **Embed iframe sandbox** — video-player.tsx renders YouTube/Vimeo iframes inline. Are they sandboxed? Can a malicious oEmbed thumbnail_url field leak to an attacker-controlled iframe (XSS via thumbnail_url not being URL-validated)?
+
+12. **Thread message body now optional** — sendMessageWithAttachments allows body to be empty when attachments present. But the existing thread_messages table likely has a NOT NULL constraint or CHECK on body. Verify the insert payload handles body=null/empty and the DB accepts it.
+
+Output format per finding:
+```
+[SEVERITY] file:line — short title
+Exploit: <one sentence>
+Fix: <one sentence>
+```
+
+If you find NO real bugs in a focus area, say so explicitly. Do not fabricate findings to fill quota. Quality over quantity.
