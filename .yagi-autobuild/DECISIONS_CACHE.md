@@ -1131,3 +1131,57 @@ UI dropdown 최종 5개 + 카피:
 
 **Confidence:** HIGH (야기 직접 reference 제공 2026-04-27)
 **Registered:** 2026-04-27 (Phase 2.9 SHIPPED)
+
+---
+
+### Q-093: Project lifecycle — canonical 9-state machine + actor_role separation + auto submitted→in_review
+
+**Asked context:** Phase 3.0 reactivated the B-O-E system to redesign the project lifecycle. yagi confirmed 7 decisions on 2026-04-27 covering state machine, role permissions, approval pattern, history persistence. The canonical truth table needed to live in DECISIONS_CACHE so future status work (cancellation patterns, contest status in Phase 6+, archival policy) inherits the same invariants.
+
+**Question:** What is the canonical project state machine, who can transition where, and how is it enforced?
+
+**Answer:**
+
+1. **9 states**: `draft, submitted, in_review, in_progress, in_revision, delivered, approved, cancelled, archived`. Implemented as `projects.status text NOT NULL DEFAULT 'draft'` with CHECK constraint over the 9 values. The `submitted` state is observable in the schema but rarely seen in practice — see #4.
+
+2. **Three actor_role classes** (resolved server-side, never trusted from client):
+   - `client` — workspace member who created the project. Resolved when `user_roles.role NOT IN ('yagi_admin','workspace_admin')`.
+   - `yagi_admin` / `workspace_admin` — admin classes; resolved from `user_roles` table (NOT `profiles.role` — that column does not exist).
+   - `system` — server-only role assigned by `submitProjectAction` via service-role client for the single auto-transition. Never assignable through the public RPC.
+
+3. **Allowed transitions** (canonical truth table, exact match enforced by `is_valid_transition(from, to, actor_role)` IMMUTABLE SQL function):
+
+   | From | To | client | yagi_admin / workspace_admin | system |
+   |---|---|---|---|---|
+   | draft | submitted | ✓ | — | — |
+   | submitted | in_review | — | — | ✓ (only system path) |
+   | in_review | in_progress | — | ✓ | — |
+   | in_progress | in_revision | ✓ | — | — |
+   | in_progress | delivered | — | ✓ | — |
+   | in_revision | in_progress | — | ✓ | — |
+   | delivered | in_revision | ✓ | — | — |
+   | delivered | approved | ✓ (client-only) | — | — |
+   | [draft..delivered] → cancelled | ✓ | ✓ | — |
+   | approved | archived | — | ✓ | — |
+
+   All other (from, to, role) combinations → FALSE. Note: `delivered → approved` is intentionally client-only — admin cannot approve their own work on behalf of the client.
+
+4. **Auto-transition `submitted → in_review` is the ONLY system-role transition** (L-015). Client-side `submitProjectAction` writes `status='in_review'` directly via service-role client (which bypasses the trigger guard), and inserts the initial history row with `actor_role='system'`. UX rationale: client must see "검토 중" immediately on submit; the literal `submitted` state is functional metadata only. Implication: the `submitted` row in `project_status_history` is the *from-state* of the system transition, not a user-observable state on `projects`.
+
+5. **All non-auto transitions go through `transition_project_status(p_project_id, p_to_status, p_comment) RETURNS uuid` SECURITY DEFINER RPC** with `SET search_path = public`. The RPC: resolves actor_role from `auth.uid()` against `user_roles`, validates via `is_valid_transition`, enforces `comment ≥10 chars` for `in_revision` (RAISE EXCEPTION `comment_required_min_10_chars`), updates projects, inserts history row, all in one plpgsql transaction. **Direct UPDATE on `projects.status` from any other code path is blocked by a BEFORE UPDATE trigger** (`guard_projects_status_direct_update`) that checks `local.transition_rpc_active` session variable.
+
+6. **History is a separate immutable table** (`project_status_history`) with RLS that DENIES all client/admin INSERTs at the policy level — only the SECURITY DEFINER RPC and scoped service-role calls can insert. Realtime publication enabled with both `ALTER PUBLICATION supabase_realtime ADD TABLE ...` AND `GRANT SELECT ... TO authenticated, anon` (L-020).
+
+7. **`projects.kind` extensible enum**: currently CHECK-constrained to `'direct'` only. Phase 6+ will add `'contest'`. All Phase 3.0 query paths assume `kind='direct'` implicitly (via the CHECK), so contest extension is forward-compatible: change CHECK → add `kind='contest'` queries → no existing path needs to be rewritten.
+
+8. **Approval surface = comment textarea + button** (yagi Q3=B), not a multi-step modal. Optional comment, persisted to history.
+
+9. **Carry-over scope discipline**: Phase 3.0 is status machine + wizard ONLY. No challenges restructure, no contest UI, no Phase 2.10 leftovers. Stale `database.types.ts` (Phase 3.0 columns not in generated types) is acceptable tech debt for this phase — handled via `as any` cast pattern (L-022).
+
+**Rationale:** Centralizing the truth table in DECISIONS_CACHE prevents future regressions where someone reads the migration file or a UI component and reconstructs a slightly-different state machine. Any contest/cancellation/archival work in Phase 6+ inherits this matrix verbatim or extends it explicitly. The strict separation of `client / admin / system` actor classes is what makes the L-015 auto-transition safe — `system` cannot be spoofed because the public RPC has no `system` branch and the trigger guard plus RLS together prevent a client from forging a history row.
+
+**Applies when:** Any future status-machine work — Phase 3.1 cancellation policy, Phase 6+ contest status, archival cron, project clone/duplicate flows. Read this Q before writing a new transition. Verify `is_valid_transition` before touching status anywhere.
+
+**Confidence:** HIGH (yagi 7 decisions confirmed 2026-04-27; K-05 LOOP_2_PASS_DIRECT_VERIFY 2026-04-28 — RPC SECURITY DEFINER + search_path + role separation + RLS all directly verified via pg_policy/pg_proc)
+
+**Registered:** 2026-04-28 (Phase 3.0 SHIPPED, sha a8e9a02 + ff-merge to main)
