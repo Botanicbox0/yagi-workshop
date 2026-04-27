@@ -510,12 +510,23 @@
     "submit_project": "Submit project",
     "status_draft": "Draft",
     "status_submitted": "Submitted",
+    "status_in_review": "In review",
     "status_in_discovery": "In discovery",
     "status_in_production": "In production",
+    "status_in_progress": "In progress",
     "status_in_revision": "In revision",
     "status_delivered": "Delivered",
     "status_approved": "Approved",
+    "status_cancelled": "Cancelled",
     "status_archived": "Archived",
+    "detail_submitted_at": "Submitted",
+    "timeline_label": "Status history",
+    "timeline_empty": "No status transitions yet.",
+    "admin": {
+      "queue": {
+        "empty": "No projects at this time"
+      }
+    },
     "transition_submit": "Submit",
     "transition_start_discovery": "Start discovery",
     "transition_start_production": "Start production",
@@ -718,6 +729,7 @@
     }
   },
   "admin": {
+    "label": "Admin",
     "title": "Admin dashboard",
     "projects_tab": "Projects",
     "workspaces_tab": "Workshops",
@@ -1178,6 +1190,10 @@
       "support_message_new": {
         "title": "New support message",
         "body": "{actor}: {excerpt}"
+      },
+      "project_submitted": {
+        "title": "Project received",
+        "body": "\"{project_name}\" is now under review. We will respond within 1 business day."
       }
     }
   },

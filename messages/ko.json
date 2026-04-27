@@ -510,12 +510,23 @@
     "submit_project": "프로젝트 제출",
     "status_draft": "초안",
     "status_submitted": "제출됨",
+    "status_in_review": "검토 중",
     "status_in_discovery": "디스커버리",
     "status_in_production": "프로덕션",
+    "status_in_progress": "진행 중",
     "status_in_revision": "수정 요청",
     "status_delivered": "납품 완료",
     "status_approved": "승인됨",
+    "status_cancelled": "취소됨",
     "status_archived": "보관됨",
+    "detail_submitted_at": "제출일",
+    "timeline_label": "상태 이력",
+    "timeline_empty": "아직 상태 변경 이력이 없습니다.",
+    "admin": {
+      "queue": {
+        "empty": "현재 프로젝트가 없습니다"
+      }
+    },
     "transition_submit": "제출하기",
     "transition_start_discovery": "디스커버리 시작",
     "transition_start_production": "프로덕션 시작",
@@ -718,6 +729,7 @@
     }
   },
   "admin": {
+    "label": "관리",
     "title": "관리자 대시보드",
     "projects_tab": "프로젝트",
     "workspaces_tab": "워크샵",
@@ -1178,6 +1190,10 @@
       "support_message_new": {
         "title": "야기 팀과의 대화에 새 메시지",
         "body": "{actor}: {excerpt}"
+      },
+      "project_submitted": {
+        "title": "의뢰가 접수되었습니다",
+        "body": "\"{project_name}\" 의뢰가 검토 중입니다. 1 영업일 이내에 회신드립니다."
       }
     }
   },
