@@ -9,6 +9,7 @@ import {
   SheetDescription,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { SidebarBrand } from "./sidebar-brand";
 import { SidebarScopeSwitcher } from "./sidebar-scope-switcher";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarUserMenu } from "./sidebar-user-menu";
@@ -37,6 +38,7 @@ function SidebarBody({
       }}
     >
       <div className="p-5 border-b border-border">
+        <SidebarBrand />
         <SidebarScopeSwitcher onNavigate={onNavigate} />
       </div>
       <div className="flex-1 overflow-y-auto py-3">
