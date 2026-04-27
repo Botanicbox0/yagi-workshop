@@ -147,6 +147,7 @@ export async function softDeleteProject(formData: FormData) {
   if (updateErr) return { error: "db" as const, message: updateErr.message };
 
   revalidatePath(`/[locale]/app/projects`, "page");
+  revalidatePath(`/[locale]/app/projects/${parsed.data.projectId}`, "page");
   revalidatePath(`/[locale]/app/admin/trash`, "page");
   return { ok: true as const };
 }
@@ -166,6 +167,7 @@ export async function restoreProject(formData: FormData) {
   if (updateErr) return { error: "db" as const, message: updateErr.message };
 
   revalidatePath(`/[locale]/app/projects`, "page");
+  revalidatePath(`/[locale]/app/projects/${parsed.data.projectId}`, "page");
   revalidatePath(`/[locale]/app/admin/trash`, "page");
   return { ok: true as const };
 }

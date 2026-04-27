@@ -203,17 +203,30 @@ export function ThreadPanel({
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "thread_messages" },
-        (payload) => {
+        async (payload) => {
           const row = payload.new as ThreadMessage;
           // Filter client-side: only rows whose thread belongs to this project.
           if (threadId && row.thread_id === threadId) {
             setMessages((prev) =>
               prev.some((m) => m.id === row.id) ? prev : [...prev, row]
             );
-            // Update threadId if it was null (first message created the thread)
-          } else if (!threadId) {
-            // If we don't know the thread yet, update and show the message
-            setThreadId(row.thread_id);
+            return;
+          }
+          // Phase 2.8.2 K-05 LOOP 1 — when threadId is unknown locally,
+          // we MUST verify the inserted row's thread actually belongs to
+          // THIS project before accepting. RLS gates the workspace, but
+          // a workspace can hold multiple projects, so blindly trusting
+          // the first visible INSERT (the previous code path) leaked
+          // other-project messages into this panel.
+          if (!threadId) {
+            const { data: t } = await supabase
+              .from("project_threads")
+              .select("id")
+              .eq("id", row.thread_id)
+              .eq("project_id", projectId)
+              .maybeSingle();
+            if (!t) return; // not our project — drop the row.
+            setThreadId(t.id);
             setMessages((prev) =>
               prev.some((m) => m.id === row.id) ? prev : [...prev, row]
             );

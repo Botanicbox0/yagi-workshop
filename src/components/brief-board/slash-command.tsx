@@ -288,6 +288,16 @@ export function createSlashCommandSuggestion(
         },
         onUpdate: (props) => {
           if (!component) return;
+          // Phase 2.8.2 K-05 LOOP 1 — IME guard mid-popup. items() already
+          // returns [] during composition, but we additionally hide the
+          // tippy popup so positioning logic does not reflow on every
+          // jamo keystroke.
+          if (props.editor.view.composing) {
+            popup[0]?.hide();
+            return;
+          } else {
+            popup[0]?.show();
+          }
           component.updateProps({
             items: props.items,
             command: (item: SlashItem) =>
@@ -300,6 +310,13 @@ export function createSlashCommandSuggestion(
           });
         },
         onKeyDown: (props) => {
+          // Phase 2.8.2 K-05 LOOP 1 — IME guard for keyboard nav. During
+          // Hangul composition, ArrowUp/Down/Enter are candidate-select
+          // and commit keys at the OS IME layer; we MUST NOT consume them
+          // for slash-menu navigation or composition characters silently
+          // get dropped (Codex K-05 HIGH-B #2). The Suggestion plugin
+          // exposes `view` (EditorView), not `editor`, in this lifecycle.
+          if (props.view.composing) return false;
           if (props.event.key === "Escape") {
             popup[0]?.hide();
             return true;
