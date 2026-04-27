@@ -32,6 +32,7 @@ const SPRING = {
 type Strings = {
   card1Eyebrow: string;
   card1Title: string;
+  card1TitleSub: string;
   card1Body: string;
   card1Alt: string;
   card2Eyebrow: string;
@@ -77,6 +78,11 @@ export function InteractiveVisualStack({ strings }: { strings: Strings }) {
             </p>
             <h3 className="font-suit text-xl lg:text-2xl font-bold text-white leading-tight tracking-tight">
               {strings.card1Title}
+              {strings.card1TitleSub && (
+                <span className="text-white/70 text-base font-normal ml-2">
+                  {strings.card1TitleSub}
+                </span>
+              )}
             </h3>
             <p className="text-sm text-white/80 mt-2 leading-relaxed keep-all">
               {strings.card1Body}
@@ -133,9 +139,11 @@ export function InteractiveVisualStack({ strings }: { strings: Strings }) {
             </p>
             <h3 className="font-suit text-xl lg:text-2xl font-bold text-white leading-tight tracking-tight">
               {strings.card2Title}
-              <span className="text-white/70 text-base font-normal ml-2">
-                {strings.card2TitleSub}
-              </span>
+              {strings.card2TitleSub && (
+                <span className="text-white/70 text-base font-normal ml-2">
+                  {strings.card2TitleSub}
+                </span>
+              )}
             </h3>
             <p className="text-sm text-white/80 mt-2 leading-relaxed keep-all">
               {strings.card2Body}

@@ -87,6 +87,7 @@ export async function ProjectsHubHero({ locale }: Props) {
         strings={{
           card1Eyebrow: t("hero_sample_1_eyebrow"),
           card1Title: t("hero_sample_1_title"),
+          card1TitleSub: t("hero_sample_1_title_sub"),
           card1Body: t("hero_sample_1_sub"),
           card1Alt: t("hero_sample_1_title"),
           card2Eyebrow: t("hero_sample_2_eyebrow"),
