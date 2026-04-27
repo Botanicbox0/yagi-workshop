@@ -35,12 +35,25 @@ import {
   type BriefActionResult,
 } from "@/app/[locale]/app/projects/[id]/brief/actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { ImageBlock } from "./blocks/image-block";
 import { FileBlock } from "./blocks/file-block";
 import { EmbedBlock } from "./blocks/embed-block";
 import { YagiRequestModal } from "./yagi-request-modal";
 import { resizeImageIfNeeded } from "@/lib/brief-board/resize-image";
+import {
+  SlashCommandExtension,
+  createSlashCommandSuggestion,
+} from "./slash-command";
+import "tippy.js/dist/tippy.css";
 
 const EMBED_URL_RE = /^\s*(https?:\/\/\S+)\s*$/i;
 
@@ -123,6 +136,32 @@ export function BriefBoardEditor({
 
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
 
+  // Phase 2.8.2 G_B2_B — toolbar / slash-command / drag-drop overlay.
+  // Refs to hidden file inputs (image vs. file accept filters); embed
+  // modal state lives in the parent so the slash command can open it.
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [embedOpen, setEmbedOpen] = useState(false);
+  const [embedDraft, setEmbedDraft] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepthRef = useRef(0); // dragenter/leave bubble; track depth.
+
+  // Slash command items + render config. Memoized on `t` so the items
+  // pick up locale changes; the trigger handlers are stable closures
+  // over refs / setState.
+  const slashSuggestion = useMemo(
+    () =>
+      createSlashCommandSuggestion(
+        {
+          onPickImage: () => imageInputRef.current?.click(),
+          onPickFile: () => fileInputRef.current?.click(),
+          onPickEmbed: () => setEmbedOpen(true),
+        },
+        (k) => t(k as Parameters<typeof t>[0]),
+      ),
+    [t],
+  );
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -132,6 +171,7 @@ export function BriefBoardEditor({
       ImageBlock,
       FileBlock,
       EmbedBlock,
+      SlashCommandExtension.configure({ suggestion: slashSuggestion }),
     ],
     content: initialContent ?? EMPTY_DOC,
     editable,
@@ -490,13 +530,127 @@ export function BriefBoardEditor({
 
   const isEmpty = editor.isEmpty;
 
+  // Drag-drop overlay handlers — DOM-level so we can render the visual
+  // "이미지를 끌어다 놓으세요" cue. The actual file processing is owned
+  // by ProseMirror's handleDrop above (which also runs and short-circuits
+  // before browser default). Counter pattern guards against dragenter /
+  // dragleave bubbling from child nodes (e.g., headings inside the editor)
+  // resetting the overlay mid-drag.
+  function onContainerDragEnter(e: React.DragEvent<HTMLDivElement>) {
+    if (!editable) return;
+    if (!Array.from(e.dataTransfer?.types ?? []).includes("Files")) return;
+    dragDepthRef.current += 1;
+    setDragOver(true);
+  }
+  function onContainerDragLeave(_e: React.DragEvent<HTMLDivElement>) {
+    if (!editable) return;
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setDragOver(false);
+  }
+  function onContainerDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (!editable) return;
+    if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) {
+      e.preventDefault();
+    }
+  }
+  function onContainerDrop(_e: React.DragEvent<HTMLDivElement>) {
+    // ProseMirror's handleDrop has already done the work; just reset
+    // the overlay state. We don't preventDefault here because PM owns
+    // the drop semantics; we only own the visual cue.
+    dragDepthRef.current = 0;
+    setDragOver(false);
+  }
+
+  function onImagePickerChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = "";
+    if (files.length > 0) void handleFilesUpload(files);
+  }
+  function onFilePickerChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = "";
+    if (files.length > 0) void handleFilesUpload(files);
+  }
+  function onEmbedSubmit(ev: React.FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+    const url = embedDraft.trim();
+    setEmbedDraft("");
+    setEmbedOpen(false);
+    if (url) void handleEmbedPaste(url);
+  }
+
   return (
     <div
       className={cn(
         "relative border border-border rounded-lg bg-background",
         className
       )}
+      onDragEnter={onContainerDragEnter}
+      onDragLeave={onContainerDragLeave}
+      onDragOver={onContainerDragOver}
+      onDrop={onContainerDrop}
     >
+      {/* Hidden file pickers — opened by the toolbar buttons + slash command */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={onImagePickerChange}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={onFilePickerChange}
+      />
+
+      {/* Drag-drop overlay — non-interactive, sits above editor content */}
+      {dragOver && editable && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-lg border-2 border-dashed border-foreground bg-background/85"
+        >
+          <p className="text-sm font-medium tracking-tight keep-all">
+            {t("dragdrop_overlay")}
+          </p>
+        </div>
+      )}
+
+      {/* Embed modal — opened by toolbar embed button or slash:embed item */}
+      <Dialog open={embedOpen} onOpenChange={setEmbedOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("embed_modal_title")}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={onEmbedSubmit} className="space-y-3">
+            <Input
+              type="url"
+              autoFocus
+              required
+              value={embedDraft}
+              onChange={(e) => setEmbedDraft(e.target.value)}
+              placeholder={t("embed_modal_url_ph")}
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setEmbedDraft("");
+                  setEmbedOpen(false);
+                }}
+              >
+                {t("embed_modal_cancel")}
+              </Button>
+              <Button type="submit">{t("embed_modal_submit")}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {mode === "viewer" && (
         <div className="px-4 py-2 flex items-center justify-between text-xs font-medium uppercase tracking-[0.12em] bg-foreground/5 text-foreground border-b border-border">
           <span>
@@ -522,7 +676,12 @@ export function BriefBoardEditor({
 
       {mode === "full" && editable && (
         <div className="px-4 py-2 flex items-center justify-between border-b border-border">
-          <Toolbar editor={editor} />
+          <Toolbar
+            editor={editor}
+            onPickImage={() => imageInputRef.current?.click()}
+            onPickFile={() => fileInputRef.current?.click()}
+            onPickEmbed={() => setEmbedOpen(true)}
+          />
           <span
             className={cn(
               "text-xs tabular-nums",
@@ -581,12 +740,19 @@ export function BriefBoardEditor({
 
 function Toolbar({
   editor,
+  onPickImage,
+  onPickFile,
+  onPickEmbed,
 }: {
   editor: ReturnType<typeof useEditor> & object;
+  onPickImage: () => void;
+  onPickFile: () => void;
+  onPickEmbed: () => void;
 }) {
   // The editor is non-null at the call site — Toolbar is only rendered
   // when `editor` is truthy in the parent.
   const e = editor as NonNullable<typeof editor>;
+  const t = useTranslations("brief_board");
   return (
     <div className="flex flex-wrap items-center gap-1">
       <ToolbarButton
@@ -639,6 +805,31 @@ function Toolbar({
         onClick={() => e.chain().focus().toggleBlockquote().run()}
         label="❝"
       />
+      <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+      <ToolbarButton
+        active={false}
+        onClick={onPickImage}
+        label={t("toolbar_image")}
+        ariaLabel={t("toolbar_image_label")}
+      />
+      <ToolbarButton
+        active={false}
+        onClick={onPickFile}
+        label={t("toolbar_file")}
+        ariaLabel={t("toolbar_file_label")}
+      />
+      <ToolbarButton
+        active={false}
+        onClick={onPickEmbed}
+        label={t("toolbar_embed")}
+        ariaLabel={t("toolbar_embed_label")}
+      />
+      <ToolbarButton
+        active={false}
+        onClick={() => e.chain().focus().setHorizontalRule().run()}
+        label={t("toolbar_divider")}
+        ariaLabel={t("toolbar_divider_label")}
+      />
     </div>
   );
 }
@@ -647,6 +838,7 @@ function ToolbarButton({
   active,
   onClick,
   label,
+  ariaLabel,
   bold,
   italic,
   strike,
@@ -654,6 +846,7 @@ function ToolbarButton({
   active: boolean;
   onClick: () => void;
   label: string;
+  ariaLabel?: string;
   bold?: boolean;
   italic?: boolean;
   strike?: boolean;
@@ -664,6 +857,7 @@ function ToolbarButton({
       variant="ghost"
       size="sm"
       aria-pressed={active}
+      aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
         "h-7 px-2 text-xs rounded-md",
