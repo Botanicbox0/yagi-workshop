@@ -137,6 +137,15 @@ export async function setSupportThreadStatus(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "unauthenticated" };
 
+  // Phase 2.8.6 K-05 LOOP 1 — yagi_admin gate. The DB trigger
+  // support_threads_pin_status_for_client also enforces this, but
+  // the action-layer check returns a useful error code instead of a
+  // generic 42501 from the trigger.
+  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
+    uid: user.id,
+  });
+  if (!isAdmin) return { ok: false, error: "forbidden" };
+
   const { error } = await supabase
     .from("support_threads")
     .update({ status: parsed.data.status })
@@ -188,16 +197,20 @@ async function _emitMessageNotification(args: {
       .is("workspace_id", null)
       .eq("role", "yagi_admin");
     if (adminRoles) {
+      // Phase 2.8.6 K-05 LOOP 1 LOW — exclude the actor in case they
+      // are also a global yagi_admin (would self-ping otherwise).
       await Promise.all(
-        adminRoles.map((r) =>
-          emitNotification({
-            user_id: r.user_id,
-            kind: "support_message_new",
-            workspace_id: thread.workspace_id,
-            payload: { actor: actorName, excerpt },
-            url_path: `/app/admin/support?thread=${args.threadId}`,
-          }),
-        ),
+        adminRoles
+          .filter((r) => r.user_id !== args.actorId)
+          .map((r) =>
+            emitNotification({
+              user_id: r.user_id,
+              kind: "support_message_new",
+              workspace_id: thread.workspace_id,
+              payload: { actor: actorName, excerpt },
+              url_path: `/app/admin/support?thread=${args.threadId}`,
+            }),
+          ),
       );
     }
   } else {

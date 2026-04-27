@@ -345,7 +345,9 @@ async function _emitRequestNotifications(
 
   const actorName = actorProfile?.display_name ?? "Client";
 
-  // notification_events for every yagi_admin user
+  // notification_events for every yagi_admin user (excluding the actor
+  // — Phase 2.8.6 K-05 LOOP 1 LOW finding: the actor may themselves
+  // hold yagi_admin globally, in which case they would self-ping).
   const { data: adminRoles } = await svc
     .from("user_roles")
     .select("user_id")
@@ -354,15 +356,17 @@ async function _emitRequestNotifications(
 
   if (adminRoles) {
     await Promise.all(
-      adminRoles.map((r) =>
-        emitNotification({
-          user_id: r.user_id,
-          kind: "meeting_requested",
-          workspace_id: workspaceId,
-          payload: { actor: actorName, meeting_title: title },
-          url_path: `/app/meetings/${meetingId}`,
-        }),
-      ),
+      adminRoles
+        .filter((r) => r.user_id !== actorId)
+        .map((r) =>
+          emitNotification({
+            user_id: r.user_id,
+            kind: "meeting_requested",
+            workspace_id: workspaceId,
+            payload: { actor: actorName, meeting_title: title },
+            url_path: `/app/meetings/${meetingId}`,
+          }),
+        ),
     );
   }
 

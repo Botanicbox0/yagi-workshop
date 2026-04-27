@@ -185,7 +185,9 @@ export default async function MeetingsPage({ params, searchParams }: Props) {
                     {meeting.project?.title ?? "—"}
                   </td>
                   <td className="px-4 py-3 tabular-nums text-muted-foreground whitespace-nowrap">
-                    {fmt.format(new Date(meeting.scheduled_at))}
+                    {meeting.scheduled_at
+                      ? fmt.format(new Date(meeting.scheduled_at))
+                      : "—"}
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">
                     {meeting.duration_minutes}
