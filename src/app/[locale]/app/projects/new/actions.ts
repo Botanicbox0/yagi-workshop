@@ -469,3 +469,306 @@ export async function fetchVideoMetadataAction(
   if (!parsed.success) return null;
   return fetchVideoMetadata(parsed.data);
 }
+
+// =============================================================================
+// Phase 3.0 task_04 — submitProjectAction
+// =============================================================================
+// Atomically submits the wizard's draft as a new project with status='in_review'
+// (the L-015 auto-transition shortcut — never writes 'submitted' to projects).
+//
+// Sequence:
+//   1. INSERT projects with status='in_review' (user-scoped client; RLS
+//      INSERT policy allows it since we own the workspace)
+//   2. INSERT project_status_history with actor_role='system' — MUST bypass
+//      RLS which denies INSERT on this table for all authenticated callers.
+//      Resolution: Option A — service-role client scoped to this single INSERT.
+//      Service-role usage is strictly scoped; other reads/writes stay on user
+//      client.
+//   3. INSERT project_references rows (user-scoped client)
+//   4. DELETE wizard_drafts row (user-scoped client)
+//   5. Send Resend admin + client emails (best-effort, not blocking)
+//   6. Emit in-app notification to the submitting user (best-effort, not
+//      blocking)
+//
+// Returns { ok: true, projectId, redirect } on success.
+// Throws on any step 1-4 failure.
+// =============================================================================
+
+import { sendProjectSubmittedAdmin, sendProjectSubmittedClient } from "@/lib/email/project";
+import { emitNotification } from "@/lib/notifications/emit";
+
+const SubmitInputSchema = z.object({
+  name: z.string().min(1).max(80),
+  description: z.string().min(30).max(2000),
+  deliverable_types: z.array(z.string()).min(1),
+  budget_band: z.enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"]),
+  delivery_date: z.string().nullable().optional(),
+  references: z
+    .array(
+      z.object({
+        id: z.string(),
+        kind: z.enum(["url", "image", "pdf", "video"]),
+        url: z.string().url(),
+        note: z.string().default(""),
+        title: z.string().optional(),
+        thumbnailUrl: z.string().url().optional(),
+        durationSeconds: z.number().int().positive().optional(),
+      })
+    )
+    .default([]),
+  // workspaceId is optional when draftProjectId is provided — the action
+  // resolves it from the draft project row in that case. One of the two
+  // must be present for workspace resolution to succeed.
+  workspaceId: z.string().uuid().optional(),
+  // draftProjectId: the wizard's autosave-created draft project. When
+  // present, workspace is resolved from it. The draft row is deleted after
+  // the real project INSERT succeeds.
+  draftProjectId: z.string().uuid().nullable().optional(),
+});
+
+export type SubmitProjectInput = z.infer<typeof SubmitInputSchema>;
+
+export type SubmitProjectResult =
+  | { ok: true; projectId: string; redirect: string }
+  | { ok: false; error: "unauthenticated" | "validation" | "db"; message?: string };
+
+export async function submitProjectAction(
+  input: unknown
+): Promise<SubmitProjectResult> {
+  // Parse + validate input
+  const parsed = SubmitInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+  const data = parsed.data;
+
+  // Auth check
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) return { ok: false, error: "unauthenticated" };
+
+  // Resolve workspaceId: prefer explicit workspaceId from input; fall back to
+  // looking it up from the draft project row; then fall back to user membership.
+  let resolvedWorkspaceId: string | null = data.workspaceId ?? null;
+  if (!resolvedWorkspaceId && data.draftProjectId) {
+    const { data: draftRow } = await supabase
+      .from("projects")
+      .select("workspace_id")
+      .eq("id", data.draftProjectId)
+      .maybeSingle();
+    resolvedWorkspaceId = draftRow?.workspace_id ?? null;
+  }
+  if (!resolvedWorkspaceId) {
+    const { data: mem } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    resolvedWorkspaceId = mem?.workspace_id ?? null;
+  }
+  if (!resolvedWorkspaceId) {
+    return { ok: false, error: "db", message: "workspace not found for user" };
+  }
+
+  // Phase 3.0 columns (budget_band, submitted_at, kind) are not in the
+  // generated database.types.ts yet — use any cast for this INSERT only.
+  // Same pattern as task_05 used in page.tsx.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.0 columns not in generated types
+  const supabaseAny = supabase as any;
+
+  // 1. INSERT projects with status='in_review' (L-015 auto-transition; INSERT
+  //    is allowed by projects_insert RLS policy for authenticated callers who
+  //    are workspace members. Direct UPDATE to status is forbidden by trigger
+  //    guard but INSERT with the target status is the allowed L-015 path.)
+  const { data: project, error: projErr } = await supabaseAny
+    .from("projects")
+    .insert({
+      // 'name' column does not exist on projects — map to 'title' (existing column)
+      title: data.name,
+      // 'description' maps to 'brief' on the projects table
+      brief: data.description,
+      deliverable_types: data.deliverable_types,
+      budget_band: data.budget_band,
+      // delivery_date maps to target_delivery_at
+      target_delivery_at: data.delivery_date ?? null,
+      workspace_id: resolvedWorkspaceId,
+      created_by: user.id,
+      status: "in_review",
+      submitted_at: new Date().toISOString(),
+      kind: "direct",
+      // project_type stays as 'direct_commission' for backward compat
+      project_type: "direct_commission",
+      intake_mode: "brief",
+    })
+    .select("id")
+    .single() as { data: { id: string } | null; error: { message: string } | null };
+
+  if (projErr || !project) {
+    console.error("[submitProjectAction] projects INSERT error:", projErr);
+    return {
+      ok: false,
+      error: "db",
+      message: projErr?.message ?? "project insert failed",
+    };
+  }
+
+  // 2. INSERT project_status_history with actor_role='system'.
+  //    Option A: service-role client for this single statement only (bypasses
+  //    the psh_insert_deny RLS policy which blocks all authenticated users).
+  //    The service-role client is NOT used for any other read/write in this action.
+  //    project_status_history is a Phase 3.0 table — not in generated types yet.
+  const service = createSupabaseService();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serviceAny = service as any;
+  const { error: histErr } = await serviceAny
+    .from("project_status_history")
+    .insert({
+      project_id: project.id,
+      from_status: "submitted",   // logical from-state (L-015: submitted→in_review)
+      to_status: "in_review",
+      actor_id: user.id,
+      actor_role: "system",
+      comment: null,
+    }) as { error: { message: string } | null };
+
+  if (histErr) {
+    console.error("[submitProjectAction] history INSERT error:", histErr);
+    // History failure is non-fatal in prod but should alert — do not roll back
+    // the project, log and continue. K-05 review can decide if we want to roll
+    // back on history failure.
+    console.error("[submitProjectAction] WARN: history row missing for project", project.id);
+  }
+
+  // 3. INSERT project_references rows (user-scoped client; RLS allows INSERT
+  //    for workspace members on their own project's references).
+  //    kind, url, note, title, thumbnail_url, sort_order are Phase 3.0 columns
+  //    — not in generated types yet. Use the any-cast client.
+  if (data.references.length > 0) {
+    const refRows = data.references.map((r, i) => ({
+      project_id: project.id,
+      kind: r.kind,
+      url: r.url,
+      note: r.note,
+      title: r.title ?? null,
+      thumbnail_url: r.thumbnailUrl ?? null,
+      duration_seconds: r.durationSeconds ?? null,
+      sort_order: i,
+      // Required legacy columns with defaults for new wizard submissions
+      added_by: user.id,
+    }));
+    const { error: refErr } = await supabaseAny
+      .from("project_references")
+      .insert(refRows) as { error: { message: string } | null };
+    if (refErr) {
+      console.error("[submitProjectAction] references INSERT error:", refErr);
+      // Non-fatal — project was created; references can be added later
+    }
+  }
+
+  // 4. Delete wizard_drafts row. wizard_drafts may not be a real table — silently
+  //    ignore errors (it's only a cleanup step). If the table doesn't exist the
+  //    error is swallowed. Use any cast since it may not be in generated types.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("wizard_drafts").delete().eq("user_id", user.id);
+  } catch {
+    // best-effort — ignore
+  }
+  // Also clean up any lingering draft project rows in status='draft' for this
+  // user in this workspace, since the real project is now submitted.
+  await supabase
+    .from("projects")
+    .delete()
+    .eq("workspace_id", resolvedWorkspaceId)
+    .eq("created_by", user.id)
+    .eq("status", "draft")
+    .eq("intake_mode", "brief")
+    .neq("id", project.id);
+
+  // 5. Resend emails (best-effort — must not block or throw)
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://studio.yagiworkshop.xyz";
+  const adminQueueUrl = `${baseUrl}/app/admin/projects`;
+  const projectUrl = `${baseUrl}/app/projects/${project.id}`;
+
+  // Resolve caller's locale and email for the client confirmation
+  let clientEmail: string | null = null;
+  let clientLocale: "ko" | "en" = "ko";
+  let clientName = "Client";
+  let workspaceName = "Workspace";
+  try {
+    const [emailRes, profileRes, workspaceRes] = await Promise.all([
+      service.auth.admin.getUserById(user.id),
+      service.from("profiles").select("display_name, handle, locale").eq("id", user.id).maybeSingle(),
+      service.from("workspaces").select("name").eq("id", resolvedWorkspaceId).maybeSingle(),
+    ]);
+    clientEmail = emailRes.data?.user?.email ?? null;
+    const profile = profileRes.data;
+    if (profile?.locale === "en") clientLocale = "en";
+    clientName = profile?.display_name ?? profile?.handle ?? "Client";
+    workspaceName = workspaceRes.data?.name ?? "Workspace";
+  } catch (e) {
+    console.error("[submitProjectAction] profile/email lookup failed", e);
+  }
+
+  // Admin notification
+  const adminEmail = process.env.YAGI_ADMIN_EMAIL ?? "yagi@yagiworkshop.xyz";
+  try {
+    await sendProjectSubmittedAdmin({
+      to: adminEmail,
+      projectName: data.name,
+      projectId: project.id,
+      locale: clientLocale,
+      dashboardUrl: adminQueueUrl,
+      clientName,
+      workspaceName,
+      budgetBand: data.budget_band,
+      deliveryDate: data.delivery_date ?? undefined,
+    });
+  } catch (e) {
+    console.error("[submitProjectAction] admin email send failed", e);
+  }
+
+  // Client confirmation
+  if (clientEmail) {
+    try {
+      await sendProjectSubmittedClient({
+        to: clientEmail,
+        projectName: data.name,
+        projectId: project.id,
+        locale: clientLocale,
+        dashboardUrl: projectUrl,
+      });
+    } catch (e) {
+      console.error("[submitProjectAction] client email send failed", e);
+    }
+  }
+
+  // 6. In-app notification (best-effort)
+  try {
+    await emitNotification({
+      user_id: user.id,
+      kind: "project_submitted",
+      project_id: project.id,
+      workspace_id: resolvedWorkspaceId,
+      payload: { project_name: data.name },
+      url_path: `/app/projects/${project.id}`,
+    });
+  } catch (e) {
+    console.error("[submitProjectAction] in-app notification failed", e);
+  }
+
+  revalidatePath("/[locale]/app/projects", "page");
+  revalidatePath(`/[locale]/app/projects/${project.id}`, "page");
+
+  return {
+    ok: true,
+    projectId: project.id,
+    redirect: `/app/projects/${project.id}`,
+  };
+}

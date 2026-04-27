@@ -28,7 +28,9 @@ export type NotificationKind =
   | "meeting_confirmed"
   | "meeting_rescheduled"
   | "meeting_cancelled"
-  | "support_message_new";
+  | "support_message_new"
+  // Phase 3.0 task_04 — project lifecycle
+  | "project_submitted";
 
 export type NotificationSeverity = "high" | "medium" | "low";
 
@@ -55,6 +57,8 @@ export const SEVERITY_BY_KIND: Record<NotificationKind, NotificationSeverity> = 
   meeting_rescheduled: "high",
   meeting_cancelled: "high",
   support_message_new: "medium",
+  // Phase 3.0 task_04
+  project_submitted: "high",
 };
 
 export function severityOf(kind: NotificationKind): NotificationSeverity {

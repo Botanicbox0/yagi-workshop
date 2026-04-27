@@ -50,6 +50,7 @@ import { Link2, ImageIcon, FileText, X, Pencil, Loader2 } from "lucide-react";
 import {
   ensureDraftProject,
   fetchVideoMetadataAction,
+  submitProjectAction,
   type WizardDraftFields,
 } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -611,13 +612,11 @@ function DeliverableChips({
 
 export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps) {
   const t = useTranslations("projects");
-  // TODO(task_04): router will be used to navigate after submit
-  const _router = useRouter();
+  const router = useRouter();
 
   const [step, setStep] = useState<Step>(1);
   const [refs, setRefs] = useState<WizardReference[]>([]);
-  // TODO(task_04): draftProjectId is passed to submitProjectAction
-  const [_draftProjectId, setDraftProjectId] = useState<string | null>(null);
+  const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
   const [isSubmitting, startSubmit] = useTransition();
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
@@ -980,19 +979,45 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
           {t("wizard.actions.back")}
         </Button>
 
-        {/* TODO(task_04): wire submitProjectAction here.
-            When task_04 ships, replace this onClick body with:
-              const result = await submitProjectAction({ projectId: draftProjectId, ... });
-              if (result.ok) router.push(`/app/projects/${result.id}`);
-        */}
         <Button
           type="button"
           className="rounded-full uppercase tracking-[0.10em] text-sm"
           disabled={isSubmitting}
           onClick={() => {
-            startSubmit(() => {
-              // TODO(task_04): wire submitProjectAction
-              toast.info("Submit action will be wired by task_04.");
+            startSubmit(async () => {
+              const vals = getValues();
+              const result = await submitProjectAction({
+                name: vals.name,
+                description: vals.description,
+                deliverable_types: vals.deliverable_types,
+                budget_band: vals.budget_band,
+                delivery_date:
+                  vals.delivery_date && vals.delivery_date !== ""
+                    ? vals.delivery_date
+                    : null,
+                references: refs.map((r) => ({
+                  id: r.id,
+                  kind: r.kind,
+                  url: r.url,
+                  note: r.note,
+                  title: r.title,
+                  thumbnailUrl: r.thumbnailUrl,
+                  durationSeconds: r.durationSeconds,
+                })),
+                // workspaceId resolved server-side from user membership
+                // (same pattern as ensureDraftProject). Passing the draft
+                // project id so the server can look up its workspace.
+                draftProjectId,
+              });
+              if (result.ok) {
+                router.push(result.redirect);
+              } else {
+                toast.error(
+                  result.error === "unauthenticated"
+                    ? "로그인이 필요합니다"
+                    : "제출에 실패했습니다. 다시 시도해 주세요."
+                );
+              }
             });
           }}
         >
