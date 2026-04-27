@@ -561,6 +561,10 @@
     "visibility_shared": "Shared (everyone sees)",
     "visibility_internal": "Internal (YAGI only)",
     "internal_badge": "Internal",
+    "role_badge_yagi": "YAGI",
+    "role_badge_admin": "Admin",
+    "role_badge_client": "Client",
+    "role_badge_member": "Member",
     "empty": "No messages",
     "attach": "Attach file",
     "attachment_add": "Add attachment",
@@ -1040,6 +1044,10 @@
       "team_channel_mention": {
         "title": "You were mentioned",
         "body": "{actor} mentioned you in #{channel_name}: {excerpt}"
+      },
+      "thread_mention": {
+        "title": "You were mentioned in a brief board",
+        "body": "{actor}: {excerpt}"
       }
     }
   },

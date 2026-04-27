@@ -37,12 +37,70 @@ const MAX_ATTACHMENTS_PER_MESSAGE = 5;
 const ATTACHMENT_BUCKET = "thread-attachments";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
+export type ThreadAuthorRole = "yagi" | "admin" | "client" | "member";
+
 export type ThreadMessageAuthor = {
   id: string;
   handle: string;
   display_name: string;
   avatar_url: string | null;
+  /** Phase 2.8.2 G_B2_E — derived role for visual hierarchy badge.
+   *  yagi  = yagi_admin (service-provider side)
+   *  admin = workspace_admin (client company admin)
+   *  client = workspace_member (client company member)
+   *  member = no scoped role (fallback)
+   */
+  role: ThreadAuthorRole;
 };
+
+// Phase 2.8.2 G_B2_E — deterministic accent color from display_name hash,
+// used as the avatar fallback bg when avatar_url is null OR fails to load.
+// Colors are chosen from a small Tailwind palette that contrasts with white
+// backgrounds and reads as identity, not status.
+const AVATAR_FALLBACK_PALETTE = [
+  "bg-rose-200 text-rose-900",
+  "bg-amber-200 text-amber-900",
+  "bg-emerald-200 text-emerald-900",
+  "bg-sky-200 text-sky-900",
+  "bg-violet-200 text-violet-900",
+  "bg-fuchsia-200 text-fuchsia-900",
+  "bg-teal-200 text-teal-900",
+  "bg-orange-200 text-orange-900",
+];
+
+function hashAuthorName(s: string): number {
+  // djb2 — small, deterministic, fast. Used for picking the palette index.
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function avatarFallbackClass(displayName: string): string {
+  return AVATAR_FALLBACK_PALETTE[
+    hashAuthorName(displayName) % AVATAR_FALLBACK_PALETTE.length
+  ];
+}
+
+// Mention parser — splits the body into runs of plain text and mention
+// tokens (@yagi, @admin, @client). Used for inline link/highlight render.
+const MENTION_RE = /@(yagi|admin|client)\b/gi;
+type Run = { kind: "text"; value: string } | { kind: "mention"; target: string };
+function parseMentions(body: string): Run[] {
+  const runs: Run[] = [];
+  let lastIndex = 0;
+  for (const m of body.matchAll(MENTION_RE)) {
+    if (m.index === undefined) continue;
+    if (m.index > lastIndex) {
+      runs.push({ kind: "text", value: body.slice(lastIndex, m.index) });
+    }
+    runs.push({ kind: "mention", target: m[1].toLowerCase() });
+    lastIndex = m.index + m[0].length;
+  }
+  if (lastIndex < body.length) {
+    runs.push({ kind: "text", value: body.slice(lastIndex) });
+  }
+  return runs;
+}
 
 export type ThreadAttachment = {
   id: string;
@@ -472,7 +530,11 @@ export function ThreadPanel({
               msg.author?.handle ||
               msg.author_id.slice(0, 8);
             const initial = authorName.charAt(0).toUpperCase();
+            const role: ThreadAuthorRole = msg.author?.role ?? "member";
+            const fallbackClass = avatarFallbackClass(authorName);
             const attachments = msg.attachments ?? [];
+            const bodyRuns =
+              msg.body && msg.body.length > 0 ? parseMentions(msg.body) : null;
 
             return (
               <div
@@ -482,20 +544,35 @@ export function ThreadPanel({
                   isMine ? "flex-row-reverse" : "flex-row"
                 )}
               >
-                {/* Avatar */}
+                {/* Avatar — Phase 2.8.2 G_B2_E: 32px + initials fallback
+                    with deterministic color hash. The img onError swap to
+                    initials handles avatar_url CORS / load failures
+                    (kickoff §2 G_B2_E FAIL on avatar_url breaks render). */}
                 <div className="flex-shrink-0">
                   {msg.author?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={msg.author.avatar_url}
                       alt={authorName}
-                      className="w-7 h-7 rounded-full object-cover"
+                      className="w-8 h-8 rounded-full object-cover bg-muted"
+                      onError={(e) => {
+                        // Hide broken image; the keyed sibling span renders.
+                        e.currentTarget.style.display = "none";
+                        const sib = e.currentTarget
+                          .nextElementSibling as HTMLElement | null;
+                        if (sib) sib.style.display = "flex";
+                      }}
                     />
-                  ) : (
-                    <span className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground uppercase">
-                      {initial}
-                    </span>
-                  )}
+                  ) : null}
+                  <span
+                    className={cn(
+                      "w-8 h-8 rounded-full items-center justify-center text-xs font-semibold uppercase",
+                      msg.author?.avatar_url ? "hidden" : "flex",
+                      fallbackClass,
+                    )}
+                  >
+                    {initial}
+                  </span>
                 </div>
 
                 {/* Message bubble */}
@@ -511,9 +588,10 @@ export function ThreadPanel({
                       isMine ? "flex-row-reverse" : "flex-row"
                     )}
                   >
-                    <span className="text-xs font-medium text-foreground">
+                    <span className="text-xs font-semibold text-foreground">
                       {authorName}
                     </span>
+                    <RoleBadge role={role} />
                     <span className="text-[11px] text-muted-foreground">
                       {formatTime(msg.created_at)}
                     </span>
@@ -523,7 +601,7 @@ export function ThreadPanel({
                       </span>
                     )}
                   </div>
-                  {msg.body && msg.body.length > 0 && (
+                  {bodyRuns && (
                     <div
                       className={cn(
                         "rounded-lg px-3 py-2 text-sm whitespace-pre-wrap keep-all",
@@ -532,7 +610,23 @@ export function ThreadPanel({
                           : "bg-muted text-foreground"
                       )}
                     >
-                      {msg.body}
+                      {bodyRuns.map((run, i) =>
+                        run.kind === "text" ? (
+                          <span key={i}>{run.value}</span>
+                        ) : (
+                          <span
+                            key={i}
+                            className={cn(
+                              "rounded px-1 font-medium",
+                              isMine
+                                ? "bg-background/15"
+                                : "bg-foreground/10",
+                            )}
+                          >
+                            @{run.target}
+                          </span>
+                        ),
+                      )}
                     </div>
                   )}
                   {attachments.length > 0 && (
@@ -677,6 +771,37 @@ export function ThreadPanel({
 }
 
 // --- Sub-components ---------------------------------------------------------
+
+// Phase 2.8.2 G_B2_E — role badge for the message author. Four asymmetric
+// visual treatments per kickoff §2 G_B2_E EXIT (yagi / admin / client /
+// member). The "yagi" badge is the most prominent — it's the host side of
+// the workshop relationship (Q-085 host/guest asymmetry) and clients need
+// to recognize it at a glance.
+function RoleBadge({ role }: { role: ThreadAuthorRole }) {
+  const t = useTranslations("threads");
+  const className: Record<ThreadAuthorRole, string> = {
+    yagi: "bg-foreground text-background border-foreground",
+    admin: "bg-background text-foreground border-foreground",
+    client: "bg-muted text-foreground border-border",
+    member: "bg-transparent text-muted-foreground border-border",
+  };
+  const labelKey: Record<ThreadAuthorRole, string> = {
+    yagi: "role_badge_yagi",
+    admin: "role_badge_admin",
+    client: "role_badge_client",
+    member: "role_badge_member",
+  };
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-1.5 py-0 text-[10px] font-medium uppercase tracking-[0.06em]",
+        className[role],
+      )}
+    >
+      {t(labelKey[role] as "role_badge_yagi")}
+    </span>
+  );
+}
 
 function AttachmentChip({
   chip,

@@ -94,6 +94,13 @@ export async function sendMessage(input: unknown) {
     }).catch((err) => {
       console.error("[sendMessage] notif emit failed:", err);
     });
+    void _emitMentionNotifications({
+      actorUserId: user.id,
+      projectId: parsed.data.projectId,
+      body: parsed.data.body,
+    }).catch((err) => {
+      console.error("[sendMessage] mention emit failed:", err);
+    });
   }
 
   return { ok: true as const };
@@ -268,6 +275,13 @@ export async function sendMessageWithAttachments(input: unknown) {
     }).catch((err) => {
       console.error("[sendMessageWithAttachments] notif emit failed:", err);
     });
+    void _emitMentionNotifications({
+      actorUserId: user.id,
+      projectId: d.projectId,
+      body: bodyValue ?? "",
+    }).catch((err) => {
+      console.error("[sendMessageWithAttachments] mention emit failed:", err);
+    });
   }
 
   return { ok: true as const, messageId: inserted.id };
@@ -333,5 +347,113 @@ async function _emitThreadMessageNotifications(args: {
         url_path: urlPath,
       })
     )
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2.8.2 G_B2_E — @yagi / @admin / @client mention notifications.
+// Parses the body for @yagi / @admin / @client tokens and fans out a
+// dedicated mention notification to the matching role-side of the
+// workspace. RLS layering is the same as thread_message_new — we only
+// query workspace_members (project participants) so non-members never
+// receive mention pings (kickoff §2 G_B2_E FAIL on / loop 2).
+// ---------------------------------------------------------------------------
+
+const MENTION_TOKEN_RE = /@(yagi|admin|client)\b/gi;
+
+async function _emitMentionNotifications(args: {
+  actorUserId: string;
+  projectId: string;
+  body: string;
+}): Promise<void> {
+  const tokens = new Set<string>();
+  for (const m of args.body.matchAll(MENTION_TOKEN_RE)) {
+    tokens.add(m[1].toLowerCase());
+  }
+  if (tokens.size === 0) return;
+
+  const svc = createSupabaseService();
+
+  const { data: project } = await svc
+    .from("projects")
+    .select("workspace_id")
+    .eq("id", args.projectId)
+    .maybeSingle();
+  if (!project) return;
+
+  // Members of this workspace (project participants set).
+  const { data: members } = await svc
+    .from("workspace_members")
+    .select("user_id")
+    .eq("workspace_id", project.workspace_id);
+  const memberIds = (members ?? [])
+    .map((m) => m.user_id)
+    .filter((id): id is string => !!id && id !== args.actorUserId);
+  if (memberIds.length === 0) return;
+
+  // Fetch role rows scoped to this workspace (or null = global yagi_admin)
+  // so we can resolve which subset of members each mention token maps to.
+  const { data: roleRows } = await svc
+    .from("user_roles")
+    .select("user_id, role, workspace_id")
+    .in("user_id", memberIds);
+
+  const isYagi = new Set<string>();
+  const isAdmin = new Set<string>();
+  for (const r of roleRows ?? []) {
+    const scoped =
+      r.workspace_id === null || r.workspace_id === project.workspace_id;
+    if (!scoped) continue;
+    if (r.role === "yagi_admin") isYagi.add(r.user_id);
+    if (r.role === "workspace_admin") isAdmin.add(r.user_id);
+  }
+
+  const targetSets: Record<string, Set<string>> = {
+    yagi: isYagi,
+    admin: isAdmin,
+    // @client = members who are NOT yagi-internal (the client side of the
+    // workshop relationship per Q-085 host/guest asymmetry).
+    client: new Set(memberIds.filter((id) => !isYagi.has(id))),
+  };
+
+  const { data: actorProfile } = await svc
+    .from("profiles")
+    .select("display_name")
+    .eq("id", args.actorUserId)
+    .maybeSingle();
+  const actorName = actorProfile?.display_name ?? "YAGI";
+  const excerpt =
+    args.body.length > 80 ? args.body.slice(0, 80) + "…" : args.body;
+  const urlPath = `/app/projects/${args.projectId}/threads`;
+
+  // Aggregate recipient → tokens it was hit by, so a single member who
+  // matches both @yagi and @admin only gets one notification.
+  const recipientTokens = new Map<string, string[]>();
+  for (const token of tokens) {
+    const set = targetSets[token];
+    if (!set) continue;
+    for (const userId of set) {
+      if (userId === args.actorUserId) continue;
+      const arr = recipientTokens.get(userId) ?? [];
+      arr.push(token);
+      recipientTokens.set(userId, arr);
+    }
+  }
+
+  await Promise.all(
+    Array.from(recipientTokens.entries()).map(([userId, hitTokens]) =>
+      emitNotification({
+        user_id: userId,
+        kind: "thread_mention",
+        project_id: args.projectId,
+        workspace_id: project.workspace_id,
+        payload: {
+          actor: actorName,
+          excerpt,
+          tokens: hitTokens,
+        },
+        url_path: urlPath,
+      }),
+    ),
   );
 }

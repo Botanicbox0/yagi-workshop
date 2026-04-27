@@ -1,6 +1,10 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ThreadPanel } from "./thread-panel";
-import type { ThreadMessage, ThreadAttachment } from "./thread-panel";
+import type {
+  ThreadMessage,
+  ThreadAttachment,
+  ThreadAuthorRole,
+} from "./thread-panel";
 
 const ATTACHMENT_BUCKET = "thread-attachments";
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
@@ -46,6 +50,49 @@ export async function ThreadPanelServer({
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id, p])
       );
+
+      // Phase 2.8.2 G_B2_E — derive a role per author for the badge.
+      // We need the project's workspace_id to scope workspace_admin /
+      // workspace_member roles correctly; yagi_admin is global so its
+      // workspace_id is NULL. One bulk query covers all authors.
+      const { data: projectRow } = await supabase
+        .from("projects")
+        .select("workspace_id")
+        .eq("id", projectId)
+        .maybeSingle();
+      const projectWorkspaceId = projectRow?.workspace_id ?? null;
+
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("user_id, role, workspace_id")
+        .in("user_id", authorIds);
+
+      const roleMap = new Map<string, ThreadAuthorRole>();
+      for (const id of authorIds) roleMap.set(id, "member");
+      for (const r of roleRows ?? []) {
+        if (!authorIds.includes(r.user_id)) continue;
+        const scoped =
+          r.workspace_id === null || r.workspace_id === projectWorkspaceId;
+        if (!scoped) continue;
+        const current = roleMap.get(r.user_id) ?? "member";
+        // Promote to highest-priority role (yagi > admin > client > member).
+        const next: ThreadAuthorRole | null =
+          r.role === "yagi_admin"
+            ? "yagi"
+            : r.role === "workspace_admin"
+              ? "admin"
+              : r.role === "workspace_member"
+                ? "client"
+                : null;
+        if (!next) continue;
+        const priority: Record<ThreadAuthorRole, number> = {
+          yagi: 3,
+          admin: 2,
+          client: 1,
+          member: 0,
+        };
+        if (priority[next] > priority[current]) roleMap.set(r.user_id, next);
+      }
 
       // Fetch attachments for all messages in a single query. The RESTRICTIVE
       // RLS `thread_attachments_hide_internal_from_clients` already hides
@@ -103,12 +150,20 @@ export async function ThreadPanelServer({
         }
       }
 
-      initialMessages = rawMessages.map((msg) => ({
-        ...msg,
-        body: msg.body ?? null,
-        author: profileMap.get(msg.author_id) ?? null,
-        attachments: attachmentMap.get(msg.id) ?? [],
-      }));
+      initialMessages = rawMessages.map((msg) => {
+        const profile = profileMap.get(msg.author_id);
+        return {
+          ...msg,
+          body: msg.body ?? null,
+          author: profile
+            ? {
+                ...profile,
+                role: roleMap.get(msg.author_id) ?? "member",
+              }
+            : null,
+          attachments: attachmentMap.get(msg.id) ?? [],
+        };
+      });
     }
   }
 

@@ -561,6 +561,10 @@
     "visibility_shared": "공유 (모두 보기)",
     "visibility_internal": "내부 (YAGI 전용)",
     "internal_badge": "내부",
+    "role_badge_yagi": "야기",
+    "role_badge_admin": "관리",
+    "role_badge_client": "클라이언트",
+    "role_badge_member": "멤버",
     "empty": "메시지가 없습니다",
     "attach": "파일 첨부",
     "attachment_add": "첨부 추가",
@@ -1040,6 +1044,10 @@
       "team_channel_mention": {
         "title": "멘션이 있습니다",
         "body": "{actor}님이 #{channel_name}에서 언급했어요: {excerpt}"
+      },
+      "thread_mention": {
+        "title": "기획 보드에서 멘션되었어요",
+        "body": "{actor}: {excerpt}"
       }
     }
   },
