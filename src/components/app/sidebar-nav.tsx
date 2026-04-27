@@ -10,7 +10,6 @@ import {
   Settings,
   ShieldCheck,
   MessageSquare,
-  Bell,
   Trophy,
   Briefcase,
   Mailbox,
@@ -88,7 +87,12 @@ const GROUPS: NavGroup[] = [
         icon: CalendarDays,
         roles: ["workspace_admin", "workspace_member"],
       },
-      { key: "notifications", href: "/app/notifications", icon: Bell },
+      // Phase 2.8.5 — `notifications` removed from sidebar. Yagi:
+      // duplicates the top-right bell + the route surfaced an error.
+      // The /app/notifications page itself stays (the bell links to
+      // it); only the sidebar entry is gone. The `nav.notifications`
+      // i18n key is preserved in messages/* — the bell's tooltip and
+      // the page header still read it.
       // `team` is injected at render time when the user is a yagi-internal member.
     ],
   },

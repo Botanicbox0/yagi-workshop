@@ -67,10 +67,17 @@ export function SidebarScopeSwitcher({
   }
 
   if (scopes.length === 1) {
+    // Phase 2.8.5 — single-workspace clients see a plain workspace
+    // label (no dropdown affordance, no icon). Yagi's intent: clients
+    // need to know which Workshop they are in, but switching is N/A
+    // when there is only one. Q-084 holds — labels say "Workshop"
+    // not "Workspace" but the workspace name itself shows verbatim.
     return (
-      <p className="font-display text-base tracking-tight flex items-center gap-2">
-        <ScopeIcon kind={active.kind} className="text-muted-foreground" />
-        <span>{scopeLabel(active)}</span>
+      <p
+        className="text-sm font-medium text-foreground truncate"
+        aria-label="Current Workshop"
+      >
+        {scopeLabel(active)}
       </p>
     );
   }

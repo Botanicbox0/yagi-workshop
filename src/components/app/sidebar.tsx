@@ -37,8 +37,13 @@ function SidebarBody({
         if (target.closest("a")) onNavigate();
       }}
     >
-      <div className="p-5 border-b border-border">
+      {/* Phase 2.8.5 — brand block + workspace label split into two rows
+          with their own dividers so the workspace identity reads as
+          "you are in <workspace>" rather than as a navigation chrome. */}
+      <div className="px-5 py-4 border-b border-border">
         <SidebarBrand />
+      </div>
+      <div className="px-5 py-3 border-b border-border/60">
         <SidebarScopeSwitcher onNavigate={onNavigate} />
       </div>
       <div className="flex-1 overflow-y-auto py-3">
