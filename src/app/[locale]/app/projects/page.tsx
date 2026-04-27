@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { statusPillClass } from "@/lib/ui/status-pill";
 import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
+import { ProjectsHubWorkflowStrip } from "@/components/projects/projects-hub-workflow-strip";
+import { ProjectsHubCtaBanner } from "@/components/projects/projects-hub-cta-banner";
 import { MeetingRequestCard } from "@/components/meetings/meeting-request-card";
 
 type Props = {
@@ -232,6 +234,13 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           ))}
         </div>
       )}
+
+      {/* Phase 2.9 G_B9_E + G_B9_F — workflow strip + bottom CTA banner.
+          Both render unconditionally so the hub feels editorial even
+          for users with active projects. The hero block above is still
+          empty-state-only (kickoff §6). */}
+      <ProjectsHubWorkflowStrip locale={locale} />
+      <ProjectsHubCtaBanner locale={locale} />
     </div>
   );
 }

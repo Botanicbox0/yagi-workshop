@@ -37,15 +37,19 @@ function SidebarBody({
         if (target.closest("a")) onNavigate();
       }}
     >
-      {/* Phase 2.8.5 — brand block + workspace label split into two rows
-          with their own dividers so the workspace identity reads as
-          "you are in <workspace>" rather than as a navigation chrome. */}
-      <div className="px-5 py-4 border-b border-border">
+      {/* Phase 2.9 G_B9_B — brand + workspace as a single unbroken
+          block. Yagi: "단차가 보이는데 이거 없애야 할 듯" — the seam
+          between the brand block and the workspace label was reading
+          as a navigation chrome step. Removed both border-b lines;
+          the bottom border under the workspace section still exists
+          on the *nav* container below to mark the start of nav. */}
+      <div className="px-5 pt-5 pb-4">
         <SidebarBrand />
+        <div className="mt-3">
+          <SidebarScopeSwitcher onNavigate={onNavigate} />
+        </div>
       </div>
-      <div className="px-5 py-3 border-b border-border/60">
-        <SidebarScopeSwitcher onNavigate={onNavigate} />
-      </div>
+      <div className="border-b border-border" />
       <div className="flex-1 overflow-y-auto py-3">
         <SidebarNav
           roles={context.workspaceRoles}

@@ -13,6 +13,11 @@ const config: Config = {
   		fontFamily: {
   			sans: ["Pretendard Variable", "var(--font-inter)", "ui-sans-serif", "system-ui"],
   			display: ["var(--font-fraunces)", "Pretendard Variable", "ui-serif", "Georgia"],
+  			// Phase 2.9 G_B9_C — SUIT Variable for Korean editorial
+  			// headlines on /app/projects + future product surfaces.
+  			// Kept separate from `display` (Fraunces) so the landing's
+  			// existing English-headline render is untouched.
+  			suit: ["var(--font-suit)", "Pretendard Variable", "ui-sans-serif", "system-ui"],
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

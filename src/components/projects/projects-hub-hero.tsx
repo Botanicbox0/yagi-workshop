@@ -1,145 +1,114 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { ArrowUpRight, ArrowRight, MessageSquare, Users } from "lucide-react";
+import { InteractiveVisualStack } from "./interactive-visual-stack";
 
-// Phase 2.8.4 — sample case imagery. Sharp-processed JPGs at 1200px max
-// width; hero card crops via aspect-[16/10] container + object-cover so
-// the visual framing stays in CSS (yagi: "crop 너무 강하게 하지는 말구").
-const SAMPLE_IMAGES: Record<1 | 2, { src: string; alt_key: "hero_sample_1_title" | "hero_sample_2_title" }> = {
-  1: { src: "/brand/sample-brand-campaign.jpg", alt_key: "hero_sample_1_title" },
-  2: { src: "/brand/sample-music-video.jpg", alt_key: "hero_sample_2_title" },
-};
+// Phase 2.9 G_B9_D — editorial hero on /app/projects empty state.
+//
+// LEFT zone — informational. PROJECT eyebrow → 3-line SUIT headline →
+// sub copy → 3 bullets with 32px circle icons (mono, no color) → CTA
+// pill + avatar stack social proof.
+//
+// RIGHT zone — emotional. <InteractiveVisualStack/> client component
+// with framer-motion spring transitions between 1:1 and 5:2 ratios.
+//
+// Design signature (DECISIONS_CACHE Q-092 spec extracted from yagi
+// reference): asymmetric weight, hairline borders, 0 accent color,
+// editorial labels, photography-as-content, black CTA pills.
 
-// Phase 2.8.2 G_B2_A — empty-state hero on /app/projects.
-// Shown only when the user has zero projects (handled by caller).
-// Layout follows the founder-referenced "self-campaign" pattern:
-//   - Left column: 3 value props + primary CTA
-//   - Right column: 1-2 sample case cards (placeholder until real cases exist)
-//   - Bottom row: 4-step workflow flow
-
-type Props = {
-  locale: string;
-};
+type Props = { locale: string };
 
 export async function ProjectsHubHero({ locale }: Props) {
   const t = await getTranslations({ locale, namespace: "projects" });
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-8 md:p-10">
-      <div className="grid grid-cols-1 lg:grid-cols-[1.1fr,1fr] gap-10">
-        {/* Left — value props + primary CTA */}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            {/* Phase 2.8.3 G_B3_D — 2-line headline. hero_title value
-                contains a literal \n; whitespace-pre-line renders the
-                break without HTML so the i18n key stays a plain string. */}
-            <h2 className="font-display text-3xl md:text-4xl tracking-tight leading-[1.1] keep-all whitespace-pre-line">
-              {t("hero_title")}
-            </h2>
-            <p className="text-sm text-muted-foreground keep-all">
-              {t("hero_sub")}
-            </p>
-          </div>
-
-          {/* Phase 2.8.3 G_B3_D — 3 single-statement bullets per yagi.
-              hero_value_*_body keys persist (must not rename) but are
-              now allowed to be empty; render skips when blank. */}
-          <ul className="space-y-3">
-            {[1, 2, 3].map((i) => {
-              const body = t(`hero_value_${i}_body` as "hero_value_1_body");
-              return (
-                <li key={i} className="flex gap-3">
-                  <span
-                    aria-hidden
-                    className="mt-1.5 h-1.5 w-1.5 rounded-full bg-foreground flex-shrink-0"
-                  />
-                  <div>
-                    <p className="text-sm font-medium leading-snug keep-all">
-                      {t(`hero_value_${i}_title` as "hero_value_1_title")}
-                    </p>
-                    {body && (
-                      <p className="text-xs text-muted-foreground leading-relaxed keep-all">
-                        {body}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-
-          <Link
-            href="/app/projects/new"
-            className="inline-flex items-center rounded-full uppercase tracking-[0.12em] px-6 py-3 bg-foreground text-background hover:bg-foreground/90 text-sm font-medium transition-colors"
-          >
-            {t("hero_cta")}
-          </Link>
-        </div>
-
-        {/* Right — sample case cards (placeholder until real cases exist) */}
-        <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            {t("hero_sample_label")}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
-            {([1, 2] as const).map((i) => {
-              const sample = SAMPLE_IMAGES[i];
-              const titleKey = `hero_sample_${i}_title` as "hero_sample_1_title";
-              const subKey = `hero_sample_${i}_sub` as "hero_sample_1_sub";
-              return (
-                <div
-                  key={i}
-                  className="border border-border rounded-lg p-4 bg-muted/20"
-                >
-                  <div className="relative aspect-[16/10] rounded-md overflow-hidden bg-muted/50 mb-3">
-                    <Image
-                      src={sample.src}
-                      alt={t(sample.alt_key)}
-                      fill
-                      sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover"
-                    />
-                  </div>
-                  <p className="text-sm font-medium leading-snug keep-all">
-                    {t(titleKey)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 keep-all">
-                    {t(subKey)}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom — 4-step workflow flow */}
-      <div className="mt-10 pt-6 border-t border-border">
-        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground mb-4">
-          {t("hero_workflow_label")}
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 py-16 lg:py-24">
+      {/* LEFT — Decision zone */}
+      <div className="flex flex-col gap-8">
+        <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">
+          {t("hero_meta_eyebrow")}
         </p>
-        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <li
-              key={i}
-              className="border border-border rounded-lg p-4 space-y-1.5"
-            >
+
+        <h1 className="font-suit text-4xl md:text-5xl lg:text-[56px] leading-[1.1] tracking-[-0.02em] font-bold text-foreground whitespace-pre-line keep-all">
+          {t("hero_title")}
+        </h1>
+
+        <p className="text-base text-muted-foreground leading-relaxed keep-all">
+          {t("hero_sub")}
+        </p>
+
+        <ul className="flex flex-col gap-4 mt-2">
+          {(
+            [
+              { i: 1, Icon: ArrowRight },
+              { i: 2, Icon: MessageSquare },
+              { i: 3, Icon: Users },
+            ] as const
+          ).map(({ i, Icon }) => (
+            <li key={i} className="flex items-center gap-3">
               <span
                 aria-hidden
-                className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-foreground text-background text-xs font-semibold tabular-nums"
+                className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center flex-shrink-0"
               >
-                {i}
+                <Icon className="w-4 h-4 text-background" />
               </span>
-              <p className="text-sm font-medium leading-snug keep-all">
-                {t(`hero_step_${i}_title` as "hero_step_1_title")}
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed keep-all">
-                {t(`hero_step_${i}_body` as "hero_step_1_body")}
-              </p>
+              <span className="text-[15px] font-medium text-foreground keep-all">
+                {t(`hero_value_${i}_title` as "hero_value_1_title")}
+              </span>
             </li>
           ))}
-        </ol>
+        </ul>
+
+        <div className="flex flex-col gap-5 mt-2">
+          <Link
+            href="/app/projects/new"
+            className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-foreground text-background text-[15px] font-semibold w-fit hover:scale-[1.02] transition-transform"
+          >
+            {t("hero_cta")}
+            <ArrowUpRight className="w-4 h-4" />
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <AvatarStack />
+            <p className="text-xs text-muted-foreground leading-relaxed keep-all">
+              {t("hero_social_proof")}
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* RIGHT — visual stack */}
+      <InteractiveVisualStack
+        strings={{
+          card1Eyebrow: t("hero_sample_1_eyebrow"),
+          card1Title: t("hero_sample_1_title"),
+          card1Body: t("hero_sample_1_sub"),
+          card1Alt: t("hero_sample_1_title"),
+          card2Eyebrow: t("hero_sample_2_eyebrow"),
+          card2Title: t("hero_sample_2_title"),
+          card2TitleSub: t("hero_sample_2_title_sub"),
+          card2Body: t("hero_sample_2_sub"),
+          card2Alt: t("hero_sample_2_title"),
+        }}
+      />
     </section>
+  );
+}
+
+// 4 monochrome avatar placeholders — gray circles with 1px ring,
+// stacked with -8px overlap. No real photos until yagi provides
+// client logos / photos for social proof.
+function AvatarStack() {
+  return (
+    <div className="flex -space-x-2">
+      {[0, 1, 2, 3].map((i) => (
+        <span
+          key={i}
+          aria-hidden
+          className="w-7 h-7 rounded-full bg-muted ring-2 ring-background"
+          style={{ zIndex: 4 - i }}
+        />
+      ))}
+    </div>
   );
 }

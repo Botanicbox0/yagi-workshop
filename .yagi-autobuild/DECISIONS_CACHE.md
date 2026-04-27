@@ -1105,3 +1105,29 @@ UI dropdown 최종 5개 + 카피:
 **Applies when:** 향후 onboarding/profile/client 카피 변경 시. Path B 선택됐다면 Phase 3.0 challenges restructure 시 legacy enum cleanup 검토.
 **Confidence:** HIGH (야기 직접 확정 2026-04-27)
 **Registered:** 2026-04-27 (Phase 2.8.1 followup-1, Path: A — pre-flight `SELECT count(*) FROM public.clients` = 0 in prod, schema + UI both narrowed to 5)
+
+---
+
+### Q-092: Editorial design system — Pretendard + SUIT, no accent color, hover-transition cards
+
+**Asked context:** Phase 2.8.5 SHIPPED 후 야기가 /app/projects 디자인을 보고 generic SaaS 느낌이라며 reference image (2376daf3-...png) 제공 + 폰트/카피/interactive 요구사항 정리.
+
+**Question:** YAGI 제품 디자인의 visual signature?
+
+**Answer:**
+1. 2-font system: Pretendard Variable (body) + SUIT Variable (headline). Headline 전용 분리. Tailwind class `font-suit` 로 opt-in (기존 `font-display` (Fraunces) 는 landing 호환을 위해 유지).
+2. 무채색 only — black/white/gray. Accent color 0개. Contrast 가 일을 함.
+3. Hairline borders (1px), no drop shadows on cards. Surface separation은 radius + bg contrast.
+4. Editorial labels: 11px uppercase letter-spaced eyebrows ("BRAND CAMPAIGN"). Magazine convention.
+5. Asymmetric weight: text zone 정보, visual zone 감정. 50/50 split desktop, mobile 은 stack.
+6. Photography as content (not decoration). 1:1 dominant card with full-bleed photography.
+7. Spring physics for layout transitions (Framer Motion `stiffness: 80, damping: 22, mass: 0.9`). 자연스러운 settle, no bounce on hover-out.
+8. Black CTA pills, white-on-black-on-white inversion at bottom CTA banner.
+9. Workspace label = plain text, no separator border (단차 제거).
+
+**Rationale:** Yagi reference (entertainment studio + editorial magazine 톤) ≠ SaaS template. 모든 styling 결정은 reference 의 visual signature 에서 파생.
+
+**Applies when:** Phase 2.10 landing rewrite, Phase 3 contest UI, future Workshop surface design. 모든 곳에서 이 token + principle 일관 적용.
+
+**Confidence:** HIGH (야기 직접 reference 제공 2026-04-27)
+**Registered:** 2026-04-27 (Phase 2.9 SHIPPED)
