@@ -44,7 +44,10 @@ export default async function OnboardingRolePage({ params }: Props) {
       return null;
     }
     if (role === "client") {
-      redirect({ href: "/app/commission/new", locale });
+      // Phase 2.8.2 hotfix: client landing → projects hub (was /app/commission/new).
+      // Yagi feedback 2026-04-27: commission flow lives inside the hub, the hub
+      // is the right first impression.
+      redirect({ href: "/app/projects", locale });
       return null;
     }
     // Legacy profile without Phase 2.5 role — send to app shell.

@@ -191,7 +191,10 @@ export async function completeProfileAction(
 
 function resolveDestination(role: ProfileRole, handle: string): string {
   if (role === "observer") return "/challenges";
-  if (role === "client") return "/app/commission/new";
+  // Phase 2.8.2 hotfix: client landing → projects hub (was /app/commission/new).
+  // Yagi feedback 2026-04-27: hub is the right first impression; commission
+  // intake stays available as a CTA on the empty-state hero card.
+  if (role === "client") return "/app/projects";
   return `/u/${handle}`;
 }
 
@@ -272,7 +275,10 @@ async function completeClientProfile(
 
   return {
     ok: true,
-    redirect: "/app/commission/new",
+    // Phase 2.8.2 hotfix: client landing → projects hub (was /app/commission/new).
+    // The hub's empty-state hero card surfaces a primary "프로젝트 의뢰하기"
+    // CTA, so the commission intake remains one click away.
+    redirect: "/app/projects",
   };
 }
 
