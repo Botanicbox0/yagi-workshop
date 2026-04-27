@@ -1,4 +1,5 @@
 import { redirect } from "@/i18n/routing";
+import { permanentRedirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -6,6 +7,7 @@ import { getOwnIntakeById } from "@/lib/commission/queries";
 import { CommissionIntakeStatePill } from "@/components/commission/intake-state-pill";
 import { Button } from "@/components/ui/button";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { AlertCircle } from "lucide-react";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -25,6 +27,13 @@ export default async function CommissionIntakeDetailPage({ params }: Props) {
   const intake = await getOwnIntakeById(id);
   if (!intake) notFound();
 
+  // Phase 3.0 — conditional redirect for converted commissions.
+  // If this intake was converted to a project via Phase 2.8.1's
+  // convert_commission_to_project RPC, redirect to the new project page.
+  if (intake.converted_to_project_id) {
+    permanentRedirect(`/${locale}/app/projects/${intake.converted_to_project_id}`);
+  }
+
   const t = await getTranslations({ locale, namespace: "commission" });
   const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ko-KR", {
     year: "numeric",
@@ -36,6 +45,17 @@ export default async function CommissionIntakeDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto px-6 md:px-8 py-12 space-y-10">
+      {/* Phase 3.0 legacy notice — unconverted commission read-only mode */}
+      <section className="rounded-lg border border-border bg-muted/30 p-5 space-y-3 flex gap-3">
+        <AlertCircle className="w-5 h-5 text-foreground/70 flex-shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="font-medium text-sm">{t("legacy_notice_title")}</p>
+          <p className="text-sm text-muted-foreground keep-all">
+            {t("legacy_notice_body")}
+          </p>
+        </div>
+      </section>
+
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-4">
           <Link

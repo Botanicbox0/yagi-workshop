@@ -321,7 +321,9 @@
     "budget_30m_50m": "3000-5000만원",
     "budget_50m_100m": "5000-1억원",
     "budget_100m_plus": "1억원 이상",
-    "budget_negotiable": "협의"
+    "budget_negotiable": "협의",
+    "legacy_notice_title": "보관된 의뢰",
+    "legacy_notice_body": "이 의뢰는 신규 프로젝트 형식으로 이전되지 않았으며, 보관용으로만 표시됩니다. 추가 조치가 필요하지 않습니다."
   },
   "admin_commission": {
     "queue_title": "의뢰 관리",

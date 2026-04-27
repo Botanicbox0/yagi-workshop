@@ -45,7 +45,7 @@ export default async function CommissionListPage({ params }: Props) {
             {t("list_empty_sub")}
           </p>
           <Button asChild size="lg">
-            <Link href={`/${locale}/app/commission/new`}>{t("list_empty_cta")}</Link>
+            <Link href={`/${locale}/app/projects/new`}>{t("list_empty_cta")}</Link>
           </Button>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default async function CommissionListPage({ params }: Props) {
           {t("list_title")}
         </h1>
         <Button asChild>
-          <Link href={`/${locale}/app/commission/new`}>{t("list_new_cta")}</Link>
+          <Link href={`/${locale}/app/projects/new`}>{t("list_new_cta")}</Link>
         </Button>
       </div>
 

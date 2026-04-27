@@ -12,7 +12,7 @@ export async function listOwnIntakes(): Promise<CommissionIntake[]> {
   const { data } = await supabase
     .from("commission_intakes")
     .select(
-      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at",
+      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at, converted_to_project_id",
     )
     .eq("client_id", user.id)
     .order("created_at", { ascending: false });
@@ -32,7 +32,7 @@ export async function getOwnIntakeById(
   const { data } = await supabase
     .from("commission_intakes")
     .select(
-      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at",
+      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at, converted_to_project_id",
     )
     .eq("id", id)
     .maybeSingle();
@@ -87,7 +87,7 @@ export async function listAdminIntakeQueue(opts?: {
   let query = supabase
     .from("commission_intakes")
     .select(
-      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at, clients!inner(company_name, contact_name)",
+      "id, client_id, title, category, budget_range, deadline_preference, reference_urls, reference_uploads, brief_md, timestamp_notes, state, admin_response_md, admin_responded_at, admin_responded_by, created_at, updated_at, converted_to_project_id, clients!inner(company_name, contact_name)",
     )
     .order("created_at", { ascending: false })
     .limit(opts?.limit ?? 100);

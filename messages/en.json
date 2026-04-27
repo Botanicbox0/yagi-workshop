@@ -321,7 +321,9 @@
     "budget_30m_50m": "₩30M – ₩50M",
     "budget_50m_100m": "₩50M – ₩100M",
     "budget_100m_plus": "₩100M+",
-    "budget_negotiable": "Negotiable"
+    "budget_negotiable": "Negotiable",
+    "legacy_notice_title": "Read-only commission",
+    "legacy_notice_body": "This commission was not migrated to the new project format and is displayed here for archival purposes. No further action is needed."
   },
   "admin_commission": {
     "queue_title": "Commission queue",
