@@ -22,7 +22,13 @@ export type NotificationKind =
   | "challenge_announced_winner"
   | "challenge_announced_participant"
   // Phase 2.8.2 G_B2_E — @yagi / @admin / @client mention in a brief thread
-  | "thread_mention";
+  | "thread_mention"
+  // Phase 2.8.6 — client-initiated meeting flow + workspace-scoped support chat
+  | "meeting_requested"
+  | "meeting_confirmed"
+  | "meeting_rescheduled"
+  | "meeting_cancelled"
+  | "support_message_new";
 
 export type NotificationSeverity = "high" | "medium" | "low";
 
@@ -44,6 +50,11 @@ export const SEVERITY_BY_KIND: Record<NotificationKind, NotificationSeverity> = 
   challenge_announced_winner: "high",
   challenge_announced_participant: "medium",
   thread_mention: "high",
+  meeting_requested: "high",
+  meeting_confirmed: "high",
+  meeting_rescheduled: "high",
+  meeting_cancelled: "high",
+  support_message_new: "medium",
 };
 
 export function severityOf(kind: NotificationKind): NotificationSeverity {

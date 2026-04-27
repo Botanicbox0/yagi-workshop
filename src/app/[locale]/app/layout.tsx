@@ -7,6 +7,7 @@ import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserScopes } from "@/lib/app/scopes";
 import { UserScopesProvider } from "@/lib/app/use-user-scopes";
+import { SupportWidget } from "@/components/support/support-widget";
 
 export default async function AppLayout({
   children,
@@ -72,6 +73,13 @@ export default async function AppLayout({
             </div>
           </main>
         </div>
+        {/* Phase 2.8.6 — workspace-scoped support chat. Hidden when
+            the user has no workspace (mid-onboarding edge case). */}
+        <SupportWidget
+          workspaceId={ctx.workspaces[0]?.id ?? null}
+          currentUserId={ctx.userId}
+          currentUserName={ctx.profile.display_name ?? ""}
+        />
       </div>
     </UserScopesProvider>
   );

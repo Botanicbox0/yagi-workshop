@@ -218,7 +218,9 @@ export default async function MeetingDetailPage({ params }: Props) {
                 {t("scheduled_at_label")}
               </p>
               <p className="text-sm font-medium">
-                {fmt.format(new Date(meeting.scheduled_at))}
+                {meeting.scheduled_at
+                  ? fmt.format(new Date(meeting.scheduled_at))
+                  : "—"}
               </p>
             </div>
             <div>

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { statusPillClass } from "@/lib/ui/status-pill";
 import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
+import { MeetingRequestCard } from "@/components/meetings/meeting-request-card";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -81,6 +82,24 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
 
   const projects = (data ?? []) as ProjectRow[];
 
+  // Phase 2.8.6 — primary workspace for the meeting request card.
+  // Picks the user's first workspace_member row; if the user has none
+  // (mid-onboarding), the card disables itself.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let primaryWorkspaceId: string | null = null;
+  if (user) {
+    const { data: ws } = await supabase
+      .from("workspace_members")
+      .select("workspace_id, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    primaryWorkspaceId = ws?.workspace_id ?? null;
+  }
+
   // Resolve brand name for active brand_id filter chip
   const activeBrand =
     sp.brand_id && projects.length > 0
@@ -147,6 +166,13 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           future re-introduction; key names are non-negotiable per the
           phase kickoff §7. */}
       {projects.length === 0 && <ProjectsHubHero locale={locale} />}
+
+      {/* Phase 2.8.6 — meeting request card is permanent (yagi: "첫
+          프로젝트 진행 이후에도 남아있으면 좋을듯"). Renders below the
+          hero on empty state and below the grid header on populated
+          state. The card disables itself if the user has no workspace
+          yet (edge case during onboarding). */}
+      <MeetingRequestCard workspaceId={primaryWorkspaceId} />
 
       {/* Direct tab — project grid */}
       {projects.length > 0 && (

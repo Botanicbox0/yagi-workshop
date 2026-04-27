@@ -720,6 +720,7 @@ export type Database = {
       }
       meetings: {
         Row: {
+          assigned_admin_id: string | null
           calendar_sync_error: string | null
           calendar_sync_status: string
           cancelled_at: string | null
@@ -729,10 +730,12 @@ export type Database = {
           description: string | null
           duration_minutes: number
           google_event_id: string | null
+          ics_uid: string
           id: string
           meet_link: string | null
-          project_id: string
-          scheduled_at: string
+          project_id: string | null
+          requested_at_options: Json
+          scheduled_at: string | null
           status: string
           summary_md: string | null
           summary_sent_at: string | null
@@ -741,6 +744,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          assigned_admin_id?: string | null
           calendar_sync_error?: string | null
           calendar_sync_status?: string
           cancelled_at?: string | null
@@ -750,10 +754,12 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           google_event_id?: string | null
+          ics_uid?: string
           id?: string
           meet_link?: string | null
-          project_id: string
-          scheduled_at: string
+          project_id?: string | null
+          requested_at_options?: Json
+          scheduled_at?: string | null
           status?: string
           summary_md?: string | null
           summary_sent_at?: string | null
@@ -762,6 +768,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          assigned_admin_id?: string | null
           calendar_sync_error?: string | null
           calendar_sync_status?: string
           cancelled_at?: string | null
@@ -771,10 +778,12 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           google_event_id?: string | null
+          ics_uid?: string
           id?: string
           meet_link?: string | null
-          project_id?: string
-          scheduled_at?: string
+          project_id?: string | null
+          requested_at_options?: Json
+          scheduled_at?: string | null
           status?: string
           summary_md?: string | null
           summary_sent_at?: string | null
@@ -783,6 +792,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "meetings_assigned_admin_id_fkey"
+            columns: ["assigned_admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meetings_project_id_fkey"
             columns: ["project_id"]
@@ -1918,6 +1934,93 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      support_messages: {
+        Row: {
+          author_id: string
+          body: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          thread_id: string
+        }
+        Insert: {
+          author_id: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          thread_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "support_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_threads: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_threads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_threads_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_channel_message_attachments: {
         Row: {

@@ -132,6 +132,12 @@ const GROUPS: NavGroup[] = [
         href: "/app/admin/trash",
         roles: ["yagi_admin"],
       },
+      {
+        // Phase 2.8.6 — yagi_admin support chat reply surface.
+        key: "admin_support",
+        href: "/app/admin/support",
+        roles: ["yagi_admin"],
+      },
     ],
   },
 ];

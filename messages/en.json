@@ -272,7 +272,8 @@
     "challenges_new": "New challenge",
     "challenges_open": "Open now",
     "admin_commissions": "Commission queue",
-    "admin_trash": "Trash"
+    "admin_trash": "Trash",
+    "admin_support": "Support chat"
   },
   "commission": {
     "list_title": "My commissions",
@@ -439,7 +440,34 @@
     "sync_retry_success": "Sync retry complete ({status})",
     "sync_retry_error": "Retry failed",
     "sync_retry_hint": "Use the actions menu to retry, or contact an admin.",
-    "actions_menu_label": "Meeting actions"
+    "actions_menu_label": "Meeting actions",
+    "request_card_title": "Want a quick meeting before starting a project?",
+    "request_card_sub": "Talk with the YAGI team for 30 min to align on direction.",
+    "request_card_cta": "Request a meeting",
+    "request_modal_title": "Request a meeting",
+    "request_modal_sub": "We will confirm one of your proposed times.",
+    "request_modal_no_workspace_title": "Workshop required",
+    "request_modal_no_workspace_body": "Finish onboarding first to request a meeting.",
+    "request_default_title": "Pre-project intro",
+    "request_field_title": "Title",
+    "request_field_agenda": "What would you like to discuss?",
+    "request_field_agenda_ph": "Project background, open questions, what you want YAGI's input on. (20+ chars)",
+    "request_field_duration": "Duration",
+    "request_field_slots": "1-3 preferred times",
+    "request_field_slots_hint": "Suggest multiple times — YAGI picks one that works. All times must be at least 24h in the future.",
+    "request_slot_add": "Add time",
+    "request_slot_remove": "Remove this time",
+    "request_cancel": "Cancel",
+    "request_submit": "Send request",
+    "request_submitting": "Sending...",
+    "request_submit_success": "Meeting request sent. We'll confirm soon.",
+    "request_submit_error": "Could not send the request. Please try again.",
+    "request_err_no_slot": "Please add at least one preferred time.",
+    "request_err_invalid_slot": "Invalid time format.",
+    "request_err_slot_too_soon": "All times must be at least 24h in the future.",
+    "request_err_agenda_too_short": "Please write at least 20 characters.",
+    "status_requested": "Requested",
+    "status_rescheduled": "Rescheduling"
   },
   "projects": {
     "list_title": "Projects",
@@ -1055,6 +1083,26 @@
       "thread_mention": {
         "title": "You were mentioned in a brief board",
         "body": "{actor}: {excerpt}"
+      },
+      "meeting_requested": {
+        "title": "New meeting request",
+        "body": "{actor} requested the \"{meeting_title}\" meeting."
+      },
+      "meeting_confirmed": {
+        "title": "Meeting confirmed",
+        "body": "\"{meeting_title}\" is confirmed for {when}."
+      },
+      "meeting_rescheduled": {
+        "title": "Meeting rescheduled",
+        "body": "{actor} rescheduled \"{meeting_title}\"."
+      },
+      "meeting_cancelled": {
+        "title": "Meeting cancelled",
+        "body": "\"{meeting_title}\" was cancelled."
+      },
+      "support_message_new": {
+        "title": "New support message",
+        "body": "{actor}: {excerpt}"
       }
     }
   },
@@ -1163,6 +1211,28 @@
     "not_found": "Not found",
     "unauthorized": "You don't have permission",
     "validation": "Invalid input"
+  },
+  "support": {
+    "fab_label": "Chat with the YAGI team",
+    "panel_label": "YAGI team chat",
+    "panel_title": "Chat with YAGI",
+    "panel_response_hint": "Usually replies within 1-2 hours",
+    "panel_close": "Close",
+    "panel_empty": "Hi! Send a message and we'll get back to you.",
+    "composer_placeholder": "Type a message...",
+    "composer_hint": "Enter to send, Shift+Enter for newline",
+    "send": "Send",
+    "send_error": "Could not send the message",
+    "toast_new_message": "New message",
+    "unread_aria": "{n} unread messages",
+    "admin_queue_title": "Support chat",
+    "admin_queue_sub": "Client conversations.",
+    "admin_queue_empty": "No conversations yet.",
+    "admin_thread_unread": "Awaiting reply",
+    "admin_close_thread": "Close thread",
+    "admin_reopen_thread": "Reopen thread",
+    "admin_status_open": "Open",
+    "admin_status_closed": "Closed"
   },
   "app": {
     "scopeSelector": {

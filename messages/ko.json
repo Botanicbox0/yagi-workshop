@@ -272,7 +272,8 @@
     "challenges_new": "새 챌린지",
     "challenges_open": "공개중",
     "admin_commissions": "의뢰 관리",
-    "admin_trash": "휴지통"
+    "admin_trash": "휴지통",
+    "admin_support": "지원 채팅"
   },
   "commission": {
     "list_title": "내 의뢰",
@@ -439,7 +440,34 @@
     "sync_retry_success": "재동기화 완료 ({status})",
     "sync_retry_error": "재동기화 실패",
     "sync_retry_hint": "우측 메뉴에서 다시 시도하거나 관리자에게 문의해 주세요.",
-    "actions_menu_label": "미팅 작업 메뉴"
+    "actions_menu_label": "미팅 작업 메뉴",
+    "request_card_title": "프로젝트 의뢰 전 미팅을 희망하시나요?",
+    "request_card_sub": "야기 팀과 30분 미팅으로 프로젝트 방향을 먼저 잡아볼 수 있어요.",
+    "request_card_cta": "미팅 요청하기",
+    "request_modal_title": "미팅 요청하기",
+    "request_modal_sub": "야기가 가능한 시간으로 확정해서 알려드릴게요.",
+    "request_modal_no_workspace_title": "워크샵이 필요해요",
+    "request_modal_no_workspace_body": "온보딩을 마치면 미팅을 요청할 수 있어요.",
+    "request_default_title": "프로젝트 사전 미팅",
+    "request_field_title": "제목",
+    "request_field_agenda": "어떤 이야기를 나누고 싶으신가요?",
+    "request_field_agenda_ph": "프로젝트 배경, 궁금한 점, 야기에게 듣고 싶은 의견 등을 자유롭게 적어주세요. (20자 이상)",
+    "request_field_duration": "소요 시간",
+    "request_field_slots": "선호 시간 1~3개",
+    "request_field_slots_hint": "여러 시간을 제안하면 야기가 가능한 시간을 골라 확정해드려요. 모든 시간은 24시간 이후여야 합니다.",
+    "request_slot_add": "시간 추가",
+    "request_slot_remove": "이 시간 제거",
+    "request_cancel": "취소",
+    "request_submit": "요청 보내기",
+    "request_submitting": "보내는 중...",
+    "request_submit_success": "미팅 요청을 보냈어요. 곧 확정 일정을 알려드릴게요.",
+    "request_submit_error": "요청 전송에 실패했어요. 다시 시도해 주세요.",
+    "request_err_no_slot": "선호 시간을 1개 이상 입력해주세요.",
+    "request_err_invalid_slot": "유효하지 않은 시간 형식이에요.",
+    "request_err_slot_too_soon": "모든 시간은 24시간 이후여야 합니다.",
+    "request_err_agenda_too_short": "안건을 20자 이상 작성해주세요.",
+    "status_requested": "요청됨",
+    "status_rescheduled": "일정 재조정 중"
   },
   "projects": {
     "list_title": "프로젝트",
@@ -1055,6 +1083,26 @@
       "thread_mention": {
         "title": "기획 보드에서 멘션되었어요",
         "body": "{actor}: {excerpt}"
+      },
+      "meeting_requested": {
+        "title": "새 미팅 요청이 도착했어요",
+        "body": "{actor}님이 \"{meeting_title}\" 미팅을 요청했어요."
+      },
+      "meeting_confirmed": {
+        "title": "미팅 일정이 확정되었어요",
+        "body": "\"{meeting_title}\" 미팅이 {when}에 확정되었어요."
+      },
+      "meeting_rescheduled": {
+        "title": "미팅 일정이 변경되었어요",
+        "body": "{actor}님이 \"{meeting_title}\" 일정을 변경했어요."
+      },
+      "meeting_cancelled": {
+        "title": "미팅이 취소되었어요",
+        "body": "\"{meeting_title}\" 미팅이 취소되었어요."
+      },
+      "support_message_new": {
+        "title": "야기 팀과의 대화에 새 메시지",
+        "body": "{actor}: {excerpt}"
       }
     }
   },
@@ -1163,6 +1211,28 @@
     "not_found": "찾을 수 없습니다",
     "unauthorized": "권한이 없습니다",
     "validation": "입력값이 올바르지 않습니다"
+  },
+  "support": {
+    "fab_label": "야기 팀에 문의하기",
+    "panel_label": "야기 팀 채팅",
+    "panel_title": "야기 팀과 대화하기",
+    "panel_response_hint": "보통 1-2시간 내에 답변드려요",
+    "panel_close": "닫기",
+    "panel_empty": "안녕하세요! 궁금한 점이 있으면 편하게 메시지 남겨주세요.",
+    "composer_placeholder": "메시지 입력...",
+    "composer_hint": "Enter 전송, Shift+Enter 줄바꿈",
+    "send": "보내기",
+    "send_error": "메시지 전송에 실패했어요",
+    "toast_new_message": "새 메시지가 도착했어요",
+    "unread_aria": "읽지 않은 메시지 {n}개",
+    "admin_queue_title": "지원 채팅",
+    "admin_queue_sub": "클라이언트 문의 대화입니다.",
+    "admin_queue_empty": "아직 받은 문의가 없어요.",
+    "admin_thread_unread": "미답변",
+    "admin_close_thread": "대화 종료",
+    "admin_reopen_thread": "대화 재개",
+    "admin_status_open": "진행 중",
+    "admin_status_closed": "종료됨"
   },
   "challenges": {
     "list": {

@@ -291,10 +291,12 @@ export async function createMeeting(
 // Helpers
 // ---------------------------------------------------------------------------
 
-function _revalidateMeetingPaths(projectId: string): void {
+function _revalidateMeetingPaths(projectId: string | null): void {
   for (const locale of ["ko", "en"]) {
     revalidatePath(`/${locale}/app/meetings`);
-    revalidatePath(`/${locale}/app/projects/${projectId}`);
+    if (projectId) {
+      revalidatePath(`/${locale}/app/projects/${projectId}`);
+    }
   }
 }
 
@@ -427,6 +429,12 @@ export async function sendMeetingSummary(
   const projectName =
     (meeting.project as { title: string } | null)?.title ?? "";
 
+  // Phase 2.8.6: scheduled_at is now nullable schema-wide, but the
+  // sendSummary path is only reachable for already-scheduled meetings.
+  // Guard for type-safety; null here means a code path bug.
+  if (!meeting.scheduled_at) {
+    return { ok: false, error: "validation" };
+  }
   const emailResult = await sendSummary({
     to: attendeeEmails,
     projectName,
@@ -654,7 +662,7 @@ export async function cancelMeeting(
     .eq("meeting_id", meetingId);
 
   const attendeeEmails = (attendees ?? []).map((a) => a.email);
-  if (attendeeEmails.length > 0) {
+  if (attendeeEmails.length > 0 && meeting.scheduled_at) {
     const projectName =
       (meeting.project as { title: string } | null)?.title ?? "";
     const scheduledAt = new Date(meeting.scheduled_at);
@@ -815,6 +823,11 @@ export async function retryCalendarSync(
   const attendeeEmails = (attendees ?? []).map((a) => a.email);
   const organizerEmail =
     process.env.GOOGLE_ORGANIZER_EMAIL ?? "yagi@yagiworkshop.xyz";
+  // Phase 2.8.6: nullable schema-wide. This path runs only for
+  // already-scheduled meetings; guard for type-safety.
+  if (!meeting.scheduled_at) {
+    return { ok: false, error: "validation" };
+  }
   const parsedDate = new Date(meeting.scheduled_at);
   const projectName =
     (meeting.project as { title: string } | null)?.title ?? "";
