@@ -1519,6 +1519,10 @@
   },
   "projectBoard": {
     "emptyOverlay": "이미지를 드래그하거나 + 버튼으로 자료를 추가하세요",
-    "mobileBanner": "PC에서 편집해주세요"
+    "mobileBanner": "PC에서 편집해주세요",
+    "assetMenu": {
+      "copyUrl": "URL 복사",
+      "download": "다운로드"
+    }
   }
 }

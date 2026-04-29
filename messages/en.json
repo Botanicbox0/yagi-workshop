@@ -1454,6 +1454,10 @@
   },
   "projectBoard": {
     "emptyOverlay": "Drag images or use the + button to add references",
-    "mobileBanner": "Edit on desktop"
+    "mobileBanner": "Edit on desktop",
+    "assetMenu": {
+      "copyUrl": "Copy URL",
+      "download": "Download"
+    }
   }
 }

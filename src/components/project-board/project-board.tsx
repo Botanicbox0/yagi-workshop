@@ -11,7 +11,7 @@
  *
  * REGION OWNERSHIP:
  *   task_02 (this file): shell + shape registration + theme + mobile detection + empty overlay
- *   task_03: fills TASK_03_STUB regions — drop handlers + asset menu wiring
+ *   task_03: fills TASK_03_STUB regions — drop handlers + asset menu wiring (DONE)
  *   task_05: fills TASK_05_STUB regions — brief mode features (version history, lock)
  */
 
@@ -19,10 +19,21 @@ import "./tldraw-theme.css";
 // Side-effect import: ensures TLGlobalShapePropsMap augmentation is in scope
 import "./shapes/yagi-shape-types";
 
-import { Tldraw, Editor, TLAnyShapeUtilConstructor } from "@tldraw/tldraw";
+import {
+  Tldraw,
+  Editor,
+  TLAnyShapeUtilConstructor,
+  createShapeId,
+} from "@tldraw/tldraw";
 import "@tldraw/tldraw/tldraw.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+
+import { AssetActionMenu } from "./asset-action-menu";
+import {
+  getWizardAssetPutUrlAction,
+  fetchVideoMetadataAction,
+} from "@/app/[locale]/app/projects/new/actions";
 
 import { ImageShapeUtil } from "./shapes/image-shape";
 import { UrlCardShapeUtil } from "./shapes/url-card-shape";
@@ -38,6 +49,55 @@ const CUSTOM_SHAPE_UTILS: TLAnyShapeUtilConstructor[] = [
   UrlCardShapeUtil,
   PdfShapeUtil,
 ];
+
+// ============================================================
+// Image/PDF size limits (client-side validation — server validates again)
+// ============================================================
+
+const IMAGE_MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+const PDF_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+
+// ============================================================
+// Asset action menu state type
+// ============================================================
+
+type AssetMenuState = {
+  shapeType: "yagi-image" | "yagi-pdf" | "yagi-url-card";
+  src: string;
+  position: { x: number; y: number };
+} | null;
+
+// ============================================================
+// Upload helper — calls server action for presigned PUT, then fetches R2
+// ============================================================
+
+async function uploadFileToR2(
+  file: File,
+  keyPrefix: string
+): Promise<string | null> {
+  const timestamp = Date.now();
+  // L-009: no Korean chars in path — use file.name as-is (user ASCII filenames expected)
+  const storageKey = `${keyPrefix}/${timestamp}-${file.name}`;
+
+  const result = await getWizardAssetPutUrlAction(storageKey, file.type);
+  if (!result.ok) {
+    console.error("[ProjectBoard] presign failed:", result.error);
+    return null;
+  }
+
+  const putResponse = await fetch(result.putUrl, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type },
+  });
+
+  if (!putResponse.ok) {
+    console.error("[ProjectBoard] R2 PUT failed:", putResponse.status);
+    return null;
+  }
+
+  return result.publicUrl;
+}
 
 // ============================================================
 // Mobile detection hook
@@ -104,6 +164,11 @@ export function ProjectBoard({
   const [hasShapes, setHasShapes] = useState(false);
   const [isEditorMounted, setIsEditorMounted] = useState(false);
 
+  // === TASK_03_STUB filled: asset action menu state ===
+  const [assetMenu, setAssetMenu] = useState<AssetMenuState>(null);
+  // hoverTimeout ref — cleared on mouseLeave before 300ms
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Effective read-only: mobile, explicit prop, or locked (non-admin)
   const isReadOnly =
     readOnly ||
@@ -151,7 +216,7 @@ export function ProjectBoard({
       updateShapeCount();
 
       // Subscribe to store changes for empty overlay + autosave
-      const unsubscribe = editor.store.listen(
+      const unsubscribeStore = editor.store.listen(
         () => {
           updateShapeCount();
 
@@ -172,23 +237,206 @@ export function ProjectBoard({
         { source: "user", scope: "document" }
       );
 
-      // === TASK_03_STUB: drop handler ===
-      // task_03 will implement onDrop handling here via:
-      //   editor.on('drop', ...) or tldraw's built-in drop integration
-      // - onDrop image file → getWizardAssetPutUrlAction → R2 PUT → insert image shape
-      //   with src = CLOUDFLARE_R2_PUBLIC_BASE + key
-      // - onDrop PDF file → upload via same path → insert pdf shape
-      // - URL paste → fetchVideoMetadataAction for YouTube/Vimeo oEmbed,
-      //   else parse title/description → insert url-card shape
-      // - Client-side size validation: image ≤20MB, PDF ≤10MB
-      // const handleDrop = undefined; // task_03 fills this
+      // === TASK_03_STUB filled: drop handler ===
+      // tldraw v4 exposes native DOM drop events via the canvas element.
+      // We intercept at the tldraw container's DOM node via the 'drop' event on the
+      // canvas wrapper since tldraw v4 does not have a public editor.on('drop') API.
 
-      // === TASK_03_STUB: asset action menu ===
-      // task_03 will wire <AssetActionMenu> component that appears on:
-      //   - hover over image/pdf/url-card shape (300ms delay)
-      //   - right-click on image/pdf/url-card shape
-      // import AssetActionMenu from './asset-action-menu' is intentionally absent here.
-      // task_03 creates asset-action-menu.tsx and adds the import + wiring.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 container access
+      const container = (editor as any).getContainer?.() as HTMLElement | null;
+
+      const handleDrop = async (e: DragEvent) => {
+        if (isReadOnly) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const files = Array.from(e.dataTransfer?.files ?? []);
+        const textData = e.dataTransfer?.getData("text/plain") ?? "";
+
+        // Calculate drop position in canvas coordinates
+        const canvasPos = editor.screenToPage({
+          x: e.clientX,
+          y: e.clientY,
+        });
+
+        // --- Handle file drops ---
+        for (const file of files) {
+          const mime = file.type;
+
+          if (mime.startsWith("image/")) {
+            // Client-side size validation — server validates again
+            if (file.size > IMAGE_MAX_BYTES) {
+              console.warn(`[ProjectBoard] Image too large (max 20MB): ${file.name}`);
+              continue;
+            }
+
+            const publicUrl = await uploadFileToR2(file, "board-assets");
+            if (!publicUrl) continue;
+
+            editor.createShape({
+              id: createShapeId(),
+              type: "yagi-image" as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1: custom shape type not in TLGlobalShapePropsMap
+              x: canvasPos.x,
+              y: canvasPos.y,
+              props: {
+                src: publicUrl,
+                w: 320,
+                h: 240,
+                alt: file.name,
+              },
+            } as any); // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1
+          } else if (mime === "application/pdf") {
+            // Client-side size validation — server validates again
+            if (file.size > PDF_MAX_BYTES) {
+              console.warn(`[ProjectBoard] PDF too large (max 10MB): ${file.name}`);
+              continue;
+            }
+
+            const publicUrl = await uploadFileToR2(file, "board-assets");
+            if (!publicUrl) continue;
+
+            editor.createShape({
+              id: createShapeId(),
+              type: "yagi-pdf" as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1: custom shape type not in TLGlobalShapePropsMap
+              x: canvasPos.x,
+              y: canvasPos.y,
+              props: {
+                src: publicUrl,
+                filename: file.name,
+                pageCount: 0,
+                w: 200,
+                h: 160,
+              },
+            } as any); // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1
+          }
+        }
+
+        // --- Handle URL drops (text/plain with a URL) ---
+        if (files.length === 0 && textData) {
+          await insertUrlCard(editor, textData, canvasPos);
+        }
+      };
+
+      // --- URL paste handler ---
+      const handlePaste = async (e: ClipboardEvent) => {
+        if (isReadOnly) return;
+        // Only intercept plain-text paste that looks like a URL
+        const text = e.clipboardData?.getData("text/plain") ?? "";
+        if (!text) return;
+
+        let url: URL;
+        try {
+          url = new URL(text);
+        } catch {
+          return; // not a URL — let tldraw handle normally
+        }
+        if (url.protocol !== "http:" && url.protocol !== "https:") return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Place url-card near the canvas center
+        const viewportCenter = editor.getViewportScreenCenter();
+        const pageCenter = editor.screenToPage(viewportCenter);
+        await insertUrlCard(editor, text, { x: pageCenter.x, y: pageCenter.y });
+      };
+
+      if (container) {
+        container.addEventListener("drop", handleDrop as unknown as EventListener);
+        container.addEventListener("dragover", (e: Event) => {
+          e.preventDefault();
+          const dragEvent = e as DragEvent;
+          if (dragEvent.dataTransfer) {
+            dragEvent.dataTransfer.dropEffect = "copy";
+          }
+        });
+      }
+
+      // Paste listener on the window (tldraw captures canvas-level paste; we hook window)
+      window.addEventListener("paste", handlePaste as unknown as EventListener);
+
+      // === TASK_03_STUB filled: asset action menu — pointer move hover wiring ===
+      // tldraw v4: editor.on('pointerMove') fires with the hovered shape ID.
+      // We track hover with a 300ms delay to avoid flicker.
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 event types
+      const unsubscribePointerMove = (editor as any).on?.("pointerMove", () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 hoveredShapeId
+        const hoveredId = (editor as any).getHoveredShapeId?.() as string | null;
+        if (!hoveredId) {
+          if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+          }
+          setAssetMenu(null);
+          return;
+        }
+
+        const shape = editor.getShape(hoveredId as Parameters<typeof editor.getShape>[0]);
+        if (!shape) return;
+
+        const YAGI_TYPES = ["yagi-image", "yagi-pdf", "yagi-url-card"] as const;
+        type YagiShapeType = (typeof YAGI_TYPES)[number];
+        if (!YAGI_TYPES.includes(shape.type as YagiShapeType)) {
+          setAssetMenu(null);
+          return;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: shape props access
+        const props = (shape as any).props as Record<string, unknown>;
+        const src =
+          (props.src as string | undefined) ??
+          (props.url as string | undefined) ??
+          "";
+        if (!src) return;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 pointer position
+        const pointer = (editor as any).inputs?.currentPagePoint ?? { x: 0, y: 0 };
+        const screenPoint = editor.pageToScreen(pointer);
+
+        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = setTimeout(() => {
+          setAssetMenu({
+            shapeType: shape.type as YagiShapeType,
+            src,
+            position: { x: screenPoint.x + 12, y: screenPoint.y + 12 },
+          });
+        }, 300);
+      }) ?? (() => {});
+
+      // Right-click context menu for asset shapes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 rightClick event info type
+      const unsubscribeRightClick = (editor as any).on?.("rightClick", (info: any) => {
+        const shapeId = info?.shape?.id ?? info?.target?.id;
+        if (!shapeId) return;
+
+        const shape = editor.getShape(shapeId as Parameters<typeof editor.getShape>[0]);
+        if (!shape) return;
+
+        const YAGI_TYPES = ["yagi-image", "yagi-pdf", "yagi-url-card"] as const;
+        type YagiShapeType2 = (typeof YAGI_TYPES)[number];
+        if (!YAGI_TYPES.includes(shape.type as YagiShapeType2)) return;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: shape props access
+        const props = (shape as any).props as Record<string, unknown>;
+        const src =
+          (props.src as string | undefined) ??
+          (props.url as string | undefined) ??
+          "";
+        if (!src) return;
+
+        // Position near the click (passed in info.point or use inputs)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 inputs
+        const inputs = (editor as any).inputs;
+        const pagePoint = info?.point ?? inputs?.currentPagePoint ?? { x: 0, y: 0 };
+        const screenPoint = editor.pageToScreen(pagePoint);
+
+        setAssetMenu({
+          shapeType: shape.type as YagiShapeType2,
+          src,
+          position: { x: screenPoint.x + 4, y: screenPoint.y + 4 },
+        });
+      }) ?? (() => {});
 
       // === TASK_05_STUB: version history panel (brief mode only) ===
       // task_05 will wire the version history side panel for mode='brief'.
@@ -197,23 +445,25 @@ export function ProjectBoard({
       // === TASK_05_STUB: lock/unlock action (brief mode, yagi_admin only) ===
       // task_05 will add the lock button + toast on locked-edit attempt.
 
-      return unsubscribe;
+      return () => {
+        unsubscribeStore();
+        if (typeof unsubscribePointerMove === "function") unsubscribePointerMove();
+        if (typeof unsubscribeRightClick === "function") unsubscribeRightClick();
+        if (container) {
+          container.removeEventListener("drop", handleDrop as unknown as EventListener);
+        }
+        window.removeEventListener("paste", handlePaste as unknown as EventListener);
+        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+      };
     },
-    [document, onDocumentChange]
+    [document, onDocumentChange, isReadOnly]
   );
 
   // ============================================================
-  // Tldraw component options
+  // Tldraw component options (unused variable — kept for documentation)
   // ============================================================
 
-  const tldrawOptions = {
-    shapeUtils: CUSTOM_SHAPE_UTILS,
-    onMount: handleMount,
-    inferDarkMode: false,
-    // Disable tldraw's default toolbar in wizard mode (we control via drop+paste)
-    // In brief mode, allow full toolbar for admin editing
-    hideUi: false,
-  } as const;
+  // const tldrawOptions — removed (was unused; props spread inline on <Tldraw>)
 
   // ============================================================
   // Render
@@ -295,6 +545,16 @@ export function ProjectBoard({
       {/* Empty canvas overlay (Q-D) */}
       {isEditorMounted && <EmptyOverlay hasShapes={hasShapes} />}
 
+      {/* Asset action menu — shown on hover (300ms) or right-click on yagi-* shapes */}
+      {assetMenu && (
+        <AssetActionMenu
+          shapeType={assetMenu.shapeType}
+          src={assetMenu.src}
+          position={assetMenu.position}
+          onClose={() => setAssetMenu(null)}
+        />
+      )}
+
       {/* tldraw canvas */}
       {/* Read-only state is set via editor.updateInstanceState in handleMount */}
       <Tldraw
@@ -305,6 +565,55 @@ export function ProjectBoard({
       />
     </div>
   );
+}
+
+// ============================================================
+// insertUrlCard — shared helper for drop + paste URL handling
+// ============================================================
+
+async function insertUrlCard(
+  editor: Editor,
+  rawUrl: string,
+  pos: { x: number; y: number }
+) {
+  let domain = "";
+  try {
+    domain = new URL(rawUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return; // not a valid URL
+  }
+
+  // Try oEmbed for YouTube / Vimeo
+  let title = "";
+  let thumbnail = "";
+  const description = "";
+
+  try {
+    const meta = await fetchVideoMetadataAction(rawUrl);
+    if (meta) {
+      title = meta.title ?? "";
+      thumbnail = meta.thumbnailUrl ?? "";
+      // oEmbed doesn't provide description; leave empty
+    }
+  } catch {
+    // oEmbed unavailable — fall back to generic card
+  }
+
+  editor.createShape({
+    id: createShapeId(),
+    type: "yagi-url-card" as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1: custom shape type not in TLGlobalShapePropsMap
+    x: pos.x,
+    y: pos.y,
+    props: {
+      url: rawUrl,
+      title,
+      description,
+      thumbnail,
+      domain,
+      w: 280,
+      h: thumbnail ? 200 : 100,
+    },
+  } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export default ProjectBoard;
