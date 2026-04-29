@@ -451,6 +451,61 @@ export async function submitDraftProject(
 }
 
 // =============================================================================
+// Phase 3.0 hotfix-2 — getWizardAssetPutUrlAction
+// =============================================================================
+// Server action that generates a presigned R2 PUT URL + the public URL for a
+// wizard reference asset. Moved server-side because createBriefAssetPutUrl
+// uses S3Client with process.env credentials — it cannot run in the browser.
+// Previously reference-board.tsx (a "use client" component) called these
+// r2/client functions directly, causing silent failures on every upload attempt.
+// Root cause: H2 — r2/client imports are server-only; client components must
+// call server actions instead.
+// =============================================================================
+
+import {
+  createBriefAssetPutUrl,
+  objectPublicUrl,
+} from "@/lib/r2/client";
+
+const wizardAssetPutUrlSchema = z.object({
+  storageKey: z.string().min(1).max(500),
+  contentType: z.string().min(1).max(200),
+});
+
+export type WizardAssetPutUrlResult =
+  | { ok: true; putUrl: string; publicUrl: string }
+  | { ok: false; error: string };
+
+export async function getWizardAssetPutUrlAction(
+  storageKey: unknown,
+  contentType: unknown
+): Promise<WizardAssetPutUrlResult> {
+  const parsed = wizardAssetPutUrlSchema.safeParse({ storageKey, contentType });
+  if (!parsed.success) {
+    return { ok: false, error: "invalid_input" };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  try {
+    const putUrl = await createBriefAssetPutUrl(
+      parsed.data.storageKey,
+      parsed.data.contentType,
+      600
+    );
+    const pubUrl = objectPublicUrl(parsed.data.storageKey);
+    return { ok: true, putUrl, publicUrl: pubUrl };
+  } catch (err) {
+    console.error("[getWizardAssetPutUrlAction] presign failed:", err);
+    return { ok: false, error: "presign_failed" };
+  }
+}
+
+// =============================================================================
 // Phase 3.0 task_03 — fetchVideoMetadataAction
 // =============================================================================
 // Server action wrapper around the oEmbed lib. Validates the URL with Zod,

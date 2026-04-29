@@ -21,11 +21,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  createBriefAssetPutUrl,
-  objectPublicUrl,
-} from "@/lib/r2/client";
-import {
   fetchVideoMetadataAction,
+  getWizardAssetPutUrlAction,
 } from "@/app/[locale]/app/projects/new/actions";
 
 // ---------------------------------------------------------------------------
@@ -285,15 +282,22 @@ export function ReferenceBoard({ refs, onChange }: ReferenceBoardProps) {
       try {
         const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
         const storageKey = `project-wizard/${id}.${ext}`;
-        const putUrl = await createBriefAssetPutUrl(storageKey, file.type, 600);
-        const uploadRes = await fetch(putUrl, {
+
+        // Phase 3.0 hotfix-2 fix: createBriefAssetPutUrl + objectPublicUrl are
+        // server-only (use S3Client + process.env credentials). This component
+        // is "use client" — calling them directly caused silent failures. Use
+        // server action getWizardAssetPutUrlAction to generate both URLs server-side.
+        const urlResult = await getWizardAssetPutUrlAction(storageKey, file.type);
+        if (!urlResult.ok) throw new Error(`presign failed: ${urlResult.error}`);
+
+        const uploadRes = await fetch(urlResult.putUrl, {
           method: "PUT",
           body: file,
           headers: { "Content-Type": file.type },
         });
         if (!uploadRes.ok) throw new Error("R2 upload failed");
 
-        const publicUrl = objectPublicUrl(storageKey);
+        const publicUrl = urlResult.publicUrl;
         // Update the placeholder in-place with the uploaded URL
         onChange(
           refsRef.current.map((r) =>
