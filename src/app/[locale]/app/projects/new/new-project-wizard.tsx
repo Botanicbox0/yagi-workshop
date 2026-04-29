@@ -346,10 +346,15 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
     setStep(2);
   }
 
-  async function goToStep3() {
-    const valid = await trigger(["deliverable_types", "budget_band"]);
-    if (!valid) return;
+  // hotfix-2: Step 2 is references-only (optional); no validation gate.
+  // deliverable_types + budget_band validation moved to goToStep4 (submit gate in Step 3).
+  function goToStep3() {
     setStep(3);
+  }
+
+  // Validate admin fields before submitting from Step 3
+  async function validateStep3Fields(): Promise<boolean> {
+    return trigger(["deliverable_types", "budget_band"]);
   }
 
   // -------------------------------------------------------------------------
@@ -418,63 +423,18 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   );
 
   // -------------------------------------------------------------------------
-  // Step 2 — Conditions
+  // Step 2 — Reference materials (hotfix-2: refs-only, optional)
   // -------------------------------------------------------------------------
 
   const step2Content = (
     <div className="space-y-6">
-      {/* Deliverable types */}
-      <div className="space-y-2">
-        <Label>{t("wizard.field.deliverable_types.label")}</Label>
-        <Controller
-          control={control}
-          name="deliverable_types"
-          render={({ field }) => (
-            <DeliverableChips
-              value={field.value ?? []}
-              onChange={field.onChange}
-            />
-          )}
-        />
-        {errors.deliverable_types && (
-          <p className="text-xs text-destructive" role="alert">
-            {t("wizard.errors.deliverable_required")}
-          </p>
-        )}
-      </div>
+      {/* "선택" tone sub text */}
+      <p className="text-sm text-muted-foreground keep-all">
+        {t("wizard.step2.sub")}
+      </p>
 
-      {/* Budget */}
-      <div className="space-y-2">
-        <Label>{t("wizard.field.budget.label")}</Label>
-        <Controller
-          control={control}
-          name="budget_band"
-          render={({ field }) => (
-            <BudgetRadio
-              value={(field.value as BudgetBand) ?? ""}
-              onChange={field.onChange}
-            />
-          )}
-        />
-        {errors.budget_band && (
-          <p className="text-xs text-destructive" role="alert">
-            {t("wizard.errors.budget_required")}
-          </p>
-        )}
-      </div>
-
-      {/* Delivery date */}
-      <div className="space-y-1.5">
-        <Label htmlFor="delivery_date">
-          {t("wizard.field.delivery_date.label")}
-        </Label>
-        <Input
-          id="delivery_date"
-          type="date"
-          min={new Date().toISOString().slice(0, 10)}
-          {...register("delivery_date")}
-        />
-      </div>
+      {/* ReferenceBoard — after Wave A upload fix */}
+      <ReferenceBoard refs={refs} onChange={setRefs} />
 
       <div className="flex items-center justify-between pt-2">
         <Button
@@ -488,7 +448,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
         <Button
           type="button"
           className="rounded-full uppercase tracking-[0.10em] text-sm"
-          onClick={() => void goToStep3()}
+          onClick={() => goToStep3()}
         >
           {t("wizard.actions.continue")}
         </Button>
