@@ -1,0 +1,147 @@
+/*
+ * tldraw-theme.css
+ * Phase 3.1 — Achromatic override for tldraw canvas chrome
+ * Enforcement: L-011 (achromatic only in /app/* product surfaces)
+ * All default tldraw blue/purple/teal accent colors are neutralized.
+ */
+
+/* ============================================================
+   CSS variable overrides — tldraw v4 custom property names
+   ============================================================ */
+
+/* Primary accent: tldraw uses --color-selected and similar for selection handles */
+:root {
+  /* Selection / highlight — tldraw uses blue by default */
+  --color-selected: #0a0a0a;
+  --color-selected-op15: rgba(10, 10, 10, 0.15);
+
+  /* Focus ring — tldraw uses a blue outline */
+  --color-focus-ring: #0a0a0a;
+
+  /* Accent / primary color throughout tldraw UI */
+  --color-accent: #0a0a0a;
+  --color-accent-hover: #333333;
+  --color-accent-active: #1a1a1a;
+
+  /* Handles on selected shapes */
+  --color-handle: #0a0a0a;
+  --color-handle-selected: #0a0a0a;
+  --color-handle-hover: #333333;
+
+  /* Binding points */
+  --color-binding: #0a0a0a;
+  --color-binding-hover: #333333;
+
+  /* Crosshair and cursor indicators */
+  --color-crosshair: #666666;
+
+  /* Text colors in tldraw UI panels */
+  --color-text: #0a0a0a;
+  --color-text-2: #555555;
+  --color-text-3: #888888;
+
+  /* Background colors */
+  --color-panel: #ffffff;
+  --color-panel-hover: #f5f5f5;
+
+  /* Border colors */
+  --color-border: #eaeaea;
+  --color-divider: #eaeaea;
+
+  /* Shadow — single permitted elevation per PRINCIPLES.md §3 */
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  /* Canvas background — white per editorial aesthetic */
+  --color-background: #ffffff;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #888888;
+
+  /* tldraw v4 specific */
+  --tl-color-accent: #0a0a0a;
+  --tl-color-selected: #0a0a0a;
+  --tl-color-highlight: rgba(10, 10, 10, 0.1);
+}
+
+/* ============================================================
+   tldraw toolbar + menus — strip blue chrome
+   ============================================================ */
+
+/* Toolbar buttons */
+.tlui-button[data-isselected="true"],
+.tlui-button--selected,
+.tlui-button:focus-visible {
+  background-color: #f0f0f0 !important;
+  color: #0a0a0a !important;
+  border-color: #0a0a0a !important;
+  outline-color: #0a0a0a !important;
+}
+
+/* tldraw shape style panel — color picker dots (we show achromatic only, hide color swatches) */
+.tlui-style-panel__section__double-select,
+.tlui-color-picker {
+  /* Allow but ensure selection rings are black not blue */
+}
+
+.tlui-swatch[aria-checked="true"]::after {
+  border-color: #0a0a0a !important;
+}
+
+/* Toolbar itself */
+.tlui-toolbar {
+  box-shadow: var(--shadow-panel) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Context menu */
+.tlui-menu {
+  box-shadow: var(--shadow-panel) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Selection box outline */
+.tl-selection {
+  border-color: #0a0a0a !important;
+}
+
+/* Handle dots on selected shape */
+.tl-handle {
+  background-color: #0a0a0a !important;
+  border-color: #ffffff !important;
+}
+
+.tl-handle:hover {
+  background-color: #333333 !important;
+}
+
+/* Focus ring on the canvas element itself */
+.tl-canvas:focus-visible {
+  outline: 2px solid #0a0a0a !important;
+  outline-offset: 2px !important;
+}
+
+/* Scrollbars inside tldraw panels */
+.tlui-scrollable::-webkit-scrollbar-thumb {
+  background-color: #cccccc !important;
+}
+
+.tlui-scrollable::-webkit-scrollbar-thumb:hover {
+  background-color: #aaaaaa !important;
+}
+
+/* ============================================================
+   Achromatic shape fill palette mapping
+   Remove any blue/teal/purple from the default shape color set.
+   tldraw shows shape color picks in the toolbar — we keep black/white/gray.
+   ============================================================ */
+
+/* The shape colors tldraw provides: black, dark-grey, grey, light-grey,
+   white, red, light-red, orange, yellow, light-yellow, green, light-green,
+   teal, cyan, blue, light-blue, violet, light-violet.
+   We CANNOT remove them from the picker without forking tldraw internals.
+   We CAN override the CSS variables so they render as achromatic values.
+   NOTE: tldraw v4 renders shape fills as CSS custom properties per-shape.
+   These are dynamically applied at runtime; we cannot override them here
+   without inline style injection. Leave shape color picker as-is but ensure
+   UI chrome is achromatic via the above overrides.
+   See K-05 note: this is a documented limitation, not a regression.
+*/
