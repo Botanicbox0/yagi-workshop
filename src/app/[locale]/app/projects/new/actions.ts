@@ -526,12 +526,12 @@ export async function fetchVideoMetadataAction(
 }
 
 // =============================================================================
-// Phase 3.0 task_04 — submitProjectAction
+// Phase 3.0 task_04 — submitProjectAction (Phase 3.1 task_04 update)
 // =============================================================================
 // Atomically submits the wizard's draft as a new project with status='in_review'
 // (the L-015 auto-transition shortcut — never writes 'submitted' to projects).
 //
-// Sequence:
+// Sequence (Phase 3.1):
 //   1. INSERT projects with status='in_review' (user-scoped client; RLS
 //      INSERT policy allows it since we own the workspace)
 //   2. INSERT project_status_history with actor_role='system' — MUST bypass
@@ -539,18 +539,37 @@ export async function fetchVideoMetadataAction(
 //      Resolution: Option A — service-role client scoped to this single INSERT.
 //      Service-role usage is strictly scoped; other reads/writes stay on user
 //      client.
-//   3. INSERT project_references rows (user-scoped client)
+//   3. RPC seed_project_board_from_wizard(project_id, board_document) —
+//      Phase 3.1 replaces the project_references INSERT path.
+//      The RPC is SECURITY DEFINER + asserts project.status='in_review'.
 //   4. DELETE wizard_drafts row (user-scoped client)
 //   5. Send Resend admin + client emails (best-effort, not blocking)
 //   6. Emit in-app notification to the submitting user (best-effort, not
 //      blocking)
 //
 // Returns { ok: true, projectId, redirect } on success.
-// Throws on any step 1-4 failure.
 // =============================================================================
 
 import { sendProjectSubmittedAdmin, sendProjectSubmittedClient } from "@/lib/email/project";
 import { emitNotification } from "@/lib/notifications/emit";
+
+// =============================================================================
+// Phase 3.1 — server-side tldraw store validator (anti-DoS + structural sanity)
+// =============================================================================
+// K-05 trust boundary: the wizard's boardDocument is client-controlled JSON.
+// Server enforces a max serialized size (5MB) AND a minimum structural shape
+// (must be either {} or contain a "store" object). Detailed validation of
+// every shape's props is impractical for tldraw store snapshots; we trust the
+// schema migration version + tldraw's runtime to reject malformed shapes on
+// load. Server prevents oversized/wrong-shape payloads only.
+function validateTldrawStore(doc: Record<string, unknown>): boolean {
+  if (!doc || typeof doc !== "object") return false;
+  if (Object.keys(doc).length === 0) return true; // empty board OK
+  if (!("store" in doc)) return false;
+  const store = (doc as { store: unknown }).store;
+  if (typeof store !== "object" || store === null) return false;
+  return true;
+}
 
 const SubmitInputSchema = z.object({
   name: z.string().min(1).max(80),
@@ -559,19 +578,25 @@ const SubmitInputSchema = z.object({
   deliverable_types: z.array(z.string()).min(1),
   budget_band: z.enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"]),
   delivery_date: z.string().nullable().optional(),
-  references: z
-    .array(
-      z.object({
-        id: z.string(),
-        kind: z.enum(["url", "image", "pdf", "video"]),
-        url: z.string().url(),
-        note: z.string().default(""),
-        title: z.string().optional(),
-        thumbnailUrl: z.string().url().optional(),
-        durationSeconds: z.number().int().positive().optional(),
-      })
+  // Phase 3.1: replaces references[] with a tldraw store snapshot.
+  // Server-side validation: 5MB serialized cap (anti-DoS) + structural sanity.
+  boardDocument: z
+    .record(z.string(), z.unknown())
+    .refine(
+      (doc) => {
+        try {
+          const serialized = JSON.stringify(doc);
+          return serialized.length <= 5 * 1024 * 1024;
+        } catch {
+          return false;
+        }
+      },
+      { message: "boardDocument exceeds 5MB or is not serializable" }
     )
-    .default([]),
+    .refine(validateTldrawStore, {
+      message: "boardDocument is not a valid tldraw store snapshot",
+    })
+    .default({}),
   // workspaceId is optional when draftProjectId is provided — the action
   // resolves it from the draft project row in that case. One of the two
   // must be present for workspace resolution to succeed.
@@ -700,30 +725,25 @@ export async function submitProjectAction(
     console.error("[submitProjectAction] WARN: history row missing for project", project.id);
   }
 
-  // 3. INSERT project_references rows (user-scoped client; RLS allows INSERT
-  //    for workspace members on their own project's references).
-  //    kind, url, note, title, thumbnail_url, sort_order are Phase 3.0 columns
-  //    — not in generated types yet. Use the any-cast client.
-  if (data.references.length > 0) {
-    const refRows = data.references.map((r, i) => ({
-      project_id: project.id,
-      kind: r.kind,
-      url: r.url,
-      note: r.note,
-      title: r.title ?? null,
-      thumbnail_url: r.thumbnailUrl ?? null,
-      duration_seconds: r.durationSeconds ?? null,
-      sort_order: i,
-      // Required legacy columns with defaults for new wizard submissions
-      added_by: user.id,
-    }));
-    const { error: refErr } = await supabaseAny
-      .from("project_references")
-      .insert(refRows) as { error: { message: string } | null };
-    if (refErr) {
-      console.error("[submitProjectAction] references INSERT error:", refErr);
-      // Non-fatal — project was created; references can be added later
+  // 3. Phase 3.1 — Seed the project_boards row via RPC.
+  //    Replaces the old project_references[] INSERT path. The RPC is
+  //    SECURITY DEFINER + asserts project.status='in_review' (which we just
+  //    set in step 1). It uses ON CONFLICT (project_id) DO UPDATE so re-submits
+  //    are idempotent. The user-scoped supabase client is fine here because
+  //    SECURITY DEFINER bypasses RLS; the RPC's own status check is the
+  //    auth gate.
+  //    eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { error: seedErr } = await (supabase as any).rpc(
+    "seed_project_board_from_wizard",
+    {
+      p_project_id: project.id,
+      p_initial_document: data.boardDocument ?? {},
     }
+  );
+  if (seedErr) {
+    console.error("[submitProjectAction] seed_project_board_from_wizard error:", seedErr);
+    // Non-fatal — the project exists; admin can manually init via init_project_board.
+    // K-05 reviewer can decide if hard rollback is needed; default = continue.
   }
 
   // 4. Delete wizard_drafts row. wizard_drafts may not be a real table — silently

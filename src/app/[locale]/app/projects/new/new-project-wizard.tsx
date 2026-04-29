@@ -45,10 +45,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import {
-  ReferenceBoard,
-  type WizardReference,
-} from "@/components/projects/wizard/reference-board";
+import { ProjectBoard } from "@/components/project-board/project-board";
 import { SummaryCard } from "@/components/projects/wizard/summary-card";
 
 // ---------------------------------------------------------------------------
@@ -160,7 +157,8 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 // ReferenceCard and ReferencesEditor replaced by ReferenceBoard (Phase 3.0 hotfix-1 task_05)
-// See src/components/projects/wizard/reference-board.tsx
+// Phase 3.1 task_04: ReferenceBoard replaced by <ProjectBoard mode="wizard"> (tldraw infinite canvas).
+// See src/components/project-board/project-board.tsx
 
 // ---------------------------------------------------------------------------
 // Budget radio
@@ -260,7 +258,8 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   const router = useRouter();
 
   const [step, setStep] = useState<Step>(1);
-  const [refs, setRefs] = useState<WizardReference[]>([]);
+  // Phase 3.1: replaces refs[] with a tldraw store snapshot.
+  const [boardDocument, setBoardDocument] = useState<Record<string, unknown>>({});
   const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
   const [isSubmitting, startSubmit] = useTransition();
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -328,7 +327,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
       return;
     }
     triggerAutosave();
-  }, [watchedValues, refs, triggerAutosave]);
+  }, [watchedValues, boardDocument, triggerAutosave]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -434,8 +433,14 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
         {t("wizard.step2.sub")}
       </p>
 
-      {/* ReferenceBoard — after Wave A upload fix */}
-      <ReferenceBoard refs={refs} onChange={setRefs} />
+      {/* Phase 3.1: ProjectBoard wizard mode replaces ReferenceBoard */}
+      <div style={{ height: "60vh", minHeight: "400px" }}>
+        <ProjectBoard
+          mode="wizard"
+          document={boardDocument}
+          onDocumentChange={setBoardDocument}
+        />
+      </div>
 
       <div className="flex items-center justify-between pt-2">
         <Button
@@ -527,10 +532,12 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
       </div>
 
       {/* Live summary card — updates as fields fill (L-012 no seam between form + card) */}
+      {/* Phase 3.1: refs={[]} — board contents are tldraw shapes; SummaryCard
+          board-aware preview is task_09 D.15 backlog. */}
       <SummaryCard
         name={watchedValues.name}
         description={watchedValues.description}
-        refs={refs}
+        refs={[]}
         deliverableTypes={watchedValues.deliverable_types ?? []}
         budgetBand={watchedValues.budget_band ?? ""}
         deliveryDate={watchedValues.delivery_date ?? ""}
@@ -573,15 +580,8 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                   formVals.delivery_date && formVals.delivery_date !== ""
                     ? formVals.delivery_date
                     : null,
-                references: refs.map((r) => ({
-                  id: r.id,
-                  kind: r.kind,
-                  url: r.url,
-                  note: r.note,
-                  title: r.title,
-                  thumbnailUrl: r.thumbnailUrl,
-                  durationSeconds: r.durationSeconds,
-                })),
+                // Phase 3.1: tldraw store snapshot replaces references[]
+                boardDocument,
                 draftProjectId,
               });
               if (result.ok) {
