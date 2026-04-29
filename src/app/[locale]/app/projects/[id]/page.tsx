@@ -13,12 +13,10 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { BriefBoardEditor } from "@/components/brief-board/editor";
-import { VersionHistorySidebar } from "@/components/brief-board/version-history";
-import { BriefCommentPanel } from "@/components/brief-board/comment-panel";
-import { LockBriefButton } from "@/components/brief-board/lock-button";
+import { ProjectBoard } from "@/components/project-board/project-board";
+import { VersionHistoryPanel, type VersionEntry } from "@/components/project-board/version-history-panel";
 import type { JSONContent } from "@tiptap/react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
-import { BriefSidePanel } from "@/components/brief-board/side-panel";
 import { StatusBadge } from "@/components/projects/status-badge";
 import { StatusTimeline } from "@/components/projects/status-timeline";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
@@ -128,7 +126,10 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   const { locale, id } = await params;
   const sp = await searchParams;
   const activeTab = sp.tab === "brief" ? "brief" : "overview";
-  const versionParam = sp.version ? Number(sp.version) : null;
+  // versionParam consumed by legacy version-history-sidebar previously.
+  // Phase 3.1 task_05: VersionHistoryPanel uses restoreVersionAction directly,
+  // no URL param needed. Kept for backward URL compat (sp.version is silently ignored).
+  void sp.version;
 
   const t = await getTranslations("projects");
 
@@ -226,9 +227,18 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   const brandName = project.brand?.name ?? null;
   const locale_ = (locale === "en" ? "en" : "ko") as "ko" | "en";
 
-  // ─── Brief tab branch (existing, unchanged) ────────────────────────────────
+  // ─── Brief tab branch (Phase 3.1 task_05 — conditional ProjectBoard vs legacy) ──
   if (activeTab === "brief") {
     const tBrief = await getTranslations({ locale, namespace: "brief_board" });
+
+    // Phase 3.1: fetch new-system project_boards row first.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+    const sbBoard = supabase as any;
+    const { data: boardRow } = await sbBoard
+      .from("project_boards")
+      .select("id, document, source, is_locked, asset_index")
+      .eq("project_id", project.id)
+      .maybeSingle();
 
     const { data: briefRow } = await supabase
       .from("project_briefs")
@@ -238,53 +248,157 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       .eq("project_id", project.id)
       .maybeSingle();
 
-    const { data: versionsRaw } = await supabase
-      .from("project_brief_versions")
-      .select("id, version_n, label, created_at")
-      .eq("project_id", project.id)
-      .order("version_n", { ascending: false });
+    // Routing rule: new-system board (source IN wizard_seed/admin_init) takes
+    // priority. If only source='migrated' (back-fill empty doc) AND a legacy
+    // project_briefs row exists with content, show legacy read-only.
+    const hasNewSystemBoard =
+      !!boardRow &&
+      (boardRow.source === "wizard_seed" || boardRow.source === "admin_init");
+    const hasLegacyBrief =
+      !!briefRow && !!briefRow.content_json;
+    const useLegacyReadOnly = !hasNewSystemBoard && hasLegacyBrief;
 
-    const versions = (versionsRaw ?? []).map((v) => ({
-      id: v.id,
-      version_n: v.version_n,
-      label: v.label,
-      created_at: v.created_at,
-    }));
+    if (hasNewSystemBoard) {
+      // ─── NEW-SYSTEM ProjectBoard brief mode ─────────────────────────────
+      // Fetch versions for the version history panel
+      const { data: bvRaw } = await sbBoard
+        .from("project_board_versions")
+        .select("id, version, created_at, label")
+        .eq("board_id", boardRow.id)
+        .order("version", { ascending: false })
+        .limit(20);
 
-    let viewerSnapshot: { content_json: unknown; version_n: number } | null =
-      null;
-    if (versionParam !== null && Number.isFinite(versionParam)) {
-      const { data: snap } = await supabase
-        .from("project_brief_versions")
-        .select("content_json, version_n")
-        .eq("project_id", project.id)
-        .eq("version_n", versionParam)
-        .maybeSingle();
-      if (snap)
-        viewerSnapshot = {
-          content_json: snap.content_json,
-          version_n: snap.version_n,
-        };
+      const versions: VersionEntry[] = (bvRaw ?? []).map(
+        (v: { id: string; version: number; created_at: string; label: string | null }) => ({
+          id: v.id,
+          version: v.version,
+          created_at: v.created_at,
+          label: v.label,
+        })
+      );
+
+      const currentVersion =
+        versions.length > 0 ? versions[0].version : 0;
+
+      const boardDocument = (boardRow.document ?? {}) as Record<string, unknown>;
+      const isLocked = boardRow.is_locked === true;
+      const viewerRoleForBoard: "client" | "yagi_admin" = isYagiAdmin
+        ? "yagi_admin"
+        : "client";
+
+      return (
+        <div className="px-6 md:px-10 py-10 max-w-6xl">
+          <nav
+            aria-label="breadcrumb"
+            className="mb-6 text-sm text-muted-foreground"
+          >
+            <span>{workspaceName}</span>
+            {brandName && (
+              <>
+                <span className="mx-1.5 text-muted-foreground/60">›</span>
+                <span>{brandName}</span>
+              </>
+            )}
+            <span className="mx-1.5 text-muted-foreground/60">›</span>
+            <span className="font-semibold text-foreground keep-all">
+              {project.title}
+            </span>
+          </nav>
+          <BriefTabsNav
+            id={project.id}
+            active="brief"
+            overviewLabel={t("tab_overview")}
+            briefLabel={t("tab_brief")}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  {tBrief("title")}
+                </h2>
+                {/* Lock button (yagi_admin only) — task_05 leaves placeholder.
+                    The new lock RPC (toggle_project_board_lock) is wired in
+                    board-actions.ts via toggleLockAction. UI button surface is
+                    a future iteration; for now lock state is set via direct DB
+                    query by yagi_admin (or via task_09 backlog UI). */}
+              </div>
+              <div style={{ height: "60vh", minHeight: "400px" }}>
+                <ProjectBoard
+                  mode="brief"
+                  document={boardDocument}
+                  locked={isLocked}
+                  viewerRole={viewerRoleForBoard}
+                />
+              </div>
+            </div>
+
+            <aside className="md:col-span-1">
+              <VersionHistoryPanel
+                boardId={boardRow.id as string}
+                versions={versions}
+                currentVersion={currentVersion}
+                viewerRole={viewerRoleForBoard}
+              />
+            </aside>
+          </div>
+        </div>
+      );
     }
 
-    const editorContent =
-      (viewerSnapshot
-        ? (viewerSnapshot.content_json as JSONContent | null)
-        : (briefRow?.content_json as JSONContent | null)) ?? null;
-    const editorUpdatedAt =
-      briefRow?.updated_at ?? new Date(0).toISOString();
-    const editorStatus =
-      (briefRow?.status as "editing" | "locked" | undefined) ?? "editing";
-    const editorMode = viewerSnapshot ? "viewer" : "full";
+    // ─── LEGACY branch: project_briefs read-only OR empty state ──────────────
+    if (useLegacyReadOnly) {
+      const editorContent = (briefRow?.content_json as JSONContent | null) ?? null;
+      const editorUpdatedAt =
+        briefRow?.updated_at ?? new Date(0).toISOString();
 
-    const { data: threadRow } = await supabase
-      .from("project_threads")
-      .select("id")
-      .eq("project_id", project.id)
-      .limit(1)
-      .maybeSingle();
-    const sidePanelThreadId = threadRow?.id ?? null;
+      return (
+        <div className="px-6 md:px-10 py-10 max-w-6xl">
+          <nav
+            aria-label="breadcrumb"
+            className="mb-6 text-sm text-muted-foreground"
+          >
+            <span>{workspaceName}</span>
+            {brandName && (
+              <>
+                <span className="mx-1.5 text-muted-foreground/60">›</span>
+                <span>{brandName}</span>
+              </>
+            )}
+            <span className="mx-1.5 text-muted-foreground/60">›</span>
+            <span className="font-semibold text-foreground keep-all">
+              {project.title}
+            </span>
+          </nav>
+          <BriefTabsNav
+            id={project.id}
+            active="brief"
+            overviewLabel={t("tab_overview")}
+            briefLabel={t("tab_brief")}
+          />
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  {tBrief("title")}
+                </h2>
+              </div>
+              <BriefBoardEditor
+                projectId={project.id}
+                initialContent={editorContent}
+                initialUpdatedAt={editorUpdatedAt}
+                initialStatus="locked"
+                mode="full"
+                readOnly={true}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Empty state: no new-system board AND no legacy brief ─────────────
     return (
       <div className="px-6 md:px-10 py-10 max-w-6xl">
         <nav
@@ -309,46 +423,10 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           overviewLabel={t("tab_overview")}
           briefLabel={t("tab_brief")}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {tBrief("title")}
-              </h2>
-              <LockBriefButton
-                projectId={project.id}
-                status={editorStatus}
-                isYagiAdmin={isYagiAdmin}
-              />
-            </div>
-            <BriefBoardEditor
-              projectId={project.id}
-              initialContent={editorContent}
-              initialUpdatedAt={editorUpdatedAt}
-              initialStatus={editorStatus}
-              mode={editorMode}
-              viewerVersionN={viewerSnapshot?.version_n}
-              viewerBackHref={`/${locale}/app/projects/${project.id}?tab=brief`}
-            />
-          </div>
-
-          <BriefSidePanel
-            projectId={project.id}
-            threadId={sidePanelThreadId}
-            messagesTab={<BriefCommentPanel projectId={project.id} />}
-            versionsTab={
-              <VersionHistorySidebar
-                projectId={project.id}
-                versions={versions}
-                currentVersion={briefRow?.current_version ?? 0}
-                viewingVersion={viewerSnapshot?.version_n ?? null}
-                locale={locale}
-                briefLocked={editorStatus === "locked"}
-              />
-            }
-            className="md:col-span-1"
-          />
+        <div className="py-16 text-center">
+          <p className="text-sm text-muted-foreground keep-all">
+            {locale_ === "ko" ? "보드가 곧 준비됩니다." : "Board coming soon."}
+          </p>
         </div>
       </div>
     );

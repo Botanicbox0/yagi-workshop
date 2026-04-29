@@ -536,8 +536,8 @@ export function ProjectBoard({
             className="font-suit text-sm"
             style={{ color: "#555555", textAlign: "center" }}
           >
-            {/* task_05 will add i18n key "boardLocked" */}
-            관리자가 보드를 잠갔습니다 / Admin has locked this board
+            {/* TASK_05_STUB filled: boardLocked i18n key from task_05 */}
+            {t("boardLocked")}
           </span>
         </div>
       )}

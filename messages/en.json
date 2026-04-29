@@ -1479,9 +1479,15 @@
   "projectBoard": {
     "emptyOverlay": "Drag images or use the + button to add references",
     "mobileBanner": "Edit on desktop",
+    "boardLocked": "Admin has locked this board",
     "assetMenu": {
       "copyUrl": "Copy URL",
       "download": "Download"
+    },
+    "versionHistory": {
+      "title": "Version History",
+      "restore": "Restore",
+      "viewing": "Viewing version #{version}"
     }
   }
 }
