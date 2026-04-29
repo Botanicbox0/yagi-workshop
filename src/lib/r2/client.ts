@@ -23,7 +23,57 @@ function getClient(): S3Client {
       accessKeyId: requireEnv("CLOUDFLARE_R2_ACCESS_KEY_ID"),
       secretAccessKey: requireEnv("CLOUDFLARE_R2_SECRET_ACCESS_KEY"),
     },
+    // Defensive against AWS SDK v3 (>=3.729.0) auto-injecting
+    // x-amz-checksum-crc32 + x-amz-sdk-checksum-algorithm headers/query on
+    // PUT operations. When those land in a presigned URL, the browser-side
+    // PUT signature mismatches what R2 verifies. Current SDK at 3.1035 + this
+    // flag together emit a clean URL (verified: SignedHeaders=host only, no
+    // checksum bits). The middleware below is belt-and-suspenders for future
+    // SDK bumps.
+    // Refs:
+    //   https://github.com/aws/aws-sdk-js-v3/issues/6810
+    //   https://github.com/aws/aws-sdk-js-v3/issues/6920
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
+
+  // Belt-and-suspenders: strip any flexible-checksum artifacts at the build
+  // stage BEFORE getSignedUrl signs the request. Currently a no-op at SDK
+  // 3.1035 with the config above, but protects against SDK upgrades that
+  // re-introduce auto-injection.
+  _client.middlewareStack.add(
+    (next) => async (args) => {
+      const req = args.request as {
+        headers?: Record<string, string>;
+        query?: Record<string, string | string[]>;
+      };
+      if (req.headers) {
+        for (const k of Object.keys(req.headers)) {
+          const lk = k.toLowerCase();
+          if (
+            lk === "x-amz-sdk-checksum-algorithm" ||
+            lk.startsWith("x-amz-checksum-")
+          ) {
+            delete req.headers[k];
+          }
+        }
+      }
+      if (req.query) {
+        for (const k of Object.keys(req.query)) {
+          const lk = k.toLowerCase();
+          if (
+            lk === "x-amz-sdk-checksum-algorithm" ||
+            lk.startsWith("x-amz-checksum-")
+          ) {
+            delete req.query[k];
+          }
+        }
+      }
+      return next(args);
+    },
+    { step: "build", name: "stripChecksumHeaders", priority: "high" }
+  );
+
   return _client;
 }
 
