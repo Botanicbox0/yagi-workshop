@@ -27,7 +27,6 @@ import {
   useRef,
   useCallback,
   useTransition,
-  type ChangeEvent,
 } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,21 +34,9 @@ import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-// crypto.randomUUID() is available in Node 19+ and modern browsers
-function uuidv4(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  // Fallback for environments without crypto.randomUUID
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
-import { Link2, ImageIcon, FileText, X, Pencil, Loader2 } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 import {
   ensureDraftProject,
-  fetchVideoMetadataAction,
   submitProjectAction,
   type WizardDraftFields,
 } from "./actions";
@@ -59,23 +46,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
-  createBriefAssetPutUrl,
-  objectPublicUrl,
-} from "@/lib/r2/client";
+  ReferenceBoard,
+  type WizardReference,
+} from "@/components/projects/wizard/reference-board";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type WizardReference = {
-  id: string;
-  kind: "url" | "image" | "pdf" | "video";
-  url: string;
-  note: string;
-  title?: string;
-  thumbnailUrl?: string;
-  durationSeconds?: number;
-};
+// WizardReference type is defined and exported from reference-board.tsx (Phase 3.0 hotfix-1)
 
 type BudgetBand =
   | "under_1m"
@@ -177,345 +156,8 @@ function StepIndicator({ current }: { current: Step }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Reference card
-// ---------------------------------------------------------------------------
-
-function ReferenceCard({
-  ref: refItem,
-  onDelete,
-  onNoteChange,
-}: {
-  ref: WizardReference;
-  onDelete: (id: string) => void;
-  onNoteChange: (id: string, note: string) => void;
-}) {
-  const t = useTranslations("projects");
-
-  return (
-    <div
-      className="flex gap-3 rounded-lg border-border/40 p-3"
-      style={{
-        boxShadow:
-          "0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.04)",
-      }}
-    >
-      {/* Thumbnail / icon */}
-      <div className="flex-shrink-0 w-14 h-14 rounded bg-muted flex items-center justify-center overflow-hidden">
-        {refItem.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={refItem.thumbnailUrl}
-            alt={refItem.title ?? ""}
-            className="w-full h-full object-cover"
-          />
-        ) : refItem.kind === "image" ? (
-          <ImageIcon className="w-5 h-5 text-muted-foreground" />
-        ) : refItem.kind === "pdf" ? (
-          <FileText className="w-5 h-5 text-muted-foreground" />
-        ) : (
-          <Link2 className="w-5 h-5 text-muted-foreground" />
-        )}
-      </div>
-
-      {/* Info + memo */}
-      <div className="flex-1 min-w-0 space-y-1.5">
-        {refItem.title && (
-          <p className="text-xs font-medium truncate keep-all">{refItem.title}</p>
-        )}
-        {!refItem.title && (
-          <p className="text-xs text-muted-foreground truncate">
-            {new URL(refItem.url).hostname}
-          </p>
-        )}
-        {refItem.durationSeconds != null && (
-          <p className="text-xs text-muted-foreground">
-            {Math.floor(refItem.durationSeconds / 60)}:
-            {String(refItem.durationSeconds % 60).padStart(2, "0")}
-          </p>
-        )}
-        <Input
-          value={refItem.note}
-          onChange={(e) => onNoteChange(refItem.id, e.target.value)}
-          placeholder={t("wizard.field.references.memo_placeholder")}
-          className="h-7 text-xs"
-          maxLength={200}
-        />
-      </div>
-
-      {/* Delete */}
-      <button
-        type="button"
-        onClick={() => onDelete(refItem.id)}
-        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-        aria-label={t("wizard.actions.edit")}
-      >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// References quick-add UI (used in Step 1 and inline in Step 3)
-// ---------------------------------------------------------------------------
-
-function ReferencesEditor({
-  refs,
-  onChange,
-}: {
-  refs: WizardReference[];
-  onChange: (next: WizardReference[]) => void;
-}) {
-  const t = useTranslations("projects");
-  const [urlDraft, setUrlDraft] = useState("");
-  const [fetchingUrl, setFetchingUrl] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
-
-  const handleDelete = useCallback(
-    (id: string) => {
-      onChange(refs.filter((r) => r.id !== id));
-    },
-    [refs, onChange]
-  );
-
-  const handleNoteChange = useCallback(
-    (id: string, note: string) => {
-      onChange(refs.map((r) => (r.id === id ? { ...r, note } : r)));
-    },
-    [refs, onChange]
-  );
-
-  async function handleUrlCommit() {
-    const raw = urlDraft.trim();
-    if (!raw) return;
-    // Normalise — add https if no scheme
-    let url = raw;
-    if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-
-    setFetchingUrl(true);
-    try {
-      const meta = await fetchVideoMetadataAction(url);
-      if (meta) {
-        // YouTube or Vimeo — video reference
-        const ref: WizardReference = {
-          id: uuidv4(),
-          kind: "video",
-          url,
-          note: "",
-          title: meta.title,
-          thumbnailUrl: meta.thumbnailUrl,
-          durationSeconds: meta.durationSeconds,
-        };
-        onChange([...refs, ref]);
-      } else {
-        // Generic URL reference
-        let hostname = url;
-        try {
-          hostname = new URL(url).hostname;
-        } catch { /* ignore */ }
-        const ref: WizardReference = {
-          id: uuidv4(),
-          kind: "url",
-          url,
-          note: "",
-          title: hostname,
-        };
-        onChange([...refs, ref]);
-      }
-    } catch {
-      const ref: WizardReference = {
-        id: uuidv4(),
-        kind: "url",
-        url,
-        note: "",
-      };
-      onChange([...refs, ref]);
-    } finally {
-      setFetchingUrl(false);
-      setUrlDraft("");
-    }
-  }
-
-  async function handleFileUpload(
-    e: ChangeEvent<HTMLInputElement>,
-    kind: "image" | "pdf"
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    // Reset so re-selecting same file fires again
-    e.target.value = "";
-
-    setUploadingFile(true);
-    try {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-      const storageKey = `project-wizard/${uuidv4()}.${ext}`;
-      const putUrl = await createBriefAssetPutUrl(storageKey, file.type, 600);
-      const uploadRes = await fetch(putUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      if (!uploadRes.ok) throw new Error("R2 upload failed");
-      const publicUrl = objectPublicUrl(storageKey);
-      const ref: WizardReference = {
-        id: uuidv4(),
-        kind,
-        url: publicUrl,
-        note: "",
-        title: file.name,
-        thumbnailUrl: kind === "image" ? publicUrl : undefined,
-      };
-      onChange([...refs, ref]);
-    } catch {
-      toast.error("Upload failed. Please try again.");
-    } finally {
-      setUploadingFile(false);
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      {/* URL paste row */}
-      <div className="flex gap-2">
-        <Input
-          value={urlDraft}
-          onChange={(e) => setUrlDraft(e.target.value)}
-          onPaste={(e) => {
-            // On paste, commit immediately
-            const pasted = e.clipboardData.getData("text").trim();
-            if (pasted) {
-              e.preventDefault();
-              setUrlDraft(pasted);
-              // commit after state update
-              setTimeout(() => {
-                setUrlDraft((prev) => {
-                  void (async () => {
-                    let url = prev;
-                    if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-                    setFetchingUrl(true);
-                    try {
-                      const meta = await fetchVideoMetadataAction(url);
-                      if (meta) {
-                        onChange([
-                          ...refs,
-                          {
-                            id: uuidv4(),
-                            kind: "video",
-                            url,
-                            note: "",
-                            title: meta.title,
-                            thumbnailUrl: meta.thumbnailUrl,
-                            durationSeconds: meta.durationSeconds,
-                          },
-                        ]);
-                      } else {
-                        let hostname = url;
-                        try { hostname = new URL(url).hostname; } catch { /* ignore */ }
-                        onChange([
-                          ...refs,
-                          { id: uuidv4(), kind: "url", url, note: "", title: hostname },
-                        ]);
-                      }
-                    } catch {
-                      onChange([...refs, { id: uuidv4(), kind: "url", url, note: "" }]);
-                    } finally {
-                      setFetchingUrl(false);
-                    }
-                  })();
-                  return ""; // clear
-                });
-              }, 0);
-            }
-          }}
-          onBlur={() => {
-            if (urlDraft.trim()) void handleUrlCommit();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              void handleUrlCommit();
-            }
-          }}
-          placeholder={t("wizard.field.references.add_url")}
-          className="flex-1 text-sm"
-          disabled={fetchingUrl || uploadingFile}
-        />
-        {fetchingUrl && (
-          <Loader2 className="w-4 h-4 animate-spin self-center text-muted-foreground" />
-        )}
-      </div>
-
-      {/* File add buttons */}
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="rounded-full text-xs uppercase tracking-[0.08em]"
-          onClick={() => imageInputRef.current?.click()}
-          disabled={uploadingFile}
-        >
-          <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
-          {t("wizard.field.references.add_image")}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="rounded-full text-xs uppercase tracking-[0.08em]"
-          onClick={() => pdfInputRef.current?.click()}
-          disabled={uploadingFile}
-        >
-          <FileText className="w-3.5 h-3.5 mr-1.5" />
-          {t("wizard.field.references.add_pdf")}
-        </Button>
-        {uploadingFile && (
-          <Loader2 className="w-4 h-4 animate-spin self-center text-muted-foreground" />
-        )}
-      </div>
-
-      {/* Hidden file inputs */}
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/*"
-        className="sr-only"
-        onChange={(e) => void handleFileUpload(e, "image")}
-        aria-label={t("wizard.field.references.add_image")}
-      />
-      <input
-        ref={pdfInputRef}
-        type="file"
-        accept="application/pdf"
-        className="sr-only"
-        onChange={(e) => void handleFileUpload(e, "pdf")}
-        aria-label={t("wizard.field.references.add_pdf")}
-      />
-
-      {/* Reference list */}
-      {refs.length === 0 && (
-        <p className="text-xs text-muted-foreground py-2 keep-all">
-          {t("wizard.field.references.empty")}
-        </p>
-      )}
-      {refs.length > 0 && (
-        <div className="space-y-2 mt-1">
-          {refs.map((r) => (
-            <ReferenceCard
-              key={r.id}
-              ref={r}
-              onDelete={handleDelete}
-              onNoteChange={handleNoteChange}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// ReferenceCard and ReferencesEditor replaced by ReferenceBoard (Phase 3.0 hotfix-1 task_05)
+// See src/components/projects/wizard/reference-board.tsx
 
 // ---------------------------------------------------------------------------
 // Budget radio
@@ -760,7 +402,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
       {/* References */}
       <div className="space-y-3">
         <Eyebrow>{t("wizard.field.references.eyebrow")}</Eyebrow>
-        <ReferencesEditor refs={refs} onChange={setRefs} />
+        <ReferenceBoard refs={refs} onChange={setRefs} />
       </div>
 
       <div className="flex items-center justify-end pt-2">
@@ -918,7 +560,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
             </p>
           ) : null}
           {/* Re-editable references in Step 3 */}
-          <ReferencesEditor refs={refs} onChange={setRefs} />
+          <ReferenceBoard refs={refs} onChange={setRefs} />
         </div>
 
         {/* Block 3: conditions */}

@@ -596,15 +596,18 @@
         },
         "description": {
           "label": "Description",
-          "placeholder": "What is this project about? (min 30 chars)"
+          "placeholder": "What is this project about?"
         },
         "references": {
           "eyebrow": "REFERENCES",
-          "add_url": "Paste a URL",
-          "add_image": "Add image",
-          "add_pdf": "Add PDF",
-          "memo_placeholder": "Memo (optional)",
-          "empty": "No references yet. Paste a URL or add an image / PDF."
+          "dropzone_hint": "Drag images or PDFs here, or paste a URL",
+          "dropzone_overlay": "Drop here",
+          "add_button": "+ Add material",
+          "caption_placeholder": "Add a free-form note about this reference",
+          "empty": "No materials added yet.",
+          "upload_failed": "Upload failed. Please try again.",
+          "file_too_large_image": "Images must be 5MB or less.",
+          "file_too_large_pdf": "PDFs must be 10MB or less."
         },
         "deliverable_types": {
           "label": "Deliverable types",

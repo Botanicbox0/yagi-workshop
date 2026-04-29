@@ -596,15 +596,18 @@
         },
         "description": {
           "label": "프로젝트 설명",
-          "placeholder": "어떤 프로젝트인가요? (최소 30자)"
+          "placeholder": "어떤 프로젝트인가요?"
         },
         "references": {
           "eyebrow": "REFERENCES",
-          "add_url": "URL 붙여넣기",
-          "add_image": "이미지 추가",
-          "add_pdf": "PDF 추가",
-          "memo_placeholder": "메모 (선택)",
-          "empty": "레퍼런스가 없습니다. URL을 붙여넣거나 이미지 · PDF를 추가해 주세요."
+          "dropzone_hint": "이미지 · PDF를 여기에 드래그하거나 URL을 붙여넣으세요",
+          "dropzone_overlay": "여기에 놓으세요",
+          "add_button": "+ 자료 추가",
+          "caption_placeholder": "이 자료에 대한 메모를 자유롭게 적어주세요",
+          "empty": "아직 추가된 자료가 없습니다.",
+          "upload_failed": "업로드에 실패했습니다. 다시 시도해 주세요.",
+          "file_too_large_image": "이미지는 5MB 이하여야 합니다.",
+          "file_too_large_pdf": "PDF는 10MB 이하여야 합니다."
         },
         "deliverable_types": {
           "label": "결과물 유형",
