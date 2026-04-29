@@ -584,7 +584,7 @@
       "step2": {
         "eyebrow": "STEP 2 / 3",
         "title": "Reference materials",
-        "sub": "Add any materials that help describe the direction of this project. This step is optional — you can leave it empty and continue."
+        "sub": "Add references describing your project direction with images, PDFs, and URLs. Optional — you can proceed without adding any."
       },
       "step3": {
         "eyebrow": "STEP 3 / 3",
@@ -1488,6 +1488,29 @@
       "title": "Version History",
       "restore": "Restore",
       "viewing": "Viewing version #{version}"
+    }
+  },
+  "attachments": {
+    "pdf": {
+      "eyebrow": "PDF",
+      "sub": "Upload PDFs of organized references below.",
+      "add": "+ Upload PDF",
+      "empty": "No PDFs attached yet.",
+      "size_too_large": "File too large. Maximum 20MB.",
+      "count_exceeded": "Maximum 30 PDFs allowed.",
+      "uploaded_at": "Uploaded · {date}"
+    },
+    "url": {
+      "eyebrow": "LINK",
+      "sub": "Add URLs of reference videos or sites you'd like to share.",
+      "placeholder": "https://...",
+      "note_placeholder": "Add a short note (optional)",
+      "add": "+ Add",
+      "empty": "No links attached yet.",
+      "invalid": "Please enter a valid URL.",
+      "count_exceeded": "Maximum 50 links allowed.",
+      "added_at": "Added · {date}",
+      "note_edit": "Edit note"
     }
   }
 }

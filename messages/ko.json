@@ -584,7 +584,7 @@
       "step2": {
         "eyebrow": "STEP 2 / 3",
         "title": "참고 자료",
-        "sub": "작업 방향을 설명하는 자료를 자유롭게 추가해주세요. 선택 사항이며, 비워두셔도 다음 단계로 넘어갈 수 있어요."
+        "sub": "작업 방향을 설명하는 자료를 이미지와 PDF, URL 기반으로 추가해주세요. 선택 사항이며, 비워두셔도 다음 단계로 넘어갈 수 있습니다."
       },
       "step3": {
         "eyebrow": "STEP 3 / 3",
@@ -1553,6 +1553,29 @@
       "title": "버전 기록",
       "restore": "복원",
       "viewing": "버전 #{version} 보는 중"
+    }
+  },
+  "attachments": {
+    "pdf": {
+      "eyebrow": "PDF",
+      "sub": "PDF로 정리된 파일은 아래에 업로드해주세요.",
+      "add": "+ PDF 업로드",
+      "empty": "아직 첨부된 PDF가 없습니다.",
+      "size_too_large": "파일이 너무 큽니다. 최대 20MB까지 업로드 가능합니다.",
+      "count_exceeded": "PDF는 최대 30개까지 첨부할 수 있습니다.",
+      "uploaded_at": "업로드됨 · {date}"
+    },
+    "url": {
+      "eyebrow": "LINK",
+      "sub": "레퍼런스로 참고할만한 영상, 사이트 url이 있다면 아래 첨부해주세요.",
+      "placeholder": "https://...",
+      "note_placeholder": "여기에 약간의 설명을 적어주세요 (선택)",
+      "add": "+ 추가",
+      "empty": "아직 첨부된 링크가 없습니다.",
+      "invalid": "올바른 URL을 입력해주세요.",
+      "count_exceeded": "링크는 최대 50개까지 첨부할 수 있습니다.",
+      "added_at": "추가됨 · {date}",
+      "note_edit": "메모 수정"
     }
   }
 }
