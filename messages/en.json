@@ -624,7 +624,7 @@
           "negotiable": "Negotiable"
         },
         "delivery_date": {
-          "label": "Delivery date (optional)"
+          "label": "Expected delivery date (optional)"
         }
       },
       "actions": {

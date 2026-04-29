@@ -624,7 +624,7 @@
           "negotiable": "협의"
         },
         "delivery_date": {
-          "label": "납기일 (선택)"
+          "label": "기대 납기일(선택)"
         }
       },
       "actions": {
