@@ -1512,5 +1512,18 @@
       "added_at": "Added · {date}",
       "note_edit": "Edit note"
     }
+  },
+  "board": {
+    "lock": {
+      "lock_button": "🔓 Lock Board",
+      "unlock_button": "🔒 Unlock Board",
+      "confirm": {
+        "title": "Lock this board?",
+        "body": "While locked, the client cannot edit. (Admin can still edit.)",
+        "cancel": "Cancel",
+        "confirm": "Lock"
+      },
+      "banner_for_client": "Admin has locked this board. Editing disabled."
+    }
   }
 }

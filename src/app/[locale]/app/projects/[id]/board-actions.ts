@@ -219,6 +219,74 @@ export async function toggleLockAction(
 }
 
 // ============================================================
+// toggleBoardLockAction (Phase 3.1 hotfix-3 task_04)
+// Defense-in-depth: action verifies yagi_admin role + RPC verifies.
+// ============================================================
+
+export type ToggleBoardLockResult =
+  | { ok: true; isLocked: boolean }
+  | {
+      ok: false;
+      error: "unauthenticated" | "forbidden" | "validation" | "db";
+      message?: string;
+    };
+
+export async function toggleBoardLockAction(
+  boardId: string,
+  locked: boolean
+): Promise<ToggleBoardLockResult> {
+  if (!boardId || typeof boardId !== "string") {
+    return { ok: false, error: "validation" };
+  }
+  if (typeof locked !== "boolean") {
+    return { ok: false, error: "validation" };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // Action-layer role check (defense-in-depth over RPC-only check)
+  const { data: roles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
+  const isYagiAdmin = (roles ?? []).some(
+    (r) => (r as { role: string }).role === "yagi_admin"
+  );
+  if (!isYagiAdmin) return { ok: false, error: "forbidden" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { error } = await (supabase as any).rpc("toggle_project_board_lock", {
+    p_board_id: boardId,
+    p_locked: locked,
+  });
+  if (error) {
+    console.error("[toggleBoardLockAction] rpc error:", error);
+    return { ok: false, error: "db", message: error.message };
+  }
+
+  // Resolve project_id for revalidation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  const { data: boardLookup } = await (supabase as any)
+    .from("project_boards")
+    .select("project_id")
+    .eq("id", boardId)
+    .maybeSingle();
+
+  if (boardLookup?.project_id) {
+    revalidatePath(
+      `/[locale]/app/projects/${boardLookup.project_id}`,
+      "page"
+    );
+  }
+
+  return { ok: true, isLocked: locked };
+}
+
+// ============================================================
 // restoreVersionAction
 // ============================================================
 

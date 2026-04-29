@@ -13,8 +13,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { BriefBoardEditor } from "@/components/brief-board/editor";
-import { BriefBoardClient } from "@/components/project-board/brief-board-client";
-import { VersionHistoryPanel, type VersionEntry } from "@/components/project-board/version-history-panel";
+import type { VersionEntry } from "@/components/project-board/version-history-panel";
 import type { JSONContent } from "@tiptap/react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { StatusBadge } from "@/components/projects/status-badge";
@@ -22,7 +21,7 @@ import { StatusTimeline } from "@/components/projects/status-timeline";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import type { Status } from "@/components/projects/status-badge";
 import { cn } from "@/lib/utils";
-import { BriefBoardAttachmentsClient } from "@/components/project-board/brief-board-attachments-client";
+import { BriefBoardShellClient } from "@/components/project-board/brief-board-shell-client";
 import type { PdfAttachment, UrlAttachment } from "@/lib/board/asset-index";
 
 type Props = {
@@ -313,42 +312,20 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             briefLabel={t("tab_brief")}
           />
 
-              {/* Canvas — full-width (Q-AC task_03 restructure) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {tBrief("title")}
-              </h2>
-              {/* Lock button (yagi_admin only) — task_04 will wire this. */}
-            </div>
-
-            {/* Full-width canvas with Q-AD aspect ratio (16:10 desktop, 4:5 mobile via CSS) */}
-            <BriefBoardClient
-              projectId={project.id}
-              initialDocument={boardDocument}
-              locked={isLocked}
-              viewerRole={viewerRoleForBoard}
-              aspectRatio="16/10"
-            />
-          </div>
-
-          {/* Attachments section — below canvas (Phase 3.1 hotfix-3) */}
-          {/* L-033: canvas-internal PDF/URL drop preserved in project-board.tsx */}
-          {/* L-041: server never accepts client-supplied asset_index */}
-          <BriefBoardAttachmentsClient
+          {/* Unified brief board shell — manages lock state cascade (task_04) */}
+          {/* Lock button (yagi_admin only), locked banner (non-admin), canvas,  */}
+          {/* attachments section, version history. L-043: lock cascades to all. */}
+          <BriefBoardShellClient
+            projectId={project.id}
             boardId={boardRow.id as string}
+            initialDocument={boardDocument}
+            initialLocked={isLocked}
+            viewerRole={viewerRoleForBoard}
             initialPdfs={(boardRow.attached_pdfs ?? []) as PdfAttachment[]}
             initialUrls={(boardRow.attached_urls ?? []) as UrlAttachment[]}
-            isLocked={isLocked}
-            isReadOnly={false}
-          />
-
-          {/* Version history — below attachments */}
-          <VersionHistoryPanel
-            boardId={boardRow.id as string}
             versions={versions}
             currentVersion={currentVersion}
-            viewerRole={viewerRoleForBoard}
+            boardTitle={tBrief("title")}
           />
         </div>
       );

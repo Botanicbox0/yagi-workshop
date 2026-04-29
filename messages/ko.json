@@ -1577,5 +1577,18 @@
       "added_at": "추가됨 · {date}",
       "note_edit": "메모 수정"
     }
+  },
+  "board": {
+    "lock": {
+      "lock_button": "🔓 보드 잠그기",
+      "unlock_button": "🔒 잠금 해제",
+      "confirm": {
+        "title": "보드를 잠그시겠습니까?",
+        "body": "잠금 시 클라이언트는 보드를 편집할 수 없습니다. (관리자는 계속 편집 가능)",
+        "cancel": "취소",
+        "confirm": "잠그기"
+      },
+      "banner_for_client": "관리자가 보드를 잠갔습니다. 편집할 수 없습니다."
+    }
   }
 }
