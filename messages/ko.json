@@ -792,6 +792,26 @@
       "col_issue_date": "발행일",
       "col_due_date": "결제기한",
       "count_label": "{count}건"
+    },
+    "projects": {
+      "references": {
+        "title": "참고 자료",
+        "copyUrl": "URL 복사",
+        "download": "다운로드",
+        "empty": "참고 자료가 없습니다"
+      },
+      "queue": {
+        "assetCount": "{count}개"
+      },
+      "detail": {
+        "client": "클라이언트",
+        "submittedAt": "접수일",
+        "deliveryDate": "납기",
+        "budget": "예산",
+        "status": "상태",
+        "deliverables": "산출물",
+        "description": "프로젝트 설명"
+      }
     }
   },
   "preprod": {

@@ -792,6 +792,26 @@
       "col_issue_date": "Issued",
       "col_due_date": "Due",
       "count_label": "{count} invoices"
+    },
+    "projects": {
+      "references": {
+        "title": "References",
+        "copyUrl": "Copy URL",
+        "download": "Download",
+        "empty": "No references"
+      },
+      "queue": {
+        "assetCount": "{count}"
+      },
+      "detail": {
+        "client": "Client",
+        "submittedAt": "Submitted",
+        "deliveryDate": "Delivery",
+        "budget": "Budget",
+        "status": "Status",
+        "deliverables": "Deliverables",
+        "description": "Description"
+      }
     }
   },
   "preprod": {

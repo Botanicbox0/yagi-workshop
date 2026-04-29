@@ -12,8 +12,12 @@ export default async function AdminProjectsPage({ params }: Props) {
 
   const supabase = await createSupabaseServer();
 
-  // Fetch all projects with their related data
-  const { data: projects, error } = await supabase
+  // Fetch all projects with their related data.
+  // Phase 3.1 task_07: extend SELECT to also pull project_boards.asset_index
+  // for the asset-count indicator. Field is JSONB array; length used as count.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 project_boards not in generated types
+  const sb = supabase as any;
+  const { data: projects, error } = await sb
     .from('projects')
     .select(
       `
@@ -25,7 +29,8 @@ export default async function AdminProjectsPage({ params }: Props) {
       created_by,
       client:profiles!projects_created_by_fkey(id, name),
       workspace:workspaces(id, name),
-      ref_count:project_references(count)
+      ref_count:project_references(count),
+      boards:project_boards(asset_index)
     `
     )
     .in('status', ['in_review', 'in_progress', 'in_revision', 'delivered', 'approved'])
@@ -36,17 +41,28 @@ export default async function AdminProjectsPage({ params }: Props) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Database query result typing
-  const projectRows = (projects ?? []).map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic status type from database
-    status: p.status as any,
-    submitted_at: p.submitted_at,
-    created_at: p.created_at,
-    client: p.client ? { id: p.client.id, name: p.client.name } : null,
-    workspace: p.workspace ? { id: p.workspace.id, name: p.workspace.name } : null,
-    ref_count: Array.isArray(p.ref_count) ? p.ref_count.length : 0,
-  }));
+  const projectRows = (projects ?? []).map((p: any) => {
+    // Resolve asset count from project_boards.asset_index (preferred);
+    // fall back to legacy project_references count if board is empty/missing.
+    const boardRow = Array.isArray(p.boards) ? p.boards[0] : p.boards;
+    const boardAssetCount =
+      boardRow && Array.isArray(boardRow.asset_index)
+        ? boardRow.asset_index.length
+        : 0;
+    const legacyRefCount = Array.isArray(p.ref_count) ? p.ref_count.length : 0;
+    const ref_count = boardAssetCount > 0 ? boardAssetCount : legacyRefCount;
+    return {
+      id: p.id,
+      title: p.title,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic status type from database
+      status: p.status as any,
+      submitted_at: p.submitted_at,
+      created_at: p.created_at,
+      client: p.client ? { id: p.client.id, name: p.client.name } : null,
+      workspace: p.workspace ? { id: p.workspace.id, name: p.workspace.name } : null,
+      ref_count,
+    };
+  });
 
   return (
     <div className="px-10 py-12 max-w-6xl">
