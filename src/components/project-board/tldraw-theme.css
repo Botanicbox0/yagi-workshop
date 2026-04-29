@@ -145,3 +145,18 @@
    UI chrome is achromatic via the above overrides.
    See K-05 note: this is a documented limitation, not a regression.
 */
+
+/* ============================================================
+   ProjectBoard responsive aspect-ratio helper
+   .pb-mobile-ratio — applied by ProjectBoard component.
+   On mobile (max-width: 768px), override to 4/5 portrait.
+   Q-AD: 16/10 desktop, 4/5 mobile.
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .pb-mobile-ratio {
+    aspect-ratio: 4 / 5 !important;
+    min-height: 300px !important;
+    max-height: 60vh !important;
+  }
+}

@@ -21,6 +21,7 @@ import "./tldraw-theme.css";
 // runtime module (webpack rejects). TS auto-includes .d.ts files in the project,
 // so the augmentation is in scope without explicit import.
 
+import React from "react";
 import {
   Tldraw,
   Editor,
@@ -140,6 +141,12 @@ export interface ProjectBoardProps {
   viewerRole?: "client" | "yagi_admin";
   /** Additional className for outer container */
   className?: string;
+  /**
+   * Canvas aspect ratio. Q-AD: 16/10 desktop, 4/5 mobile (mobile overrides via CSS).
+   * 'auto' keeps the existing height:100% behavior for special containers.
+   * Default: '16/10'
+   */
+  aspectRatio?: "16/10" | "4/5" | "auto";
 }
 
 // ============================================================
@@ -154,6 +161,7 @@ export function ProjectBoard({
   locked = false,
   viewerRole = "client",
   className,
+  aspectRatio = "16/10",
 }: ProjectBoardProps) {
   const t = useTranslations("projectBoard");
   const isMobileDetected = useIsMobileReadOnly();
@@ -466,20 +474,42 @@ export function ProjectBoard({
   // Render
   // ============================================================
 
+  // Compute aspect-ratio style for the container.
+  // Q-AD: 16/10 desktop, 4/5 mobile.
+  // We use CSS aspect-ratio with a min/max height guard.
+  // On mobile (max-width: 768px via CSS media), we override to 4/5 via a
+  // sibling class `.pb-mobile-ratio` injected alongside the container.
+  const aspectRatioStyle: React.CSSProperties =
+    aspectRatio === "auto"
+      ? { height: "100%" }
+      : {
+          // Default: use the provided ratio. Mobile override via CSS class below.
+          aspectRatio: aspectRatio === "16/10" ? "16 / 10" : "4 / 5",
+          minHeight: "480px",
+          maxHeight: "80vh",
+          height: "auto",
+        };
+
   return (
     <div
-      className={className}
+      className={[
+        className,
+        // pb-mobile-ratio is a CSS helper class (defined in tldraw-theme.css or global.css)
+        // that overrides aspect-ratio to 4/5 on mobile. We include it always.
+        "pb-mobile-ratio",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{
         position: "relative",
         width: "100%",
-        height: "100%",
-        minHeight: "400px",
         background: "#ffffff",
         borderRadius: "8px",
         // L-013: soft shadow for canvas container
         boxShadow:
           "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
         overflow: "hidden",
+        ...aspectRatioStyle,
       }}
     >
       {/* Mobile read-only banner */}

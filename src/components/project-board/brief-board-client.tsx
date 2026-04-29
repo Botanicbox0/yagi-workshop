@@ -21,6 +21,8 @@ export interface BriefBoardClientProps {
   initialDocument: Record<string, unknown>;
   locked: boolean;
   viewerRole: "client" | "yagi_admin";
+  /** Q-AD: Canvas aspect ratio. Default '16/10'. */
+  aspectRatio?: "16/10" | "4/5" | "auto";
 }
 
 export function BriefBoardClient({
@@ -28,6 +30,7 @@ export function BriefBoardClient({
   initialDocument,
   locked,
   viewerRole,
+  aspectRatio = "16/10",
 }: BriefBoardClientProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef<boolean>(false);
@@ -72,6 +75,7 @@ export function BriefBoardClient({
       onDocumentChange={handleDocumentChange}
       locked={locked}
       viewerRole={viewerRole}
+      aspectRatio={aspectRatio}
     />
   );
 }
