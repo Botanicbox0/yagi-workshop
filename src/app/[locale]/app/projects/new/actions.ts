@@ -545,6 +545,20 @@ export async function getWizardAssetPutUrlAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "unauthenticated" };
 
+  // K-05 LOOP 2 HIGH-B fix: bind storageKey to the caller's UUID prefix.
+  // The legacy action's prefix-allow-list (board-assets/, wizard-references/,
+  // project-briefs/) was insufficient because keys within those namespaces
+  // could overwrite OTHER users' assets. Now require keys to start with
+  // <prefix>/<user.id>/ so a caller can only write under their own subspace.
+  const allowedPrefixes = [
+    `board-assets/${user.id}/`,
+    `wizard-references/${user.id}/`,
+    `project-briefs/${user.id}/`,
+  ];
+  if (!allowedPrefixes.some((p) => parsed.data.storageKey.startsWith(p))) {
+    return { ok: false, error: "storage_key_not_owned" };
+  }
+
   try {
     const putUrl = await createBriefAssetPutUrl(
       parsed.data.storageKey,
