@@ -1450,7 +1450,11 @@
     "sidepanel_tab_messages": "Messages",
     "sidepanel_tab_versions": "Version history",
     "sidepanel_unread_aria": "{n} new message(s)",
-    "new_message_toast": "New message"
+    "new_message_toast": "New message",
+    "legacyBanner": {
+      "title": "This project uses the previous board system.",
+      "description": "Displayed in read-only mode. New projects use the updated board system."
+    }
   },
   "projectBoard": {
     "emptyOverlay": "Drag images or use the + button to add references",

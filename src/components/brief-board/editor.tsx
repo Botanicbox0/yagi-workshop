@@ -104,6 +104,14 @@ export interface BriefBoardEditorProps {
    * When mode='viewer', the locale-aware "back to latest" CTA target href.
    */
   viewerBackHref?: string;
+  /**
+   * Phase 3.1 task_06 — top-level read-only override for legacy projects routed
+   * by the detail page (task_05) when no `project_boards` row of the new system
+   * exists. Forces `editable=false` regardless of `mode` + `initialStatus`,
+   * suppresses all editing affordances, and renders a legacy-system banner
+   * above the editor. Defaults to `false` for back-compat.
+   */
+  readOnly?: boolean;
   className?: string;
 }
 
@@ -117,10 +125,12 @@ export function BriefBoardEditor({
   mode = "full",
   viewerVersionN,
   viewerBackHref,
+  readOnly = false,
   className,
 }: BriefBoardEditorProps) {
   const t = useTranslations("brief_board");
-  const editable = mode !== "viewer" && initialStatus === "editing";
+  // Phase 3.1 task_06: readOnly forces editable=false regardless of mode/status.
+  const editable = !readOnly && mode !== "viewer" && initialStatus === "editing";
 
   // Mutable refs that don't trigger re-renders. updatedAtRef is the
   // CAS token: the most recent server-stamped timestamp we know about.
@@ -668,7 +678,22 @@ export function BriefBoardEditor({
           )}
         </div>
       )}
-      {mode !== "viewer" && !editable && (
+      {/* Phase 3.1 task_06 — Legacy banner for readOnly mode (L-010 font-suit, L-013 border-border/40) */}
+      {readOnly && (
+        <div
+          role="status"
+          className="px-4 py-3 border-b border-border/40 font-suit"
+          style={{ background: "#fafafa" }}
+        >
+          <p className="text-sm font-medium text-foreground keep-all">
+            {t("legacyBanner.title")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground keep-all">
+            {t("legacyBanner.description")}
+          </p>
+        </div>
+      )}
+      {!readOnly && mode !== "viewer" && !editable && (
         <div className="px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] bg-muted text-muted-foreground border-b border-border">
           {t("locked_banner")}
         </div>

@@ -1515,7 +1515,11 @@
     "sidepanel_tab_messages": "메시지",
     "sidepanel_tab_versions": "버전 기록",
     "sidepanel_unread_aria": "새 메시지 {n}개",
-    "new_message_toast": "새 메시지가 도착했어요"
+    "new_message_toast": "새 메시지가 도착했어요",
+    "legacyBanner": {
+      "title": "이 프로젝트는 이전 보드 시스템을 사용 중입니다.",
+      "description": "읽기 전용으로 표시됩니다. 새 보드 시스템은 이후 프로젝트부터 적용됩니다."
+    }
   },
   "projectBoard": {
     "emptyOverlay": "이미지를 드래그하거나 + 버튼으로 자료를 추가하세요",
