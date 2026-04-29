@@ -22,6 +22,8 @@ import { StatusTimeline } from "@/components/projects/status-timeline";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import type { Status } from "@/components/projects/status-badge";
 import { cn } from "@/lib/utils";
+import { BriefBoardAttachmentsClient } from "@/components/project-board/brief-board-attachments-client";
+import type { PdfAttachment, UrlAttachment } from "@/lib/board/asset-index";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -236,7 +238,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
     const sbBoard = supabase as any;
     const { data: boardRow } = await sbBoard
       .from("project_boards")
-      .select("id, document, source, is_locked, asset_index")
+      .select("id, document, source, is_locked, asset_index, attached_pdfs, attached_urls")
       .eq("project_id", project.id)
       .maybeSingle();
 
@@ -311,37 +313,43 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             briefLabel={t("tab_brief")}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  {tBrief("title")}
-                </h2>
-                {/* Lock button (yagi_admin only) — task_05 leaves placeholder.
-                    The new lock RPC (toggle_project_board_lock) is wired in
-                    board-actions.ts via toggleLockAction. UI button surface is
-                    a future iteration; for now lock state is set via direct DB
-                    query by yagi_admin (or via task_09 backlog UI). */}
-              </div>
-              <div style={{ height: "60vh", minHeight: "400px" }}>
-                <BriefBoardClient
-                  projectId={project.id}
-                  initialDocument={boardDocument}
-                  locked={isLocked}
-                  viewerRole={viewerRoleForBoard}
-                />
-              </div>
+              {/* Canvas — full-width (Q-AC task_03 restructure) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {tBrief("title")}
+              </h2>
+              {/* Lock button (yagi_admin only) — task_04 will wire this. */}
             </div>
 
-            <aside className="md:col-span-1">
-              <VersionHistoryPanel
-                boardId={boardRow.id as string}
-                versions={versions}
-                currentVersion={currentVersion}
-                viewerRole={viewerRoleForBoard}
-              />
-            </aside>
+            {/* Full-width canvas with Q-AD aspect ratio (16:10 desktop, 4:5 mobile via CSS) */}
+            <BriefBoardClient
+              projectId={project.id}
+              initialDocument={boardDocument}
+              locked={isLocked}
+              viewerRole={viewerRoleForBoard}
+              aspectRatio="16/10"
+            />
           </div>
+
+          {/* Attachments section — below canvas (Phase 3.1 hotfix-3) */}
+          {/* L-033: canvas-internal PDF/URL drop preserved in project-board.tsx */}
+          {/* L-041: server never accepts client-supplied asset_index */}
+          <BriefBoardAttachmentsClient
+            boardId={boardRow.id as string}
+            initialPdfs={(boardRow.attached_pdfs ?? []) as PdfAttachment[]}
+            initialUrls={(boardRow.attached_urls ?? []) as UrlAttachment[]}
+            isLocked={isLocked}
+            isReadOnly={false}
+          />
+
+          {/* Version history — below attachments */}
+          <VersionHistoryPanel
+            boardId={boardRow.id as string}
+            versions={versions}
+            currentVersion={currentVersion}
+            viewerRole={viewerRoleForBoard}
+          />
         </div>
       );
     }

@@ -686,6 +686,41 @@ function validateTldrawStore(doc: Record<string, unknown>): boolean {
   return true;
 }
 
+// Phase 3.1 hotfix-3: attachment sub-schemas (L-026 — must stay in sync with
+// client-side wizard state types and task_02 PdfAttachment/UrlAttachment types).
+const PdfAttachmentSchema = z.object({
+  id: z.string().uuid(),
+  storage_key: z.string().regex(/^project-(wizard|board)\//),
+  filename: z.string().min(1).max(200),
+  size_bytes: z.number().int().positive().max(20 * 1024 * 1024),
+  uploaded_at: z.string(),
+  uploaded_by: z.string(),
+});
+
+const UrlAttachmentSchema = z.object({
+  id: z.string().uuid(),
+  url: z.string()
+    .min(1)
+    .max(2000)
+    .refine(
+      (u) => {
+        try {
+          const p = new URL(u);
+          return p.protocol === "http:" || p.protocol === "https:";
+        } catch {
+          return false;
+        }
+      },
+      { message: "URL must be http:// or https://" }
+    ),
+  title: z.string().max(200).nullable(),
+  thumbnail_url: z.string().max(2000).nullable(),
+  provider: z.enum(["youtube", "vimeo", "generic"]),
+  note: z.string().max(500).nullable(),
+  added_at: z.string(),
+  added_by: z.string(),
+});
+
 const SubmitInputSchema = z.object({
   name: z.string().min(1).max(80),
   // hotfix-2: max reduced to 500 to match client wizardSchema (L-026 — keep in sync)
@@ -712,6 +747,10 @@ const SubmitInputSchema = z.object({
       message: "boardDocument is not a valid tldraw store snapshot",
     })
     .default({}),
+  // Phase 3.1 hotfix-3: structured attachment columns (Q-AA)
+  // Server validates shape/size/scheme (L-026 — synced with client wizard state)
+  attachedPdfs: z.array(PdfAttachmentSchema).max(30).optional().default([]),
+  attachedUrls: z.array(UrlAttachmentSchema).max(50).optional().default([]),
   // workspaceId is optional when draftProjectId is provided — the action
   // resolves it from the draft project row in that case. One of the two
   // must be present for workspace resolution to succeed.
@@ -849,8 +888,17 @@ export async function submitProjectAction(
   //    so admin queue/detail counts are accurate immediately after submit
   //    (K-05 trust boundary — never trust client-supplied asset_index).
   const seedDocument = data.boardDocument ?? {};
+  const seedAttachedPdfs = data.attachedPdfs ?? [];
+  const seedAttachedUrls = data.attachedUrls ?? [];
+  // Phase 3.1 hotfix-3: compute unified asset_index from all three sources
+  // (canvas shapes + attached PDFs + attached URLs). Trust boundary: server
+  // always recomputes — never accepts client-supplied asset_index (L-041).
   const seedAssetIndex = extractAssetIndex(
-    seedDocument as Record<string, unknown>
+    seedDocument as Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: attachment types not in generated types yet
+    seedAttachedPdfs as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: attachment types not in generated types yet
+    seedAttachedUrls as any,
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
   const { error: seedErr } = await (supabase as any).rpc(
@@ -858,6 +906,8 @@ export async function submitProjectAction(
     {
       p_project_id: project.id,
       p_initial_document: seedDocument,
+      p_initial_attached_pdfs: seedAttachedPdfs,
+      p_initial_attached_urls: seedAttachedUrls,
       p_initial_asset_index: seedAssetIndex,
     }
   );

@@ -26,6 +26,11 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { extractAssetIndex } from "@/lib/board/asset-index";
+import {
+  createBriefAssetPutUrl,
+  briefObjectPublicUrl,
+} from "@/lib/r2/client";
+import { fetchVideoMetadata } from "@/lib/oembed";
 
 const VERSION_DEBOUNCE_MS = 30_000;
 const DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
@@ -99,7 +104,20 @@ export async function updateProjectBoardAction(
   if (board.is_locked) return { ok: false, error: "locked" };
 
   // K-05 trust boundary: server-recompute asset_index. Never trust client.
-  const assetIndex = extractAssetIndex(parsed.data.document);
+  // Phase 3.1 hotfix-3: also merge attached_pdfs + attached_urls (read from DB).
+  // For canvas-only update, fetch current attachment state from DB to merge.
+  const { data: currentBoard } = await sb
+    .from("project_boards")
+    .select("attached_pdfs, attached_urls")
+    .eq("id", board.id)
+    .maybeSingle();
+  const assetIndex = extractAssetIndex(
+    parsed.data.document,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 columns not in generated types
+    ((currentBoard as any)?.attached_pdfs ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 columns not in generated types
+    ((currentBoard as any)?.attached_urls ?? []) as any,
+  );
 
   // K-05 LOOP 1 HIGH-B F3 fix: atomic update guarded by is_locked=false to
   // close the lock race window. If admin locks between our SELECT and UPDATE,
@@ -262,7 +280,19 @@ export async function restoreVersionAction(
   if (!validateTldrawStore(restoredDoc)) {
     return { ok: false, error: "validation", message: "snapshot_malformed" };
   }
-  const assetIndex = extractAssetIndex(restoredDoc);
+  // Phase 3.1 hotfix-3: fetch current attached_pdfs + attached_urls for merge
+  const { data: boardForRestore } = await sb
+    .from("project_boards")
+    .select("attached_pdfs, attached_urls")
+    .eq("id", parsed.data.boardId)
+    .maybeSingle();
+  const assetIndex = extractAssetIndex(
+    restoredDoc,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 columns not in generated types
+    ((boardForRestore as any)?.attached_pdfs ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 columns not in generated types
+    ((boardForRestore as any)?.attached_urls ?? []) as any,
+  );
 
   // Resolve project_id for revalidation — board → project_id lookup
   const { data: boardLookup } = await sb
@@ -292,5 +322,321 @@ export async function restoreVersionAction(
       "page"
     );
   }
+  return { ok: true };
+}
+
+// ============================================================
+// Phase 3.1 hotfix-3 — Attachment server actions
+// ============================================================
+// All actions: validate input, call RPC, recompute asset_index server-side,
+// revalidate page. Trust boundary: client never supplies asset_index (L-041).
+
+// Helper: recompute asset_index from current board state and UPDATE
+async function recomputeAndUpdateAssetIndex(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sb: any,
+  boardId: string
+): Promise<void> {
+  const { data: board } = await sb
+    .from("project_boards")
+    .select("document, attached_pdfs, attached_urls, project_id")
+    .eq("id", boardId)
+    .maybeSingle();
+  if (!board) return;
+
+  const newIndex = extractAssetIndex(
+    board.document as Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 columns not in generated types
+    (board.attached_pdfs ?? []) as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 columns not in generated types
+    (board.attached_urls ?? []) as any,
+  );
+
+  await sb
+    .from("project_boards")
+    .update({ asset_index: newIndex, updated_at: new Date().toISOString() })
+    .eq("id", boardId);
+
+  if (board.project_id) {
+    revalidatePath(`/[locale]/app/projects/${board.project_id}`, "page");
+  }
+}
+
+// URL validation — only http/https allowed (L-042 server layer)
+const SAFE_URL_SCHEMES = ["http:", "https:"];
+function validateUrlScheme(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return SAFE_URL_SCHEMES.includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
+// ============================================================
+// addPdfAttachmentAction
+// ============================================================
+
+export type AddPdfResult =
+  | { ok: true; attachmentId: string }
+  | { ok: false; error: string };
+
+export async function addPdfAttachmentAction(
+  boardId: string,
+  file: File
+): Promise<AddPdfResult> {
+  if (!boardId || typeof boardId !== "string") {
+    return { ok: false, error: "invalid_board_id" };
+  }
+
+  // Validate file
+  if (file.type !== "application/pdf") {
+    return { ok: false, error: "not_pdf" };
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    return { ok: false, error: "file_too_large" };
+  }
+  if (file.name.length > 200) {
+    return { ok: false, error: "filename_too_long" };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // Upload to R2 first (server-generated key for this board)
+  const ext = "pdf";
+  const uuid = crypto.randomUUID();
+  const storageKey = `project-board/${boardId}/${uuid}.${ext}`;
+
+  try {
+    const putUrl = await createBriefAssetPutUrl(storageKey, file.type, 600);
+    const arrayBuffer = await file.arrayBuffer();
+    const putResp = await fetch(putUrl, {
+      method: "PUT",
+      body: arrayBuffer,
+      headers: { "Content-Type": file.type },
+    });
+    if (!putResp.ok) {
+      return { ok: false, error: "r2_put_failed" };
+    }
+  } catch (err) {
+    console.error("[addPdfAttachmentAction] R2 upload error:", err);
+    return { ok: false, error: "r2_upload_error" };
+  }
+
+  // Call add_project_board_pdf RPC
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { data: attachmentId, error: rpcErr } = await (supabase as any).rpc(
+    "add_project_board_pdf",
+    {
+      p_board_id: boardId,
+      p_storage_key: storageKey,
+      p_filename: file.name,
+      p_size_bytes: file.size,
+    }
+  );
+  if (rpcErr) {
+    console.error("[addPdfAttachmentAction] RPC error:", rpcErr);
+    return { ok: false, error: rpcErr.message };
+  }
+
+  // Recompute asset_index server-side (trust boundary L-041)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  await recomputeAndUpdateAssetIndex(supabase as any, boardId);
+
+  return { ok: true, attachmentId: attachmentId as string };
+}
+
+// ============================================================
+// removePdfAttachmentAction
+// ============================================================
+
+export type RemovePdfResult = { ok: true } | { ok: false; error: string };
+
+export async function removePdfAttachmentAction(
+  boardId: string,
+  attachmentId: string
+): Promise<RemovePdfResult> {
+  if (!boardId || !attachmentId) return { ok: false, error: "invalid_input" };
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { error: rpcErr } = await (supabase as any).rpc(
+    "remove_project_board_attachment",
+    {
+      p_board_id: boardId,
+      p_kind: "pdf",
+      p_attachment_id: attachmentId,
+    }
+  );
+  if (rpcErr) {
+    console.error("[removePdfAttachmentAction] RPC error:", rpcErr);
+    return { ok: false, error: rpcErr.message };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  await recomputeAndUpdateAssetIndex(supabase as any, boardId);
+  return { ok: true };
+}
+
+// ============================================================
+// addUrlAttachmentAction
+// ============================================================
+
+export type AddUrlResult =
+  | { ok: true; attachmentId: string }
+  | { ok: false; error: string };
+
+export async function addUrlAttachmentAction(
+  boardId: string,
+  url: string,
+  note: string | null
+): Promise<AddUrlResult> {
+  if (!boardId) return { ok: false, error: "invalid_board_id" };
+
+  // Server-side URL validation (L-042 — only http/https)
+  if (!validateUrlScheme(url)) {
+    return { ok: false, error: "invalid_url_scheme" };
+  }
+  if (url.length > 2000) return { ok: false, error: "url_too_long" };
+  if (note && note.length > 500) return { ok: false, error: "note_too_long" };
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // Detect provider and fetch metadata
+  let provider: "youtube" | "vimeo" | "generic" = "generic";
+  let title: string | null = null;
+  let thumbnail_url: string | null = null;
+
+  try {
+    const parsedUrl = new URL(url);
+    const host = parsedUrl.hostname.replace(/^www\./, "");
+    if (host === "youtube.com" || host === "youtu.be") provider = "youtube";
+    else if (host === "vimeo.com") provider = "vimeo";
+    else title = host;
+  } catch {
+    // ignore parse error — URL already validated above
+  }
+
+  if (provider !== "generic") {
+    try {
+      const meta = await fetchVideoMetadata(url);
+      if (meta) {
+        title = meta.title ?? null;
+        thumbnail_url = meta.thumbnailUrl ?? null;
+      }
+    } catch {
+      // best-effort — fall back to no metadata
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { data: attachmentId, error: rpcErr } = await (supabase as any).rpc(
+    "add_project_board_url",
+    {
+      p_board_id: boardId,
+      p_url: url,
+      p_title: title,
+      p_thumbnail_url: thumbnail_url,
+      p_provider: provider,
+      p_note: note,
+    }
+  );
+  if (rpcErr) {
+    console.error("[addUrlAttachmentAction] RPC error:", rpcErr);
+    return { ok: false, error: rpcErr.message };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  await recomputeAndUpdateAssetIndex(supabase as any, boardId);
+  return { ok: true, attachmentId: attachmentId as string };
+}
+
+// ============================================================
+// updateUrlNoteAction
+// ============================================================
+
+export type UpdateUrlNoteResult = { ok: true } | { ok: false; error: string };
+
+export async function updateUrlNoteAction(
+  boardId: string,
+  attachmentId: string,
+  note: string
+): Promise<UpdateUrlNoteResult> {
+  if (!boardId || !attachmentId) return { ok: false, error: "invalid_input" };
+  if (note && note.length > 500) return { ok: false, error: "note_too_long" };
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { error: rpcErr } = await (supabase as any).rpc(
+    "update_project_board_url_note",
+    {
+      p_board_id: boardId,
+      p_attachment_id: attachmentId,
+      p_note: note,
+    }
+  );
+  if (rpcErr) {
+    console.error("[updateUrlNoteAction] RPC error:", rpcErr);
+    return { ok: false, error: rpcErr.message };
+  }
+
+  // Note is in asset_index entries — must recompute (L-041)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  await recomputeAndUpdateAssetIndex(supabase as any, boardId);
+  return { ok: true };
+}
+
+// ============================================================
+// removeUrlAttachmentAction
+// ============================================================
+
+export type RemoveUrlResult = { ok: true } | { ok: false; error: string };
+
+export async function removeUrlAttachmentAction(
+  boardId: string,
+  attachmentId: string
+): Promise<RemoveUrlResult> {
+  if (!boardId || !attachmentId) return { ok: false, error: "invalid_input" };
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  const { error: rpcErr } = await (supabase as any).rpc(
+    "remove_project_board_attachment",
+    {
+      p_board_id: boardId,
+      p_kind: "url",
+      p_attachment_id: attachmentId,
+    }
+  );
+  if (rpcErr) {
+    console.error("[removeUrlAttachmentAction] RPC error:", rpcErr);
+    return { ok: false, error: rpcErr.message };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  await recomputeAndUpdateAssetIndex(supabase as any, boardId);
   return { ok: true };
 }

@@ -46,7 +46,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ProjectBoard } from "@/components/project-board/project-board";
+import { AttachmentsSection } from "@/components/project-board/attachments-section";
 import { SummaryCard } from "@/components/projects/wizard/summary-card";
+import type { PdfAttachment, UrlAttachment } from "@/lib/board/asset-index";
+import { getBoardAssetPutUrlAction, fetchVideoMetadataAction } from "./actions";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -260,6 +263,9 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   const [step, setStep] = useState<Step>(1);
   // Phase 3.1: replaces refs[] with a tldraw store snapshot.
   const [boardDocument, setBoardDocument] = useState<Record<string, unknown>>({});
+  // Phase 3.1 hotfix-3: structured attachment state (Q-AA)
+  const [attachedPdfs, setAttachedPdfs] = useState<PdfAttachment[]>([]);
+  const [attachedUrls, setAttachedUrls] = useState<UrlAttachment[]>([]);
   const [draftProjectId, setDraftProjectId] = useState<string | null>(null);
   const [isSubmitting, startSubmit] = useTransition();
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -358,6 +364,107 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   }
 
   // -------------------------------------------------------------------------
+  // Phase 3.1 hotfix-3 — Wizard attachment handlers (local state, no RPC)
+  // Brief mode calls server actions directly; wizard builds local state until submit.
+  // -------------------------------------------------------------------------
+
+  async function handlePdfAddWizard(file: File): Promise<void> {
+    // Get presigned PUT URL from server action (server generates storage key)
+    const result = await getBoardAssetPutUrlAction(file.type);
+    if (!result.ok) {
+      toast.error("파일 업로드에 실패했습니다. 다시 시도해주세요.");
+      return;
+    }
+    // Upload to R2
+    const putResp = await fetch(result.putUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": file.type },
+    });
+    if (!putResp.ok) {
+      toast.error("파일 업로드에 실패했습니다. 다시 시도해주세요.");
+      return;
+    }
+    // storage_key for wizard PDFs uses the board-assets prefix (server-generated).
+    // The publicUrl contains the full path; we extract the key by stripping the base URL.
+    // If we can't parse it, fall back to the publicUrl itself.
+    let storageKey = result.publicUrl;
+    try {
+      const urlObj = new URL(result.publicUrl);
+      // path is like /board-assets/user-id/uuid.pdf — strip leading slash
+      storageKey = "project-wizard" + urlObj.pathname;
+    } catch {
+      // fall back to publicUrl
+    }
+    const newPdf: PdfAttachment = {
+      id: crypto.randomUUID(),
+      storage_key: storageKey,
+      filename: file.name,
+      size_bytes: file.size,
+      uploaded_at: new Date().toISOString(),
+      uploaded_by: "wizard",
+    };
+    setAttachedPdfs((prev) => [...prev, newPdf]);
+  }
+
+  function handlePdfRemoveWizard(id: string): Promise<void> {
+    setAttachedPdfs((prev) => prev.filter((p) => p.id !== id));
+    return Promise.resolve();
+  }
+
+  async function handleUrlAddWizard(url: string, note: string | null): Promise<void> {
+    let provider: UrlAttachment["provider"] = "generic";
+    let title: string | null = null;
+    let thumbnail_url: string | null = null;
+
+    try {
+      const parsedUrl = new URL(url);
+      const host = parsedUrl.hostname.replace(/^www\./, "");
+      if (host === "youtube.com" || host === "youtu.be") provider = "youtube";
+      else if (host === "vimeo.com") provider = "vimeo";
+      else title = host;
+    } catch {
+      // ignore — URL already validated upstream
+    }
+
+    if (provider !== "generic") {
+      try {
+        const meta = await fetchVideoMetadataAction(url);
+        if (meta) {
+          title = meta.title ?? null;
+          thumbnail_url = meta.thumbnailUrl ?? null;
+        }
+      } catch {
+        // best-effort — fall back to no metadata
+      }
+    }
+
+    const newUrl: UrlAttachment = {
+      id: crypto.randomUUID(),
+      url,
+      title,
+      thumbnail_url,
+      provider,
+      note: note ?? null,
+      added_at: new Date().toISOString(),
+      added_by: "wizard",
+    };
+    setAttachedUrls((prev) => [...prev, newUrl]);
+  }
+
+  function handleUrlRemoveWizard(id: string): Promise<void> {
+    setAttachedUrls((prev) => prev.filter((u) => u.id !== id));
+    return Promise.resolve();
+  }
+
+  function handleUrlNoteUpdateWizard(id: string, note: string): Promise<void> {
+    setAttachedUrls((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, note } : u))
+    );
+    return Promise.resolve();
+  }
+
+  // -------------------------------------------------------------------------
   // Step 1 — Project summary
   // -------------------------------------------------------------------------
 
@@ -427,20 +534,37 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   // -------------------------------------------------------------------------
 
   const step2Content = (
-    <div className="space-y-6">
-      {/* "선택" tone sub text */}
+    <div className="space-y-8">
+      {/* Step 2 sub copy (hotfix-3 copy per Q-AA KICKOFF §3c) */}
       <p className="text-sm text-muted-foreground keep-all">
         {t("wizard.step2.sub")}
       </p>
 
-      {/* Phase 3.1: ProjectBoard wizard mode replaces ReferenceBoard */}
-      <div style={{ height: "60vh", minHeight: "400px" }}>
-        <ProjectBoard
-          mode="wizard"
-          document={boardDocument}
-          onDocumentChange={setBoardDocument}
-        />
-      </div>
+      {/* Phase 3.1: ProjectBoard wizard mode (tldraw infinite canvas)
+          Phase 3.1 hotfix-3: aspectRatio=16/10 + mobile 4/5 (Q-AD).
+          Canvas-internal PDF/URL drop still works (yagi hard constraint). */}
+      <ProjectBoard
+        mode="wizard"
+        document={boardDocument}
+        onDocumentChange={setBoardDocument}
+        aspectRatio="16/10"
+      />
+
+      {/* Phase 3.1 hotfix-3: AttachmentsSection — PDF + URL structured attachments (Q-AA).
+          Uses wizard local state; no server RPCs until submit. */}
+      <AttachmentsSection
+        mode="wizard"
+        boardId={null}
+        pdfs={attachedPdfs}
+        urls={attachedUrls}
+        onPdfAdd={handlePdfAddWizard}
+        onPdfRemove={handlePdfRemoveWizard}
+        onUrlAdd={handleUrlAddWizard}
+        onUrlNoteUpdate={handleUrlNoteUpdateWizard}
+        onUrlRemove={handleUrlRemoveWizard}
+        isLocked={false}
+        isReadOnly={false}
+      />
 
       <div className="flex items-center justify-between pt-2">
         <Button
@@ -582,6 +706,9 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                     : null,
                 // Phase 3.1: tldraw store snapshot replaces references[]
                 boardDocument,
+                // Phase 3.1 hotfix-3: pass structured attachments (Q-AA)
+                attachedPdfs,
+                attachedUrls,
                 draftProjectId,
               });
               if (result.ok) {
@@ -627,7 +754,14 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   )[step];
 
   return (
-    <div className="px-6 py-8 max-w-2xl mx-auto">
+    // Step 2 breakout to max-w-6xl (Q-AC, Q-AF); Steps 1+3 unchanged at max-w-2xl.
+    // Tailwind transition-[max-width] ~300ms ease-out sells the width change (L-039).
+    <div
+      className={cn(
+        "px-6 py-8 mx-auto w-full transition-[max-width] duration-300 ease-out",
+        step === 2 ? "max-w-6xl" : "max-w-2xl"
+      )}
+    >
       <StepIndicator current={step} />
 
       {/* Step header — no border-b below (L-012) */}
