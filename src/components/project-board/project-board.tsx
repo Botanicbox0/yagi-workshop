@@ -16,8 +16,10 @@
  */
 
 import "./tldraw-theme.css";
-// Side-effect import: ensures TLGlobalShapePropsMap augmentation is in scope
-import "./shapes/yagi-shape-types";
+// Note: ./shapes/yagi-shape-types.d.ts contains module augmentation declarations
+// for TLGlobalShapePropsMap. It is type-only (.d.ts) so cannot be imported as a
+// runtime module (webpack rejects). TS auto-includes .d.ts files in the project,
+// so the augmentation is in scope without explicit import.
 
 import {
   Tldraw,
