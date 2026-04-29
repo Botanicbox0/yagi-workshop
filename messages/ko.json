@@ -583,11 +583,13 @@
       },
       "step2": {
         "eyebrow": "STEP 2 / 3",
-        "title": "조건"
+        "title": "참고 자료",
+        "sub": "작업 방향을 설명하는 자료를 자유롭게 추가해주세요. 선택 사항이며, 비워두셔도 다음 단계로 넘어갈 수 있어요."
       },
       "step3": {
         "eyebrow": "STEP 3 / 3",
-        "title": "최종 확인"
+        "title": "최종 확인",
+        "sub": "프로젝트의 마무리 정보를 입력해주세요."
       },
       "field": {
         "name": {
@@ -595,8 +597,9 @@
           "placeholder": "예: 여름 캠페인"
         },
         "description": {
-          "label": "프로젝트 설명",
-          "placeholder": "어떤 프로젝트인가요?"
+          "label": "어떤 결과물을 만들고 싶으신가요?",
+          "placeholder": "간단하게 말씀해주세요. 자세한 내용은 다음 단계에서 자료와 함께 정리하실 수 있어요.",
+          "helper": "다음 단계에서 자료 보드로 자세히 설명할 수 있어요. (선택)"
         },
         "references": {
           "eyebrow": "REFERENCES",
@@ -641,7 +644,8 @@
       },
       "errors": {
         "name_required": "프로젝트 이름을 입력해 주세요.",
-        "description_too_short": "프로젝트 설명은 30자 이상 입력해 주세요.",
+        "description_required": "만들고 싶은 결과물을 간단하게 입력해 주세요.",
+        "description_too_short": "프로젝트 설명을 입력해 주세요.",
         "budget_required": "예산을 선택해 주세요.",
         "deliverable_required": "결과물 유형을 하나 이상 선택해 주세요."
       }

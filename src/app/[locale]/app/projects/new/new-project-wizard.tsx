@@ -85,7 +85,9 @@ const DELIVERABLE_OPTIONS = [
 
 const wizardSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  description: z.string().trim().min(1).max(2000),
+  // hotfix-2: description max reduced to 500 (Step 1 is "한 줄"); synced with
+  // server SubmitInputSchema (L-026 — client + server schemas must stay in sync)
+  description: z.string().trim().min(1).max(500),
   deliverable_types: z.array(z.string().trim().min(1)).min(1),
   budget_band: z.enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"]),
   delivery_date: z
@@ -377,7 +379,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
         )}
       </div>
 
-      {/* Description */}
+      {/* Description — hotfix-2: label + placeholder updated; References moved to Step 2 */}
       <div className="space-y-1.5">
         <Label htmlFor="description">
           {t("wizard.field.description.label")}{" "}
@@ -388,21 +390,19 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
         <Textarea
           id="description"
           placeholder={t("wizard.field.description.placeholder")}
-          rows={5}
-          maxLength={2000}
+          rows={4}
+          maxLength={500}
           {...register("description")}
         />
-        {errors.description && (
+        {errors.description ? (
           <p className="text-xs text-destructive" role="alert">
-            {t("wizard.errors.description_too_short")}
+            {t("wizard.errors.description_required")}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground keep-all">
+            {t("wizard.field.description.helper")}
           </p>
         )}
-      </div>
-
-      {/* References */}
-      <div className="space-y-3">
-        <Eyebrow>{t("wizard.field.references.eyebrow")}</Eyebrow>
-        <ReferenceBoard refs={refs} onChange={setRefs} />
       </div>
 
       <div className="flex items-center justify-end pt-2">

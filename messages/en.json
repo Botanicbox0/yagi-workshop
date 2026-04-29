@@ -583,11 +583,13 @@
       },
       "step2": {
         "eyebrow": "STEP 2 / 3",
-        "title": "Project conditions"
+        "title": "Reference materials",
+        "sub": "Add any materials that help describe the direction of this project. This step is optional — you can leave it empty and continue."
       },
       "step3": {
         "eyebrow": "STEP 3 / 3",
-        "title": "Final review"
+        "title": "Final review",
+        "sub": "Fill in the remaining project details."
       },
       "field": {
         "name": {
@@ -595,8 +597,9 @@
           "placeholder": "e.g., Summer campaign"
         },
         "description": {
-          "label": "Description",
-          "placeholder": "What is this project about?"
+          "label": "What kind of deliverable do you want to create?",
+          "placeholder": "Give us a quick summary. You can elaborate with references in the next step.",
+          "helper": "You can add more detail with a reference board in the next step. (optional)"
         },
         "references": {
           "eyebrow": "REFERENCES",
@@ -641,7 +644,8 @@
       },
       "errors": {
         "name_required": "Project name is required.",
-        "description_too_short": "Description must be at least 30 characters.",
+        "description_required": "Please briefly describe what you'd like to create.",
+        "description_too_short": "Please enter a description.",
         "budget_required": "Please select a budget.",
         "deliverable_required": "Please select at least one deliverable type."
       }
