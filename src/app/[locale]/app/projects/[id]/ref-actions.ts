@@ -93,7 +93,8 @@ export async function addReference(input: unknown) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" as const };
 
-  const { error } = await supabase.from("project_references").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.0 kind column added; ref-actions predates regen; kind not part of this action's schema
+  const { error } = await (supabase as any).from("project_references").insert({
     project_id: d.projectId,
     added_by: user.id,
     storage_path: d.storage_path ?? null,
@@ -144,7 +145,8 @@ export async function addReferenceFromUrl(input: {
   const video = await unfurlVideoUrl(url);
 
   if (video) {
-    const { error } = await supabase.from("project_references").insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.0 kind column added; ref-actions predates regen
+    const { error } = await (supabase as any).from("project_references").insert({
       project_id: projectId,
       added_by: user.id,
       external_url: video.canonical_url,
@@ -163,7 +165,8 @@ export async function addReferenceFromUrl(input: {
   // Fall back to generic OG unfurl (never throws).
   const og = await unfurl(url);
 
-  const { error } = await supabase.from("project_references").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.0 kind column added; ref-actions predates regen
+  const { error } = await (supabase as any).from("project_references").insert({
     project_id: projectId,
     added_by: user.id,
     external_url: url,
