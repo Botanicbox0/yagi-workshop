@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       brands: {
@@ -1229,6 +1204,114 @@ export type Database = {
         }
         Relationships: []
       }
+      project_board_versions: {
+        Row: {
+          board_id: string
+          created_at: string
+          created_by: string | null
+          document: Json
+          id: string
+          label: string | null
+          version: number
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          created_by?: string | null
+          document: Json
+          id?: string
+          label?: string | null
+          version: number
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          created_by?: string | null
+          document?: Json
+          id?: string
+          label?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_board_versions_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "project_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_board_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_boards: {
+        Row: {
+          asset_index: Json
+          attached_pdfs: Json
+          attached_urls: Json
+          created_at: string
+          document: Json
+          id: string
+          is_locked: boolean
+          locked_at: string | null
+          locked_by: string | null
+          project_id: string
+          schema_version: number
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          asset_index?: Json
+          attached_pdfs?: Json
+          attached_urls?: Json
+          created_at?: string
+          document?: Json
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          project_id: string
+          schema_version?: number
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          asset_index?: Json
+          attached_pdfs?: Json
+          attached_urls?: Json
+          created_at?: string
+          document?: Json
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          project_id?: string
+          schema_version?: number
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_boards_locked_by_fkey"
+            columns: ["locked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_boards_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_brief_assets: {
         Row: {
           byte_size: number
@@ -1463,15 +1546,21 @@ export type Database = {
           embed_provider: string | null
           external_url: string | null
           id: string
+          kind: string
           media_type: string
+          note: string | null
           og_description: string | null
           og_image_url: string | null
           og_title: string | null
           page_count: number | null
           project_id: string
+          sort_order: number
           storage_path: string | null
           tags: string[] | null
           thumbnail_path: string | null
+          thumbnail_url: string | null
+          title: string | null
+          url: string | null
         }
         Insert: {
           added_by: string
@@ -1481,15 +1570,21 @@ export type Database = {
           embed_provider?: string | null
           external_url?: string | null
           id?: string
+          kind: string
           media_type?: string
+          note?: string | null
           og_description?: string | null
           og_image_url?: string | null
           og_title?: string | null
           page_count?: number | null
           project_id: string
+          sort_order?: number
           storage_path?: string | null
           tags?: string[] | null
           thumbnail_path?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          url?: string | null
         }
         Update: {
           added_by?: string
@@ -1499,15 +1594,21 @@ export type Database = {
           embed_provider?: string | null
           external_url?: string | null
           id?: string
+          kind?: string
           media_type?: string
+          note?: string | null
           og_description?: string | null
           og_image_url?: string | null
           og_title?: string | null
           page_count?: number | null
           project_id?: string
+          sort_order?: number
           storage_path?: string | null
           tags?: string[] | null
           thumbnail_path?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+          url?: string | null
         }
         Relationships: [
           {
@@ -1519,6 +1620,47 @@ export type Database = {
           },
           {
             foreignKeyName: "project_references_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_status_history: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          comment: string | null
+          from_status: string | null
+          id: string
+          project_id: string
+          to_status: string
+          transitioned_at: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: string
+          comment?: string | null
+          from_status?: string | null
+          id?: string
+          project_id: string
+          to_status: string
+          transitioned_at?: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          comment?: string | null
+          from_status?: string | null
+          id?: string
+          project_id?: string
+          to_status?: string
+          transitioned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_status_history_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1569,6 +1711,7 @@ export type Database = {
         Row: {
           brand_id: string | null
           brief: string | null
+          budget_band: string | null
           created_at: string
           created_by: string
           deleted_at: string | null
@@ -1576,12 +1719,14 @@ export type Database = {
           estimated_budget_range: string | null
           id: string
           intake_mode: string
+          kind: string
           project_type: string
           proposal_audience: string | null
           proposal_budget_range: string | null
           proposal_goal: string | null
           proposal_timeline: string | null
           status: string
+          submitted_at: string | null
           target_delivery_at: string | null
           title: string
           updated_at: string
@@ -1590,6 +1735,7 @@ export type Database = {
         Insert: {
           brand_id?: string | null
           brief?: string | null
+          budget_band?: string | null
           created_at?: string
           created_by: string
           deleted_at?: string | null
@@ -1597,12 +1743,14 @@ export type Database = {
           estimated_budget_range?: string | null
           id?: string
           intake_mode?: string
+          kind?: string
           project_type?: string
           proposal_audience?: string | null
           proposal_budget_range?: string | null
           proposal_goal?: string | null
           proposal_timeline?: string | null
           status?: string
+          submitted_at?: string | null
           target_delivery_at?: string | null
           title: string
           updated_at?: string
@@ -1611,6 +1759,7 @@ export type Database = {
         Update: {
           brand_id?: string | null
           brief?: string | null
+          budget_band?: string | null
           created_at?: string
           created_by?: string
           deleted_at?: string | null
@@ -1618,12 +1767,14 @@ export type Database = {
           estimated_budget_range?: string | null
           id?: string
           intake_mode?: string
+          kind?: string
           project_type?: string
           proposal_audience?: string | null
           proposal_budget_range?: string | null
           proposal_goal?: string | null
           proposal_timeline?: string | null
           status?: string
+          submitted_at?: string | null
           target_delivery_at?: string | null
           title?: string
           updated_at?: string
@@ -2451,6 +2602,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_project_board_pdf: {
+        Args: {
+          p_board_id: string
+          p_filename: string
+          p_size_bytes: number
+          p_storage_key: string
+        }
+        Returns: string
+      }
+      add_project_board_url: {
+        Args: {
+          p_board_id: string
+          p_note: string
+          p_provider: string
+          p_thumbnail_url: string
+          p_title: string
+          p_url: string
+        }
+        Returns: string
+      }
       bootstrap_workspace: {
         Args: { p_logo_url?: string; p_name: string; p_slug: string }
         Returns: string
@@ -2481,11 +2652,20 @@ export type Database = {
         }[]
       }
       increment_showcase_view: { Args: { sid: string }; Returns: number }
+      init_project_board: { Args: { p_project_id: string }; Returns: string }
       is_handle_available: { Args: { candidate: string }; Returns: boolean }
+      is_valid_transition: {
+        Args: { actor_role: string; from_status: string; to_status: string }
+        Returns: boolean
+      }
       is_ws_admin: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_ws_member: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_yagi_admin: { Args: { uid: string }; Returns: boolean }
       is_yagi_internal_ws: { Args: { ws_id: string }; Returns: boolean }
+      remove_project_board_attachment: {
+        Args: { p_attachment_id: string; p_board_id: string; p_kind: string }
+        Returns: boolean
+      }
       resolve_user_ids_by_emails: {
         Args: { p_emails: string[] }
         Returns: {
@@ -2496,6 +2676,37 @@ export type Database = {
       save_brief_version: {
         Args: { p_label?: string; p_project_id: string }
         Returns: Json
+      }
+      seed_project_board_from_wizard:
+        | {
+            Args: {
+              p_initial_asset_index?: Json
+              p_initial_document: Json
+              p_project_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_initial_asset_index?: Json
+              p_initial_attached_pdfs?: Json
+              p_initial_attached_urls?: Json
+              p_initial_document: Json
+              p_project_id: string
+            }
+            Returns: string
+          }
+      toggle_project_board_lock: {
+        Args: { p_board_id: string; p_locked: boolean }
+        Returns: undefined
+      }
+      transition_project_status: {
+        Args: { p_comment?: string; p_project_id: string; p_to_status: string }
+        Returns: string
+      }
+      update_project_board_url_note: {
+        Args: { p_attachment_id: string; p_board_id: string; p_note: string }
+        Returns: boolean
       }
     }
     Enums: {
@@ -2625,9 +2836,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
