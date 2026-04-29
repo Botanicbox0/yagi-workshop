@@ -640,7 +640,16 @@
         "edit": "Edit"
       },
       "summary": {
-        "references_count": "{count} reference{count, plural, one {} other {s}}"
+        "title": "Project summary",
+        "card_label": "Project summary card",
+        "references_count": "{count} reference{count, plural, one {} other {s}}",
+        "references_label": "References",
+        "conditions_label": "Budget & delivery",
+        "refs_none": "No materials added",
+        "not_entered": "Not entered",
+        "view_all": "View all",
+        "delivery_negotiable": "To be discussed",
+        "edit_hint": "If you'd like to change anything, go back to the previous step."
       },
       "errors": {
         "name_required": "Project name is required.",

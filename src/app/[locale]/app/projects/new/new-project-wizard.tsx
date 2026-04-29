@@ -34,7 +34,7 @@ import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-import { Pencil, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   ensureDraftProject,
   submitProjectAction,
@@ -49,6 +49,7 @@ import {
   ReferenceBoard,
   type WizardReference,
 } from "@/components/projects/wizard/reference-board";
+import { SummaryCard } from "@/components/projects/wizard/summary-card";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -319,7 +320,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
     }, 500);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Watch form fields + refs for autosave. Skip the very first render.
+  // Watch form fields for autosave + live summary card re-render
   const watchedValues = watch();
   useEffect(() => {
     if (isFirstRender.current) {
@@ -457,118 +458,89 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   );
 
   // -------------------------------------------------------------------------
-  // Step 3 — Final review
+  // Step 3 — Admin info + live summary card (hotfix-2 restructure)
   // -------------------------------------------------------------------------
 
-  const vals = getValues();
-
-  const budgetLabel = vals.budget_band
-    ? t(`wizard.field.budget.${vals.budget_band}` as Parameters<typeof t>[0])
-    : "—";
-
+  // watchedValues is used both for autosave (above) and for live summary card
   const step3Content = (
-    <div className="space-y-6">
-      {/* Summary card */}
-      <div
-        className="rounded-lg border-border/40 divide-y divide-border/40 overflow-hidden"
-        style={{
-          boxShadow:
-            "0 1px 2px rgba(0,0,0,0.04),0 4px 12px rgba(0,0,0,0.04)",
-        }}
-      >
-        {/* Block 1: name + description */}
-        <div className="px-4 py-3 space-y-1">
-          <div className="flex items-start justify-between gap-2">
-            <Eyebrow>
-              {t("wizard.field.name.label")}
-            </Eyebrow>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em]"
-              aria-label={t("wizard.actions.edit")}
-            >
-              <Pencil className="w-3 h-3" />
-              {t("wizard.actions.edit")}
-            </button>
-          </div>
-          <p className="text-sm font-medium keep-all">{vals.name || "—"}</p>
-          {vals.description && (
-            <p className="text-sm text-muted-foreground keep-all whitespace-pre-line line-clamp-3">
-              {vals.description}
+    <div className="space-y-8">
+      {/* Admin info fields — deliverable types + budget + delivery date */}
+      {/* (relocated from old Step 2) */}
+      <div className="space-y-6">
+        {/* Step 3 sub */}
+        <p className="text-sm text-muted-foreground keep-all">
+          {t("wizard.step3.sub")}
+        </p>
+
+        {/* Deliverable types */}
+        <div className="space-y-2">
+          <Label>{t("wizard.field.deliverable_types.label")}</Label>
+          <Controller
+            control={control}
+            name="deliverable_types"
+            render={({ field }) => (
+              <DeliverableChips
+                value={field.value ?? []}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          {errors.deliverable_types && (
+            <p className="text-xs text-destructive" role="alert">
+              {t("wizard.errors.deliverable_required")}
             </p>
           )}
         </div>
 
-        {/* Block 2: references */}
-        <div className="px-4 py-3 space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <Eyebrow>{t("wizard.field.references.eyebrow")}</Eyebrow>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em]"
-              aria-label={t("wizard.actions.edit")}
-            >
-              <Pencil className="w-3 h-3" />
-              {t("wizard.actions.edit")}
-            </button>
-          </div>
-          {refs.length > 0 ? (
-            <p className="text-xs text-muted-foreground mb-2">
-              {t("wizard.summary.references_count", { count: refs.length })}
+        {/* Budget */}
+        <div className="space-y-2">
+          <Label>{t("wizard.field.budget.label")}</Label>
+          <Controller
+            control={control}
+            name="budget_band"
+            render={({ field }) => (
+              <BudgetRadio
+                value={(field.value as BudgetBand) ?? ""}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          {errors.budget_band && (
+            <p className="text-xs text-destructive" role="alert">
+              {t("wizard.errors.budget_required")}
             </p>
-          ) : null}
-          {/* Re-editable references in Step 3 */}
-          <ReferenceBoard refs={refs} onChange={setRefs} />
+          )}
         </div>
 
-        {/* Block 3: conditions */}
-        <div className="px-4 py-3 space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <Eyebrow>{t("wizard.field.deliverable_types.label")}</Eyebrow>
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em]"
-              aria-label={t("wizard.actions.edit")}
-            >
-              <Pencil className="w-3 h-3" />
-              {t("wizard.actions.edit")}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {(vals.deliverable_types ?? []).map((dt) => (
-              <span
-                key={dt}
-                className="rounded-full border border-border/40 px-2.5 py-0.5 text-xs keep-all"
-              >
-                {t(
-                  `wizard.field.deliverable_types.${dt}` as Parameters<
-                    typeof t
-                  >[0]
-                )}
-              </span>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-4 pt-1 text-sm">
-            <span>
-              <span className="text-xs text-muted-foreground mr-1 uppercase tracking-[0.08em]">
-                {t("wizard.field.budget.label")}
-              </span>
-              {budgetLabel}
-            </span>
-            {vals.delivery_date && vals.delivery_date !== "" && (
-              <span>
-                <span className="text-xs text-muted-foreground mr-1 uppercase tracking-[0.08em]">
-                  {t("wizard.field.delivery_date.label")}
-                </span>
-                {vals.delivery_date}
-              </span>
-            )}
-          </div>
+        {/* Delivery date */}
+        <div className="space-y-1.5">
+          <Label htmlFor="delivery_date">
+            {t("wizard.field.delivery_date.label")}
+          </Label>
+          <Input
+            id="delivery_date"
+            type="date"
+            min={new Date().toISOString().slice(0, 10)}
+            {...register("delivery_date")}
+          />
         </div>
       </div>
+
+      {/* Live summary card — updates as fields fill (L-012 no seam between form + card) */}
+      <SummaryCard
+        name={watchedValues.name}
+        description={watchedValues.description}
+        refs={refs}
+        deliverableTypes={watchedValues.deliverable_types ?? []}
+        budgetBand={watchedValues.budget_band ?? ""}
+        deliveryDate={watchedValues.delivery_date ?? ""}
+        onEditStep={(s) => setStep(s)}
+      />
+
+      {/* Edit hint */}
+      <p className="text-xs text-muted-foreground keep-all">
+        {t("wizard.summary.edit_hint")}
+      </p>
 
       {/* Action row */}
       <div className="flex items-center justify-between pt-2">
@@ -587,15 +559,19 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
           disabled={isSubmitting}
           onClick={() => {
             startSubmit(async () => {
-              const vals = getValues();
+              // Validate admin fields before submitting
+              const isValid = await validateStep3Fields();
+              if (!isValid) return;
+
+              const formVals = getValues();
               const result = await submitProjectAction({
-                name: vals.name,
-                description: vals.description,
-                deliverable_types: vals.deliverable_types,
-                budget_band: vals.budget_band,
+                name: formVals.name,
+                description: formVals.description,
+                deliverable_types: formVals.deliverable_types,
+                budget_band: formVals.budget_band,
                 delivery_date:
-                  vals.delivery_date && vals.delivery_date !== ""
-                    ? vals.delivery_date
+                  formVals.delivery_date && formVals.delivery_date !== ""
+                    ? formVals.delivery_date
                     : null,
                 references: refs.map((r) => ({
                   id: r.id,
@@ -606,9 +582,6 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                   thumbnailUrl: r.thumbnailUrl,
                   durationSeconds: r.durationSeconds,
                 })),
-                // workspaceId resolved server-side from user membership
-                // (same pattern as ensureDraftProject). Passing the draft
-                // project id so the server can look up its workspace.
                 draftProjectId,
               });
               if (result.ok) {

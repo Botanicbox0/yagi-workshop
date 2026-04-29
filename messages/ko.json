@@ -640,7 +640,16 @@
         "edit": "수정"
       },
       "summary": {
-        "references_count": "레퍼런스 {count}개"
+        "title": "의뢰 요약",
+        "card_label": "프로젝트 요약 카드",
+        "references_count": "레퍼런스 {count}개",
+        "references_label": "참고 자료",
+        "conditions_label": "예산 · 납기",
+        "refs_none": "추가된 자료 없음",
+        "not_entered": "미입력",
+        "view_all": "전체 보기",
+        "delivery_negotiable": "협의",
+        "edit_hint": "수정할 부분이 있으면 이전 단계로 돌아가 변경할 수 있어요."
       },
       "errors": {
         "name_required": "프로젝트 이름을 입력해 주세요.",
