@@ -133,6 +133,21 @@ export const BRIEF_BUCKET =
   process.env.CLOUDFLARE_R2_BRIEF_BUCKET ?? "yagi-commission-files";
 
 /**
+ * Public URL for a BRIEF_BUCKET object. Phase 3.1 K-05 LOOP 1 HIGH-B F7 fix:
+ * the legacy `objectPublicUrl` builds a URL based on `BUCKET` (the challenge
+ * submissions bucket), but brief assets are written to `BRIEF_BUCKET`. When
+ * `CLOUDFLARE_R2_PUBLIC_BASE` is set (the Phase 3.1 prereq), it overrides
+ * regardless and is expected to point at the brief bucket's public URL. When
+ * unset, this helper at least targets the correct bucket via the R2 endpoint.
+ */
+export function briefObjectPublicUrl(key: string): string {
+  const base =
+    process.env.CLOUDFLARE_R2_PUBLIC_BASE ??
+    `${requireEnv("CLOUDFLARE_R2_ENDPOINT")}/${BRIEF_BUCKET}`;
+  return `${base}/${key}`;
+}
+
+/**
  * Generate a presigned PUT URL for a brief asset upload.
  * Default expiry 600s — uploads are debounced one-shot, not long-lived.
  */

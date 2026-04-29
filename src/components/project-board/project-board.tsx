@@ -33,7 +33,7 @@ import { useTranslations } from "next-intl";
 
 import { AssetActionMenu } from "./asset-action-menu";
 import {
-  getWizardAssetPutUrlAction,
+  getBoardAssetPutUrlAction,
   fetchVideoMetadataAction,
 } from "@/app/[locale]/app/projects/new/actions";
 
@@ -70,18 +70,13 @@ type AssetMenuState = {
 } | null;
 
 // ============================================================
-// Upload helper — calls server action for presigned PUT, then fetches R2
+// Upload helper — calls server action for presigned PUT, then fetches R2.
+// K-05 LOOP 1 HIGH-A F7 fix: server generates the storage key (UUID-based),
+// the client only forwards the file's content type. Filename is NOT trusted.
 // ============================================================
 
-async function uploadFileToR2(
-  file: File,
-  keyPrefix: string
-): Promise<string | null> {
-  const timestamp = Date.now();
-  // L-009: no Korean chars in path — use file.name as-is (user ASCII filenames expected)
-  const storageKey = `${keyPrefix}/${timestamp}-${file.name}`;
-
-  const result = await getWizardAssetPutUrlAction(storageKey, file.type);
+async function uploadFileToR2(file: File): Promise<string | null> {
+  const result = await getBoardAssetPutUrlAction(file.type);
   if (!result.ok) {
     console.error("[ProjectBoard] presign failed:", result.error);
     return null;
@@ -272,7 +267,7 @@ export function ProjectBoard({
               continue;
             }
 
-            const publicUrl = await uploadFileToR2(file, "board-assets");
+            const publicUrl = await uploadFileToR2(file);
             if (!publicUrl) continue;
 
             editor.createShape({
@@ -294,7 +289,7 @@ export function ProjectBoard({
               continue;
             }
 
-            const publicUrl = await uploadFileToR2(file, "board-assets");
+            const publicUrl = await uploadFileToR2(file);
             if (!publicUrl) continue;
 
             editor.createShape({

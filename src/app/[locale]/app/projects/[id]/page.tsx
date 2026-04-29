@@ -13,7 +13,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { BriefBoardEditor } from "@/components/brief-board/editor";
-import { ProjectBoard } from "@/components/project-board/project-board";
+import { BriefBoardClient } from "@/components/project-board/brief-board-client";
 import { VersionHistoryPanel, type VersionEntry } from "@/components/project-board/version-history-panel";
 import type { JSONContent } from "@tiptap/react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
@@ -324,9 +324,9 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                     query by yagi_admin (or via task_09 backlog UI). */}
               </div>
               <div style={{ height: "60vh", minHeight: "400px" }}>
-                <ProjectBoard
-                  mode="brief"
-                  document={boardDocument}
+                <BriefBoardClient
+                  projectId={project.id}
+                  initialDocument={boardDocument}
                   locked={isLocked}
                   viewerRole={viewerRoleForBoard}
                 />

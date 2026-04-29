@@ -30,13 +30,29 @@ import { extractAssetIndex } from "@/lib/board/asset-index";
 const VERSION_DEBOUNCE_MS = 30_000;
 const DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
 
+// K-05 LOOP 1 MEDIUM F6 fix: same validator as wizard's submitProjectAction
+// to reject malformed tldraw store snapshots. Empty {} is permitted (a brief
+// in initial state). Otherwise document MUST contain a `store` object key.
+function validateTldrawStore(doc: Record<string, unknown>): boolean {
+  if (!doc || typeof doc !== "object") return false;
+  if (Object.keys(doc).length === 0) return true;
+  if (!("store" in doc)) return false;
+  const store = (doc as { store: unknown }).store;
+  if (typeof store !== "object" || store === null) return false;
+  return true;
+}
+
 // ============================================================
 // updateProjectBoardAction
 // ============================================================
 
 const UpdateBoardSchema = z.object({
   projectId: z.string().uuid(),
-  document: z.record(z.string(), z.unknown()),
+  document: z
+    .record(z.string(), z.unknown())
+    .refine(validateTldrawStore, {
+      message: "document is not a valid tldraw store snapshot",
+    }),
 });
 
 export type UpdateBoardResult =
@@ -85,7 +101,31 @@ export async function updateProjectBoardAction(
   // K-05 trust boundary: server-recompute asset_index. Never trust client.
   const assetIndex = extractAssetIndex(parsed.data.document);
 
-  // Versioning: snapshot if last version >30s ago (or never).
+  // K-05 LOOP 1 HIGH-B F3 fix: atomic update guarded by is_locked=false to
+  // close the lock race window. If admin locks between our SELECT and UPDATE,
+  // the WHERE clause filters it out and `updated` returns empty rows; we then
+  // return error:locked WITHOUT having inserted a version snapshot.
+  const { data: updated, error: uErr } = await sb
+    .from("project_boards")
+    .update({
+      document: parsed.data.document,
+      asset_index: assetIndex,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", board.id)
+    .eq("is_locked", false)
+    .select("id");
+  if (uErr) {
+    console.error("[updateProjectBoardAction] update error:", uErr);
+    return { ok: false, error: "db", message: uErr.message };
+  }
+  if (!Array.isArray(updated) || updated.length === 0) {
+    // Lock was acquired between SELECT and UPDATE → no rows updated, no snapshot.
+    return { ok: false, error: "locked" };
+  }
+
+  // Versioning: snapshot AFTER successful update (K-05 LOOP 1 HIGH-B F3 fix —
+  // never insert a version row for a write that did not land).
   const { data: lastVersion } = await sb
     .from("project_board_versions")
     .select("created_at, version")
@@ -112,21 +152,6 @@ export async function updateProjectBoardAction(
       created_by: user.id,
       label: null,
     });
-  }
-
-  // UPDATE the board (user-scoped client; RLS update_client policy allows
-  // when board.is_locked=false, which we just verified).
-  const { error: uErr } = await sb
-    .from("project_boards")
-    .update({
-      document: parsed.data.document,
-      asset_index: assetIndex,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", board.id);
-  if (uErr) {
-    console.error("[updateProjectBoardAction] update error:", uErr);
-    return { ok: false, error: "db", message: uErr.message };
   }
 
   revalidatePath(`/[locale]/app/projects/${parsed.data.projectId}`, "page");
@@ -197,6 +222,8 @@ export type RestoreVersionResult =
       message?: string;
     };
 
+
+
 export async function restoreVersionAction(
   input: unknown
 ): Promise<RestoreVersionResult> {
@@ -230,7 +257,19 @@ export async function restoreVersionAction(
   if (sErr || !snap) return { ok: false, error: "not_found" };
 
   const restoredDoc = snap.document as Record<string, unknown>;
+  // K-05 LOOP 1 MEDIUM F6: validate snapshot is structurally a tldraw store
+  // before restoring (defense against historical bad data).
+  if (!validateTldrawStore(restoredDoc)) {
+    return { ok: false, error: "validation", message: "snapshot_malformed" };
+  }
   const assetIndex = extractAssetIndex(restoredDoc);
+
+  // Resolve project_id for revalidation — board → project_id lookup
+  const { data: boardLookup } = await sb
+    .from("project_boards")
+    .select("project_id")
+    .eq("id", parsed.data.boardId)
+    .maybeSingle();
 
   const { error: uErr } = await sb
     .from("project_boards")
@@ -243,6 +282,15 @@ export async function restoreVersionAction(
   if (uErr) {
     console.error("[restoreVersionAction] update error:", uErr);
     return { ok: false, error: "db", message: uErr.message };
+  }
+
+  // K-05 LOOP 1 MEDIUM fix: revalidate the project page after restore so the
+  // canvas re-renders with the restored snapshot.
+  if (boardLookup?.project_id) {
+    revalidatePath(
+      `/[locale]/app/projects/${boardLookup.project_id}`,
+      "page"
+    );
   }
   return { ok: true };
 }

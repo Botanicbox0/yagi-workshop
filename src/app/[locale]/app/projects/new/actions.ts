@@ -6,6 +6,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import type { Json } from "@/lib/supabase/database.types";
 import { fetchVideoMetadata, type OEmbedResult } from "@/lib/oembed";
+import { extractAssetIndex } from "@/lib/board/asset-index";
 
 // -----------------------------------------------------------------------------
 // Phase 2.8.1 G_B1-B — Wizard draft mode
@@ -464,11 +465,59 @@ export async function submitDraftProject(
 
 import {
   createBriefAssetPutUrl,
-  objectPublicUrl,
+  briefObjectPublicUrl,
 } from "@/lib/r2/client";
 
+// Phase 3.1 K-05 LOOP 1 HIGH-A F7 fix:
+// The legacy getWizardAssetPutUrlAction accepted arbitrary storageKey from the
+// client, which let any authenticated caller overwrite known/guessable R2
+// objects in the brief bucket. The new getBoardAssetPutUrlAction generates the
+// storage key server-side using a UUID and validates content type against a
+// strict allow-list. The legacy action is kept for backward-compat but now
+// applies the same allow-list and a more restrictive prefix policy.
+
+const ALLOWED_CONTENT_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+  "image/avif",
+  "application/pdf",
+]);
+
+const EXT_FOR_CONTENT_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/svg+xml": "svg",
+  "image/avif": "avif",
+  "application/pdf": "pdf",
+};
+
+// Phase 3.0/legacy schema — accepts a client-supplied key but now restricts
+// the prefix to a known-safe namespace. Existing callers should migrate to
+// getBoardAssetPutUrlAction below.
 const wizardAssetPutUrlSchema = z.object({
-  storageKey: z.string().min(1).max(500),
+  storageKey: z
+    .string()
+    .min(1)
+    .max(500)
+    // Restrict to known prefixes to prevent overwriting unrelated R2 objects.
+    // Must start with a recognized board/wizard asset prefix.
+    .refine(
+      (k) =>
+        k.startsWith("board-assets/") ||
+        k.startsWith("wizard-references/") ||
+        k.startsWith("project-briefs/"),
+      { message: "storageKey prefix not allowed" }
+    )
+    // No traversal / parent-dir / null bytes
+    .refine(
+      (k) => !k.includes("..") && !k.includes("\0") && !k.includes("//"),
+      { message: "storageKey contains forbidden characters" }
+    ),
   contentType: z.string().min(1).max(200),
 });
 
@@ -485,6 +534,11 @@ export async function getWizardAssetPutUrlAction(
     return { ok: false, error: "invalid_input" };
   }
 
+  // Strict content-type allow-list (HIGH-A F7)
+  if (!ALLOWED_CONTENT_TYPES.has(parsed.data.contentType)) {
+    return { ok: false, error: "content_type_not_allowed" };
+  }
+
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -497,10 +551,57 @@ export async function getWizardAssetPutUrlAction(
       parsed.data.contentType,
       600
     );
-    const pubUrl = objectPublicUrl(parsed.data.storageKey);
+    // Phase 3.1 K-05 LOOP 1 HIGH-B F7 fix: use briefObjectPublicUrl which
+    // targets BRIEF_BUCKET (where the PUT lands), not BUCKET (the challenges
+    // submissions bucket).
+    const pubUrl = briefObjectPublicUrl(parsed.data.storageKey);
     return { ok: true, putUrl, publicUrl: pubUrl };
   } catch (err) {
     console.error("[getWizardAssetPutUrlAction] presign failed:", err);
+    return { ok: false, error: "presign_failed" };
+  }
+}
+
+// Phase 3.1 — server-generated key + strict content-type validation.
+// Use this for board asset uploads going forward. Legacy
+// getWizardAssetPutUrlAction is preserved for back-compat with already-
+// shipped client code paths.
+const boardAssetPutUrlSchema = z.object({
+  contentType: z.string().min(1).max(200),
+});
+
+export async function getBoardAssetPutUrlAction(
+  contentType: unknown
+): Promise<WizardAssetPutUrlResult> {
+  const parsed = boardAssetPutUrlSchema.safeParse({ contentType });
+  if (!parsed.success) return { ok: false, error: "invalid_input" };
+
+  if (!ALLOWED_CONTENT_TYPES.has(parsed.data.contentType)) {
+    return { ok: false, error: "content_type_not_allowed" };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // Server-generated key: UUID + safe extension. NO client filename trust.
+  const ext = EXT_FOR_CONTENT_TYPE[parsed.data.contentType] ?? "bin";
+  const uuid = crypto.randomUUID();
+  const storageKey = `board-assets/${user.id}/${uuid}.${ext}`;
+
+  try {
+    const putUrl = await createBriefAssetPutUrl(
+      storageKey,
+      parsed.data.contentType,
+      600
+    );
+    // K-05 LOOP 1 HIGH-B F7: BRIEF_BUCKET-targeted public URL.
+    const pubUrl = briefObjectPublicUrl(storageKey);
+    return { ok: true, putUrl, publicUrl: pubUrl };
+  } catch (err) {
+    console.error("[getBoardAssetPutUrlAction] presign failed:", err);
     return { ok: false, error: "presign_failed" };
   }
 }
@@ -727,17 +828,23 @@ export async function submitProjectAction(
 
   // 3. Phase 3.1 — Seed the project_boards row via RPC.
   //    Replaces the old project_references[] INSERT path. The RPC is
-  //    SECURITY DEFINER + asserts project.status='in_review' (which we just
-  //    set in step 1). It uses ON CONFLICT (project_id) DO UPDATE so re-submits
-  //    are idempotent. The user-scoped supabase client is fine here because
-  //    SECURITY DEFINER bypasses RLS; the RPC's own status check is the
-  //    auth gate.
-  //    eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
+  //    SECURITY DEFINER + asserts caller owns the project (K-05 LOOP 1 F1 fix)
+  //    AND project.status='in_review'. ON CONFLICT (project_id) DO UPDATE so
+  //    re-submits are idempotent.
+  //    K-05 HIGH-B F5 fix: server-recompute asset_index from the board document
+  //    so admin queue/detail counts are accurate immediately after submit
+  //    (K-05 trust boundary — never trust client-supplied asset_index).
+  const seedDocument = data.boardDocument ?? {};
+  const seedAssetIndex = extractAssetIndex(
+    seedDocument as Record<string, unknown>
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
   const { error: seedErr } = await (supabase as any).rpc(
     "seed_project_board_from_wizard",
     {
       p_project_id: project.id,
-      p_initial_document: data.boardDocument ?? {},
+      p_initial_document: seedDocument,
+      p_initial_asset_index: seedAssetIndex,
     }
   );
   if (seedErr) {
