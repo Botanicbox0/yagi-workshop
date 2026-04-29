@@ -499,7 +499,7 @@ import { emitNotification } from "@/lib/notifications/emit";
 
 const SubmitInputSchema = z.object({
   name: z.string().min(1).max(80),
-  description: z.string().min(30).max(2000),
+  description: z.string().min(1).max(2000),
   deliverable_types: z.array(z.string()).min(1),
   budget_band: z.enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"]),
   delivery_date: z.string().nullable().optional(),
