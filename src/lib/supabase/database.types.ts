@@ -1720,6 +1720,7 @@ export type Database = {
           id: string
           intake_mode: string
           kind: string
+          meeting_preferred_at: string | null
           project_type: string
           proposal_audience: string | null
           proposal_budget_range: string | null
@@ -1744,6 +1745,7 @@ export type Database = {
           id?: string
           intake_mode?: string
           kind?: string
+          meeting_preferred_at?: string | null
           project_type?: string
           proposal_audience?: string | null
           proposal_budget_range?: string | null
@@ -1768,6 +1770,7 @@ export type Database = {
           id?: string
           intake_mode?: string
           kind?: string
+          meeting_preferred_at?: string | null
           project_type?: string
           proposal_audience?: string | null
           proposal_budget_range?: string | null
