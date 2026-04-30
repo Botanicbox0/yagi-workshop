@@ -1,0 +1,212 @@
+0322fba fix(hotfix-3-addendum-2): Wave H task_12 - submit error surfacing + client redirect + commission route migration
+5cd1fc2 chore(types): regen database.types.ts post task_09 meeting_preferred_at migration
+1da4207 feat(hotfix-3-addendum): Wave E task_09 - Step 3 polish + meeting_preferred_at + canvas drop dedup
+b2788b2 fix(k05-loop-1-hotfix3): owner_id->created_by in 4 RPCs + seed auth gate + RLS column REVOKE
+dedb499 fix(types): add as-any casts to ref-actions.ts after database.types.ts regen (kind column NOT NULL)
+6454bb3 chore: regen database.types.ts for hotfix-3 schema (attached_pdfs/urls + 4 new RPCs)
+1c8c73b feat(lock-ui): yagi_admin lock button + locked banner + cascade + toggleBoardLockAction
+9c37810 feat(integration): wire AttachmentsSection to wizard + brief mode + 5 server actions
+5d4a905 feat(attachments): AttachmentsSection + PdfCard + UrlCard + i18n + asset-list-panel update
+74efba1 feat(board): canvas full-width breakout + Q-AD aspect ratio + tsconfig allowImportingTsExtensions
+098787a feat(board): unified asset_index normalizer with attached_pdfs + attached_urls merge
+ae7738d feat(db): hotfix-3 migration -- attached_pdfs + attached_urls + 4 RPCs + extend seed RPC
+43ff013 fix(k05-loop-2): drop unsafe 2-arg seed RPC overload + bind storageKey to caller user.id
+0180e1d fix(k05-loop-1): seed RPC owner gate, server-gen storage keys, asset_index seed, autosave wiring, lock race, bucket mismatch
+6c3b17e fix(board): drop runtime import of yagi-shape-types.d.ts (webpack cannot resolve type-only file)
+db5ca75 feat(detail): brief tab = ProjectBoard brief mode + board-actions + version-history-panel
+779a441 feat(admin): asset list panel + queue count indicator (Phase 3.1)
+e658424 feat(brief-board): add readOnly prop + legacy banner for Phase 3.1 routing
+8ed637e feat(wizard): step 2 = ProjectBoard wizard mode + seed_project_board RPC submit
+4665312 feat(board): drop handlers + asset action menu + asset-index extractor
+d9b76d9 feat(board): tldraw POC shell -- 3 custom shapes, achromatic theme, empty overlay, mobile read-only
+4325897 feat(db): Phase 3.1 project_boards + project_board_versions + 3 RPCs + RLS
+5bfca60 fix(r2): strip x-amz-checksum-* headers from presigned PUT URLs
+469b377 feat(wizard): Step 3 = admin info + live summary card
+8e8fc78 feat(wizard): Step 2 = ReferenceBoard only with optional tone
+e76a6f9 feat(wizard): Step 1 simplification -- name + short description only
+d1dd196 fix(reference-board): repair image/PDF upload -- move presign to server action
+3fb0aa6 ﻿feat(hotfix-1/wave-c): ReferenceBoard — Pinterest/Figma board pattern (replace ReferencesEditor)
+3a31efe ﻿chore(hotfix-1/wave-b-03): update delivery date label
+48a9faf ﻿fix(hotfix-1/wave-a): diagnose + fix submit FAIL — description min(30) blocks submit
+6875066 docs(phase-3-0/decisions): Q-093 — canonical 9-state machine + actor_role + auto submitted→in_review
+a8e9a02 fix(phase-3-0/k05-loop1): projects_insert RLS allows workspace members to INSERT
+2dcf459 feat(phase-3-0/wave-d/task-07): deprecate /app/commission/* in favor of /app/projects/*
+863c64d feat(phase-3-0/wave-c/task-04): submitProjectAction + post-submit card + Resend wiring
+73ad076 feat(phase-3-0/wave-c/task-05): project detail rebuild + status timeline + action modals
+56d532b feat(phase-3-0/wave-c/task-06): admin queue + shared status badge + RPC action wrappers
+a29bcdf feat(phase-3-0/wave-b/task-03): 3-step project wizard + oEmbed module
+8fc0a32 feat(phase-3-0/wave-a/task-02): 7 lifecycle email templates
+56b9931 feat(phase-3-0/wave-a/task-01): projects lifecycle DB schema + RPC + RLS
+28f15ea feat(phase-2-10): design system v0.2.0 — editorial integration codification
+670e54a fix(phase-2-9 hotfix-3): swap card1/card2 text positions on hero — top now VIDEO PRODUCTION, bottom BRAND CAMPAIGN per yagi
+6b23d25 fix(phase-2-9 hotfix-2): editorial integration polish per yagi smoke
+c6fa469 fix(phase-2-9 hotfix-1): sidebar seam removal — single continuous flow
+7d94bce feat(phase-2-9): projects hub editorial redesign + brand system upgrade
+9565c90 spec(phase-2-9): KICKOFF v1 — projects hub editorial redesign + Pretendard/SUIT + interactive cards
+cab8d08 fix(phase-2-8-6 review-loop-2): K-05 LOOP 2 — support_threads_update yagi-admin-only
+5bb212e fix(phase-2-8-6 review-loop-1): K-05 LOOP 1 — meeting/support RLS hardening + trigger NULL tolerance
+cb8bc13 feat(phase-2-8-6): meeting request flow + support chat widget
+8bdc8a0 chore(repo-hygiene): archive shipped phase artifacts + tighten gitignore
+1664b6f fix(phase-2-8-5): logo transparency + sizing + workspace label + nav cleanup
+44adad2 feat(phase-2-8-4): brand re-import + sample images + italic removal
+625c27c refactor(phase-2-8-3 g-b3-d): projects hub hero rewrite per yagi framing
+fe73321 refactor(phase-2-8-3 g-b3-c): creator profile copy + handle live-validation
+ae94d87 feat(phase-2-8-3 g-b3-b): sidebar brand mark + workspace switcher restoration
+bbaef51 feat(phase-2-8-3 g-b3-a): brand asset import + favicon refresh
+8f38f56 spec(phase-2-8-3): KICKOFF v1 — 6 gates, 4d target, brand restore + copy polish
+6af1254 fix(phase-2-8-2 hotfix): client redirect to projects hub + tippy.js install
+cf9d74d chore(phase-2-8-2 shipped): SPEC §8 — canvas mode + 8-category popovers bumped to Phase 2.10
+41c9c48 fix(phase-2-8-2 review-loop-1): K-05 LOOP 1 — RLS WITH CHECK + RPC deleted gate + realtime project filter + IME
+a3e849c refactor(phase-2-8-2 g-b2-f): commission page → permanent redirect to landing
+caab8f8 feat(phase-2-8-2 g-b2-e): comment author hierarchy — avatar + role badge + mentions
+a74f2df feat(phase-2-8-2 g-b2-d): brief board side panel — realtime messages tab + version history demoted
+0716be9 feat(phase-2-8-2 g-b2-b): brief board toolbar + slash command + drag-drop
+bed96b0 feat(phase-2-8-2 g-b2-a): projects hub onboarding hero + admin soft-delete
+d1aea70 spec(phase-2-8-2): KICKOFF v1 — 6 gates, 6d target, K-PUX absorbed
+532a81f feat(onboarding): company_type enum to founder framing (5 visible options)
+d64f1d6 spec(phase-2-8-1-followup-1): company_type enum to founder framing
+dc0eb49 fix(onboarding): role + client profile copy reframe + contact field grouping
+dbd7e1e chore(phase-2-8-1 shipped): log SHIPPED + merge ff + push origin main
+0c0ea9f chore(phase-2-8-1 review-loop-2): K-05 LOOP_2_PASS — verdict CLEAN
+add9414 fix(phase-2-8-1 review-loop-1): K-05 HIGH-B fixes (commission seed + draft guard)
+bda8ad0 fix(phase-2-8-1 g-b1-j): wizard polish bundle (tags + slash hint + modal copy)
+df82888 refactor(phase-2-8-1 g-b1-i): projects hub IA (Brief default + contest tab off)
+f415e7f feat(phase-2-8-1 g-b1-h): commission flow integrity (CTA + intent + admin convert)
+c1e5c43 test(phase-2-8-1 g-b1-g): playwright e2e + korean ime smoke
+ca9a139 feat(phase-2-8-1 g-b1-f): tabs i18n + saveVersion RPC + r2 round-trip test
+cd9678c chore(phase-2-8-1 g-b1-e): remove dead code from phase 2.7.2 + 2.8
+646988e refactor(phase-2-8-1 g-b1-d): workspace → workshop terminology sweep
+b0417cf fix(phase-2-8-1 g-b1-c): ssrf defense-in-depth — redirect, cgn, ipv6-compat
+0b012ca feat(phase-2-8-1 g-b1-b): wizard step 3 draft-project integration
+63d4cc7 chore(phase-2-8-1 g-b1-a): rsc form-action lint rule + CI sweep
+498a15f spec(phase-2-8-1): v2 with K-PUX absorption (10 sub-gates, 8d target)
+583e60d docs(k-pux): consolidate Codex K-PUX-1 findings into readable markdown
+1273356 fix(auth+rsc) + feat(onboarding) + docs: signup UX + form-action types + role simplification + Phase 2.8.1/2 SPECs
+5d09826 fix(rsc) + docs(strategy): form-action sweep + decisions + Phase 2.8.1 SPEC
+a969aa7 chore(phase-2-8 shipped): log REVIEW=MEDIUM_ONLY=PASS + SHIPPED merge
+9913c98 fix(phase-2-8 review): codex k-05 loop1+loop2 patches
+729fe8b feat(phase-2-8 g-b-7): wizard + brief tab integration
+c78faf2 feat(phase-2-8 g-b-6): comments + yagi-request CTA + lock
+7db5c75 feat(phase-2-8 g-b-5): version snapshot + history sidebar
+b5f32f0 feat(phase-2-8 g-b-4): embed block + oembed proxy
+474c924 feat(phase-2-8 g-b-3): image+file blocks + R2 upload
+87093a6 feat(phase-2-8 g-b-2): tiptap editor + auto-save
+d46cac6 chore(phase-2-8 g-b-1): schema + RLS + actions skeleton
+5bb0a57 docs(phase-2-8): land Brief Board SPEC + executable KICKOFF
+eb377eb feat(phase-2-7.2): wizard 3-step + sidebar funnel split + i18n cleanup
+ddd9a66 style(phase-2-7-1): max-width layout + i18n unification + Webflow light polish
+b018aeb feat(phase-2-7-1): language switcher + role badge + scope switcher clarity
+bd77e24 fix(phase-2-7-1): projects/new Select bug + remove italics + sidebar cleanup
+6043b9a feat(phase-2-7 g5): Phase 2.7 SHIPPED — ADR-011/012/013 + Codex K-05 CLEAN
+8021466 chore(phase-2-7 g5): hardening v2 — empty-string → null on client optional fields
+4fdabcd chore(phase-2-7 g5): hardening v1 — Codex K-05 final-review patches
+499d469 chore(phase-2-7 g4): polish — redirect client persona at /app to /app/commission
+8cc00ca feat(phase-2-7 g3): admin queue + sponsor + landing redesign
+f0a9c16 feat(phase-2-7 g2): client signup + intake form
+92b9984 feat(phase-2-7 g1): commission intake schema + sidebar adapter
+ea69742 docs(phase-2-6): land FOLLOWUPS + KICKOFF_PROMPT
+ded4d30 chore(phase-2-6 g4): hardening v3 — close /api/og guide leak (Loop 3 tail)
+6c164b0 chore(phase-2-6 g4): hardening v2 — close remaining guide leaks in [slug] page
+463b25f chore(phase-2-6 g4): hardening v1 — Codex K-05 MED-B + LOW-C patches
+42d1d0e feat(phase-2-6 g4): mobile drawer via Sheet + a11y labeling
+7f93d4f feat(phase-2-6 g3): help link + public exit + challenge-creation guide
+86d7bb4 feat(phase-2-6 g2): scope selector (workspace/profile/admin) + first-use tooltip
+dba4923 feat(phase-2-6 g1): sidebar 3-tier refactor + 4-group mapping + ADR-010
+6b055dd Merge branch 'worktree-g3-challenges' — Phase 2.5 SHIPPED (Codex K-05 CLEAN)
+e8caec2 feat(phase-2-5 g8): Codex K-05 CLEAN + SHIPPED
+bc22b21 chore(phase-2-5 g8): hardening v3 — K05-003A/B final (loop 3/3)
+359a0a0 chore(phase-2-5 g8): HALT #2 — hardening loop 2/2 exhausted, K05-003 partial
+5ceff0f chore(phase-2-5 g8): hardening v2 — K05-003 full submission_requirements schema
+bcddd04 chore(phase-2-5 g8): hardening for Codex K05-001 through K05-006
+6ac8bcd chore(phase-2-5 g8): HALT — Codex K-05 returned HIGH_FINDINGS (6 ship-blockers)
+90a5b8f feat(phase-2-5 g7): notifications glue — cron + dispatch + challenge_updates_enabled gate
+ac10cc5 feat(phase-2-5 g6): public profile /u/[handle] + settings extension + avatar crop
+c3d661c feat(phase-2-5 g5): admin challenge management — 5 routes + CRUD/judge/announce actions
+c7f99e0 feat(phase-2-5): G4 — submission flow (R2 signed-URL + atomic post-upload + dynamic Zod)
+51f39ba docs(phase-2-5+2-6): G5-G8 entry packages + Phase 2.6 SPEC v3
+33b319c feat(phase-2-5): G3 — public challenge surfaces (list + detail + gallery + polish)
+1fb9dd2 feat(challenges): pre-G3 infra — markdown, status helpers, brand assets
+79ce0b5 docs(autobuild): add parallel execution model + v2.0 architecture
+c5cf385 docs(autobuild): add Gate Autopilot + Decisions Cache
+5beb927 docs(claude): codify DB write protocol in Builder CLAUDE.md
+1bef429 docs(autobuild): add G2 retrospective
+f32b529 docs(autobuild): add Codex triage framework + prompt template
+2fcfad4 feat(phase-2-5): G2 — auth + role selection (ADR-009)
+326f106 fix(lint): migrate tailwind.config require to ESM import
+21a103b fix(phase-2-5): G1 hardening v2 — closes Codex-v1 MED + 2 LOW
+bcc039b docs(phase-2-5): SPEC v2 §3 G1 task 6 — challenge_judgments admin-only
+be7553d fix(phase-2-5): G1 hardening migration — closes Codex K-05 HIGH/MED
+58dbf6e feat(phase-2-5): G1 migration — challenge platform schema applied
+d1884a5 docs(phase-2-5): SPEC v2 MED-3 — challenge_updates_enabled default alignment
+7de7941 fix(phase-2-5): GO-B fix-all — HIGH-1 + MED-1 + MED-2 closed
+5a5d020 chore(phase-2-5): HARD STOP #4 — Codex GO-B review HIGH (s/[token] retoken incomplete)
+665b065 docs: brief v5 — Phase 2.5 revision pass summary, 9/13 X1 CRITICAL closed
+ade027f feat(ui): X1 CRITICAL #3 #6 #7 — semantic status tokens + centralized status-pill helper
+8121538 fix(phase-2-5): X1 CRITICAL #1 — s/[token] share page retoken [BLOCKS 2.5]
+c6040bc fix(phase-2-5): X1 CRITICAL #1/#2/#9 — share components retoken + primitive conversion [BLOCKS 2.5]
+f2815f1 feat(ui): Button pill size variant — canonical CTA for public surfaces
+5440954 docs(phase-2-5): SPEC v2 — X2 4 CRITICAL + 9 HIGH applied
+a29a0df docs(phase-2-5): launchpad X1 design audit complete — 13 CRITICAL (some [BLOCKS 2.5])
+522f2a0 chore(phase-2-5): HARD STOP at launchpad X2 — 4 CRITICAL_BLOCKING findings
+b68976e docs(phase-2-5): launchpad X3 — pre-flight findings
+55b06e7 docs(design): ADR-006 SPEC-to-kickoff alignment protocol
+d50b9e9 chore(phase-2-1): G8 closeout — Phase 2.1 SHIPPED
+484ed09 fix(phase-2-1): G7 H1 Pass 3 — binary IPv6 parser + shared classifier module
+34be708 chore(phase-2-1): HARD STOP #2 at G7 Pass 2 — H1 partial, M1 resolved
+638ad43 fix(phase-2-1): G7 H1 + M1 — SSRF IPv6 hex-form + publication migration idempotency
+13dac64 chore(phase-2-1): HARD STOP at G7 — Codex HIGH (SSRF hex-form IPv6); autopilot ended
+8d34210 docs(phase-2-1): G6 QA_SMOKE PASS + YAGI-MANUAL-QA-QUEUE seeded
+5855dd0 fix(phase-2-1): G6 #5/#6 middleware matcher — exclude /showcase and /challenges from intl redirect
+c82ff6f chore(phase-2-5): SPEC + CEO_APPROVED — Challenge platform MVP spec
+c27fb26 docs(phase-2-1): G6 QA_SMOKE — PASS 1, MANUAL_PENDING 4, FAIL/REGRESSION 1 (STOP)
+57611a1 docs(phase-2-2): BACKLOG taxonomy rename — DEFER_TO_2_2 → DEFER_PHASE_2_5/PHASE_3 + WONTFIX
+d744690 chore(phase-2-1): G1 closeout — notification pipeline operational
+f8fb5d9 fix(phase-2-1): G5 FIX_NOW #3 — addReference server-derive media_type (1.2.5 L3)
+7eb5686 fix(phase-2-1): G5 FIX_NOW #2 — meeting+attendees atomic RPC (1.3 M1)
+f3fade5 fix(phase-2-1): G5 FIX_NOW #1 — og-video-unfurl.ts per-hop SSRF revalidation (1.2.5 M1)
+3b0faae docs(phase-2-2): seed backlog — cron job + pattern notes
+ef9ccac docs(phase-2-1): G5 triage — 24 DEFER items classified; 5 FIX_NOW recommended
+cc02bce fix(phase-2-1): G4 POPBILL issueTaxInvoice guard — structured NOT_IMPLEMENTED + bilingual UI
+73b9bd5 fix(phase-2-1): G3 seed yagi-internal workspace (clean-clone bootstrap)
+4bf7591 fix(phase-2-1): G2 realtime publication membership for preprod feedback tables
+3c97a6b chore(phase-2-5): SPEC + Gate 1 approved (Challenge MVP, blocks on 2.1, expedited per ADR-005)
+65414bd chore(phase-2-1): SPEC + Gate 1 approved (operational tail, expedited per ADR-005)
+7ca32e2 docs(design-system): CHANGELOG 0.1.0 + 5 ADRs
+4aeec74 docs(design-system): ARCHITECTURE v1.0 + P1 specs (TYPOGRAPHY/COMPONENT v1.1/INTERACTION/ANTI_PATTERNS)
+c869224 docs(design-system): track P0 artifacts (PRINCIPLES/UI_FRAMES/REFERENCES + review rubrics)
+3be2a4a docs(phase-2-0): G7 closeout — contracts.md patched, H1 deferred to P2.1
+88292a5 docs(phase-2-0-G7): cross-phase contracts.md + CLAUDE.md pointer
+47a12ea chore(phase-2-0-G6-i18n): drop dead translation keys (Phase 1.7)
+61b16da fix(phase-2-0-G6-L5): showcase not-found — inline html/body shell (Next 15.5 bug)
+ef3e24c fix(phase-2-0-G6-L4): viewer buildEmbedUrl — handle YouTube Shorts URLs (1.9/L4)
+129c141 fix(phase-2-0-G6-L3): showcases/page — drop unused locale param on renderEmpty (1.9/L3)
+d53540d fix(phase-2-0-G6-L2): requestBadgeRemoval — document why reason isn't persisted (1.9/L2)
+7aefd66 fix(phase-2-0-G6-L1): createShowcaseFromBoard — retry on draft slug collision (1.9/L1)
+e9caa28 fix(phase-2-0-G5-#7): storage "showcase-og update" — add WITH CHECK (1.9/M2)
+56f7889 fix(phase-2-0-G5-#6): storage "showcase-media update" — add WITH CHECK (1.9/M2)
+0106228 fix(phase-2-0-G5-#5): storage avatars_update — add WITH CHECK (1.9/M2)
+a12d87e fix(phase-2-0-G5-#4): team_channels_update — add WITH CHECK (1.9/M2)
+15f3d48 fix(phase-2-0-G5-#3): showcase_media_update — add WITH CHECK (1.9/M2)
+e5d26d6 fix(phase-2-0-G5-#2): meetings_update — add WITH CHECK to UPDATE policy (1.9/M2)
+5f9956f fix(phase-2-0-G5-#1): recalc_invoice_totals — pin search_path on SECURITY DEFINER
+97e8f11 docs(phase-2-0): G3+G4 HANDOFF update
+ade2cb0 fix(phase-2-0-G4-#9): invoice print — refuse draft status in code (1.5/M1)
+9f1c5df fix(phase-2-0-G4-#8): google calendar — stable requestId for retry dedup (1.3/M3)
+decaa8c fix(phase-2-0-G4-#7): site-footer — journal article locale toggle fallback (1.6/M4)
+82de416 fix(phase-2-0-G4-#5): team markChannelSeen — surface real errors (1.7/M3)
+614312e fix(phase-2-0-G4-#3): notification prefs — IANA timezone allowlist (1.8/M7)
+3e69e81 fix(phase-2-0-G4-#1): unsubscribe — atomic token claim via used_at guard (1.8/M1)
+df6bf32 fix(phase-2-0-G4-#4): team sendMessage — reject `..` in attachment paths (1.7/M11)
+5baaea7 fix(phase-2-0-G4-#2): thread-actions — drop cross-workspace yagi admin fan-out (1.8/M6)
+15c1005 fix(phase-2-0-G4-#10): ref-actions — reject `..` in storage_path (1.2/M8)
+911bf93 fix(phase-2-0-G4-#6): preprod createBoard — authorize projectId (1.4/M1)
+435ba20 chore(phase-2-0): G3 POPBILL flip docs
+5a11159 docs(phase-2-0): G4 triage — 10 FIX_NOW + 15 DEFER_TO_2_1
+f3ba76c chore(phase-2-0): G2 migration baseline squash (Option C)
+e56c364 chore(phase-2-0): G1.5 pre-commit secret hook + spec template
+96c8233 chore(snapshot): Phase 1.9 shipped state baseline (G0 of Phase 2.0)
+d9345b4 docs(phase-2-0): SPEC.md v3 — manual-mode tech debt cleanup plan
+13b4de2 docs(handoff): add security incident log + git status section
+a914cc6 feat: phases 1.0-1.9 complete
+e9cba13 docs: B-O-E autobuild methodology + phase 1.0-1.9 specs
+7dd3f48 chore: initial project scaffolding + ops scripts
