@@ -76,11 +76,14 @@ CREATE POLICY "project_licenses_select_admin" ON project_licenses
     )
   );
 
+-- Phase 4.x BLOCKER 1 fix (2026-05-01): KICKOFF spec referenced
+-- projects.owner_id but the actual ownership column is created_by.
+-- yagi confirmed option B: amend the policy to match the schema.
 CREATE POLICY "project_licenses_select_owner" ON project_licenses
   FOR SELECT TO authenticated
   USING (
     project_id IN (
-      SELECT id FROM projects WHERE owner_id = auth.uid()
+      SELECT id FROM projects WHERE created_by = auth.uid()
     )
   );
 
