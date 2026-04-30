@@ -1,7 +1,7 @@
 # task_01 -- DB schema migration result
 
 **Status**: completed (pending Wave D apply)
-**Commit SHA**: (see below after commit)
+**Commit SHA**: 02f0628e7f54844aef4d732ff26a44ca73087e1e
 **Files**:
 - supabase/migrations/20260501000000_phase_4_x_workspace_kind_and_licenses.sql (NEW, 110 lines)
 
