@@ -1,6 +1,10 @@
 import { redirect } from "@/i18n/routing";
 import { fetchAppContext } from "@/lib/app/context";
 import { Sidebar, MobileSidebarSheet } from "@/components/app/sidebar";
+import {
+  resolveActiveWorkspace,
+  listOwnWorkspaces,
+} from "@/lib/workspace/active";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { PageHelpLink } from "@/components/app/page-help-link";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
@@ -52,13 +56,31 @@ export default async function AppLayout({
 
   const scopes = getUserScopes(ctx);
 
+  // Phase 4.x task_06 — resolve active workspace + full membership list
+  // for the sidebar workspace switcher. resolveActiveWorkspace reads the
+  // 'yagi_active_workspace' cookie + validates membership; listOwnWorkspaces
+  // returns every workspace the user belongs to (with workspaces.kind, which
+  // null-safe-defaults to 'brand' until task_01 migration applies at Wave D).
+  const [activeWorkspace, allWorkspaces] = await Promise.all([
+    resolveActiveWorkspace(ctx.userId),
+    listOwnWorkspaces(ctx.userId),
+  ]);
+
   return (
     <UserScopesProvider value={scopes}>
       <div className="min-h-dvh flex">
-        <Sidebar context={ctx} />
+        <Sidebar
+          context={ctx}
+          activeWorkspace={activeWorkspace}
+          workspaces={allWorkspaces}
+        />
         <div className="flex-1 min-w-0 flex flex-col">
           <header className="flex items-center justify-between gap-2 h-12 px-4 border-b border-border">
-            <MobileSidebarSheet context={ctx} />
+            <MobileSidebarSheet
+              context={ctx}
+              activeWorkspace={activeWorkspace}
+              workspaces={allWorkspaces}
+            />
             <div className="flex-1" />
             <PageHelpLink />
             <LanguageSwitcher />

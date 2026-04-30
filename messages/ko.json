@@ -370,7 +370,19 @@
   "workspace": {
     "current": "현재 워크샵",
     "switch": "워크샵 전환",
-    "no_workspace": "워크샵 없음"
+    "no_workspace": "워크샵 없음",
+    "switcher": {
+      "brands_group": "Brands",
+      "artists_group": "Artists",
+      "admin_group": "YAGI",
+      "add_new": "+ 새 workspace 추가",
+      "add_new_disabled": "Phase 5 부터 가능",
+      "errors": {
+        "unauthenticated": "로그인이 필요해요.",
+        "not_a_member": "이 워크스페이스에 속해 있지 않아요.",
+        "invalid": "워크스페이스를 전환할 수 없어요. 잠시 후 다시 시도해 주세요."
+      }
+    }
   },
   "invite": {
     "pending": "대기중인 초대",

@@ -10,23 +10,35 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { SidebarBrand } from "./sidebar-brand";
-import { SidebarScopeSwitcher } from "./sidebar-scope-switcher";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarUserMenu } from "./sidebar-user-menu";
 import { SidebarPublicExit } from "./sidebar-public-exit";
+import {
+  WorkspaceSwitcher,
+  type WorkspaceItem,
+} from "@/components/sidebar/workspace-switcher";
 import type { AppContext } from "@/lib/app/context";
 
 function isYagiInternal(context: AppContext): boolean {
   return context.workspaces.some((w) => w.slug === "yagi-internal");
 }
 
+type SidebarProps = {
+  context: AppContext;
+  /** Phase 4.x task_06 — server-resolved active workspace + full membership list.
+   *  When null (zero memberships), the workspace switcher is hidden. The
+   *  /app layout redirects to /onboarding/workspace before reaching here in
+   *  that case for non-privileged users. */
+  activeWorkspace: WorkspaceItem | null;
+  workspaces: WorkspaceItem[];
+};
+
 function SidebarBody({
   context,
+  activeWorkspace,
+  workspaces,
   onNavigate,
-}: {
-  context: AppContext;
-  onNavigate?: () => void;
-}) {
+}: SidebarProps & { onNavigate?: () => void }) {
   const internalMember = isYagiInternal(context);
   return (
     <div
@@ -37,17 +49,21 @@ function SidebarBody({
         if (target.closest("a")) onNavigate();
       }}
     >
-      {/* Phase 2.9 G_B9_B + Phase 2.9 hotfix — brand + workspace +
-          nav as one continuous flow. Yagi visual smoke 2026-04-27:
-          the explicit border-b after the workspace block was reading
-          as a horizontal seam between the sidebar header and body.
-          Removed entirely; nav items have enough vertical rhythm to
-          stand on their own without a divider line. */}
+      {/* Phase 4.x task_06 — workspace switcher replaces the older
+          SidebarScopeSwitcher at the sidebar top. yagi_admin / profile
+          scope switching has been folded into the user menu + nav admin
+          entry; the explicit scope switcher file remains for potential
+          Phase 5+ reuse. */}
       <div className="px-5 pt-5 pb-3">
         <SidebarBrand />
-        <div className="mt-3">
-          <SidebarScopeSwitcher onNavigate={onNavigate} />
-        </div>
+        {activeWorkspace && (
+          <div className="mt-3">
+            <WorkspaceSwitcher
+              current={activeWorkspace}
+              workspaces={workspaces}
+            />
+          </div>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto pt-1 pb-3">
         <SidebarNav
@@ -68,18 +84,30 @@ function SidebarBody({
   );
 }
 
-export function Sidebar({ context }: { context: AppContext }) {
+export function Sidebar({
+  context,
+  activeWorkspace,
+  workspaces,
+}: SidebarProps) {
   return (
     <aside
       aria-label="Main navigation"
       className="hidden md:flex w-[240px] shrink-0 border-r border-border bg-background flex-col min-h-dvh"
     >
-      <SidebarBody context={context} />
+      <SidebarBody
+        context={context}
+        activeWorkspace={activeWorkspace}
+        workspaces={workspaces}
+      />
     </aside>
   );
 }
 
-export function MobileSidebarSheet({ context }: { context: AppContext }) {
+export function MobileSidebarSheet({
+  context,
+  activeWorkspace,
+  workspaces,
+}: SidebarProps) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -97,7 +125,12 @@ export function MobileSidebarSheet({ context }: { context: AppContext }) {
         <SheetDescription className="sr-only">
           Switch scope, navigate sections, and manage your account.
         </SheetDescription>
-        <SidebarBody context={context} onNavigate={() => setOpen(false)} />
+        <SidebarBody
+          context={context}
+          activeWorkspace={activeWorkspace}
+          workspaces={workspaces}
+          onNavigate={() => setOpen(false)}
+        />
       </SheetContent>
     </Sheet>
   );

@@ -370,7 +370,19 @@
   "workspace": {
     "current": "Current workshop",
     "switch": "Switch workshop",
-    "no_workspace": "No workshop"
+    "no_workspace": "No workshop",
+    "switcher": {
+      "brands_group": "Brands",
+      "artists_group": "Artists",
+      "admin_group": "YAGI",
+      "add_new": "+ Add new workspace",
+      "add_new_disabled": "Available in Phase 5",
+      "errors": {
+        "unauthenticated": "Please sign in.",
+        "not_a_member": "You are not a member of this workspace.",
+        "invalid": "Couldn't switch workspaces. Please try again in a moment."
+      }
+    }
   },
   "invite": {
     "pending": "Pending",
