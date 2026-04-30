@@ -1465,6 +1465,45 @@
       }
     }
   },
+  "dashboard_v4": {
+    "eyebrow": "WORK",
+    "title": "대시보드",
+    "cta_new": "+ 새 프로젝트",
+    "view_all": "모든 프로젝트 보기",
+    "not_set": "미입력",
+    "count": {
+      "total": "총 프로젝트",
+      "in_progress": "진행 중",
+      "delivered": "납품 완료"
+    },
+    "recent_rfps": {
+      "title": "최근 RFP",
+      "empty": "아직 의뢰가 없어요",
+      "empty_cta": "+ 새 프로젝트 시작"
+    },
+    "status": {
+      "draft": "임시 저장",
+      "submitted": "제출됨",
+      "in_review": "검토 중",
+      "in_progress": "진행 중",
+      "in_revision": "수정 중",
+      "delivered": "납품됨",
+      "approved": "승인됨",
+      "cancelled": "취소됨",
+      "archived": "보관됨"
+    },
+    "budget": {
+      "under_1m": "100만원 이하",
+      "1m_to_5m": "100~500만원",
+      "5m_to_10m": "500~1000만원",
+      "negotiable": "협의"
+    },
+    "twin_intent": {
+      "undecided": "Twin 활용 의향 있음",
+      "specific_in_mind": "정해진 인물이 있음",
+      "no_twin": "Twin 활용 안 함"
+    }
+  },
   "project_detail": {
     "timeline": {
       "review": "검토",

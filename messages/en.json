@@ -1400,6 +1400,45 @@
       }
     }
   },
+  "dashboard_v4": {
+    "eyebrow": "WORK",
+    "title": "Dashboard",
+    "cta_new": "+ New project",
+    "view_all": "View all projects",
+    "not_set": "Not entered",
+    "count": {
+      "total": "Total projects",
+      "in_progress": "In progress",
+      "delivered": "Delivered"
+    },
+    "recent_rfps": {
+      "title": "Recent RFPs",
+      "empty": "No RFPs yet",
+      "empty_cta": "+ Start a new project"
+    },
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "in_review": "In review",
+      "in_progress": "In progress",
+      "in_revision": "In revision",
+      "delivered": "Delivered",
+      "approved": "Approved",
+      "cancelled": "Cancelled",
+      "archived": "Archived"
+    },
+    "budget": {
+      "under_1m": "Under 1M KRW",
+      "1m_to_5m": "1M-5M KRW",
+      "5m_to_10m": "5M-10M KRW",
+      "negotiable": "To be discussed"
+    },
+    "twin_intent": {
+      "undecided": "Open to using a Twin",
+      "specific_in_mind": "Has a specific person",
+      "no_twin": "No Twin"
+    }
+  },
   "project_detail": {
     "timeline": {
       "review": "Review",
