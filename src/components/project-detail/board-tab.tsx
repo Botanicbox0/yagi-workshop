@@ -113,7 +113,9 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         role="region"
       >
         <p className="text-sm text-muted-foreground keep-all">
-          {tBrief("legacy_banner_text")}
+          {locale === "ko"
+            ? "이 프로젝트는 이전 시스템에서 만들어졌어요. 보드는 읽기 전용으로 표시됩니다."
+            : "This project was created on the legacy system. The board is read-only."}
         </p>
       </div>
     );
@@ -128,7 +130,7 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
       role="region"
     >
       <p className="text-sm text-muted-foreground keep-all">
-        {tBrief("empty_state_text")}
+        {locale === "ko" ? "보드가 곧 준비됩니다." : "Board coming soon."}
       </p>
     </div>
   );

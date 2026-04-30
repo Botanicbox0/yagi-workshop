@@ -1400,6 +1400,74 @@
       }
     }
   },
+  "project_detail": {
+    "timeline": {
+      "review": "Review",
+      "routing": "Routing",
+      "progress": "In progress",
+      "proposal": "Proposal",
+      "delivered": "Delivered"
+    },
+    "hero": {
+      "banner_in_review": "YAGI will respond within 1-2 business days."
+    },
+    "info_rail": {
+      "section": "Project info",
+      "submitted_on": "Submitted on",
+      "budget": "Budget",
+      "delivery": "Delivery",
+      "delivery_negotiable": "To be discussed",
+      "twin_intent": "Twin intent",
+      "meeting": "Preferred meeting",
+      "meeting_none": "Not set",
+      "not_set": "Not entered"
+    },
+    "budget": {
+      "under_1m": "Under 1M KRW",
+      "1m_to_5m": "1M-5M KRW",
+      "5m_to_10m": "5M-10M KRW",
+      "negotiable": "To be discussed"
+    },
+    "twin_intent": {
+      "undecided": "Open to using a Twin",
+      "specific_in_mind": "Has a specific person",
+      "no_twin": "No Twin"
+    },
+    "tabs": {
+      "board": "Board",
+      "progress": "Progress",
+      "comment": "Comments",
+      "deliverable": "Deliverables"
+    },
+    "progress_tab": {
+      "section": "Status history",
+      "empty": "No transitions yet.",
+      "from_to": "{from} → {to}"
+    },
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "in_review": "In review",
+      "in_progress": "In progress",
+      "in_revision": "In revision",
+      "delivered": "Delivered",
+      "approved": "Approved",
+      "cancelled": "Cancelled",
+      "archived": "Archived"
+    },
+    "actor": {
+      "client": "Client",
+      "yagi_admin": "YAGI admin",
+      "workspace_admin": "Workspace admin",
+      "system": "System"
+    },
+    "placeholder": {
+      "comment_title": "Comments",
+      "comment_description": "Available from Phase 5+.",
+      "deliverable_title": "Deliverables",
+      "deliverable_description": "Visible after delivery."
+    }
+  },
   "brief_board": {
     "title": "Brief board",
     "toolbar_idle": "No changes",

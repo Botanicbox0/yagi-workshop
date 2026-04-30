@@ -1465,6 +1465,74 @@
       }
     }
   },
+  "project_detail": {
+    "timeline": {
+      "review": "검토",
+      "routing": "라우팅",
+      "progress": "진행",
+      "proposal": "시안",
+      "delivered": "납품"
+    },
+    "hero": {
+      "banner_in_review": "YAGI 팀이 1-2 영업일 내 답변드립니다."
+    },
+    "info_rail": {
+      "section": "프로젝트 정보",
+      "submitted_on": "의뢰 일자",
+      "budget": "예산",
+      "delivery": "납기",
+      "delivery_negotiable": "협의",
+      "twin_intent": "Twin intent",
+      "meeting": "미팅 희망",
+      "meeting_none": "미정",
+      "not_set": "미입력"
+    },
+    "budget": {
+      "under_1m": "100만원 이하",
+      "1m_to_5m": "100~500만원",
+      "5m_to_10m": "500~1000만원",
+      "negotiable": "협의"
+    },
+    "twin_intent": {
+      "undecided": "Twin 활용 의향 있음",
+      "specific_in_mind": "정해진 인물이 있음",
+      "no_twin": "Twin 활용 안 함"
+    },
+    "tabs": {
+      "board": "보드",
+      "progress": "진행",
+      "comment": "코멘트",
+      "deliverable": "결과물"
+    },
+    "progress_tab": {
+      "section": "상태 변경 이력",
+      "empty": "아직 변경 이력이 없습니다.",
+      "from_to": "{from} → {to}"
+    },
+    "status": {
+      "draft": "임시 저장",
+      "submitted": "제출됨",
+      "in_review": "검토 중",
+      "in_progress": "진행 중",
+      "in_revision": "수정 중",
+      "delivered": "납품됨",
+      "approved": "승인됨",
+      "cancelled": "취소됨",
+      "archived": "보관됨"
+    },
+    "actor": {
+      "client": "클라이언트",
+      "yagi_admin": "YAGI 운영자",
+      "workspace_admin": "워크스페이스 관리자",
+      "system": "시스템"
+    },
+    "placeholder": {
+      "comment_title": "코멘트",
+      "comment_description": "Phase 5+ 부터 사용 가능합니다.",
+      "deliverable_title": "결과물",
+      "deliverable_description": "납품 후 표시됩니다."
+    }
+  },
   "brief_board": {
     "title": "기획 보드",
     "toolbar_idle": "변경사항 없음",
