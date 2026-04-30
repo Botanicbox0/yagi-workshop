@@ -1,11 +1,44 @@
 import createMiddleware from "next-intl/middleware";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
 import { updateSupabaseSession } from "@/lib/supabase/middleware";
 
 const intlMiddleware = createMiddleware(routing);
 
+// Phase 4.x task_05 — /app/commission/* -> /app/projects redirect.
+// Phase 2.x leftover surface; Phase 4 funnels all client intake through
+// /app/projects. Open-redirect protection: we drop ALL query params
+// (specifically `?next=https://evil.com` is ignored) and target a
+// fixed in-app path.
+//
+// Matches both locale-prefixed and locale-free forms; the locale-free
+// case targets the routing default locale.
+const COMMISSION_WITH_LOCALE = /^\/(ko|en)\/app\/commission(?:\/.*)?$/;
+const COMMISSION_NO_LOCALE = /^\/app\/commission(?:\/.*)?$/;
+
+function maybeRedirectCommission(request: NextRequest): NextResponse | null {
+  const path = request.nextUrl.pathname;
+  const localedMatch = path.match(COMMISSION_WITH_LOCALE);
+  if (localedMatch) {
+    const locale = localedMatch[1];
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}/app/projects`;
+    url.search = "";
+    return NextResponse.redirect(url, 308);
+  }
+  if (COMMISSION_NO_LOCALE.test(path)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${routing.defaultLocale}/app/projects`;
+    url.search = "";
+    return NextResponse.redirect(url, 308);
+  }
+  return null;
+}
+
 export default async function middleware(request: NextRequest) {
+  const commissionRedirect = maybeRedirectCommission(request);
+  if (commissionRedirect) return commissionRedirect;
+
   const response = intlMiddleware(request);
   return updateSupabaseSession(request, response);
 }

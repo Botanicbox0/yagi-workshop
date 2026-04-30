@@ -1,92 +1,20 @@
-import { getTranslations } from "next-intl/server";
+// Phase 4.x task_05 — /app default landing redirect to /app/dashboard.
+//
+// Phase 2 routed clients to /app/commission (now redirected to /app/projects)
+// and other workspace members to a Projects empty-state. Phase 4
+// flattens this: every authenticated user lands on /app/dashboard
+// (Brand workspace dashboard with count cards + recent RFPs).
+//
+// yagi_admin / creator / etc. can navigate to their persona-specific
+// surfaces (admin queue, creator console) from the sidebar.
+
 import { redirect } from "next/navigation";
-import { fetchAppContext } from "@/lib/app/context";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export default async function AppDashboardPage({ params }: Props) {
+export default async function AppLandingPage({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations("dashboard");
-  const ctx = await fetchAppContext();
-
-  // Phase 2.7: client persona's primary surface is /app/commission, not
-  // /app. Send them there so they don't see the workspace-projects shell
-  // they have no use for.
-  if (ctx?.profile.role === "client") {
-    redirect(`/${locale}/app/commission`);
-  }
-
-  const isYagiAdmin = ctx?.workspaceRoles.includes("yagi_admin") ?? false;
-  const isCreator = ctx?.workspaceRoles.includes("creator") ?? false;
-
-  if (isYagiAdmin) {
-    return (
-      <div className="px-10 py-12 max-w-5xl">
-        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-2">
-          All projects
-        </h1>
-        <p className="text-sm text-muted-foreground">Across all workspaces</p>
-        <div className="mt-10 text-sm text-muted-foreground">
-          {/* Phase 1.2+ */}
-          (admin project list placeholder)
-        </div>
-      </div>
-    );
-  }
-
-  if (isCreator) {
-    return (
-      <div className="px-10 py-12 max-w-5xl">
-        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-2">
-          Creator dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground">Contests &amp; submissions</p>
-        <div className="mt-10 text-sm text-muted-foreground">
-          {/* Phase 2 */}
-          (creator contest list placeholder)
-        </div>
-      </div>
-    );
-  }
-
-  // Client (workspace_admin / workspace_member) view
-  return (
-    <div className="px-10 py-12 max-w-5xl">
-      <div className="flex items-end justify-between mb-8">
-        <div>
-          <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1">
-            Projects
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {ctx?.workspaces[0]?.name}
-          </p>
-        </div>
-        <Button size="lg" disabled title={t("coming_soon")}>
-          {t("new_project")}
-        </Button>
-      </div>
-
-      <Tabs defaultValue="direct" className="w-full">
-        <TabsList>
-          <TabsTrigger value="direct" disabled>
-            {t("direct_tab")}
-          </TabsTrigger>
-          <TabsTrigger value="contest" disabled>
-            {t("contest_tab")}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <div className="mt-16 flex flex-col items-center justify-center text-center py-20 border border-dashed border-border rounded-lg">
-        <p className="font-display text-xl tracking-tight mb-2">
-          {t("empty_title")}
-        </p>
-        <p className="text-sm text-muted-foreground">{t("empty_sub")}</p>
-      </div>
-    </div>
-  );
+  redirect(`/${locale}/app/dashboard`);
 }
