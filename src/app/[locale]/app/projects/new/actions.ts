@@ -758,6 +758,13 @@ const SubmitInputSchema = z.object({
   // Server validates shape/size/scheme (L-026 — synced with client wizard state)
   attachedPdfs: z.array(PdfAttachmentSchema).max(30).optional().default([]),
   attachedUrls: z.array(UrlAttachmentSchema).max(50).optional().default([]),
+  // Phase 4.x task_03 — Digital Twin intent. Defense-in-depth: client-supplied
+  // value, validated here and again by the projects.twin_intent CHECK constraint
+  // added in task_01 migration. Default 'undecided' matches the column default.
+  twin_intent: z
+    .enum(["undecided", "specific_in_mind", "no_twin"])
+    .optional()
+    .default("undecided"),
   // workspaceId is optional when draftProjectId is provided — the action
   // resolves it from the draft project row in that case. One of the two
   // must be present for workspace resolution to succeed.
@@ -840,6 +847,10 @@ export async function submitProjectAction(
       target_delivery_at: data.delivery_date ?? null,
       // Phase 3.1 hotfix-3 addendum: 미팅 희망 일자 (optional)
       meeting_preferred_at: data.meeting_preferred_at ?? null,
+      // Phase 4.x task_03: Digital Twin intent (3-radio, default 'undecided').
+      // Persistence requires task_01 migration applied (Wave D D.1) — until
+      // then prod DB has no twin_intent column and this field is ignored.
+      twin_intent: data.twin_intent,
       workspace_id: resolvedWorkspaceId,
       created_by: user.id,
       status: "in_review",

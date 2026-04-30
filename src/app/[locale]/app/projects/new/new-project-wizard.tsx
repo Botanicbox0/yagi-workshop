@@ -44,6 +44,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProjectBoard } from "@/components/project-board/project-board";
 import { AttachmentsSection } from "@/components/project-board/attachments-section";
@@ -105,6 +113,10 @@ const wizardSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/)
     .optional()
     .or(z.literal("")),
+  // Phase 4.x task_03 — Digital Twin intent.
+  // Locked option A (3-radio per _decisions_locked.md §1). Maps 1:1 to the
+  // projects.twin_intent CHECK constraint added by task_01 migration.
+  twin_intent: z.enum(["undecided", "specific_in_mind", "no_twin"]).default("undecided"),
 });
 
 type WizardFormData = z.infer<typeof wizardSchema>;
@@ -296,6 +308,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
       budget_band: undefined,
       delivery_date: "",
       meeting_preferred_at: "",
+      twin_intent: "undecided",
     },
   });
 
@@ -692,6 +705,73 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
             {t("wizard.field.meeting_preferred_at.help")}
           </p>
         </div>
+
+        {/* Phase 4.x task_03 — Digital Twin intent (3-radio, locked option A).
+            Maps 1:1 to projects.twin_intent enum (undecided / specific_in_mind / no_twin). */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5">
+            <Label>{t("wizard.step3.twin_intent.label")}</Label>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={t("wizard.step3.twin_intent.tooltip_aria")}
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  align="start"
+                  className="max-w-xs keep-all text-xs leading-relaxed"
+                >
+                  {t("wizard.step3.twin_intent.tooltip")}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Controller
+            control={control}
+            name="twin_intent"
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="space-y-2"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="undecided" id="twin_intent_undecided" />
+                  <Label
+                    htmlFor="twin_intent_undecided"
+                    className="font-normal cursor-pointer"
+                  >
+                    {t("wizard.step3.twin_intent.option.undecided")}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="specific_in_mind" id="twin_intent_specific" />
+                  <Label
+                    htmlFor="twin_intent_specific"
+                    className="font-normal cursor-pointer"
+                  >
+                    {t("wizard.step3.twin_intent.option.specific")}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="no_twin" id="twin_intent_no_twin" />
+                  <Label
+                    htmlFor="twin_intent_no_twin"
+                    className="font-normal cursor-pointer"
+                  >
+                    {t("wizard.step3.twin_intent.option.no_twin")}
+                  </Label>
+                </div>
+              </RadioGroup>
+            )}
+          />
+        </div>
       </div>
 
       {/* Live summary card — separated from admin form via hairline + spacing
@@ -759,6 +839,8 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                     ? formVals.delivery_date
                     : null,
                 meeting_preferred_at: meetingPreferredAt,
+                // Phase 4.x task_03: Digital Twin intent (3-radio).
+                twin_intent: formVals.twin_intent,
                 // Phase 3.1: tldraw store snapshot replaces references[]
                 boardDocument,
                 // Phase 3.1 hotfix-3: pass structured attachments (Q-AA)
