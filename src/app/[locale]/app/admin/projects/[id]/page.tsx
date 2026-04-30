@@ -44,7 +44,7 @@ export default async function AdminProjectDetailPage({ params }: Props) {
       `
       id, title, brief, status,
       deliverable_types, estimated_budget_range,
-      target_delivery_at, submitted_at, created_at,
+      target_delivery_at, meeting_preferred_at, submitted_at, created_at,
       created_by,
       brand:brands(id, name),
       workspace:workspaces(id, name)
@@ -73,11 +73,22 @@ export default async function AdminProjectDetailPage({ params }: Props) {
     : [];
 
   const fmt = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
+  const fmtDateTime = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
   const submittedAt = projectRaw.submitted_at
     ? fmt.format(new Date(projectRaw.submitted_at as string))
     : null;
   const targetDelivery = projectRaw.target_delivery_at
     ? fmt.format(new Date(projectRaw.target_delivery_at as string))
+    : null;
+  // Phase 3.1 hotfix-3 addendum: optional preferred meeting datetime
+  // (cast: meeting_preferred_at column added in 20260430075826 — types regen in task_10)
+  const meetingPreferredAtRaw = (projectRaw as { meeting_preferred_at?: string | null })
+    .meeting_preferred_at;
+  const meetingPreferredAt = meetingPreferredAtRaw
+    ? fmtDateTime.format(new Date(meetingPreferredAtRaw))
     : null;
 
   const brand = Array.isArray(projectRaw.brand)
@@ -195,6 +206,14 @@ export default async function AdminProjectDetailPage({ params }: Props) {
                     {tDetail("deliveryDate")}
                   </dt>
                   <dd className="text-foreground">{targetDelivery}</dd>
+                </div>
+              )}
+              {meetingPreferredAt && (
+                <div className="flex gap-2">
+                  <dt className="text-muted-foreground w-32 flex-shrink-0">
+                    {tDetail("meetingPreferredAt")}
+                  </dt>
+                  <dd className="text-foreground">{meetingPreferredAt}</dd>
                 </div>
               )}
             </dl>

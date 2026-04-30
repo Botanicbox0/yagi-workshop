@@ -631,6 +631,10 @@
         },
         "delivery_date": {
           "label": "기대 납기일(선택)"
+        },
+        "meeting_preferred_at": {
+          "label": "미팅 희망 일자 (선택)",
+          "help": "미팅을 희망하시는 경우 일자와 시간을 선택해주세요."
         }
       },
       "actions": {
@@ -649,7 +653,11 @@
         "not_entered": "미입력",
         "view_all": "전체 보기",
         "delivery_negotiable": "협의",
-        "edit_hint": "수정할 부분이 있으면 이전 단계로 돌아가 변경할 수 있어요."
+        "edit_hint": "수정할 부분이 있으면 이전 단계로 돌아가 변경할 수 있어요.",
+        "meeting_preferred_at": {
+          "label": "미팅 희망",
+          "none": "미정"
+        }
       },
       "errors": {
         "name_required": "프로젝트 이름을 입력해 주세요.",
@@ -807,6 +815,7 @@
         "client": "클라이언트",
         "submittedAt": "접수일",
         "deliveryDate": "납기",
+        "meetingPreferredAt": "미팅 희망",
         "budget": "예산",
         "status": "상태",
         "deliverables": "산출물",

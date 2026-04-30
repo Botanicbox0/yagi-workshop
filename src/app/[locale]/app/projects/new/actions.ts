@@ -728,6 +728,13 @@ const SubmitInputSchema = z.object({
   deliverable_types: z.array(z.string()).min(1),
   budget_band: z.enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"]),
   delivery_date: z.string().nullable().optional(),
+  // Phase 3.1 hotfix-3 addendum (yagi smoke v1 FAIL-5): optional 미팅 희망 일자.
+  // Client emits ISO 8601 with Z (converted from <input type="datetime-local">
+  // via new Date(local).toISOString()). Server accepts ISO datetime; null/undefined
+  // both treated as "not specified". Past datetimes are NOT rejected server-side
+  // (UI blocks via min attr; server keeps client-trust minimal — client may set
+  // any future datetime; explicit decision logged in _run.log).
+  meeting_preferred_at: z.string().datetime().nullable().optional(),
   // Phase 3.1: replaces references[] with a tldraw store snapshot.
   // Server-side validation: 5MB serialized cap (anti-DoS) + structural sanity.
   boardDocument: z
@@ -831,6 +838,8 @@ export async function submitProjectAction(
       budget_band: data.budget_band,
       // delivery_date maps to target_delivery_at
       target_delivery_at: data.delivery_date ?? null,
+      // Phase 3.1 hotfix-3 addendum: 미팅 희망 일자 (optional)
+      meeting_preferred_at: data.meeting_preferred_at ?? null,
       workspace_id: resolvedWorkspaceId,
       created_by: user.id,
       status: "in_review",

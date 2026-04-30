@@ -631,6 +631,10 @@
         },
         "delivery_date": {
           "label": "Expected delivery date (optional)"
+        },
+        "meeting_preferred_at": {
+          "label": "Preferred Meeting Time (optional)",
+          "help": "Select a date and time if you'd like a meeting."
         }
       },
       "actions": {
@@ -649,7 +653,11 @@
         "not_entered": "Not entered",
         "view_all": "View all",
         "delivery_negotiable": "To be discussed",
-        "edit_hint": "If you'd like to change anything, go back to the previous step."
+        "edit_hint": "If you'd like to change anything, go back to the previous step.",
+        "meeting_preferred_at": {
+          "label": "Preferred meeting",
+          "none": "Not set"
+        }
       },
       "errors": {
         "name_required": "Project name is required.",
@@ -807,6 +815,7 @@
         "client": "Client",
         "submittedAt": "Submitted",
         "deliveryDate": "Delivery",
+        "meetingPreferredAt": "Preferred meeting",
         "budget": "Budget",
         "status": "Status",
         "deliverables": "Deliverables",

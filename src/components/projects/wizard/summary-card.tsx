@@ -32,6 +32,10 @@ interface SummaryCardProps {
   deliverableTypes: string[];
   budgetBand: string;
   deliveryDate: string;
+  // Phase 3.1 hotfix-3 addendum (yagi smoke v1 FAIL-5):
+  // Optional preferred meeting datetime. Receives the raw <input type="datetime-local">
+  // value ("YYYY-MM-DDTHH:MM"), or null when unset. Card formats for display.
+  meetingPreferredAt?: string | null;
   onEditStep: (step: 1 | 2 | 3) => void;
 }
 
@@ -53,10 +57,13 @@ function RowHeader({
       <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">
         {label}
       </p>
+      {/* yagi smoke v1 FAIL-5 fix: 수정 button — enlarge hit area + clearer hover
+          affordance (UX-FIX per _run.log diagnosis 2026-04-29; wiring confirmed
+          functional via summary-card.tsx L56-65 + wizard L668 setStep wiring). */}
       <button
         type="button"
         onClick={onEdit}
-        className="text-[11px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 uppercase tracking-[0.08em] transition-colors"
+        className="-mr-2 px-2 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center gap-1 uppercase tracking-[0.08em] transition-colors"
         aria-label={editLabel}
       >
         <Pencil className="w-3 h-3" aria-hidden />
@@ -105,6 +112,7 @@ export function SummaryCard({
   deliverableTypes,
   budgetBand,
   deliveryDate,
+  meetingPreferredAt = null,
   onEditStep,
 }: SummaryCardProps) {
   const t = useTranslations("projects");
@@ -115,6 +123,18 @@ export function SummaryCard({
 
   const previewRefs = refs.slice(0, 3);
   const hasMoreRefs = refs.length > 3;
+
+  // Phase 3.1 hotfix-3 addendum: format meeting datetime for display.
+  // Input format: "YYYY-MM-DDTHH:MM" (datetime-local) or null.
+  // Output: "YYYY-MM-DD · HH:MM" (locale-light, achromatic, deterministic).
+  const meetingDisplay: string | null = (() => {
+    if (!meetingPreferredAt) return null;
+    const m = meetingPreferredAt.match(
+      /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/
+    );
+    if (!m) return meetingPreferredAt;
+    return `${m[1]} · ${m[2]}`;
+  })();
 
   const descTruncated =
     description.length > 200 ? description.slice(0, 200) : description;
@@ -259,6 +279,26 @@ export function SummaryCard({
                 : t("wizard.summary.delivery_negotiable")}
             </span>
           </div>
+        </div>
+
+        {/* Row 6: Meeting preferred at — Phase 3.1 hotfix-3 addendum
+            (yagi smoke v1 FAIL-5 ask). Shows formatted datetime when set,
+            "미정" placeholder when null. */}
+        <div className="px-4 py-3 space-y-1">
+          <RowHeader
+            label={t("wizard.summary.meeting_preferred_at.label")}
+            onEdit={() => onEditStep(3)}
+            editLabel={t("wizard.actions.edit")}
+          />
+          <p
+            className={cn(
+              "text-sm",
+              !meetingDisplay && "text-muted-foreground"
+            )}
+          >
+            {meetingDisplay ??
+              t("wizard.summary.meeting_preferred_at.none")}
+          </p>
         </div>
       </div>
     </div>

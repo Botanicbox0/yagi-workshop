@@ -96,6 +96,15 @@ const wizardSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .or(z.literal("")),
+  // Phase 3.1 hotfix-3 addendum (yagi smoke v1 FAIL-5 ask): optional 미팅 희망 일자.
+  // Native <input type="datetime-local"> emits "YYYY-MM-DDTHH:MM" (no seconds, no TZ).
+  // Server zod accepts ISO-with-Z; client emits local datetime; submit handler converts
+  // local→ISO via new Date(...).toISOString(). Empty → null.
+  meeting_preferred_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/)
+    .optional()
+    .or(z.literal("")),
 });
 
 type WizardFormData = z.infer<typeof wizardSchema>;
@@ -286,6 +295,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
       deliverable_types: [],
       budget_band: undefined,
       delivery_date: "",
+      meeting_preferred_at: "",
     },
   });
 
@@ -356,6 +366,18 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
   // deliverable_types + budget_band validation moved to goToStep4 (submit gate in Step 3).
   function goToStep3() {
     setStep(3);
+  }
+
+  // yagi smoke v1 FAIL-5 fix: SummaryCard 수정 button → step change + smooth scroll
+  // to top so user lands at the target field, not stuck mid-page (UX-FIX).
+  function handleEditStep(s: 1 | 2 | 3) {
+    setStep(s);
+    // Defer scroll to next frame so the target step renders before scrolling.
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
 
   // Validate admin fields before submitting from Step 3
@@ -653,20 +675,45 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
             {...register("delivery_date")}
           />
         </div>
+
+        {/* Phase 3.1 hotfix-3 addendum: 미팅 희망 일자 (optional, yagi smoke v1 FAIL-5)
+            datetime-local; past datetimes blocked via `min`; empty → null. */}
+        <div className="space-y-1.5">
+          <Label htmlFor="meeting_preferred_at">
+            {t("wizard.field.meeting_preferred_at.label")}
+          </Label>
+          <Input
+            id="meeting_preferred_at"
+            type="datetime-local"
+            min={new Date().toISOString().slice(0, 16)}
+            {...register("meeting_preferred_at")}
+          />
+          <p className="text-xs text-muted-foreground keep-all">
+            {t("wizard.field.meeting_preferred_at.help")}
+          </p>
+        </div>
       </div>
 
-      {/* Live summary card — updates as fields fill (L-012 no seam between form + card) */}
+      {/* Live summary card — separated from admin form via hairline + spacing
+          (yagi smoke v1 FAIL-5 fix: "구분선 + 살짝 더 아래로 내려가서 구분된다는 느낌").
+          L-012 hairline border (not section background); L-013 achromatic. */}
       {/* Phase 3.1: refs={[]} — board contents are tldraw shapes; SummaryCard
           board-aware preview is task_09 D.15 backlog. */}
-      <SummaryCard
-        name={watchedValues.name}
-        description={watchedValues.description}
-        refs={[]}
-        deliverableTypes={watchedValues.deliverable_types ?? []}
-        budgetBand={watchedValues.budget_band ?? ""}
-        deliveryDate={watchedValues.delivery_date ?? ""}
-        onEditStep={(s) => setStep(s)}
-      />
+      <div
+        id="summary-card-section"
+        className="border-t border-border/30 pt-10 mt-10"
+      >
+        <SummaryCard
+          name={watchedValues.name}
+          description={watchedValues.description}
+          refs={[]}
+          deliverableTypes={watchedValues.deliverable_types ?? []}
+          budgetBand={watchedValues.budget_band ?? ""}
+          deliveryDate={watchedValues.delivery_date ?? ""}
+          meetingPreferredAt={watchedValues.meeting_preferred_at ?? null}
+          onEditStep={handleEditStep}
+        />
+      </div>
 
       {/* Edit hint */}
       <p className="text-xs text-muted-foreground keep-all">
@@ -695,6 +742,13 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
               if (!isValid) return;
 
               const formVals = getValues();
+              // Phase 3.1 hotfix-3 addendum: convert datetime-local "YYYY-MM-DDTHH:MM"
+              // (no TZ) to ISO 8601 with Z so server zod's z.string().datetime()
+              // accepts it. Empty string → null.
+              const meetingPreferredAt =
+                formVals.meeting_preferred_at && formVals.meeting_preferred_at !== ""
+                  ? new Date(formVals.meeting_preferred_at).toISOString()
+                  : null;
               const result = await submitProjectAction({
                 name: formVals.name,
                 description: formVals.description,
@@ -704,6 +758,7 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                   formVals.delivery_date && formVals.delivery_date !== ""
                     ? formVals.delivery_date
                     : null,
+                meeting_preferred_at: meetingPreferredAt,
                 // Phase 3.1: tldraw store snapshot replaces references[]
                 boardDocument,
                 // Phase 3.1 hotfix-3: pass structured attachments (Q-AA)

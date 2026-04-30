@@ -242,34 +242,37 @@ export function ProjectBoard({
         { source: "user", scope: "document" }
       );
 
-      // === TASK_03_STUB filled: drop handler ===
-      // tldraw v4 exposes native DOM drop events via the canvas element.
-      // We intercept at the tldraw container's DOM node via the 'drop' event on the
-      // canvas wrapper since tldraw v4 does not have a public editor.on('drop') API.
+      // === Drop + paste handlers — Phase 3.1 hotfix-3 task_09 sub-deliverable 4 ===
+      // yagi smoke v1 FAIL-2 fix (canvas image drop produced 2 shapes per file):
+      // Original Phase 3.1 implementation registered native DOM drop+dragover via
+      // container.addEventListener('drop',...). That co-existed with tldraw v4's
+      // INTERNAL external-content pipeline → 2 shapes per drop (yagi-image custom +
+      // tldraw default image asset). preventDefault/stopPropagation on the DOM event
+      // does NOT block tldraw's internal handler since it registers separately.
+      // FIX: replace native DOM listeners with editor.registerExternalContentHandler
+      // which OVERRIDES tldraw's default external-content handling for the given
+      // type. Single registered handler routes all image/PDF/URL processing.
+      // Canvas-internal PDF/URL drop preservation continues (yagi hard constraint
+      // L-033 + L-040) — this only deduplicates, no surface removed.
+      // Reference: https://tldraw.dev/reference/editor/Editor#registerExternalContentHandler
+      // (canonical override hook in tldraw v4)
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 container access
-      const container = (editor as any).getContainer?.() as HTMLElement | null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: tldraw v4 registerExternalContentHandler typing
+      const editorAny = editor as any;
 
-      const handleDrop = async (e: DragEvent) => {
+      // ----- 'files' handler: image + PDF drop (replaces tldraw default file drop) -----
+      // Receives all dropped files at a given page point. preventDefault + insertion
+      // happens implicitly — tldraw won't run its default handler when we register one.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tldraw v4 file handler info type
+      const filesHandler = async (info: any) => {
         if (isReadOnly) return;
-        e.preventDefault();
-        e.stopPropagation();
+        const point = info?.point ?? { x: 0, y: 0 };
+        const files: File[] = Array.from(info?.files ?? []);
 
-        const files = Array.from(e.dataTransfer?.files ?? []);
-        const textData = e.dataTransfer?.getData("text/plain") ?? "";
-
-        // Calculate drop position in canvas coordinates
-        const canvasPos = editor.screenToPage({
-          x: e.clientX,
-          y: e.clientY,
-        });
-
-        // --- Handle file drops ---
         for (const file of files) {
           const mime = file.type;
 
           if (mime.startsWith("image/")) {
-            // Client-side size validation — server validates again
             if (file.size > IMAGE_MAX_BYTES) {
               console.warn(`[ProjectBoard] Image too large (max 20MB): ${file.name}`);
               continue;
@@ -281,8 +284,8 @@ export function ProjectBoard({
             editor.createShape({
               id: createShapeId(),
               type: "yagi-image" as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1: custom shape type not in TLGlobalShapePropsMap
-              x: canvasPos.x,
-              y: canvasPos.y,
+              x: point.x,
+              y: point.y,
               props: {
                 src: publicUrl,
                 w: 320,
@@ -291,7 +294,6 @@ export function ProjectBoard({
               },
             } as any); // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1
           } else if (mime === "application/pdf") {
-            // Client-side size validation — server validates again
             if (file.size > PDF_MAX_BYTES) {
               console.warn(`[ProjectBoard] PDF too large (max 10MB): ${file.name}`);
               continue;
@@ -303,8 +305,8 @@ export function ProjectBoard({
             editor.createShape({
               id: createShapeId(),
               type: "yagi-pdf" as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1: custom shape type not in TLGlobalShapePropsMap
-              x: canvasPos.x,
-              y: canvasPos.y,
+              x: point.x,
+              y: point.y,
               props: {
                 src: publicUrl,
                 filename: file.name,
@@ -315,50 +317,45 @@ export function ProjectBoard({
             } as any); // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1
           }
         }
-
-        // --- Handle URL drops (text/plain with a URL) ---
-        if (files.length === 0 && textData) {
-          await insertUrlCard(editor, textData, canvasPos);
-        }
       };
 
-      // --- URL paste handler ---
-      const handlePaste = async (e: ClipboardEvent) => {
+      // ----- 'url' / 'text' handlers: paste/drop URL → yagi-url-card -----
+      // tldraw v4 fires 'url' for explicit URL drops, 'text' for raw text drops/paste
+      // that may contain a URL. We accept both; insertUrlCard validates.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tldraw v4 text/url handler info type
+      const urlHandler = async (info: any) => {
         if (isReadOnly) return;
-        // Only intercept plain-text paste that looks like a URL
-        const text = e.clipboardData?.getData("text/plain") ?? "";
+        const point = info?.point ?? null;
+        const text: string = (info?.url ?? info?.text ?? "").toString();
         if (!text) return;
 
         let url: URL;
         try {
           url = new URL(text);
         } catch {
-          return; // not a URL — let tldraw handle normally
+          return; // not a URL — silently ignore
         }
         if (url.protocol !== "http:" && url.protocol !== "https:") return;
 
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Place url-card near the canvas center
-        const viewportCenter = editor.getViewportScreenCenter();
-        const pageCenter = editor.screenToPage(viewportCenter);
-        await insertUrlCard(editor, text, { x: pageCenter.x, y: pageCenter.y });
+        const fallback = (() => {
+          const c = editor.getViewportScreenCenter();
+          return editor.screenToPage(c);
+        })();
+        const insertAt = point ?? fallback;
+        await insertUrlCard(editor, text, { x: insertAt.x, y: insertAt.y });
       };
 
-      if (container) {
-        container.addEventListener("drop", handleDrop as unknown as EventListener);
-        container.addEventListener("dragover", (e: Event) => {
-          e.preventDefault();
-          const dragEvent = e as DragEvent;
-          if (dragEvent.dataTransfer) {
-            dragEvent.dataTransfer.dropEffect = "copy";
-          }
-        });
-      }
-
-      // Paste listener on the window (tldraw captures canvas-level paste; we hook window)
-      window.addEventListener("paste", handlePaste as unknown as EventListener);
+      // Register handlers — these OVERRIDE tldraw's default external-content
+      // handling, eliminating the duplicate-shape race condition.
+      const unregisterFiles =
+        editorAny.registerExternalContentHandler?.("files", filesHandler) ??
+        (() => {});
+      const unregisterUrl =
+        editorAny.registerExternalContentHandler?.("url", urlHandler) ??
+        (() => {});
+      const unregisterText =
+        editorAny.registerExternalContentHandler?.("text", urlHandler) ??
+        (() => {});
 
       // === TASK_03_STUB filled: asset action menu — pointer move hover wiring ===
       // tldraw v4: editor.on('pointerMove') fires with the hovered shape ID.
@@ -454,10 +451,11 @@ export function ProjectBoard({
         unsubscribeStore();
         if (typeof unsubscribePointerMove === "function") unsubscribePointerMove();
         if (typeof unsubscribeRightClick === "function") unsubscribeRightClick();
-        if (container) {
-          container.removeEventListener("drop", handleDrop as unknown as EventListener);
-        }
-        window.removeEventListener("paste", handlePaste as unknown as EventListener);
+        // Phase 3.1 hotfix-3 task_09: registerExternalContentHandler returns
+        // its unregister fn (or no-op when API unavailable in older tldraw).
+        if (typeof unregisterFiles === "function") unregisterFiles();
+        if (typeof unregisterUrl === "function") unregisterUrl();
+        if (typeof unregisterText === "function") unregisterText();
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       };
     },
