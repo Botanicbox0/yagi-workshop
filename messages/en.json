@@ -664,7 +664,10 @@
         "description_required": "Please briefly describe what you'd like to create.",
         "description_too_short": "Please enter a description.",
         "budget_required": "Please select a budget.",
-        "deliverable_required": "Please select at least one deliverable type."
+        "deliverable_required": "Please select at least one deliverable type.",
+        "unauthenticated": "Please sign in to continue.",
+        "submit_validation": "Some inputs are invalid. Please review each step.",
+        "submit_failed": "Submission failed. Please try again in a moment."
       }
     }
   },

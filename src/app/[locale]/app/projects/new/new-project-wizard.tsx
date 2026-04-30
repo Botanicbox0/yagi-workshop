@@ -769,11 +769,14 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
               if (result.ok) {
                 router.push(result.redirect);
               } else {
-                toast.error(
+                console.error("[wizard.submit] failed:", result);
+                const errorKey =
                   result.error === "unauthenticated"
-                    ? "로그인이 필요합니다"
-                    : "제출에 실패했습니다. 다시 시도해 주세요."
-                );
+                    ? "wizard.step3.errors.unauthenticated"
+                    : result.error === "validation"
+                    ? "wizard.step3.errors.submit_validation"
+                    : "wizard.step3.errors.submit_failed";
+                toast.error(t(errorKey));
               }
             });
           }}

@@ -664,7 +664,10 @@
         "description_required": "만들고 싶은 결과물을 간단하게 입력해 주세요.",
         "description_too_short": "프로젝트 설명을 입력해 주세요.",
         "budget_required": "예산을 선택해 주세요.",
-        "deliverable_required": "결과물 유형을 하나 이상 선택해 주세요."
+        "deliverable_required": "결과물 유형을 하나 이상 선택해 주세요.",
+        "unauthenticated": "로그인이 필요합니다.",
+        "submit_validation": "입력값에 문제가 있어요. 각 단계를 다시 확인해 주세요.",
+        "submit_failed": "제출에 실패했어요. 잠시 후 다시 시도해 주세요."
       }
     }
   },
