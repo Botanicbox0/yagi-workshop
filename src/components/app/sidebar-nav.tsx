@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Trophy,
   Briefcase,
+  LayoutDashboard,
+  Sparkles,
   Mailbox,
   ChevronDown,
   type LucideIcon,
@@ -51,6 +53,13 @@ const GROUPS: NavGroup[] = [
     key: "work",
     items: [
       {
+        // Phase 4.x task_05: Brand workspace dashboard. First WORK item
+        // per KICKOFF section task_05 spec; sits above 프로젝트.
+        key: "dashboard",
+        href: "/app/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
         // Phase 2.7.2: projects hub restored as the canonical commission
         // surface (Option C — funnel split). `/commission` stays as the
         // public-facing landing form for anonymous intake; once a user is
@@ -61,6 +70,15 @@ const GROUPS: NavGroup[] = [
         key: "projects",
         href: "/app/projects",
         icon: Briefcase,
+      },
+      {
+        // Phase 4.x task_05 + Q-103: 추천 Artist disabled placeholder
+        // for Phase 7+. Renders as a disabled link with 'Coming soon'
+        // tooltip. Q-103 option A: 라이선스 entry is HIDDEN (Phase 6+),
+        // intentionally not added here.
+        key: "recommended_artist",
+        icon: Sparkles,
+        disabled: true,
       },
       {
         // Phase 2.5 admin challenge console — yagi_admin only.

@@ -254,7 +254,9 @@
       "billing": "Billing",
       "system": "System"
     },
+    "dashboard": "Dashboard",
     "projects": "Projects",
+    "recommended_artist": "Recommended artists",
     "showcases": "Showcases",
     "storyboards": "Storyboards",
     "brands": "Brands",
