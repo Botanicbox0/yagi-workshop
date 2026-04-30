@@ -116,7 +116,9 @@ const wizardSchema = z.object({
   // Phase 4.x task_03 — Digital Twin intent.
   // Locked option A (3-radio per _decisions_locked.md §1). Maps 1:1 to the
   // projects.twin_intent CHECK constraint added by task_01 migration.
-  twin_intent: z.enum(["undecided", "specific_in_mind", "no_twin"]).default("undecided"),
+  // No .default() here so the Zod input and output types stay symmetric;
+  // RHF's Resolver requires both to match. defaultValues sets 'undecided'.
+  twin_intent: z.enum(["undecided", "specific_in_mind", "no_twin"]),
 });
 
 type WizardFormData = z.infer<typeof wizardSchema>;
