@@ -65,3 +65,46 @@ becomes a member-less workspace; either delete it manually or run
 `DELETE FROM public.workspaces WHERE id = '8f67b0f6-...';`.
 
 The row is **not** a Wave C.5b ship-blocker.
+
+---
+
+## amend_03 follow-up — yonsei profile reclassified (2026-05-01)
+
+yagi locked Option A from this audit's recommendations. Reclassify
+applied via service-role (validate_profile_role_transition trigger
+short-circuits at `auth.uid() IS NULL → RETURN NEW`):
+
+```sql
+UPDATE public.profiles
+SET role = 'client', updated_at = now()
+WHERE id = '73be213d-1306-42f1-bee4-7b77175a6e79'
+RETURNING id, handle, display_name, role, locale, updated_at;
+
+-- → 1 row updated. role='client', updated_at='2026-05-01 10:12:33+00'
+```
+
+Re-audit query shows the expected post-reclassify distribution:
+
+| role | count |
+|---|---|
+| `artist` | 1 (artist@yagiworkshop.xyz from amend_02b) |
+| `client` | 2 (yout40204020 manual + yonsei reclassified) |
+| NULL | 1 (yagi pre-Phase-2.5 row, untouched) |
+| `creator` | 0 |
+| `studio` | 0 |
+| `observer` | 0 |
+
+The companion `creators` row for the yonsei id is intentionally
+left in place (sub_10 audit Option A's DELETE step skipped):
+
+- The `creators_update_self` RLS policy now denies the row owner
+  (their `profiles.role != 'creator'` post-reclassify), so the row
+  is effectively read-only-from-server-perspective.
+- No UI surface in the codebase queries the `creators` table after
+  the Wave C.5b sub_02 deletions.
+- Keeping the row preserves forensic context for any future Phase
+  5+ work that wants to know "did this account ever go through the
+  Phase 2.5 creator flow?".
+
+**No migration file authored** — this is a one-off data correction,
+not a schema change. The recorded action lives in this audit log.
