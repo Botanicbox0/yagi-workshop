@@ -2,71 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Phase 4.x Wave C.5b sub_00 — Editorial dark foundation (yagi-design-system v1.0).
-   Source of truth: ~/.claude/skills/yagi-design-system/references/{tokens.json, globals.css, DESIGN-flora.md}.
-   Sole accent: sage #71D083. Zero default shadow. 24px card radius. 400ms cubic-bezier(0.45,0,0,1). */
+/* Phase 4.x Wave C.5b sub_00 ROLLBACK (2026-05-01) — yagi visual review
+   verdict: dark editorial reads as too heavy. Phase 2.7.1 P12 light
+   canvas restored as :root. v1.0 token vocabulary (sage accent, ink
+   hierarchy, surface tints, border ramp, motion, radius, Pretendard)
+   stays — but values shift to light-bg-friendly forms so the post-sub_00
+   pages that already consumed `.bg-card-deep` / `.border-subtle` /
+   `.ink-*` / `.accent-sage` / `.bg-sage` still render legibly on white.
+
+   Source of truth for the v1.0 token *names* + intent:
+   ~/.claude/skills/yagi-design-system/references/{tokens.json,
+   globals.css, DESIGN-flora.md}. The values below are the LIGHT-MODE
+   adaptation of those tokens; the dark variants are kept under .dark
+   for opt-in surfaces and a possible future flip. */
 
 @layer base {
   :root {
-    /* Shadcn semantic tokens (HSL-channel form so existing components keep working).
-       Defaults are now dark editorial; .light is opt-in for special contexts only. */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 93%;
+    /* Phase 2.7.1 P12: off-white background per Webflow light-mode tone.
+       Cards/popover stay pure white so they pop against the off-white
+       page surface. */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 93%;
+    --card-foreground: 0 0% 4%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 93%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
 
-    --primary: 0 0% 93%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 0 0% 4%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 70%;
+    --secondary: 0 0% 97%;
+    --secondary-foreground: 0 0% 4%;
 
-    --muted: 0 0% 100%;
-    --muted-foreground: 0 0% 48%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 42%;
 
-    /* shadcn `accent` = subtle hover surface. Sage accent lives separately
-       under tailwind's `sage` color family (see tailwind.config.ts). */
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 93%;
+    --accent: 0 0% 95%;
+    --accent-foreground: 0 0% 4%;
 
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 131 50% 63%;
-    --success-foreground: 0 0% 0%;
-    --warning: 38 92% 60%;
-    --warning-foreground: 0 0% 0%;
-    --info: 0 0% 70%;
-    --info-foreground: 0 0% 0%;
+    /* Phase 2.5 launchpad X1 CRITICAL #7 — semantic status tokens.
+       Used by `src/lib/ui/status-pill.ts` to centralize status badges. */
+    --success: 142 60% 92%;
+    --success-foreground: 142 72% 24%;
+    --warning: 38 92% 92%;
+    --warning-foreground: 25 95% 30%;
+    --info: 214 100% 94%;
+    --info-foreground: 214 80% 30%;
 
-    --border: 0 0% 100%;
-    --input: 0 0% 100%;
-    --ring: 131 50% 63%;
+    /* Phase 2.7.1 P12: softer border to fit the off-white surface. */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 4%;
 
-    --radius: 1.5rem;
+    --radius: 0.5rem;
 
-    /* yagi v1.0 raw tokens (RGBA-aware — used by utility classes below) */
-    --ds-bg-base:       #000000;
-    --ds-bg-raised:     rgba(25, 25, 25, 0.9);
-    --ds-bg-card:       rgba(255, 255, 255, 0.10);
-    --ds-bg-card-deep:  rgba(255, 255, 255, 0.05);
-    --ds-bg-scrim:      rgba(0, 0, 0, 0.35);
+    /* yagi v1.0 raw tokens (LIGHT-adapted per sub_00 ROLLBACK).
+       The token names match the v1.0 spec; the values are tuned for an
+       off-white canvas. Utility classes under @layer utilities below
+       reference these vars and adapt automatically when .dark is
+       opted-in for an inverse section. */
+    --ds-bg-base:       #FAFAFA;
+    --ds-bg-raised:     rgba(255, 255, 255, 0.96);
+    --ds-bg-card:       rgba(0, 0, 0, 0.04);
+    --ds-bg-card-deep:  rgba(0, 0, 0, 0.025);
+    --ds-bg-scrim:      rgba(255, 255, 255, 0.35);
 
-    --ds-ink-primary:   #EEEEEE;
-    --ds-ink-secondary: #B4B4B4;
-    --ds-ink-tertiary:  #7B7B7B;
-    --ds-ink-disabled:  rgba(238, 238, 238, 0.33);
-    --ds-ink-muted:     rgba(238, 238, 238, 0.35);
+    --ds-ink-primary:   #0A0A0A;
+    --ds-ink-secondary: #5C5C5C;
+    --ds-ink-tertiary:  #8C8C8C;
+    --ds-ink-disabled:  rgba(10, 10, 10, 0.33);
+    --ds-ink-muted:     rgba(10, 10, 10, 0.35);
 
-    --ds-border-subtle: rgba(255, 255, 255, 0.11);
-    --ds-border-soft:   rgba(255, 255, 255, 0.06);
+    --ds-border-subtle: rgba(0, 0, 0, 0.08);
+    --ds-border-soft:   rgba(0, 0, 0, 0.04);
 
+    /* Sage stays #71D083 as a fill (sole accent rule). For text-on-light
+       use --ds-sage-ink (darker) — sage #71D083 against pure white only
+       reaches ~1.6:1 contrast which fails WCAG AA. */
     --ds-sage:          #71D083;
-    --ds-sage-soft:     rgba(113, 208, 131, 0.12);
+    --ds-sage-soft:     rgba(113, 208, 131, 0.18);
+    --ds-sage-ink:      #2D7A3F;
 
     --ds-font-sans-ko:    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --ds-font-sans-en:    'Geist Variable', Geist, system-ui, sans-serif;
@@ -82,73 +102,70 @@
     --ds-ls-display:   -0.01em;
     --ds-ls-body:      0;
 
-    --ds-easing-default:  cubic-bezier(0.45, 0, 0, 1);
+    --ds-easing-default:   cubic-bezier(0.45, 0, 0, 1);
     --ds-duration-default: 400ms;
-
-    color-scheme: dark;
   }
 
-  /* next-themes adds .dark when defaultTheme="dark"; mirror :root so the class is a no-op. */
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 93%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 93%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 93%;
-    --primary: 0 0% 93%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 70%;
-    --muted: 0 0% 100%;
-    --muted-foreground: 0 0% 48%;
+    /* Phase 2.7.1 dark mapping (restored). Opt-in via the next-themes
+       theme switcher or a `.dark` className on a section wrapper for
+       inverse sections (image-led hero, footer, etc.). */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
+
     --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 93%;
+    --accent-foreground: 0 0% 98%;
+
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
-    --success: 131 50% 63%;
-    --success-foreground: 0 0% 0%;
-    --warning: 38 92% 60%;
-    --warning-foreground: 0 0% 0%;
-    --info: 0 0% 70%;
-    --info-foreground: 0 0% 0%;
-    --border: 0 0% 100%;
-    --input: 0 0% 100%;
-    --ring: 131 50% 63%;
-    color-scheme: dark;
+
+    --success: 142 30% 18%;
+    --success-foreground: 142 72% 72%;
+    --warning: 25 40% 18%;
+    --warning-foreground: 38 92% 72%;
+    --info: 214 40% 18%;
+    --info-foreground: 214 100% 82%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 98%;
+
+    /* v1.0 raw tokens — dark variants for opt-in dark surfaces. */
+    --ds-bg-base:       #000000;
+    --ds-bg-raised:     rgba(25, 25, 25, 0.9);
+    --ds-bg-card:       rgba(255, 255, 255, 0.10);
+    --ds-bg-card-deep:  rgba(255, 255, 255, 0.05);
+    --ds-bg-scrim:      rgba(0, 0, 0, 0.35);
+
+    --ds-ink-primary:   #EEEEEE;
+    --ds-ink-secondary: #B4B4B4;
+    --ds-ink-tertiary:  #7B7B7B;
+    --ds-ink-disabled:  rgba(238, 238, 238, 0.33);
+    --ds-ink-muted:     rgba(238, 238, 238, 0.35);
+
+    --ds-border-subtle: rgba(255, 255, 255, 0.11);
+    --ds-border-soft:   rgba(255, 255, 255, 0.06);
+
+    --ds-sage-soft:     rgba(113, 208, 131, 0.12);
+    --ds-sage-ink:      #71D083;
   }
 
-  /* Opt-in light context (admin / special use only). */
-  .light {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
-    --primary: 0 0% 4%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 97%;
-    --secondary-foreground: 0 0% 4%;
-    --muted: 0 0% 97%;
-    --muted-foreground: 0 0% 42%;
-    --accent: 0 0% 95%;
-    --accent-foreground: 0 0% 4%;
-    --destructive: 0 72% 48%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 142 60% 92%;
-    --success-foreground: 142 72% 24%;
-    --warning: 38 92% 92%;
-    --warning-foreground: 25 95% 30%;
-    --info: 214 100% 94%;
-    --info-foreground: 214 80% 30%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 4%;
-    color-scheme: light;
-  }
-
-  /* Locale-aware typography variables */
+  /* Locale-aware typography variables (kept across both modes). */
   [lang="en"] {
     --ds-font-body:    var(--ds-font-sans-en);
     --ds-font-display: var(--ds-font-display-en);
@@ -157,19 +174,12 @@
     --ds-ls-display:   -0.03em;
   }
 
-  /* Default border ramp = near-invisible white (v1.0 border.subtle).
-     Components that need a stronger border should use border-border explicitly. */
-  * { border-color: hsl(var(--border) / 0.11); }
+  * { border-color: hsl(var(--border)); }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Pretendard Variable", var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
     font-feature-settings: "ss01", "cv11";
-  }
-
-  ::selection {
-    background: var(--ds-sage);
-    color: #000;
   }
 
   .keep-all {
@@ -178,9 +188,6 @@
     overflow-wrap: break-word;
   }
 
-  /* .font-display kept on Fraunces for legacy editorial italic patterns
-     ("Workflow that *thinks*" etc.). Migration to Redaction blocked on
-     self-hosted woff2 ingestion — tracked in followups. */
   .font-display {
     font-family: var(--font-fraunces), "Pretendard Variable", ui-serif, Georgia, serif;
     font-optical-sizing: auto;
@@ -201,7 +208,9 @@
 }
 
 @layer utilities {
-  /* yagi v1.0 surfaces */
+  /* yagi v1.0 surfaces — values resolve via --ds-* CSS vars so they
+     adapt automatically when a section opts into .dark for inverse
+     surfaces. */
   .bg-base       { background-color: var(--ds-bg-base); }
   .bg-raised     { background-color: var(--ds-bg-raised); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   .bg-card-deep  { background-color: var(--ds-bg-card-deep); }
@@ -218,10 +227,11 @@
   .border-subtle { border-color: var(--ds-border-subtle); }
   .border-soft   { border-color: var(--ds-border-soft); }
 
-  /* Sage accent */
-  .accent-sage   { color: var(--ds-sage); }
+  /* Sage accent — text usage routes through --ds-sage-ink for AA contrast
+     on light bg; bg/fill usage uses the saturated --ds-sage. */
+  .accent-sage   { color: var(--ds-sage-ink); }
   .bg-sage       { background-color: var(--ds-sage); color: #000; }
-  .bg-sage-soft  { background-color: var(--ds-sage-soft); color: var(--ds-sage); }
+  .bg-sage-soft  { background-color: var(--ds-sage-soft); color: var(--ds-sage-ink); }
   .ring-sage     { --tw-ring-color: var(--ds-sage); }
 
   /* Typography helpers */

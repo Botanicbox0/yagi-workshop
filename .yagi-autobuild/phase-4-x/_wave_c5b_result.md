@@ -268,3 +268,90 @@ entered**. yagi must:
    self-trigger.
 
 `push 절대 X. ff-merge 절대 X.` (L-027 BROWSER_REQUIRED gate)
+
+---
+
+## sub_00 ROLLBACK amendment (2026-05-01, post-yagi visual review)
+
+yagi visual review verdict: "DARK MODE가 너무 보기에 좀 안좋은 것
+같아. LIGHT MODE로 롤백하고 싶음." sub_00's bg flip is reversed;
+the surrounding token vocabulary stays.
+
+### What reversed
+
+- `src/app/[locale]/layout.tsx` — `ThemeProvider` flipped back to
+  `defaultTheme="light"` + `enableSystem` (Phase 2.7.1 P12 default).
+- `src/app/globals.css` — `:root` returned to Phase 2.7.1 P12 light
+  tokens (off-white background, near-black ink). The `.light`
+  opt-in selector is dropped (no longer needed). The `.dark`
+  selector reinstates the original Phase 2.7.1 P12 dark mapping
+  AND carries v1.0 dark variants of the `--ds-*` tokens for opt-in
+  inverse sections.
+- The `* { border-color: ... / 0.11 }` global default is reverted
+  to `hsl(var(--border))` (no alpha modulation) — `border-border`
+  callsites again resolve to light gray, matching their original
+  intent. FU-C5b-05 (border-border sweep) is closed as obsolete.
+
+### What survived
+
+- All v1.0 token names live in `--ds-*` namespace under `:root`,
+  but with **light-bg-adapted values**: `--ds-bg-base: #FAFAFA`,
+  `--ds-ink-primary: #0A0A0A`, `--ds-ink-secondary: #5C5C5C`,
+  `--ds-ink-tertiary: #8C8C8C`, `--ds-border-subtle: rgba(0,0,0,0.08)`,
+  `--ds-border-soft: rgba(0,0,0,0.04)`, `--ds-bg-card-deep:
+  rgba(0,0,0,0.025)`, etc.
+- `--ds-sage` keeps `#71D083` as a fill. New token `--ds-sage-ink:
+  #2D7A3F` introduced for **text-on-light** sage so `.accent-sage`
+  reaches WCAG AA (~5.2:1 vs the failing 1.6:1 from saturated sage
+  on white). `.bg-sage-soft` text path also routes to the darker
+  variant.
+- All v1.0 utility classes under `@layer utilities`
+  (`.bg-card-deep`, `.ink-primary`, `.border-subtle`,
+  `.accent-sage`, `.bg-sage`, `.ring-sage`, `.lh-display-ko`,
+  `.font-mono-ko`, `.ease-flora`, etc.) still exist — they
+  reference the `--ds-*` vars and now resolve to light values.
+- `tailwind.config.ts` `sage / ink / surface / edge` Tailwind color
+  families now source from CSS vars instead of hard-coded hex —
+  so `text-ink-primary`, `bg-surface-card-deep`, etc. resolve via
+  the same vars and adapt automatically when `.dark` is opted-in.
+- ThemeProvider re-enables `enableSystem` so a future Phase 5+
+  inverse section / admin-mode-toggle can lean on next-themes
+  without a rewrite.
+
+### Post-rollback impact on sub_03..sub_12
+
+The post-sub_00 commits already used the v1.0 utility class names.
+Each was inspected after rollback:
+
+| sub | Class usages | Renders OK on light? |
+|---|---|---|
+| 03 | `accent-sage` | ✅ `--ds-sage-ink` darker sage on white ≈ 5.2:1 |
+| 04 | `bg-card-deep`, `border-subtle`, `ink-secondary`, `rounded-card` | ✅ subtle dark-tint card on light reads as a calm panel |
+| 07 | `bg-sage`, `bg-card-deep`, `border-subtle`, `ink-{primary,secondary,tertiary}`, `rounded-card`, `accent-sage`, `leading-body` | ✅ resend CTA = sage fill + black text (AA Large); recipient card calm |
+| 12 | `bg-card-deep`, `border-subtle`, `ink-tertiary` | ✅ avatar cluster reads as faint gray-on-white hairline circles |
+
+No code change required outside `globals.css`, `tailwind.config.ts`,
+and the layout `ThemeProvider` flip.
+
+### Verify
+
+- `pnpm exec tsc --noEmit` → exit 0
+- `pnpm lint` → exit 1 baseline (3155 errors, identical to Wave C.5a)
+- `pnpm build` → exit 0 (Compiled successfully; middleware 161 kB)
+
+### What yagi should re-review
+
+The page list in the original visual checklist above is still the
+right walk. After this rollback, the canvas is back to off-white
+P12 — every page should look like the Wave C.5a baseline, **plus**
+the surface polish from sub_03 (slug warning), sub_04
+(/auth/expired), sub_07 (verify-email card), sub_12 (avatar
+cluster). The dark-mode-specific breakage that the original
+`_sub00_visual_audit.md` flagged should be NA after rollback.
+
+### Followup amendments
+
+- FU-C5b-05 (border-border sweep) → **CLOSED** as obsolete.
+- FU-C5b-07 (NEW) — Dark editorial canvas as future option. Refer
+  to git sha `ef4e9c1` for the original sub_00 dark variant if
+  yagi ever wants to re-flip.

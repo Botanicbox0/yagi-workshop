@@ -560,3 +560,27 @@ button), maxWidth (narrow / content / cinema).
 
 Wave C.5c is reserved for the visual-breakage sweep flagged by
 `_sub00_breakage_log.md` after yagi review.
+
+### 18.3 sub_00 ROLLBACK amendment (2026-05-01)
+
+§18.2 above describes the dark editorial flip that landed in Wave
+C.5b sub_00. yagi's visual review of that flip returned a verdict
+of "too heavy on light pages, roll back." The amendment:
+
+- `:root` returned to Phase 2.7.1 P12 light tokens (off-white
+  background, near-black ink). `next-themes` `defaultTheme="light"`
+  + `enableSystem` restored.
+- v1.0 vocabulary **kept**: sage sole accent, ink hierarchy,
+  surface ramp, border ramp, type scale, motion, radius,
+  Pretendard fonts. Values are now light-bg-adapted (the `--ds-*`
+  namespace in globals.css carries the light variants under
+  `:root`, the dark variants under `.dark` for opt-in inverse
+  sections).
+- New token `--ds-sage-ink: #2D7A3F` introduced for text-on-light
+  sage — saturated `#71D083` only reaches ~1.6:1 contrast on white
+  (fails WCAG AA). `.accent-sage` and `.bg-sage-soft` (text uses)
+  route to the darker variant; `.bg-sage` (fill use) keeps the
+  saturated value.
+
+The deletion list and persona-A model under §18.1 are unaffected —
+those decisions stand.

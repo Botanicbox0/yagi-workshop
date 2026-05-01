@@ -49,6 +49,24 @@ action, and the trigger that should pull it back into scope.
 - **Status**: Not started.
 - **Registered**: 2026-05-01 (Wave C.5b sub_12).
 
+## FU-C5b-07 — Dark editorial canvas as future option
+
+- **Trigger**: Phase 5+ if yagi changes the canvas-color verdict (e.g.
+  reaches a "image-led, content-saturated" surface that benefits from
+  dark) OR if an admin / inverse-hero section needs to opt into dark.
+- **Risk**: Wave C.5b sub_00 originally flipped `:root` to dark
+  editorial; yagi rolled it back to light per visual review. The
+  vocabulary is retained — re-flipping is a one-file change in
+  `globals.css` (swap the `:root` block with the `.dark` block) plus
+  flipping `defaultTheme` to `"dark"` in `[locale]/layout.tsx`. Don't
+  re-flip without yagi's explicit go.
+- **Action**: when the trigger fires, refer to git sha `ef4e9c1` for
+  the original sub_00 dark variant; copy the `:root` block from there
+  into the current globals.css.
+- **Owner**: yagi (decision), Builder (implementation).
+- **Status**: Deferred indefinitely.
+- **Registered**: 2026-05-01 (Wave C.5b sub_00 ROLLBACK).
+
 ## FU-C5b-04 — `.font-display` migration to Redaction (EN display)
 
 - **Trigger**: When Redaction 10 / Redaction 50 Italic woff2 files
@@ -95,16 +113,15 @@ action, and the trigger that should pull it back into scope.
 - **Status**: Not started.
 - **Registered**: 2026-05-01 (Wave C.5b sub_04).
 
-## FU-C5b-05 — `border-border` callsite sweep
+## FU-C5b-05 — `border-border` callsite sweep — ✅ OBSOLETE (sub_00 ROLLBACK)
 
-- **Trigger**: Wave C.5c (yagi visual review of Wave C.5b).
-- **Risk**: 264 explicit `border-border` callsites across 100 files
-  bypass the new `* { border-color: hsl(var(--border) / 0.11); }`
-  default and now resolve to solid white (loud against bg-base).
-- **Action**: Sweep callsites and migrate to `border-edge-subtle` /
-  remove explicit `border-border` where the default subtle ramp is
-  what the surface actually wants. Components that genuinely need a
-  visible divider stay on `border-border`.
-- **Owner**: Builder.
-- **Status**: Not started.
+- **Status**: Obsolete as of 2026-05-01 (Wave C.5b sub_00 ROLLBACK).
+- **Why**: This followup was opened because sub_00's dark flip
+  changed the global `* { border-color: ... }` rule from
+  `hsl(var(--border))` (Phase 2.7.1 P12) to `hsl(var(--border) /
+  0.11)` (alpha-11 white). After the rollback the global rule is
+  back to the original solid alpha — `border-border` resolves to
+  light gray `hsl(0 0% 90%)`, which is exactly what the 264
+  explicit callsites expect. No sweep needed.
 - **Registered**: 2026-05-01 (Wave C.5b sub_00).
+- **Closed**: 2026-05-01 (Wave C.5b sub_00 ROLLBACK).

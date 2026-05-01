@@ -94,29 +94,36 @@ const config: Config = {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			// Phase 4.x Wave C.5b sub_00 — yagi-design-system v1.0 token surface.
-  			// Tailwind utilities: bg-sage / text-sage / bg-sage-soft etc.
+  			// Phase 4.x Wave C.5b sub_00 ROLLBACK — yagi-design-system v1.0
+  			// token vocabulary kept on a light editorial canvas. Colors
+  			// resolve via CSS vars defined in globals.css so a future
+  			// inverse section that opts into .dark gets the dark variants
+  			// of the same names.
+  			//
+  			// Tailwind utilities: bg-sage / text-sage / bg-sage-soft /
+  			// text-ink-primary / bg-surface-card-deep / border-edge-subtle.
   			sage: {
-  				DEFAULT: '#71D083',
-  				soft:    'rgba(113, 208, 131, 0.12)',
+  				DEFAULT: 'var(--ds-sage)',
+  				soft:    'var(--ds-sage-soft)',
+  				ink:     'var(--ds-sage-ink)',
   			},
   			ink: {
-  				primary:   '#EEEEEE',
-  				secondary: '#B4B4B4',
-  				tertiary:  '#7B7B7B',
-  				disabled:  'rgba(238, 238, 238, 0.33)',
-  				muted:     'rgba(238, 238, 238, 0.35)',
+  				primary:   'var(--ds-ink-primary)',
+  				secondary: 'var(--ds-ink-secondary)',
+  				tertiary:  'var(--ds-ink-tertiary)',
+  				disabled:  'var(--ds-ink-disabled)',
+  				muted:     'var(--ds-ink-muted)',
   			},
   			surface: {
-  				base:      '#000000',
-  				raised:    'rgba(25, 25, 25, 0.9)',
-  				card:      'rgba(255, 255, 255, 0.10)',
-  				'card-deep':'rgba(255, 255, 255, 0.05)',
-  				scrim:     'rgba(0, 0, 0, 0.35)',
+  				base:        'var(--ds-bg-base)',
+  				raised:      'var(--ds-bg-raised)',
+  				card:        'var(--ds-bg-card)',
+  				'card-deep': 'var(--ds-bg-card-deep)',
+  				scrim:       'var(--ds-bg-scrim)',
   			},
   			edge: {
-  				subtle: 'rgba(255, 255, 255, 0.11)',
-  				soft:   'rgba(255, 255, 255, 0.06)',
+  				subtle: 'var(--ds-border-subtle)',
+  				soft:   'var(--ds-border-soft)',
   			},
   			inverse: {
   				bg:  '#FFFFFF',

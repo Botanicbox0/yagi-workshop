@@ -1279,3 +1279,23 @@ sage is sole.
 yagi-design-system v1.0 SKILL.md "Hard Rules")
 
 **Registered:** 2026-05-01 (Wave C.5b sub_11)
+
+**Amendment 2026-05-01 (Wave C.5b sub_00 ROLLBACK):** yagi visual
+review verdict — "DARK MODE가 너무 보기에 좀 안좋은 것 같아. LIGHT
+MODE로 롤백하고 싶음." The dark *canvas* (bg-base #000000 + ink
+#EEEEEE) is reversed; Phase 2.7.1 P12 light tokens restored as
+:root. The v1.0 *vocabulary* (sage sole accent, ink hierarchy,
+surface ramp, border ramp, type scale, motion, radius, Pretendard
+locale-aware fonts) is **retained** with light-bg-adapted values
+in globals.css `--ds-*` namespace + Tailwind `sage / ink / surface
+/ edge` families now sourced from those CSS vars. New token
+`--ds-sage-ink` (`#2D7A3F`) introduced for text-on-light sage —
+sage `#71D083` against pure white only reaches ~1.6:1 which fails
+WCAG AA, so `.accent-sage` (text usage) routes to the darker
+variant while `.bg-sage` (fill usage) keeps the saturated value.
+The `.dark` selector retains a complete v1.0 dark mapping for
+opt-in inverse sections + a possible future flip.
+
+Hard rules unchanged: still sole accent, still zero shadow, still
+24px card radius, still 400ms cubic-bezier(0.45, 0, 0, 1) motion,
+still no EN tracking on KO. Only the canvas color reversed.

@@ -38,10 +38,13 @@ export default async function LocaleLayout({
         />
       </head>
       <body>
-        {/* Phase 4.x Wave C.5b sub_00 — defaultTheme="dark" so next-themes
-            adds .dark on hydration. enableSystem dropped: editorial dark is
-            the universal canvas; .light is opt-in for special contexts. */}
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+        {/* Phase 4.x Wave C.5b sub_00 ROLLBACK (2026-05-01) — yagi visual
+            review verdict: dark editorial reads as too heavy. Restored
+            to defaultTheme="light" + enableSystem (Phase 2.7.1 P12).
+            v1.0 design tokens (sage accent, ink hierarchy, radius,
+            Pretendard) live on at light-bg-adapted values in
+            globals.css; only the dark canvas itself is reversed. */}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <NextIntlClientProvider messages={messages}>
             <PublicChromeHeader />
             {children}
