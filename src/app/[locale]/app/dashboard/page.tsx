@@ -188,23 +188,29 @@ export default async function DashboardPage({ params }: Props) {
         />
       </div>
 
-      {/* L3 Recent RFPs */}
+      {/* L3 Recent projects */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-sm uppercase tracking-[0.10em] text-muted-foreground keep-all">
-            {t("recent_rfps.title")}
+            {t("recent_projects.title")}
           </h2>
         </div>
         {recent.length === 0 ? (
-          <div className="rounded-3xl border border-border/40 px-8 py-16 text-center">
-            <p className="text-sm text-muted-foreground keep-all">
-              {t("recent_rfps.empty")}
+          <div className="rounded-3xl border border-border/40 px-8 py-16 flex flex-col items-center text-center">
+            <p
+              className="text-[22px] font-semibold text-foreground keep-all"
+              style={{ letterSpacing: "-0.01em", lineHeight: 1.2 }}
+            >
+              {t("recent_projects.empty_headline")}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground keep-all">
+              {t("recent_projects.empty_subtitle")}
             </p>
             <Link
               href={`/${locale}/app/projects/new`}
               className="mt-6 inline-flex items-center rounded-full border border-border/40 px-5 py-2 text-sm font-medium text-foreground hover:bg-foreground/[0.04] transition-colors"
             >
-              {t("recent_rfps.empty_cta")}
+              {t("recent_projects.empty_cta")}
             </Link>
           </div>
         ) : (

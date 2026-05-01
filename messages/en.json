@@ -1427,9 +1427,10 @@
       "in_progress": "In progress",
       "delivered": "Delivered"
     },
-    "recent_rfps": {
-      "title": "Recent RFPs",
-      "empty": "No RFPs yet",
+    "recent_projects": {
+      "title": "Recent projects",
+      "empty_headline": "No projects yet",
+      "empty_subtitle": "Start your first project",
       "empty_cta": "+ Start a new project"
     },
     "status": {
