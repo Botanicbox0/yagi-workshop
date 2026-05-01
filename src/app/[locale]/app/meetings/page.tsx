@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { Link } from "@/i18n/routing";
+import { Calendar } from "lucide-react";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -121,20 +122,31 @@ export default async function MeetingsPage({ params, searchParams }: Props) {
         </Link>
       </div>
 
-      {/* Empty state */}
+      {/* Empty state — Wave C.5a sub_07: onboarding-styled 4-stack
+          (icon + headline + subtitle + CTA). Calm container, no
+          dashed border. CTA copy is intentionally distinct from the
+          page-top "새 미팅" — that one is the action button, this
+          one is the invitation. */}
       {meetings.length === 0 && (
-        <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
-          <p className="font-display text-xl tracking-tight mb-2 keep-all">
-            {t("list_empty")}
-          </p>
-          <p className="text-sm text-muted-foreground mb-6 keep-all">
-            {t("list_empty_sub")}
+        <div className="mt-16 flex flex-col items-center justify-center text-center py-24 px-6 rounded-3xl border border-border/40">
+          <Calendar
+            className="w-8 h-8 text-muted-foreground mb-6"
+            aria-hidden="true"
+          />
+          <h2
+            className="text-[22px] md:text-[26px] font-semibold text-foreground keep-all"
+            style={{ letterSpacing: "-0.01em", lineHeight: 1.2 }}
+          >
+            {t("empty.headline")}
+          </h2>
+          <p className="mt-2 max-w-[480px] text-base text-muted-foreground keep-all" style={{ lineHeight: 1.37 }}>
+            {t("empty.subtitle")}
           </p>
           <Link
             href="/app/meetings/new"
-            className="rounded-full uppercase tracking-[0.12em] px-6 py-3 bg-foreground text-background hover:bg-foreground/90 text-sm font-medium transition-colors"
+            className="mt-6 rounded-xl bg-foreground px-6 py-3 text-sm font-medium text-background hover:bg-foreground/90 transition-colors"
           >
-            {t("new")}
+            {t("empty.cta")}
           </Link>
         </div>
       )}

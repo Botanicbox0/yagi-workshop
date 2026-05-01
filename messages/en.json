@@ -393,6 +393,11 @@
     "list_title": "Meetings",
     "list_empty": "No meetings scheduled",
     "list_empty_sub": "Schedule one from a project detail page",
+    "empty": {
+      "headline": "No upcoming meetings yet",
+      "subtitle": "Schedule a 30-min meeting with the YAGI team to align on direction.",
+      "cta": "Book a meeting"
+    },
     "new": "New meeting",
     "new_title": "Schedule a meeting",
     "new_description": "Set the time and attendees; a Google Calendar invite is sent automatically",

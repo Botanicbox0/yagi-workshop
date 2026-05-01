@@ -393,6 +393,11 @@
     "list_title": "미팅",
     "list_empty": "예정된 미팅이 없습니다",
     "list_empty_sub": "프로젝트 상세에서 새 미팅을 예약해 주세요",
+    "empty": {
+      "headline": "아직 예정된 미팅이 없습니다",
+      "subtitle": "YAGI 팀과 30분 미팅으로 프로젝트 방향을 정리할 수 있어요.",
+      "cta": "미팅 예약하기"
+    },
     "new": "새 미팅",
     "new_title": "미팅 예약",
     "new_description": "일정과 참가자를 입력하시면 Google Calendar 초대가 발송됩니다",
