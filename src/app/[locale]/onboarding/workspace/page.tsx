@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createWorkspaceAction } from "@/lib/onboarding/actions";
 
+// Phase 4.x Wave C.5b sub_03 — auto-derive a slug-safe URL from the
+// workspace name. Pure Roman names produce a kebab-case slug; non-ASCII
+// names (Korean etc.) collapse to empty, which is the trigger for the
+// `workspace_slug_korean_warning` nudge below.
 const slugFromName = (name: string) =>
   name
     .toLowerCase()
@@ -22,7 +26,7 @@ const slugFromName = (name: string) =>
 
 const schema = z.object({
   name: z.string().min(1).max(80),
-  slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/, "3–50 lowercase, hyphens"),
+  slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/, "3-50 lowercase, hyphens"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -53,6 +57,14 @@ export default function OnboardingWorkspacePage() {
     }
   }, [nameValue, slugTouched, setValue]);
 
+  // Non-ASCII name (Korean etc.) collapses to an empty slug. Surface a
+  // one-line nudge so the user knows to type one manually instead of
+  // staring at an empty field.
+  const showKoreanWarning =
+    !slugTouched &&
+    nameValue.trim().length > 0 &&
+    slugFromName(nameValue).length === 0;
+
   async function onSubmit(values: FormValues) {
     setSubmitting(true);
     const res = await createWorkspaceAction({ name: values.name, slug: values.slug });
@@ -81,12 +93,21 @@ export default function OnboardingWorkspacePage() {
           <Input
             id="slug"
             value={slugValue}
+            placeholder={t("workspace_slug_ph")}
             onChange={(e) => {
               setSlugTouched(true);
               setValue("slug", e.target.value);
             }}
           />
-          <p className="text-xs text-muted-foreground">{t("workspace_slug_help")}{slugValue}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("workspace_slug_help")}
+            <span className="text-foreground">{slugValue}</span>
+          </p>
+          {showKoreanWarning && (
+            <p className="text-xs accent-sage keep-all">
+              {t("workspace_slug_korean_warning")}
+            </p>
+          )}
           {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
         </div>
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
