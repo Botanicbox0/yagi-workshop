@@ -110,35 +110,48 @@ export default function SignUpPage() {
   // is required by the project. The user stays on this view and follows the
   // mailbox link. This replaces the "toast-only and the form stays put"
   // behavior that read as a dead-end.
+  // Phase 4.x Wave C.5b sub_07 — verify-email screen on the v1.0 dark
+  // editorial foundation. Headline + subtitle land on the editorial type
+  // scale; the recipient block is a card-deep / border-subtle surface;
+  // primary CTA is the sage "resend" beat, secondary is a calm ghost
+  // button to switch addresses.
   if (sentToEmail) {
     return (
       <div className="space-y-8">
         <div className="space-y-3 text-center">
-          <h1 className="font-display text-3xl tracking-tight">
+          <h1 className="font-display text-3xl tracking-tight keep-all">
             {t("check_your_email_title")}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base ink-secondary leading-body keep-all">
             {t("check_your_email_sub")}
           </p>
         </div>
 
-        <div className="rounded-lg border border-border bg-muted/40 px-5 py-4 text-sm space-y-3">
-          <p className="text-foreground">
-            <span className="text-muted-foreground">{t("sent_to_label")}: </span>
+        <div className="rounded-card bg-card-deep border-subtle border p-6 text-sm space-y-4">
+          <p className="ink-primary">
+            <span className="ink-tertiary">{t("sent_to_label")}: </span>
             <span className="font-medium break-all">{sentToEmail}</span>
           </p>
-          <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
-            <li>{t("check_email_hint_inbox")}</li>
-            <li>{t("check_email_hint_spam")}</li>
-            <li>{t("check_email_hint_link")}</li>
+          <ul className="text-sm ink-secondary space-y-2 leading-body">
+            <li className="flex gap-2 keep-all">
+              <span className="ink-tertiary">·</span>
+              <span>{t("check_email_hint_inbox")}</span>
+            </li>
+            <li className="flex gap-2 keep-all">
+              <span className="ink-tertiary">·</span>
+              <span>{t("check_email_hint_spam")}</span>
+            </li>
+            <li className="flex gap-2 keep-all">
+              <span className="ink-tertiary">·</span>
+              <span>{t("check_email_hint_link")}</span>
+            </li>
           </ul>
         </div>
 
         <div className="space-y-3">
           <Button
             type="button"
-            variant="outline"
-            className="w-full"
+            className="w-full bg-sage hover:brightness-105"
             size="lg"
             onClick={onResend}
             disabled={resending}
@@ -156,9 +169,9 @@ export default function SignUpPage() {
           </Button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm ink-tertiary">
           {t("have_account")}{" "}
-          <Link href="/signin" className="text-foreground hover:underline">
+          <Link href="/signin" className="ink-primary hover:accent-sage transition-colors">
             {c("signin")}
           </Link>
         </p>
