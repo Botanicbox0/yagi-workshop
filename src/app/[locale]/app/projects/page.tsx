@@ -1,12 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { statusPillClass } from "@/lib/ui/status-pill";
 import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
 import { ProjectsHubWorkflowStrip } from "@/components/projects/projects-hub-workflow-strip";
 import { ProjectsHubCtaBanner } from "@/components/projects/projects-hub-cta-banner";
+import { ProjectListCard } from "@/components/projects/project-list-card";
 import { MeetingRequestCard } from "@/components/meetings/meeting-request-card";
 
 type Props = {
@@ -24,24 +22,6 @@ type ProjectRow = {
   workspace_id: string;
   brand: { id: string; name: string; logo_url: string | null } | null;
 };
-
-type StatusKey =
-  | "draft"
-  | "submitted"
-  | "in_discovery"
-  | "in_production"
-  | "in_revision"
-  | "delivered"
-  | "approved"
-  | "archived";
-
-// Phase 2.5 launchpad X1 CRITICAL #3 — replaced the file-local
-// statusBadgeClass with src/lib/ui/status-pill.ts. Kept the `archived`
-// opacity modifier via a small wrapper so callers keep the faded look.
-function statusBadgeClass(status: string): string {
-  const base = statusPillClass("project", status);
-  return status === "archived" ? `${base} opacity-60` : base;
-}
 
 export default async function ProjectsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -178,61 +158,25 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           yet (edge case during onboarding). */}
       <MeetingRequestCard workspaceId={primaryWorkspaceId} />
 
-      {/* Direct tab — project grid */}
+      {/* Direct tab — project grid (Wave C.5a sub_06: vertical card v1.0).
+          Title top-left + status pill top-right + date bottom-right.
+          Sage accent gated to in_review only. Brand chip moved out of
+          this surface — Phase 4 has no real brand-mixed list view yet,
+          and the v1.0 grammar wants the title to carry the card. */}
       {projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
           {projects.map((project) => (
-            <Link
+            <ProjectListCard
               key={project.id}
-              href={`/app/projects/${project.id}` as `/app/projects/${string}`}
-              className="group block border border-border rounded-lg p-4 hover:bg-accent transition-colors"
-            >
-              {/* Brand chip */}
-              <div className="flex items-center gap-2 mb-3">
-                {project.brand ? (
-                  <>
-                    {project.brand.logo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={project.brand.logo_url}
-                        alt={project.brand.name}
-                        className="w-5 h-5 rounded-sm object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <span className="w-5 h-5 rounded-sm bg-muted flex-shrink-0" />
-                    )}
-                    <span className="text-xs text-muted-foreground truncate">
-                      {project.brand.name}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
-              </div>
-
-              {/* Title */}
-              <p className="text-sm font-medium leading-snug line-clamp-2 keep-all mb-3 group-hover:text-foreground">
-                {project.title}
-              </p>
-
-              {/* Status + date row */}
-              <div className="flex items-center justify-between gap-2">
-                <Badge
-                  className={cn(
-                    "rounded-full text-[11px] px-2.5 py-0.5",
-                    statusBadgeClass(project.status)
-                  )}
-                >
-                  {t(`status_${project.status}` as Parameters<typeof t>[0])}
-                </Badge>
-                <span className="text-[11px] text-muted-foreground tabular-nums flex-shrink-0">
-                  {new Intl.DateTimeFormat(locale, {
-                    month: "short",
-                    day: "numeric",
-                  }).format(new Date(project.updated_at))}
-                </span>
-              </div>
-            </Link>
+              href={`/app/projects/${project.id}`}
+              title={project.title}
+              status={project.status}
+              statusLabel={t(`status_${project.status}` as Parameters<typeof t>[0])}
+              dateLabel={new Intl.DateTimeFormat(locale, {
+                month: "short",
+                day: "numeric",
+              }).format(new Date(project.updated_at))}
+            />
           ))}
         </div>
       )}
