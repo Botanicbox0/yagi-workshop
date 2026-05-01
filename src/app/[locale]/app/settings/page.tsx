@@ -27,10 +27,12 @@ export default async function SettingsPage({
         .createSignedUrl(ctx!.profile.avatar_url, 3600);
       avatarSignedUrl = data?.signedUrl ?? null;
     }
-    // G6: fetch extended profile fields (bio, instagram_handle, handle_changed_at)
+    // G6: fetch extended profile fields (bio, instagram_handle).
+    // Phase 4.x sub_04 — handle is no longer user-editable from /settings,
+    // so handle_changed_at is no longer fetched here.
     const { data: extended } = await supabase
       .from("profiles")
-      .select("bio, instagram_handle, handle_changed_at")
+      .select("bio, instagram_handle")
       .eq("id", ctx!.userId)
       .maybeSingle();
     return (
@@ -40,7 +42,6 @@ export default async function SettingsPage({
         userId={ctx!.userId}
         bio={extended?.bio ?? null}
         instagramHandle={extended?.instagram_handle ?? null}
-        handleChangedAt={extended?.handle_changed_at ?? null}
       />
     );
   }

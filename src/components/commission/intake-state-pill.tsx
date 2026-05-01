@@ -6,7 +6,7 @@ const KO_LABELS: Record<CommissionIntakeState, string> = {
   admin_responded: "답변 완료",
   closed: "완료됨",
   archived: "보관됨",
-  converted: "워크샵 전환됨",
+  converted: "워크스페이스 전환됨",
 };
 
 const EN_LABELS: Record<CommissionIntakeState, string> = {

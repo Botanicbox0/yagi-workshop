@@ -14,25 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { updateProfile, updateAvatarUrl } from "./actions";
-import {
-  validateHandle,
-  HANDLE_MIN_LENGTH,
-  HANDLE_MAX_LENGTH,
-} from "@/lib/handles/validate";
-import { canChangeHandle } from "@/lib/handles/change";
 
 const profileSchema = z.object({
   display_name: z.string().trim().min(1).max(80),
-  handle: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .min(HANDLE_MIN_LENGTH)
-    .max(HANDLE_MAX_LENGTH)
-    .superRefine((val, ctx) => {
-      const err = validateHandle(val);
-      if (err) ctx.addIssue({ code: "custom", message: err });
-    }),
   locale: z.enum(["ko", "en"]),
   bio: z
     .string()
@@ -54,7 +38,6 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 interface ProfileFormProps {
   profile: {
     id: string;
-    handle: string;
     display_name: string;
     avatar_url: string | null;
     locale: "ko" | "en";
@@ -63,10 +46,9 @@ interface ProfileFormProps {
   userId: string;
   bio: string | null;
   instagramHandle: string | null;
-  handleChangedAt: string | null;
 }
 
-export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHandle, handleChangedAt }: ProfileFormProps) {
+export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHandle }: ProfileFormProps) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   const tOnboarding = useTranslations("onboarding");
@@ -85,24 +67,12 @@ export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHa
     resolver: zodResolver(profileSchema),
     defaultValues: {
       display_name: profile.display_name,
-      handle: profile.handle,
       locale: profile.locale,
       bio: bio ?? "",
       instagram_handle: instagramHandle ?? "",
     },
   });
 
-  const handleLock = canChangeHandle(
-    handleChangedAt ? new Date(handleChangedAt) : null,
-  );
-  const handleLocked = !handleLock.allowed;
-  const handleUnlockAtLabel = handleLock.unlockAt
-    ? new Intl.DateTimeFormat("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(handleLock.unlockAt)
-    : null;
   const bioValue = watch("bio") ?? "";
 
   const handleAvatarClick = () => {
@@ -158,10 +128,10 @@ export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHa
   const onSubmit = async (data: ProfileFormData) => {
     const res = await updateProfile(data);
     if ("error" in res) {
-      toast.error(t("profile_save"));
+      toast.error(t("save_failed"));
       return;
     }
-    toast.success(t("profile_save"));
+    toast.success(t("save_success"));
     router.refresh();
   };
 
@@ -215,28 +185,6 @@ export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHa
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="handle">{tOnboarding("handle")}</Label>
-          <Input
-            id="handle"
-            {...register("handle")}
-            disabled={handleLocked}
-            aria-describedby={handleLocked ? "handle-lock-note" : undefined}
-          />
-          {handleLocked && handleUnlockAtLabel && (
-            <p
-              id="handle-lock-note"
-              className="text-xs text-muted-foreground"
-              title="핸들은 90일에 한 번 변경할 수 있어요."
-            >
-              핸들은 90일에 한 번 변경할 수 있어요. 다음 변경 가능: {handleUnlockAtLabel}
-            </p>
-          )}
-          {errors.handle && (
-            <p className="text-xs text-destructive">{errors.handle.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
           <Label htmlFor="bio">소개 (최대 200자)</Label>
           <Textarea
             id="bio"
@@ -285,7 +233,7 @@ export function ProfileForm({ profile, avatarSignedUrl, userId, bio, instagramHa
           {isSubmitting ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
           ) : null}
-          {t("profile_save")}
+          {t("save_changes")}
         </Button>
       </form>
     </div>

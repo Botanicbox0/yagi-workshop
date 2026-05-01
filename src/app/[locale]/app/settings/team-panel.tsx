@@ -35,10 +35,7 @@ export async function TeamPanel({ workspaceId }: TeamPanelProps) {
             <li key={m.user_id} className="px-4 py-3 flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium">
-                  {profile?.display_name ?? profile?.handle ?? m.user_id.slice(0, 8)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  @{profile?.handle ?? "—"}
+                  {profile?.display_name?.trim() || m.user_id.slice(0, 8)}
                 </div>
               </div>
               <div className="flex items-center gap-3">

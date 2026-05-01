@@ -9,6 +9,11 @@ import {
   HANDLE_MAX_LENGTH,
 } from "@/lib/handles/validate";
 
+// Phase 4.x Wave C.5a sub_04 — handle is no longer surfaced in /app/settings.
+// The field stays optional on the action so any future admin/internal
+// surface that wants to drive change_handle through this entry point can
+// continue to do so. Client form omits it; server skips the RPC path
+// when absent.
 const profileSchema = z.object({
   display_name: z.string().trim().min(1).max(80),
   handle: z
@@ -16,7 +21,8 @@ const profileSchema = z.object({
     .trim()
     .toLowerCase()
     .min(HANDLE_MIN_LENGTH)
-    .max(HANDLE_MAX_LENGTH),
+    .max(HANDLE_MAX_LENGTH)
+    .optional(),
   locale: z.enum(["ko", "en"]),
   // G6 additions
   bio: z
@@ -40,35 +46,35 @@ export async function updateProfile(input: unknown) {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { error: "validation" as const };
 
-  const handleErr = validateHandle(parsed.data.handle);
-  if (handleErr) return { error: "handle" as const, kind: handleErr };
-
   const supabase = await createSupabaseServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" as const };
 
-  // Detect handle change vs. metadata-only update. Handle changes must go
-  // through the change_handle RPC (enforces 90-day lock + anti-squatting
-  // via handle_history).
-  const { data: currentProfile } = await supabase
-    .from("profiles")
-    .select("handle")
-    .eq("id", user.id)
-    .maybeSingle();
-  const currentHandle = currentProfile?.handle ?? null;
+  // Optional handle change path — only entered when caller supplied one.
+  if (parsed.data.handle) {
+    const handleErr = validateHandle(parsed.data.handle);
+    if (handleErr) return { error: "handle" as const, kind: handleErr };
 
-  if (currentHandle && currentHandle !== parsed.data.handle) {
-    const { error: rpcErr } = await (supabase.rpc as unknown as (
-      fn: "change_handle",
-      args: { new_handle_input: string }
-    ) => Promise<{ data: unknown; error: { message: string; code?: string } | null }>)(
-      "change_handle",
-      { new_handle_input: parsed.data.handle }
-    );
-    if (rpcErr) {
-      return { error: "handle_change" as const, message: rpcErr.message };
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("handle")
+      .eq("id", user.id)
+      .maybeSingle();
+    const currentHandle = currentProfile?.handle ?? null;
+
+    if (currentHandle && currentHandle !== parsed.data.handle) {
+      const { error: rpcErr } = await (supabase.rpc as unknown as (
+        fn: "change_handle",
+        args: { new_handle_input: string }
+      ) => Promise<{ data: unknown; error: { message: string; code?: string } | null }>)(
+        "change_handle",
+        { new_handle_input: parsed.data.handle }
+      );
+      if (rpcErr) {
+        return { error: "handle_change" as const, message: rpcErr.message };
+      }
     }
   }
 

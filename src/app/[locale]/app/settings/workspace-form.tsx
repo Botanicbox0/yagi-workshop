@@ -56,10 +56,10 @@ export function WorkspaceForm({ workspace }: WorkspaceFormProps) {
       tax_invoice_email: data.tax_invoice_email || null,
     });
     if ("error" in res) {
-      toast.error(t("workspace_tab"));
+      toast.error(t("save_failed"));
       return;
     }
-    toast.success(t("workspace_tab"));
+    toast.success(t("save_success"));
     router.refresh();
   };
 
@@ -72,7 +72,7 @@ export function WorkspaceForm({ workspace }: WorkspaceFormProps) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-1.5">
-          <Label htmlFor="ws_name">{t("workspace_tab")}</Label>
+          <Label htmlFor="ws_name">{t("workspace_name_label")}</Label>
           <Input id="ws_name" {...register("name")} />
           {errors.name && (
             <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -107,7 +107,7 @@ export function WorkspaceForm({ workspace }: WorkspaceFormProps) {
           {isSubmitting ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
           ) : null}
-          {t("profile_save")}
+          {t("save_changes")}
         </Button>
       </form>
     </div>
