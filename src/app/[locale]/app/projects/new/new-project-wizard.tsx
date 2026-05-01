@@ -856,10 +856,10 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                 console.error("[wizard.submit] failed:", result);
                 const errorKey =
                   result.error === "unauthenticated"
-                    ? "wizard.step3.errors.unauthenticated"
+                    ? "wizard.errors.unauthenticated"
                     : result.error === "validation"
-                    ? "wizard.step3.errors.submit_validation"
-                    : "wizard.step3.errors.submit_failed";
+                    ? "wizard.errors.submit_validation"
+                    : "wizard.errors.submit_failed";
                 toast.error(t(errorKey));
               }
             });
