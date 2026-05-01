@@ -1,0 +1,40 @@
+K-05 ADVERSARIAL CODE REVIEW (retroactive, target file is already applied to prod).
+
+Repository root: C:/Users/yout4/yagi-studio/yagi-workshop
+Target: supabase/migrations/20260501095935_phase_4_x_auto_profile_on_signup.sql
+
+This migration introduces a SECURITY DEFINER trigger function 'public.handle_new_user()' that fires AFTER INSERT on auth.users and auto-creates a public.profiles row. It is ALREADY APPLIED to the prod Supabase project (jvamvbpxnztynsccvcmr). Review is retroactive — your job is to find anything that warrants a follow-up corrective commit, especially HIGH-A (security-critical) or HIGH-B (high-impact bug) findings.
+
+PROCESS:
+1. Read the migration file in full.
+2. Read .yagi-autobuild/phase-4-x/_amend01_self_review.md (the prior Opus 4.7 self-review) and challenge or extend each finding.
+3. Read src/lib/app/context.ts (ProfileRole type), src/middleware.ts, src/app/auth/callback/route.ts to understand the runtime context the trigger lands inside.
+4. (Optional) Read existing related migrations under supabase/migrations/ for conventions (search_path, REVOKE patterns) used elsewhere.
+
+FOCUS AREAS (each must be a separate finding with explicit verdict):
+A. SECURITY DEFINER hijack vector — search_path locked? pg_temp shadowing closed? Any dynamic SQL?
+B. SQL injection through NEW.email concatenation into md5() — verify md5 sanitises.
+C. citext cast on the prefixed handle — silent failure path? handle constraint ^[a-z0-9_-]{3,30}$ vs produced 'c_<8 hex>' (10 chars) — exact match?
+D. Retry loop bound — actual attempt count, off-by-one, infinite loop?
+E. ON CONFLICT (id) DO NOTHING — handle UNIQUE collision still possible between SELECT pre-check and INSERT?
+F. raw_user_meta_data->>'locale' NULL safety — coerced to ko on missing/unknown?
+G. AFTER INSERT atomicity — RAISE rolls back auth.users INSERT? orphan state still possible?
+H. REVOKE EXECUTE FROM PUBLIC/authenticated/anon — does it block trigger fire? Defense in depth against direct invocation by a user calling SELECT public.handle_new_user(forged_record)?
+I. 'client' default role consistency with persona A (DECISIONS_CACHE.md Q-094 = Brand-only Phase 4-9). Interaction with the artist bootstrap path (sub_13 service-role admin upsert) — does the trigger first creating role='client' then UPDATE to 'artist' work cleanly through validate_profile_role_transition?
+J. Empty display_name fallback chain — email '@example.com' or NULL email — does the chain always produce a non-empty value? profiles.display_name is NOT NULL.
+K. Function ownership for SECURITY DEFINER — when the migration runs as postgres, is the function owned by postgres? Adequate to bypass RLS on the profiles INSERT?
+
+Severity scale per finding: HIGH-A | HIGH-B | HIGH-C | MED-A | MED-B | MED-C | LOW.
+
+Output format (markdown), one section per finding:
+
+## Finding F<N> — <short title>
+- Severity: <level>
+- Surface: <file:lines or sql snippet>
+- Verdict: <clear yes/no/partial>
+- Reasoning: <2-4 sentences>
+- Proposed fix: <patch sketch> OR 'no fix needed' with rationale
+
+End with a 'Verdict' line summarising HIGH-A / HIGH-B / MED-A counts and recommending APPLY / FIX / HALT.
+
+Do NOT modify any file. Do NOT run git commands beyond log/diff/blame. Do NOT apply migrations. Read-only review only.

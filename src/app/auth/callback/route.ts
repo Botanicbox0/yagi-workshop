@@ -64,6 +64,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/ko/signin?error=no_user`);
   }
 
+  // Phase 4.x Wave C.5b amend_01 LOOP 1 fix (Codex F12): the
+  // handle_new_user DB trigger now guarantees a profiles row materialises
+  // in the same transaction as auth.users INSERT, so `!profile` is no
+  // longer the right onboarding gate. Use workspace membership + global
+  // role instead — the actual constraint that decides whether the user
+  // can land on /app surfaces.
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, locale")
@@ -72,25 +78,34 @@ export async function GET(request: NextRequest) {
 
   const locale = profile?.locale ?? "ko";
 
-  // Password recovery flow: send to reset-password regardless of profile state.
+  // Password recovery flow: send to reset-password regardless of state.
   if (type === "recovery") {
     return NextResponse.redirect(`${origin}/${locale}/reset-password`);
   }
 
   // Phase 2.8.1 G_B1-H (F-PUX-003): preserve the commission intent across
-  // the entire signup → confirm → onboarding chain. If the user just
-  // confirmed their email and still needs to onboard, hand the next URL
-  // off so onboarding can either auto-skip (commission intent) or finish
-  // and resume.
+  // the entire signup → confirm → onboarding chain.
   const safeNext =
     next && next.startsWith("/") && !next.startsWith("//")
       ? next
       : null;
 
-  // Phase 4.x Wave C.5b sub_01 — Brand-only persona; freshly-confirmed users
-  // land directly on the workspace form (skips legacy /onboarding entry +
-  // /role intermediate step).
-  if (!profile) {
+  const { count: workspaceMembershipCount } = await supabase
+    .from("workspace_members")
+    .select("workspace_id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  const { data: globalRoles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .is("workspace_id", null)
+    .in("role", ["creator", "yagi_admin"]);
+
+  const hasWorkspace = (workspaceMembershipCount ?? 0) > 0;
+  const hasGlobalRole = (globalRoles?.length ?? 0) > 0;
+
+  if (!hasWorkspace && !hasGlobalRole) {
     const onboardingUrl = safeNext
       ? `${origin}/${locale}/onboarding/workspace?next=${encodeURIComponent(safeNext)}`
       : `${origin}/${locale}/onboarding/workspace`;

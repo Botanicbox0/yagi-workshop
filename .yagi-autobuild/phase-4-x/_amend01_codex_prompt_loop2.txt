@@ -1,0 +1,50 @@
+K-05 ADVERSARIAL CODE REVIEW — LOOP 2 (verify LOOP 1 fixes).
+
+Repository root: C:/Users/yout4/yagi-studio/yagi-workshop
+
+LOOP 1 produced 12 findings, summary: HIGH-A 0 / HIGH-B 0 / MED-A 2.
+The 2 MED-A findings have now been addressed:
+
+1. F1 (search_path hardening) — fixed via follow-up migration:
+   supabase/migrations/20260501140308_phase_4_x_handle_new_user_search_path_hardening.sql
+   ALTER FUNCTION public.handle_new_user() SET search_path = public, pg_temp;
+   Already APPLIED to prod. Verify proconfig now reads `public, pg_temp`
+   in the migration file (live state already confirmed by the apply).
+
+2. F12 (auth callback gate) — fixed in src/app/auth/callback/route.ts:
+   the `!profile` redirect-to-onboarding branch was replaced by a
+   workspace-state gate. The new logic:
+   - reads workspace_members.count + user_roles where role IN
+     ('creator','yagi_admin') AND workspace_id IS NULL
+   - if neither workspace nor global role → /onboarding/workspace
+     (preserving safeNext as ?next=)
+   - else → safeNext or /app
+   Profile lookup retained only for locale resolution.
+
+PROCESS for LOOP 2:
+1. Read the LOOP 1 review at .yagi-autobuild/phase-4-x/_amend01_codex_review_loop_1.md
+2. Read the two new artifacts:
+   - supabase/migrations/20260501140308_phase_4_x_handle_new_user_search_path_hardening.sql
+   - src/app/auth/callback/route.ts (current state, post-fix)
+3. For each LOOP 1 finding F1..F12:
+   - If MED-A or HIGH-*: confirm fix is correct OR identify residual.
+   - If LOW: skip unless your re-read finds a new angle.
+4. Look for NEW issues introduced by the fixes (e.g., RLS implications
+   of querying workspace_members from a Route Handler context, query
+   chain ordering edge cases, locale fallback regressions).
+
+Output format (markdown):
+
+## Loop 2 verdict on Loop 1 findings
+- F1: <FIXED / RESIDUAL with description>
+- F12: <FIXED / RESIDUAL with description>
+- (others — only if changed)
+
+## New findings (introduced by Loop 1 fixes)
+(zero or more, same severity scale as Loop 1)
+
+## Final verdict
+HIGH-A <N> / HIGH-B <N> / MED-A <N> residual.
+Recommend APPLY (clean) / FIX (more work) / HALT (escalate).
+
+Read-only review only. Do NOT modify files.
