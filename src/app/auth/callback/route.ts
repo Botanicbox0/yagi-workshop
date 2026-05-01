@@ -51,10 +51,13 @@ export async function GET(request: NextRequest) {
       ? next
       : null;
 
+  // Phase 4.x Wave C.5b sub_01 — Brand-only persona; freshly-confirmed users
+  // land directly on the workspace form (skips legacy /onboarding entry +
+  // /role intermediate step).
   if (!profile) {
     const onboardingUrl = safeNext
-      ? `${origin}/${locale}/onboarding?next=${encodeURIComponent(safeNext)}`
-      : `${origin}/${locale}/onboarding`;
+      ? `${origin}/${locale}/onboarding/workspace?next=${encodeURIComponent(safeNext)}`
+      : `${origin}/${locale}/onboarding/workspace`;
     return NextResponse.redirect(onboardingUrl);
   }
 

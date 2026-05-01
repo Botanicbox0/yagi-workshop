@@ -14,19 +14,15 @@ export default async function OnboardingEntryPage({
     return null;
   }
 
-  if (!state.hasProfile) {
-    // Phase 2.5 default: new users land on role selection.
-    redirect({ href: "/onboarding/role", locale });
-    return null;
-  }
-
-  // Profile exists — route legacy Phase 1.1 users based on workspace state.
+  // Phase 4.x Wave C.5b sub_01 — persona A locked (Brand only). Role
+  // selection flow retired; first-touch onboarding is the workspace
+  // (= company) form regardless of profile state. Users who already
+  // have a workspace go straight to /app.
   if (state.workspaceMembershipCount >= 1 || state.hasGlobalRole) {
     redirect({ href: "/app", locale });
     return null;
   }
 
-  // Profile but no workspace and no global role — complete legacy workspace step.
   redirect({ href: "/onboarding/workspace", locale });
   return null;
 }

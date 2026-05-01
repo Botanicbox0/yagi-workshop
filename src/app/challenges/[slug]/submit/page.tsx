@@ -85,9 +85,10 @@ export default async function SubmitPage({ params }: Props) {
   const role = profile?.role ?? null;
 
   if (role === "observer") {
-    redirect(
-      `/onboarding/role?next=${encodeURIComponent(`/challenges/${slug}/submit`)}`
-    );
+    // Phase 4.x Wave C.5b sub_01: role-selection retired. Observer-role
+    // legacy profiles can no longer "upgrade" via UI; bounce to sign-in
+    // and let yagi handle these cases manually if they surface.
+    redirect(`/signin?next=${encodeURIComponent(`/challenges/${slug}/submit`)}`);
   }
 
   if (role !== "creator" && role !== "studio") {

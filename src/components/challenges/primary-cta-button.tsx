@@ -56,8 +56,9 @@ export async function PrimaryCtaButton({ challenge }: Props) {
         label = LABELS.submit;
         href = `/challenges/${slug}/submit`;
       } else if (role === "observer") {
-        label = LABELS.upgrade;
-        href = `/onboarding/role?next=${encodeURIComponent(`/challenges/${slug}`)}`;
+        // Phase 4.x Wave C.5b sub_01: role-upgrade flow retired.
+        label = LABELS.signin;
+        href = `/signin?next=${encodeURIComponent(`/challenges/${slug}`)}`;
       } else {
         // role is null (profile incomplete) — treat same as no-auth
         label = LABELS.signin;

@@ -1,11 +1,13 @@
-// Onboarding redirect resolver — Phase 2.5 G2 §F Step 5.
+// Onboarding redirect resolver — Phase 4.x Wave C.5b sub_01 simplified.
 //
-// Centralizes the post-signup redirect path computation:
-// - role/handle/profile fields not all set → redirect to next missing step
-// - all set → redirect to /u/<handle> (creator/studio) or /challenges (observer)
+// Phase 2.5 introduced a 3-step flow (role → profile → /u/<handle>) for
+// creator/studio/observer/client personae. Phase 4.x locks persona A
+// (Brand only) and retires the role step entirely; first-touch
+// onboarding is the workspace form.
 //
-// Used by: /api/onboarding/role/route.ts, /api/onboarding/profile/route.ts,
-// auth callback (src/app/auth/callback/route.ts).
+// This module is retained as a thin compat shim for any caller still
+// importing `resolveOnboardingRedirect`. All non-completed flows now
+// route to /onboarding/workspace.
 
 import type { ProfileRole } from "@/lib/app/context";
 
@@ -20,35 +22,16 @@ export type OnboardingRedirect = {
   reason: "role_missing" | "profile_missing" | "complete";
 };
 
-/**
- * Compute the next onboarding step or final destination for a profile.
- *
- * Resumption-friendly: if user refreshes mid-onboarding, this returns
- * the appropriate next step based on current profile state.
- *
- * Conventions:
- *   role missing → /onboarding/role
- *   role set + (handle missing OR child row missing) → /onboarding/profile/<role>
- *   all set + role IN (creator,studio) → /u/<handle>
- *   all set + role = observer → /challenges
- */
 export function resolveOnboardingRedirect(
   profile: OnboardingProfile
 ): OnboardingRedirect {
   if (profile.role === null) {
-    return { href: "/onboarding/role", reason: "role_missing" };
+    return { href: "/onboarding/workspace", reason: "role_missing" };
   }
 
   if (profile.handle === null || !profile.hasRoleChildRow) {
-    return {
-      href: `/onboarding/profile/${profile.role}`,
-      reason: "profile_missing",
-    };
+    return { href: "/onboarding/workspace", reason: "profile_missing" };
   }
 
-  if (profile.role === "observer") {
-    return { href: "/challenges", reason: "complete" };
-  }
-
-  return { href: `/u/${profile.handle}`, reason: "complete" };
+  return { href: "/app", reason: "complete" };
 }

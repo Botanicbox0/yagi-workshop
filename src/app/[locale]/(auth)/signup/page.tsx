@@ -79,7 +79,8 @@ export default function SignUpPage() {
       // Email confirmation disabled in Supabase auth settings — auto-login path.
       // Honor `next` here too so the in-product redirect mirrors the
       // email-confirm path.
-      router.push((next ?? "/onboarding") as "/onboarding");
+      // Phase 4.x Wave C.5b sub_01: persona A — direct to workspace creation.
+      router.push((next ?? "/onboarding/workspace") as "/onboarding/workspace");
     } else {
       // Email confirmation enabled — switch the page over to the sent-state view
       // instead of leaving the user on the form with only a toast.

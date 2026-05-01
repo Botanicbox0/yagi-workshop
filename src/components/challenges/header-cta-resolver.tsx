@@ -72,14 +72,11 @@ export async function HeaderCtaResolver() {
     );
   }
 
-  // role = observer (Q2-1 B adopted)
-  // ?next= preserves path so user returns to current page after role upgrade
-  // (mirrors primary-cta-button.tsx observer branch)
+  // Phase 4.x Wave C.5b sub_01: role selection retired. Legacy observer
+  // profiles bounce to sign-in (challenges surface is Phase 3+ deferred).
   return (
     <Button size="pill" asChild>
-      <Link
-        href={`/onboarding/role?next=${encodeURIComponent(currentPath)}`}
-      >
+      <Link href={`/signin?next=${encodeURIComponent(currentPath)}`}>
         창작자로 참여하기
       </Link>
     </Button>
