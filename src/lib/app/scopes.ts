@@ -2,12 +2,13 @@ import type { AppContext } from "@/lib/app/context";
 
 /**
  * A user's "scope" — one of the things they can be acting as right now.
- * Used by the sidebar scope switcher (Phase 2.6 G2) and by G6 profile
- * edit-affordance detection ("is this visitor the owner?").
+ * Used by the sidebar scope switcher.
+ *
+ * Phase 4.x Wave C.5b sub_02: "profile" scope (legacy /u/<handle>) was
+ * dropped along with persona A locking. Only workspace + admin remain.
  */
 export type Scope =
   | { kind: "workspace"; id: string; name: string; href: string; active: boolean }
-  | { kind: "profile"; handle: string; display_name: string; href: string; active: boolean }
   | { kind: "admin"; name: string; href: string; active: boolean };
 
 export function getUserScopes(ctx: AppContext, currentPath?: string): Scope[] {
@@ -23,16 +24,6 @@ export function getUserScopes(ctx: AppContext, currentPath?: string): Scope[] {
         (currentPath?.startsWith("/app") &&
           !currentPath?.startsWith("/app/admin")) ||
         false,
-    });
-  }
-
-  if (ctx.profile.role === "creator" || ctx.profile.role === "studio") {
-    scopes.push({
-      kind: "profile",
-      handle: ctx.profile.handle,
-      display_name: ctx.profile.display_name,
-      href: `/u/${ctx.profile.handle}`,
-      active: currentPath?.startsWith(`/u/${ctx.profile.handle}`) || false,
     });
   }
 

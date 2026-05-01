@@ -16,7 +16,6 @@ import {
   Check,
   ChevronsUpDown,
   ShieldCheck,
-  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserScopes } from "@/lib/app/use-user-scopes";
@@ -31,17 +30,12 @@ function ScopeIcon({
   kind: Scope["kind"];
   className?: string;
 }) {
-  const Icon =
-    kind === "workspace" ? Briefcase : kind === "profile" ? User : ShieldCheck;
+  const Icon = kind === "workspace" ? Briefcase : ShieldCheck;
   return <Icon className={cn("w-3.5 h-3.5 shrink-0", className)} />;
 }
 
 function scopeLabel(scope: Scope): string {
-  return scope.kind === "workspace"
-    ? scope.name
-    : scope.kind === "profile"
-      ? scope.display_name
-      : scope.name;
+  return scope.name;
 }
 
 export function SidebarScopeSwitcher({
@@ -131,14 +125,9 @@ function MultiScopeSwitcher({
 
   const workspaceScopes = scopes.filter((s) => s.kind === "workspace");
   const adminScopes = scopes.filter((s) => s.kind === "admin");
-  const profileScopes = scopes.filter((s) => s.kind === "profile");
 
   function scopeKey(scope: Scope): string {
-    return scope.kind === "workspace"
-      ? `workspace:${scope.id}`
-      : scope.kind === "profile"
-        ? `profile:${scope.handle}`
-        : "admin";
+    return scope.kind === "workspace" ? `workspace:${scope.id}` : "admin";
   }
 
   function renderItem(scope: Scope) {
@@ -190,17 +179,6 @@ function MultiScopeSwitcher({
                 Admin
               </DropdownMenuLabel>
               {adminScopes.map(renderItem)}
-            </>
-          )}
-          {profileScopes.length > 0 && (
-            <>
-              {(workspaceScopes.length > 0 || adminScopes.length > 0) && (
-                <DropdownMenuSeparator />
-              )}
-              <DropdownMenuLabel className={sectionLabelClass}>
-                Profile
-              </DropdownMenuLabel>
-              {profileScopes.map(renderItem)}
             </>
           )}
         </DropdownMenuContent>

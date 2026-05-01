@@ -55,6 +55,9 @@ export const config = {
     // `/{defaultLocale}/showcase/<slug>` which matched no route, falling
     // back to Next's default 404 and making the custom not-found.tsx
     // unreachable (and the Phase 2.0 G6 L5 html/body shell fix inert).
-    "/((?!api|_next|_vercel|auth/callback|showcase|challenges|u|.*\\..*).*)",
+    // Phase 4.x Wave C.5b sub_02 — `u` removed (creator handle profile
+    // tree at /u/<handle> is gone). Keeping it in the exclude was a
+    // forward-leak from the deleted Phase 2.5 surface.
+    "/((?!api|_next|_vercel|auth/callback|showcase|challenges|.*\\..*).*)",
   ],
 };
