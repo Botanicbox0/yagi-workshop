@@ -113,6 +113,44 @@ action, and the trigger that should pull it back into scope.
 - **Status**: Not started.
 - **Registered**: 2026-05-01 (Wave C.5b sub_04).
 
+## FU-C5b-08 — Brand onboarding step model rework
+
+- **Trigger**: Phase 4.x ff-merge → hotfix-1, OR Phase 5 entry (when
+  the IA is being re-laid out for Artist Roster anyway).
+- **Risk**: yagi visual review (post-sub_00 rollback, 2026-05-01)
+  flagged the `/onboarding/brand` step as a Phase 2.x leftover. It
+  models a multi-brand agency onboarding shape — separate workspace
+  → separate brands inside it — which the actual customer mix does
+  not match. ~90% of clients are 1 workspace = 1 company = 1 brand.
+  In that case the brand step reads as "another mandatory form" and
+  the "건너뛰기" (skip) link becomes the de-facto default flow,
+  which is awkward UX (the form-with-skip pattern signals "this is
+  optional but you still need to acknowledge it").
+- **Action**: NOT in scope for Wave C.5b — yagi locked the call as
+  "register only, fix later" (Wave C.5b scope creep avoidance).
+  Three options when the work is picked up:
+  - **a.** Keep the route, strengthen the default-skip CTA (smallest
+    change). Keeps the multi-brand affordance for the rare agency case.
+  - **b.** Collapse 1 workspace = 1 brand into the workspaces row
+    (drop or fold the `brands` table into `workspaces`). Needs
+    migration + RLS update.
+  - **c.** Delete `/onboarding/brand`, auto-create a default brand
+    row at workspace bootstrap (`workspaces.name → brands.name`),
+    move multi-brand management into `/app/settings/workspace`. This
+    is the cleanest UX. Multi-brand agency case becomes a settings-
+    surface power-user feature instead of an onboarding gate.
+- **Recommended**: **c**. Reasons: matches the 90% case directly,
+  doesn't penalize the 10% case (still possible from settings), and
+  fits the editorial "first impression = workspace landing" goal of
+  Wave C.5b's onboarding flow.
+- **Affected surfaces**: `/onboarding/brand` route + page,
+  `bootstrap_workspace` RPC (auto-insert default brand),
+  `/app/settings/workspace` (new "brand 관리" section), `brands`
+  RLS already keys off `workspace_id` so no policy change required.
+- **Owner**: yagi (decision), Builder (implementation).
+- **Status**: Not started. Locked as deferred for Wave C.5b scope.
+- **Registered**: 2026-05-01 (Wave C.5b amend_04).
+
 ## FU-C5b-05 — `border-border` callsite sweep — ✅ OBSOLETE (sub_00 ROLLBACK)
 
 - **Status**: Obsolete as of 2026-05-01 (Wave C.5b sub_00 ROLLBACK).
