@@ -38,7 +38,10 @@ export default async function LocaleLayout({
         />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        {/* Phase 4.x Wave C.5b sub_00 — defaultTheme="dark" so next-themes
+            adds .dark on hydration. enableSystem dropped: editorial dark is
+            the universal canvas; .light is opt-in for special contexts. */}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <NextIntlClientProvider messages={messages}>
             <PublicChromeHeader />
             {children}
