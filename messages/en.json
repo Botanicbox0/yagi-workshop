@@ -522,7 +522,17 @@
       "step3": {
         "eyebrow": "STEP 3 / 3",
         "title": "Final review",
-        "sub": "Fill in the remaining project details."
+        "sub": "Fill in the remaining project details.",
+        "twin_intent": {
+          "label": "Would you like to use a Digital Twin?",
+          "tooltip": "Digital Twin is an AI asset based on real persons (artists, actors, singers). YAGI can propose Twins of licensed talents for ads or content production. You can also produce without Twins, using only virtual characters or VFX.",
+          "tooltip_aria": "Digital Twin info",
+          "option": {
+            "undecided": "Open to using a Twin",
+            "specific": "I have a specific person in mind",
+            "no_twin": "No Twin (virtual character / VFX only)"
+          }
+        }
       },
       "field": {
         "name": {

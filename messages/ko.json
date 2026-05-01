@@ -522,7 +522,17 @@
       "step3": {
         "eyebrow": "STEP 3 / 3",
         "title": "최종 확인",
-        "sub": "프로젝트의 마무리 정보를 입력해주세요."
+        "sub": "프로젝트의 마무리 정보를 입력해주세요.",
+        "twin_intent": {
+          "label": "Digital Twin 활용을 원하시나요?",
+          "tooltip": "Digital Twin 은 실존 인물(아티스트, 배우, 가수 등) 기반의 AI 자산입니다. YAGI 가 라이선스를 보유한 인물의 Twin 을 광고/콘텐츠 제작에 활용하는 걸 제안드릴 수 있습니다. Digital Twin 없이 가상 인물 / VFX 만으로도 진행 가능합니다.",
+          "tooltip_aria": "Digital Twin 정보",
+          "option": {
+            "undecided": "Twin 활용 의향 있음",
+            "specific": "정해진 인물이 있다",
+            "no_twin": "Twin 활용 안 함 (가상 인물 / VFX 만)"
+          }
+        }
       },
       "field": {
         "name": {
