@@ -73,9 +73,9 @@ export async function ProjectsHubHero({ locale }: Props) {
             <ArrowUpRight className="w-4 h-4" />
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <AvatarStack />
-            <p className="text-xs text-muted-foreground leading-relaxed keep-all">
+            <p className="text-sm ink-tertiary leading-body keep-all">
               {t("hero_social_proof")}
             </p>
           </div>
@@ -101,29 +101,23 @@ export async function ProjectsHubHero({ locale }: Props) {
   );
 }
 
-// Phase 2.9 hotfix-2 Task 2 — 5 monochrome avatar placeholders.
-// 32px circles (h-8 w-8), -ml-2 overlap, ring-2 ring-background for
-// separation. Subtle gray-tint variation makes the stack feel less
-// robotic without breaking Q-092 #2 (no accent color). Real client
-// logos / avatars are a Phase 3.0 deliverable when YAGI publishes
-// the case-study list — placeholders only for now.
-const AVATAR_TINTS = [
-  "bg-zinc-200",
-  "bg-zinc-300",
-  "bg-zinc-200",
-  "bg-zinc-300",
-  "bg-zinc-200",
-] as const;
+// Phase 4.x Wave C.5b sub_12 — placeholder cluster on v1.0 dark editorial.
+// 4 circles at 40px, ~10px overlap, bg-card-deep (rgba(255,255,255,0.05))
+// with a near-invisible white border-subtle ring. The ring-2 ring-background
+// from the Phase 2.9 placeholder is dropped — on dark, ring=bg and the ring
+// just disappears anyway. Followup FU-C5b-03 tracks the Phase 7+ swap to
+// real client brand marks once yagi has the public-disclosure consents.
+const PLACEHOLDER_COUNT = 4;
 
 function AvatarStack() {
   return (
     <div className="flex">
-      {AVATAR_TINTS.map((tint, i) => (
+      {Array.from({ length: PLACEHOLDER_COUNT }).map((_, i) => (
         <span
           key={i}
           aria-hidden
-          className={`h-8 w-8 rounded-full ${tint} ring-2 ring-background ${i === 0 ? "" : "-ml-2"}`}
-          style={{ zIndex: AVATAR_TINTS.length - i }}
+          className={`h-10 w-10 rounded-full bg-card-deep border border-subtle ${i === 0 ? "" : "-ml-2.5"}`}
+          style={{ zIndex: PLACEHOLDER_COUNT - i }}
         />
       ))}
     </div>
