@@ -1,0 +1,45 @@
+K-05 ADVERSARIAL CODE REVIEW (retroactive, target migration is already applied to prod).
+
+Repository root: C:/Users/yout4/yagi-studio/yagi-workshop
+Targets:
+  1. supabase/migrations/20260501100806_phase_4_x_widen_profile_role_enum.sql
+  2. src/lib/app/context.ts (ProfileRole union extended with "artist")
+  3. src/components/app/sidebar-user-menu.tsx (switch case + "Artist" label)
+  4. scripts/create-artist-account.ts (admin bootstrap path; already executed)
+
+This migration widens the profiles_role_check CHECK constraint to include the value 'artist' in addition to the prior allowlist (creator/studio/observer/client). Rationale: pulled forward from Phase 5 entry to unblock the demo Artist account in Wave C.5b sub_13 / amend_02b. The migration is ALREADY APPLIED to prod (jvamvbpxnztynsccvcmr) and the demo account artist@yagiworkshop.xyz is live with role='artist'.
+
+PROCESS:
+1. Read the migration file in full.
+2. Read .yagi-autobuild/phase-4-x/_amend02_self_review.md (the prior Opus 4.7 self-review) and challenge or extend each finding.
+3. Read src/lib/app/context.ts (ProfileRole), src/components/app/sidebar-user-menu.tsx (switch usage), src/app/[locale]/app/layout.tsx (workspace-required redirect that treats role==='client' specially).
+4. Audit RLS policies for any role-string consumer that treats the enum as closed-world (look for hard-coded literal lists). Also check `creators_update_self`, `studios_update_self`, `validate_profile_role_transition` — does adding 'artist' open an unintended path?
+5. Read scripts/create-artist-account.ts — the upsert ordering after the trigger creates role='client' first; does the script's UPDATE survive validate_profile_role_transition without the service-role bypass being load-bearing in unexpected ways?
+6. Search for `case "creator"` / switch over ProfileRole / Zod enum on role to confirm 'artist' falls through cleanly.
+
+FOCUS AREAS (each must be a separate finding with explicit verdict):
+A. Additive only — verify all existing profiles.role values pass the new CHECK; verify no row was silently invalidated.
+B. RLS / policy implicit dependence on the enum closed-world (creators_update_self, studios_update_self, anything else).
+C. validate_profile_role_transition interaction — does the artist UPSERT exercise an edge that the function doesn't anticipate?
+D. handle_new_user (amend_01) interaction — sequencing, trigger order, accidental double-write.
+E. TypeScript ProfileRole type drift now resolved — does the extension cause any consumer to lose exhaustiveness inference (switch with no default that previously was exhaustive)?
+F. Phase 5 entry artist work — does pulling the enum widening forward leave any Phase 5 migration stale or expecting a CHECK that no longer matches?
+G. is_yagi_admin / is_ws_admin / role_switched_at handling — independent of profiles.role enum but verify.
+H. Constraint replace atomicity (DROP + ADD).
+I. Server actions / RPC role checks — do any treat the role list as closed?
+J. Account landing experience for artist@yagiworkshop.xyz — workspace-required redirect at /[locale]/app/layout.tsx skips role==='client' but not role==='artist'. Does that leave the artist demo bouncing into /onboarding/workspace as a side effect? If so, MED-B (UX gap) or LOW (Phase 5 will redesign)?
+
+Severity scale: HIGH-A | HIGH-B | HIGH-C | MED-A | MED-B | MED-C | LOW.
+
+Output format (markdown), one section per finding:
+
+## Finding F<N> — <short title>
+- Severity: <level>
+- Surface: <file:lines or sql snippet>
+- Verdict: <clear>
+- Reasoning: <2-4 sentences>
+- Proposed fix: <patch sketch> OR 'no fix needed' with rationale
+
+End with a 'Verdict' line summarising HIGH-A / HIGH-B / MED-A counts and recommending APPLY / FIX / HALT.
+
+Read-only review only. Do NOT modify files. Do NOT apply migrations.
