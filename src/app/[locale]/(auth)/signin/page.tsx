@@ -58,7 +58,7 @@ export default function SignInPage() {
     // Strip the fragment so a refresh doesn't re-trigger.
     window.history.replaceState(null, "", window.location.pathname + window.location.search);
     if (isOtpExpired(error)) {
-      router.push("/auth/expired" as "/auth/expired");
+      router.push("/auth/expired" as const);
       return;
     }
     toast.error(error.description || error.code);
