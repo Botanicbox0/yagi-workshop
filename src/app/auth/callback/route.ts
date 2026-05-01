@@ -38,6 +38,13 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createSupabaseServer();
+  // Phase 4.x Wave C.5b sub_05 — exchangeCodeForSession persists the
+  // authenticated session via the @supabase/ssr cookie adapter wired in
+  // createSupabaseServer (server.ts setAll → cookieStore.set). Inside a
+  // Route Handler, next/headers cookies() is mutable, so those Set-Cookie
+  // entries land on the eventual NextResponse.redirect below — meaning
+  // the user arrives at /onboarding/workspace already authenticated.
+  // No follow-up signIn() / refresh() call is required.
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError) {
