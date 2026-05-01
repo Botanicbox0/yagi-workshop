@@ -7,8 +7,9 @@
 | Phase | Name | Status | Summary file |
 |---|---|---|---|
 | 1.0 | Bootstrap | ✅ | (pre-autobuild, no summary file) |
-| 1.0.6 | Design system (white/black, editorial) | ✅ | (in commit history) |
+| 1.0.6 | Design system (white/black, editorial) | ✅ superseded by Phase 4.x Wave C.5b sub_00 | (in commit history) |
 | 1.1 | Auth + workspace + onboarding + app shell | ✅ | `summary.md` |
+| 4.x C.5b | Persona A lock + design system v1.0 dark editorial + auth-flow polish | 🟢 builder pass complete, awaiting yagi visual review | `phase-4-x/_wave_c5b_result.md` (sub_14) |
 
 ## In progress
 

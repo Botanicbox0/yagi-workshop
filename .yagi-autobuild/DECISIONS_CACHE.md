@@ -1185,3 +1185,97 @@ UI dropdown 최종 5개 + 카피:
 **Confidence:** HIGH (yagi 7 decisions confirmed 2026-04-27; K-05 LOOP_2_PASS_DIRECT_VERIFY 2026-04-28 — RPC SECURITY DEFINER + search_path + role separation + RLS all directly verified via pg_policy/pg_proc)
 
 **Registered:** 2026-04-28 (Phase 3.0 SHIPPED, sha a8e9a02 + ff-merge to main)
+
+---
+
+### Q-094: Phase 4.x persona model — Brand only (creator/studio retired)
+
+**Asked context:** Phase 4.x Wave C.5b (2026-05-01). Visual review by yagi
+surfaced the legacy Phase 2.5 self-registration funnel still wired in:
+`/onboarding/role` 2-card picker (크리에이터/스튜디오 vs 의뢰인) +
+`/onboarding/profile/{client,creator,observer,studio}/` form tree +
+`/u/<handle>` creator profile page. None of these surfaces are reachable
+from the curated Phase 4 onboarding intent (Brand-first commission
+intake), and the "self-register as creator" model directly contradicts
+the studio's curated-boutique positioning.
+
+**Question:** Is "AI 크리에이터/스튜디오" a live persona for Phase 4 ship,
+or does Phase 4 lock to Brand only with creator/studio handling deferred?
+
+**Answer:** Lock persona model A — **Brand only** (의뢰인 / `client` role)
+plus YAGI Admin (internal). Self-registration as creator/studio is
+permanently retired from this codebase. Artist Roster intake (셀럽 /
+엔터에이전시) is moved to Phase 5 entry as a curated yagi-direct flow,
+NOT a self-registration form. Independent creator self-registration is
+deferred to Phase 9+ or permanently dropped.
+
+Wave C.5b sub_01..02 executed the cleanup: deleted `/onboarding/role`,
+`/onboarding/profile/{client,creator,observer,studio}/`, the
+`completeProfileAction` server action, the entire `/u/<handle>` tree
+(layout + page + queries), email templates `signup-welcome.ts` and
+`role-confirmation.ts`, and narrowed `lib/app/scopes.ts` Scope union to
+{workspace, admin}. The `profiles.role` enum still carries
+`creator|studio|observer|client` for legacy DB rows; only `client` (and
+the future `artist` value to be added in Phase 5) is wired to a live UI
+in current code.
+
+**Applies when:** Any future request to "let creators sign up" or
+"add a creator portal." Default answer: Phase 4-9 = no. Artist Roster
+work belongs to Phase 5 with a curated yagi-admin-issued invite-token
+flow, not a self-registration form. Independent creator self-service
+is the kind of decision that needs an explicit reversal — do not
+quietly re-add `/onboarding/role`.
+
+**Confidence:** HIGH (yagi explicit 5-decision lock chat 2026-05-01,
+recorded in `_decisions_locked.md` + `_wave-c5b-prompt.md`)
+
+**Registered:** 2026-05-01 (Wave C.5b sub_11)
+
+---
+
+### Q-095: Design system v1.0 — editorial dark adopted globally
+
+**Asked context:** Phase 4.x Wave C.5b (2026-05-01). Visual review by yagi
+surfaced the fundamental gap: every page rendered light because
+`src/app/globals.css :root` carried Phase 2.7.1 P12 light-mode tokens
+(off-white background `0 0% 98%`) and the existing `.dark` opt-in
+selector was never activated by the theme provider. yagi-design-system
+v1.0 (`~/.claude/skills/yagi-design-system`) specifies "editorial dark
++ sage #71D083 sole accent" — an aesthetic the app had **0%** applied.
+
+**Question:** Should Phase 4 land on light mode (Phase 2.7.1 inheritance)
+or flip to the v1.0 editorial dark across every authenticated and
+public surface?
+
+**Answer:** Flip to v1.0 editorial dark **globally**. `:root` now
+carries dark editorial tokens directly; `.dark` is a no-op alias;
+`.light` is preserved as **opt-in** (admin / inverse-section special
+contexts only). `next-themes` `defaultTheme` flipped to `"dark"`,
+`enableSystem={false}` so the editorial canvas is the universal
+default and is not at the mercy of a user's OS preference.
+
+Tokens live under two namespaces:
+- HSL channel form (`--background`, `--foreground`, `--accent`, ...)
+  for shadcn-component compatibility
+- v1.0 raw form (`--ds-bg-base`, `--ds-ink-primary`, `--ds-sage`, ...)
+  for rgba-aware utilities (`bg-card-deep`, `border-subtle`, `bg-sage`,
+  `ink-primary`, etc.)
+
+Tailwind config extends with non-overlapping families: `sage`, `ink`,
+`surface`, `edge`, `inverse`, plus the v1.0 type scale, motion (default
+400ms cubic-bezier(0.45, 0, 0, 1)), and radius/maxWidth scales.
+
+The shipping risk: every component built in Wave A/B/C/C.5a was authored
+on top of light P12, so visual breakage on dark is **expected** and is
+batched into Wave C.5c.
+
+**Applies when:** Any future surface (new page, component, marketing
+section) — start from v1.0 tokens. NEVER reach for raw hex outside
+the token system except in single-purpose visualizations (chart
+palette, photo overlays). NEVER reintroduce a second accent color —
+sage is sole.
+
+**Confidence:** HIGH (yagi explicit decision chat 2026-05-01 +
+yagi-design-system v1.0 SKILL.md "Hard Rules")
+
+**Registered:** 2026-05-01 (Wave C.5b sub_11)

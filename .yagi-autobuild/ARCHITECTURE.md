@@ -490,3 +490,73 @@ If a skill file or decision package says "skip Step N for Phase X", and this doc
 Open an ADR. Update this document. Then update the skill.
 
 Exception: `PARALLEL_WORKTREES.md` wins on parallel execution mechanics. `CODEX_TRIAGE.md` wins on Codex finding triage. `GATE_AUTOPILOT.md` wins on Gate-to-Gate transitions. `AUTOPILOT.md` wins on Phase-to-Phase transitions. This document covers the overall shape and the review pipeline; the specialized docs cover their domains.
+
+---
+
+## 18. Phase 4.x Wave C.5b amendments (2026-05-01)
+
+Two cross-cutting decisions land here so future Phases inherit them
+verbatim. Full reasoning lives in `DECISIONS_CACHE.md` Q-094 and
+Q-095; this section is the architectural anchor.
+
+### 18.1 Persona model: Brand-only for Phase 4–9
+
+The 3-persona model (Brand / Artist / YAGI Admin) introduced by the
+PRODUCT-MASTER concept holds, but with **Brand only** wired to a
+live UI through Phase 9. Artist Roster intake is curated yagi-direct
+(Phase 5 entry, not self-registration). Independent creators are
+permanently deferred.
+
+Concrete deletions executed in Wave C.5b sub_01..02:
+
+- `src/app/[locale]/onboarding/role/`
+- `src/app/[locale]/onboarding/profile/{client,creator,observer,studio}/`
+- `src/app/[locale]/onboarding/profile/actions.ts`
+- `src/app/u/` (full tree — `[handle]/`, `layout.tsx`)
+- `src/lib/profile/` (queries.ts)
+- `src/lib/email/send-onboarding.ts` + `templates/{signup-welcome,role-confirmation,index}.ts`
+- The `kind: "profile"` branch of `Scope` union in `src/lib/app/scopes.ts`
+- The `User` icon usage + profile-section render in
+  `src/components/app/sidebar-scope-switcher.tsx`
+
+The `profiles.role` enum still carries `creator|studio|observer|client`
+for legacy DB rows. Code reads `client` (active) and will read
+`artist` (Phase 5 entry, after enum extension migration). All other
+values are inert.
+
+### 18.2 Design system v1.0 — editorial dark
+
+`src/app/globals.css` `:root` now carries v1.0 dark editorial tokens
+directly — Phase 2.7.1 P12 light P12 retired. `.dark` is a no-op
+alias; `.light` is **opt-in** for special contexts only (admin /
+inverse sections / future special-purpose surfaces).
+
+Source of truth: `~/.claude/skills/yagi-design-system` (SKILL.md +
+references/{tokens.json, globals.css, tailwind.preset.cjs,
+DESIGN-flora.md}).
+
+Token namespaces in this repo:
+
+| Layer | Namespace | Purpose |
+|---|---|---|
+| shadcn HSL channel | `--background`, `--foreground`, `--accent`, ... | shadcn-component compat |
+| v1.0 raw | `--ds-bg-base`, `--ds-ink-primary`, `--ds-sage`, ... | rgba-aware utilities |
+
+Tailwind config extends with non-overlapping families: `sage`, `ink`,
+`surface`, `edge`, `inverse`, type scale 11..80, motion (400ms /
+cubic-bezier(0.45, 0, 0, 1) defaults), radius scale (pill / card /
+button), maxWidth (narrow / content / cinema).
+
+**Hard rules** (yagi-design-system v1.0 SKILL.md §"Hard Rules"):
+
+1. No additional accent colors. Sage `#71D083` is sole.
+2. No shadows by default. Border + backdrop blur for elevation.
+3. No legacy `#C8FF8C` lime — fully retired; replace with sage.
+4. No EN tracking on KO text. KO body `0`, KO display `-0.01em`.
+5. No lh 1.0 on KO display. Minimum 1.15 to avoid jamo clipping.
+6. No Mona12 / Redaction Italic for body (accent-only, max 2 words).
+7. No uniform grids for media (mixed-size asymmetric is the language).
+8. No bold (700+) in body (Pretendard/Geist body 400–600).
+
+Wave C.5c is reserved for the visual-breakage sweep flagged by
+`_sub00_breakage_log.md` after yagi review.
