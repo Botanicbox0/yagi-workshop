@@ -3,6 +3,44 @@
 Captured during Wave C.5b. Each entry records the surface, the deferred
 action, and the trigger that should pull it back into scope.
 
+## FU-C5b-09 — Meeting type / duration UX rework
+
+- **Trigger**: Phase 4.x ff-merge → hotfix-1, OR Phase 5 entry IA
+  cleanup (paired with FU-C5b-08 brand-onboarding rework).
+- **Risk**: yagi visual review (2026-05-01, post-rollback +
+  post-amendments) flagged that `/ko/app/meetings/new`'s "소요 시간"
+  radio (30 / 45 / 60 / 90분) is meaningless for the client. Every
+  client meeting naturally lands at 1 hour; duration is admin-side
+  scheduling info, not a client decision. The current control reads
+  as "another mandatory radio with no real choice" UX.
+- **Action**: NOT in scope for Wave C.5b (yagi locked as register-
+  only, fix later — scope creep avoidance). Spec when picked up:
+  - **Schema** (new migration):
+    - `meetings.meeting_type text NOT NULL DEFAULT 'online'` with
+      CHECK (`meeting_type IN ('online','offline')`).
+    - `meetings.location_preference text NULL`.
+    - `meetings.duration_minutes` retained (admin scheduling tool
+      keeps using it); server-side default enforced at 60 so the
+      UI no longer needs to ask.
+  - **UI** (`/app/meetings/new` form):
+    - Remove the duration radio.
+    - Add a "선호 미팅 방식 / Preferred meeting format" radio with
+      온라인 / 대면 (online / offline) options.
+    - When 대면 (offline) is selected, conditionally render an
+      optional input "선호 장소가 있으신가요?" / "Preferred location?"
+      bound to `location_preference`.
+  - **i18n** (KO + EN): new keys for label / options / conditional
+    input copy.
+  - **Google Calendar sync impact**: zero — `meeting_type` is metadata
+    only, doesn't affect the event payload Google receives.
+- **Recommended bundling**: pair with FU-C5b-08 brand-onboarding
+  rework so a single hotfix-1 touches both `/onboarding/brand` and
+  `/app/meetings/new` IA. Phase 5 entry is the alternative if Phase
+  4.x ff-merges before hotfix windows open.
+- **Owner**: yagi (decision), Builder (implementation when greenlit).
+- **Status**: Not started. Locked as deferred for Wave C.5b scope.
+- **Registered**: 2026-05-01 (Wave C.5b Codex amendments final step).
+
 ## FU-C5b-01 — Phase 5 Artist Roster intake surface
 
 - **Trigger**: Phase 5 entry (셀럽/엔터에이전시 영입 시작).
