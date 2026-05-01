@@ -52,6 +52,8 @@ function getRoleLabel(
       return "Client";
     case "observer":
       return "Observer";
+    case "artist":
+      return "Artist";
     default:
       return "";
   }

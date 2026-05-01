@@ -12,7 +12,11 @@ export type WorkspaceRole =
 // NEVER compare against a bare "creator" literal without prefixing with
 // `profile.role ===` — see ADR-009 naming rule.
 // Phase 2.7 added "client" for the commission-intake persona (ADR-011).
-export type ProfileRole = "creator" | "studio" | "observer" | "client";
+// Phase 4.x Wave C.5b amend_02 added "artist" — DECISIONS Q-094 / §4 of
+// PRODUCT-MASTER persona model. The Artist intake surface itself is a
+// Phase 5 entry deliverable (FU-C5b-01); the type extension here covers
+// the demo account row created in Wave C.5b sub_13/amend_02.
+export type ProfileRole = "creator" | "studio" | "observer" | "client" | "artist";
 
 export type AppContext = {
   userId: string;
