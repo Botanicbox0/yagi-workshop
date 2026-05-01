@@ -971,13 +971,16 @@ export async function submitProjectAction(
   try {
     const [emailRes, profileRes, workspaceRes] = await Promise.all([
       service.auth.admin.getUserById(user.id),
-      service.from("profiles").select("display_name, handle, locale").eq("id", user.id).maybeSingle(),
+      // Phase 4.x Wave C.5b sub_08 — drop handle from select; client name
+      // falls back to display_name and then literal "Client", never to the
+      // internal c_<random> handle.
+      service.from("profiles").select("display_name, locale").eq("id", user.id).maybeSingle(),
       service.from("workspaces").select("name").eq("id", resolvedWorkspaceId).maybeSingle(),
     ]);
     clientEmail = emailRes.data?.user?.email ?? null;
     const profile = profileRes.data;
     if (profile?.locale === "en") clientLocale = "en";
-    clientName = profile?.display_name ?? profile?.handle ?? "Client";
+    clientName = profile?.display_name ?? "Client";
     workspaceName = workspaceRes.data?.name ?? "Workspace";
   } catch (e) {
     console.error("[submitProjectAction] profile/email lookup failed", e);

@@ -18,6 +18,17 @@ export type AppContext = {
   userId: string;
   profile: {
     id: string;
+    /**
+     * Internal-only DB identifier (Phase 4.x Wave C.5b sub_08).
+     *
+     * `profiles.handle` is auto-generated server-side as `c_<8 hex chars>`
+     * and exposed only to internal code paths (auth callback resolver,
+     * RLS policies that key off the unique-handle column, future admin
+     * tools). It MUST NOT appear in any user-facing surface — sidebar,
+     * settings, chat, profile pages, exports, or emails. If you find
+     * yourself reaching for `profile.handle` in a JSX/email template,
+     * fall back to `display_name` then `id.slice(0, 8)` instead.
+     */
     handle: string;
     display_name: string;
     email: string | null;

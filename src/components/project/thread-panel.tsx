@@ -538,10 +538,10 @@ export function ThreadPanel({
         ) : (
           messages.map((msg) => {
             const isMine = msg.author_id === currentUserId;
+            // Phase 4.x Wave C.5b sub_08 — handle is internal-only; do not
+            // surface in chat author fallback. Skip directly to id slice.
             const authorName =
-              msg.author?.display_name ||
-              msg.author?.handle ||
-              msg.author_id.slice(0, 8);
+              msg.author?.display_name || msg.author_id.slice(0, 8);
             const initial = authorName.charAt(0).toUpperCase();
             const role: ThreadAuthorRole = msg.author?.role ?? "member";
             const fallbackClass = avatarFallbackClass(authorName);

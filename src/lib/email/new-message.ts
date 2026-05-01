@@ -73,13 +73,14 @@ export async function notifyNewMessage(messageId: string): Promise<void> {
     if (!project) return;
 
     // 2. Author display name
+    // Phase 4.x Wave C.5b sub_08 — drop handle from user-facing fallback;
+    // handle is internal (c_<random>) and not appropriate for emails.
     const { data: authorProfile } = await admin
       .from("profiles")
-      .select("display_name, handle")
+      .select("display_name")
       .eq("id", msg.author_id)
       .maybeSingle();
-    const authorName =
-      authorProfile?.display_name ?? authorProfile?.handle ?? "Someone";
+    const authorName = authorProfile?.display_name ?? "Someone";
 
     // 3. Recipient set: workspace members + yagi admins, minus author
     const [membersRes, yagiRes] = await Promise.all([
