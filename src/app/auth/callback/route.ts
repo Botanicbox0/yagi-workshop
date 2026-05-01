@@ -1,11 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
+// Phase 4.x Wave C.5b sub_04 — expired-OTP detection. Supabase reports
+// expiry via either the `error_description` query param on the redirect
+// (PKCE error path) or as `exchangeCodeForSession` failure with a
+// message containing one of these markers.
+const EXPIRY_MARKERS = ["otp_expired", "otp expired", "code expired", "expired", "invalid_grant"];
+function isExpiryError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return EXPIRY_MARKERS.some((marker) => lower.includes(marker));
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next");
   const type = searchParams.get("type");
+  const errorParam = searchParams.get("error");
+  const errorCodeParam = searchParams.get("error_code");
+  const errorDescParam = searchParams.get("error_description");
+
+  // Supabase Auth redirects expired/invalid links here with the failure
+  // surfaced as query params instead of a `code`. Bounce to /auth/expired
+  // before doing any other work.
+  if (errorParam || errorCodeParam) {
+    const blob = `${errorParam ?? ""} ${errorCodeParam ?? ""} ${errorDescParam ?? ""}`;
+    if (isExpiryError(blob)) {
+      return NextResponse.redirect(`${origin}/ko/auth/expired`);
+    }
+    return NextResponse.redirect(
+      `${origin}/ko/signin?error=${encodeURIComponent(errorDescParam ?? errorCodeParam ?? errorParam ?? "auth_failed")}`,
+    );
+  }
 
   if (!code) {
     return NextResponse.redirect(`${origin}/ko/signin?error=missing_code`);
@@ -15,6 +41,9 @@ export async function GET(request: NextRequest) {
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError) {
+    if (isExpiryError(exchangeError.message)) {
+      return NextResponse.redirect(`${origin}/ko/auth/expired`);
+    }
     return NextResponse.redirect(
       `${origin}/ko/signin?error=${encodeURIComponent(exchangeError.message)}`
     );

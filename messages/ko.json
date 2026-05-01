@@ -130,7 +130,15 @@
     "check_email_hint_spam": "스팸 또는 광고 폴더에 들어갈 수 있어요",
     "check_email_hint_link": "링크를 눌러야 가입이 완료됩니다",
     "resend_email": "이메일 다시 보내기",
-    "use_different_email": "다른 이메일로 가입하기"
+    "use_different_email": "다른 이메일로 가입하기",
+    "expired_headline": "이메일 링크가 만료되었어요",
+    "expired_subtitle": "보안을 위해 링크는 일정 시간 후 만료됩니다. 새 링크를 받아주세요.",
+    "expired_cta": "이메일 다시 보내기",
+    "expired_resend_hint": "가입하신 이메일을 입력하면 새 링크를 보내드려요",
+    "expired_back_to_signin": "로그인으로 돌아가기",
+    "expired_resend_success": "새 인증 링크를 보냈습니다. 메일함을 확인해 주세요.",
+    "expired_resend_email_label": "이메일",
+    "expired_resend_send": "보내기"
   },
   "onboarding": {
     "role_title": "어떻게 YAGI Workshop을 사용하시나요?",

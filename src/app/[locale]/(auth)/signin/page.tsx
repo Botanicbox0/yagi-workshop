@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,28 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+// Phase 4.x Wave C.5b sub_04 — Supabase Auth occasionally surfaces
+// expiry/error states via the URL fragment (e.g. when the email-link
+// callback bounces to the signin page directly with
+// `#error_code=otp_expired&...`). Detect on mount and route to the
+// dedicated expired surface; clear the fragment so the page state
+// stops being driven by stale URL noise.
+function readHashError(): { code: string; description: string } | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.location.hash.replace(/^#/, "");
+  if (!raw) return null;
+  const params = new URLSearchParams(raw);
+  const code = params.get("error_code") ?? params.get("error") ?? "";
+  const description = params.get("error_description") ?? "";
+  if (!code && !description) return null;
+  return { code, description };
+}
+
+function isOtpExpired(error: { code: string; description: string }): boolean {
+  const blob = `${error.code} ${error.description}`.toLowerCase();
+  return blob.includes("otp_expired") || blob.includes("expired");
+}
+
 export default function SignInPage() {
   const t = useTranslations("auth");
   const c = useTranslations("common");
@@ -29,6 +51,18 @@ export default function SignInPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  useEffect(() => {
+    const error = readHashError();
+    if (!error) return;
+    // Strip the fragment so a refresh doesn't re-trigger.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    if (isOtpExpired(error)) {
+      router.push("/auth/expired" as "/auth/expired");
+      return;
+    }
+    toast.error(error.description || error.code);
+  }, [router]);
 
   async function onSubmit(values: FormValues) {
     setSubmitting(true);

@@ -70,6 +70,31 @@ action, and the trigger that should pull it back into scope.
 - **Status**: Not started.
 - **Registered**: 2026-05-01 (Wave C.5b sub_00).
 
+## FU-C5b-06 — Supabase Dashboard auth redirect URLs + OTP expiry
+
+- **Trigger**: Wave C.5b sub_04 lands and the new `/auth/expired`
+  page becomes the target for expired-link bounces.
+- **Risk**: This repo doesn't keep a checked-in `supabase/config.toml`,
+  so allowlist/expiry settings live entirely in the hosted dashboard.
+  If `studio.yagiworkshop.xyz/auth/expired` (and the localhost dev
+  variant) are not in **Authentication → URL Configuration → Redirect
+  URLs**, the email-link expired-bounce that depends on Supabase
+  redirecting back to our origin will land on Supabase's default
+  error page instead of the branded `/auth/expired` surface.
+- **Action**: yagi opens the Supabase dashboard for studio (prod)
+  and adds the following to the Redirect URLs allowlist (one per line):
+    - `https://studio.yagiworkshop.xyz/auth/callback`
+    - `https://studio.yagiworkshop.xyz/auth/expired`
+    - `http://localhost:3001/auth/callback`
+    - `http://localhost:3001/auth/expired`
+    - `http://localhost:3003/auth/callback`
+    - `http://localhost:3003/auth/expired`
+  Optional: bump OTP expiry from default 1h to 24h on dev/test
+  projects (Authentication → Email → OTP Expiry seconds).
+- **Owner**: yagi.
+- **Status**: Not started.
+- **Registered**: 2026-05-01 (Wave C.5b sub_04).
+
 ## FU-C5b-05 — `border-border` callsite sweep
 
 - **Trigger**: Wave C.5c (yagi visual review of Wave C.5b).

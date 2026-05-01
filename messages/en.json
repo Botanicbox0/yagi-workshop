@@ -130,7 +130,15 @@
     "check_email_hint_spam": "It may have landed in spam or junk",
     "check_email_hint_link": "Click the link to complete signup",
     "resend_email": "Resend email",
-    "use_different_email": "Use a different email"
+    "use_different_email": "Use a different email",
+    "expired_headline": "Your email link has expired",
+    "expired_subtitle": "For security, links expire after a while. Please request a new one.",
+    "expired_cta": "Resend email",
+    "expired_resend_hint": "Enter your sign-up email and we'll send a fresh link",
+    "expired_back_to_signin": "Back to sign in",
+    "expired_resend_success": "Sent a new verification link. Please check your inbox.",
+    "expired_resend_email_label": "Email",
+    "expired_resend_send": "Send"
   },
   "onboarding": {
     "role_title": "How will you use YAGI Workshop?",
