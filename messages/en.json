@@ -1403,7 +1403,6 @@
     "scopeSelector": {
       "firstUseTooltip": "Switch between workshops, profile, and admin."
     },
-    "publicExit": "Back to public site",
     "help": {
       "label": "Page guide",
       "routes": {

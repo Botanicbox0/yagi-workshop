@@ -1468,7 +1468,6 @@
     "scopeSelector": {
       "firstUseTooltip": "여러 공간을 전환할 수 있어요. 클릭해 보세요."
     },
-    "publicExit": "공개 사이트로 나가기",
     "help": {
       "label": "페이지 가이드",
       "routes": {

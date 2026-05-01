@@ -12,7 +12,6 @@ import {
 import { SidebarBrand } from "./sidebar-brand";
 import { SidebarNav } from "./sidebar-nav";
 import { SidebarUserMenu } from "./sidebar-user-menu";
-import { SidebarPublicExit } from "./sidebar-public-exit";
 import {
   WorkspaceSwitcher,
   type WorkspaceItem,
@@ -72,13 +71,12 @@ function SidebarBody({
           isYagiInternalMember={internalMember}
         />
       </div>
-      <div className="p-3 border-t border-border space-y-1">
+      <div className="p-3 border-t border-border">
         <SidebarUserMenu
           profile={context.profile}
           workspaceRoles={context.workspaceRoles}
           isYagiInternalMember={internalMember}
         />
-        <SidebarPublicExit />
       </div>
     </div>
   );
