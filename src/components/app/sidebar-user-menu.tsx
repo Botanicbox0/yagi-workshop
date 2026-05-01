@@ -17,9 +17,21 @@ type Profile = {
   id: string;
   handle: string;
   display_name: string;
+  email: string | null;
   avatar_url: string | null;
   role: ProfileRole | null;
 };
+
+function resolveVisibleName(profile: Profile): string {
+  // Wave C.5a sub_02 — DB handle (c_xxx) is never user-facing. Prefer
+  // display_name; fall back to email local-part. Never expose the email
+  // address itself or the raw handle in UI.
+  const displayName = profile.display_name?.trim();
+  if (displayName) return displayName;
+  const localPart = profile.email?.split("@")[0]?.trim();
+  if (localPart) return localPart;
+  return "";
+}
 
 function getRoleLabel(
   profile: Profile,
@@ -55,13 +67,15 @@ export function SidebarUserMenu({
   isYagiInternalMember: boolean;
 }) {
   const c = useTranslations("common");
-  const initials = profile.display_name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || profile.handle.slice(0, 2).toUpperCase();
+  const visibleName = resolveVisibleName(profile);
+  const initials =
+    visibleName
+      .split(/\s+/)
+      .map((w) => w[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "·";
   const roleLabel = getRoleLabel(profile, workspaceRoles, isYagiInternalMember);
 
   return (
@@ -72,18 +86,17 @@ export function SidebarUserMenu({
           <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
         </Avatar>
         <div className="flex-1 text-left min-w-0">
-          <p className="text-[13px] truncate">{profile.display_name}</p>
-          <p className="text-[11px] text-muted-foreground truncate">
-            @{profile.handle}
-            {roleLabel && (
-              <span className="text-foreground/70"> · {roleLabel}</span>
-            )}
-          </p>
+          <p className="text-[13px] truncate">{visibleName}</p>
+          {roleLabel && (
+            <p className="text-[11px] text-muted-foreground truncate">
+              {roleLabel}
+            </p>
+          )}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="min-w-[180px]">
         <DropdownMenuItem disabled className="text-xs">
-          @{profile.handle}
+          {visibleName}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <form action={signOutAction}>

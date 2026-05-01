@@ -20,6 +20,7 @@ export type AppContext = {
     id: string;
     handle: string;
     display_name: string;
+    email: string | null;
     avatar_url: string | null;
     locale: "ko" | "en";
     role: ProfileRole | null;
@@ -69,6 +70,7 @@ export async function fetchAppContext(): Promise<AppContext | null> {
       id: profile.id,
       handle: profile.handle,
       display_name: profile.display_name,
+      email: user.email ?? null,
       avatar_url: profile.avatar_url,
       locale: profile.locale as "ko" | "en",
       role: (profile.role as ProfileRole | null) ?? null,
