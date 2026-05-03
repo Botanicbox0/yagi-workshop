@@ -40,56 +40,49 @@ GRANT UPDATE (document, updated_at) ON project_boards TO authenticated;
 
 -- Sanity assertions — fail the migration if the privilege state is not
 -- what we expect, so we never silently ship a half-applied lockdown.
+--
+-- Wave C.5d sub_03f_5 F5: information_schema.role_table_grants /
+-- column_privileges only see direct grants to the named role; they do
+-- not surface privileges inherited via PUBLIC or via role membership.
+-- Use has_table_privilege() / has_column_privilege() instead — those
+-- check effective privileges (the same path PostgREST evaluates) so
+-- the assertion catches drift through any inheritance chain.
 DO $$
-DECLARE
-  v_table_update boolean;
-  v_doc_update   boolean;
-  v_asset_update boolean;
-  v_pdfs_update  boolean;
-  v_urls_update  boolean;
 BEGIN
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.role_table_grants
-    WHERE table_schema = 'public' AND table_name = 'project_boards'
-      AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
-  ) INTO v_table_update;
-  IF v_table_update THEN
-    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has table-level UPDATE on project_boards';
+  -- Effective table-level UPDATE must be denied to authenticated.
+  IF has_table_privilege('authenticated', 'public.project_boards', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards (check PUBLIC + inherited grants)';
   END IF;
 
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.column_privileges
-    WHERE table_schema = 'public' AND table_name = 'project_boards'
-      AND column_name = 'document' AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
-  ) INTO v_doc_update;
-  IF NOT v_doc_update THEN
-    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated lost UPDATE on project_boards.document';
+  -- Effective column-level UPDATE must remain on the explicitly granted
+  -- columns the action layer relies on.
+  IF NOT has_column_privilege('authenticated', 'public.project_boards', 'document', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated lost effective UPDATE on project_boards.document';
+  END IF;
+  IF NOT has_column_privilege('authenticated', 'public.project_boards', 'updated_at', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated lost effective UPDATE on project_boards.updated_at';
   END IF;
 
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.column_privileges
-    WHERE table_schema = 'public' AND table_name = 'project_boards'
-      AND column_name = 'asset_index' AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
-  ) INTO v_asset_update;
-  IF v_asset_update THEN
-    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has UPDATE on project_boards.asset_index';
+  -- Effective column-level UPDATE must be denied on every server-managed
+  -- column. asset_index, attached_pdfs, attached_urls, is_locked,
+  -- locked_by, locked_at, schema_version, source, project_id, id flow
+  -- through SECURITY DEFINER RPCs or the service-role client.
+  IF has_column_privilege('authenticated', 'public.project_boards', 'asset_index', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.asset_index';
   END IF;
-
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.column_privileges
-    WHERE table_schema = 'public' AND table_name = 'project_boards'
-      AND column_name = 'attached_pdfs' AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
-  ) INTO v_pdfs_update;
-  IF v_pdfs_update THEN
-    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has UPDATE on project_boards.attached_pdfs';
+  IF has_column_privilege('authenticated', 'public.project_boards', 'attached_pdfs', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.attached_pdfs';
   END IF;
-
-  SELECT EXISTS (
-    SELECT 1 FROM information_schema.column_privileges
-    WHERE table_schema = 'public' AND table_name = 'project_boards'
-      AND column_name = 'attached_urls' AND grantee = 'authenticated' AND privilege_type = 'UPDATE'
-  ) INTO v_urls_update;
-  IF v_urls_update THEN
-    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has UPDATE on project_boards.attached_urls';
+  IF has_column_privilege('authenticated', 'public.project_boards', 'attached_urls', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.attached_urls';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.project_boards', 'is_locked', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.is_locked';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.project_boards', 'locked_by', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.locked_by';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.project_boards', 'locked_at', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.locked_at';
   END IF;
 END $$;

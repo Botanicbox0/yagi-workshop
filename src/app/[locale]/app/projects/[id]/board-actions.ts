@@ -64,7 +64,13 @@ export type UpdateBoardResult =
   | { ok: true; boardId: string }
   | {
       ok: false;
-      error: "unauthenticated" | "validation" | "locked" | "not_found" | "db";
+      error:
+        | "unauthenticated"
+        | "validation"
+        | "locked"
+        | "not_found"
+        | "forbidden"
+        | "db";
       message?: string;
     };
 
@@ -93,6 +99,41 @@ export async function updateProjectBoardAction(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
   const sb = supabase as any;
+
+  // Wave C.5d sub_03f_5 F4: project_boards_update_client RLS scopes by
+  // workspace membership, but a workspace member who is NOT the project
+  // creator (and not yagi/workspace admin) must not be able to autosave
+  // a teammate's brief. Re-verify ownership in the action layer before
+  // the service-role UPDATE bypasses RLS.
+  const { data: project, error: pErr } = await sb
+    .from("projects")
+    .select("created_by, workspace_id")
+    .eq("id", parsed.data.projectId)
+    .maybeSingle();
+  if (pErr || !project) return { ok: false, error: "not_found" };
+
+  const isCreator = project.created_by === user.id;
+  let isAuthorized = isCreator;
+  if (!isAuthorized) {
+    const { data: yagiAdmin } = await supabase.rpc("is_yagi_admin", {
+      uid: user.id,
+    });
+    if (yagiAdmin) {
+      isAuthorized = true;
+    } else {
+      const { data: member } = await sb
+        .from("workspace_members")
+        .select("role")
+        .eq("workspace_id", project.workspace_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const memberRole = (member as { role: string } | null)?.role;
+      if (memberRole === "owner" || memberRole === "admin") {
+        isAuthorized = true;
+      }
+    }
+  }
+  if (!isAuthorized) return { ok: false, error: "forbidden" };
 
   // Fetch the board (RLS gates SELECT — non-owner non-admin gets nothing)
   const { data: board, error: bErr } = await sb

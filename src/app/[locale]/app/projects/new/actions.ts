@@ -685,9 +685,14 @@ function validateTldrawStore(doc: Record<string, unknown>): boolean {
 
 // Phase 3.1 hotfix-3: attachment sub-schemas (L-026 — must stay in sync with
 // client-side wizard state types and task_02 PdfAttachment/UrlAttachment types).
+// Wave C.5d sub_03f_5 F1: extend storage_key prefix allowlist to include
+// `board-assets/` so wizard PDFs uploaded via getBoardAssetPutUrlAction (which
+// generates `board-assets/<user>/<uuid>.pdf` server-side) pass the SubmitInputSchema
+// gate. The companion seed RPC (sub_03f_5 F3) enforces caller-bound prefix on
+// `board-assets/` keys, so this client-trust schema is intentionally permissive.
 const PdfAttachmentSchema = z.object({
   id: z.string().uuid(),
-  storage_key: z.string().regex(/^project-(wizard|board)\//),
+  storage_key: z.string().regex(/^(project-(wizard|board)|board-assets)\//),
   filename: z.string().min(1).max(200),
   size_bytes: z.number().int().positive().max(20 * 1024 * 1024),
   uploaded_at: z.string(),

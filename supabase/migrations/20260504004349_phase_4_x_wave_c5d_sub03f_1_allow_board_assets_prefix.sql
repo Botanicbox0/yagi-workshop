@@ -1,6 +1,5 @@
--- Wave C.5d sub_03f_1 — allow `board-assets/` prefix on
--- add_project_board_pdf so wizard PDFs can be persisted with their
--- actual R2 storage key.
+-- Wave C.5d sub_03f_1 + sub_03f_5 F2 — allow `board-assets/` prefix on
+-- add_project_board_pdf with caller-bound prefix checks.
 --
 -- Background: getBoardAssetPutUrlAction (Phase 3.0) generates a
 -- server-side R2 upload key shaped like `board-assets/<user>/<uuid>.<ext>`
@@ -13,10 +12,20 @@
 -- R2 and broke PDF retrieval from both the project board and the admin
 -- asset-list panel.
 --
--- This migration extends the validation allowlist to include
--- `board-assets/%`, and the wizard now writes the bare R2 key.
--- Production audit at apply time: 0 broken-prefix entries persisted in
--- attached_pdfs, so no backfill is required.
+-- This migration:
+--   1. Extends the validation allowlist to include `board-assets/%`,
+--      so the wizard can write the bare R2 key.
+--   2. (sub_03f_5 F2) Binds every accepted prefix to the caller's own
+--      identity so a malicious authenticated user cannot persist another
+--      user's R2 key (or another board's project-board/ key) via this
+--      RPC. Prefix-to-binding map:
+--        - `board-assets/<auth.uid()>/...`
+--        - `project-wizard/<auth.uid()>/...`
+--        - `project-board/<p_board_id>/...`
+--      Anything else under those prefixes is rejected.
+--
+-- Production audit at sub_03f_1 apply time: 0 broken-prefix entries
+-- persisted in attached_pdfs, so no backfill is required.
 
 CREATE OR REPLACE FUNCTION add_project_board_pdf(
   p_board_id    uuid,
@@ -75,13 +84,20 @@ BEGIN
     RAISE EXCEPTION 'add_project_board_pdf: filename must be 1-200 chars';
   END IF;
 
-  IF p_storage_key IS NULL OR p_storage_key LIKE '%..%' OR left(p_storage_key, 1) = '/'
-    OR (
-      p_storage_key NOT LIKE 'project-wizard/%'
-      AND p_storage_key NOT LIKE 'project-board/%'
-      AND p_storage_key NOT LIKE 'board-assets/%'
-    ) THEN
-    RAISE EXCEPTION 'add_project_board_pdf: invalid storage_key (must start with project-wizard/, project-board/, or board-assets/)';
+  IF p_storage_key IS NULL OR p_storage_key LIKE '%..%' OR left(p_storage_key, 1) = '/' THEN
+    RAISE EXCEPTION 'add_project_board_pdf: invalid storage_key (null/traversal/leading slash)';
+  END IF;
+
+  -- sub_03f_5 F2: every accepted prefix is caller-bound. The role-bound
+  -- prefixes use auth.uid() to prevent persisting another authenticated
+  -- user's R2 key; the project-board prefix is bound to p_board_id so it
+  -- cannot be cross-board persisted. Anything else is rejected.
+  IF NOT (
+    p_storage_key LIKE 'board-assets/' || v_caller_id::text || '/%'
+    OR p_storage_key LIKE 'project-wizard/' || v_caller_id::text || '/%'
+    OR p_storage_key LIKE 'project-board/' || p_board_id::text || '/%'
+  ) THEN
+    RAISE EXCEPTION 'add_project_board_pdf: storage_key prefix must be caller-bound (board-assets/<caller>/, project-wizard/<caller>/, or project-board/<p_board_id>/)';
   END IF;
 
   UPDATE project_boards
