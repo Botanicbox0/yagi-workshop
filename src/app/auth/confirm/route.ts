@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex,nofollow" />
-<meta name="referrer" content="no-referrer" />
+<meta name="referrer" content="same-origin" />
 <title>YAGI · 이메일 인증</title>
 <style>
   :root { color-scheme: light; }
@@ -162,8 +162,18 @@ export async function GET(request: NextRequest) {
       // Codex LOOP 2 N1 fix — clickjacking + form-action lockdown.
       "Content-Security-Policy":
         "default-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; form-action 'self'; base-uri 'none'",
-      // Codex LOOP 2 N2 fix — keep the token_hash out of any Referer.
-      "Referrer-Policy": "no-referrer",
+      // Codex LOOP 2 N2 fix — keep the token_hash out of cross-origin
+      // Referer leaks. Wave D sub_03h: switched from "no-referrer" to
+      // "same-origin" because the original policy stripped Origin +
+      // Referer on the same-origin form POST too, so the route's
+      // CSRF guard saw cross-origin headers and redirected before
+      // verifyOtp could run. With "same-origin" the form submit keeps
+      // Origin + Referer (sameOriginByOrigin / sameOriginByReferer
+      // pass), but cross-origin navigations and resource loads still
+      // get an empty Referer. Since the intermediate page is fully
+      // inline (no external CSS / scripts / images), there is no
+      // cross-origin resource that could leak token_hash via Referer.
+      "Referrer-Policy": "same-origin",
     },
   });
 }
