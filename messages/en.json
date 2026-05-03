@@ -158,6 +158,12 @@
     "brand_sub": "Only if you run multiple brands",
     "brand_name": "Brand name",
     "brand_name_ph": "e.g., CGP",
+    "brand": {
+      "helper": {
+        "placeholder": "You can add a brand logo later",
+        "twin": "If you primarily plan to use Twin, you can skip this step and start now"
+      }
+    },
     "invite_title": "Invite your team",
     "invite_sub": "Now or later in settings",
     "invite_email": "Email address",

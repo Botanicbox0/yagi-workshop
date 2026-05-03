@@ -25,6 +25,8 @@ type FormValues = z.infer<typeof schema>;
 export default function OnboardingBrandPage() {
   const t = useTranslations("onboarding");
   const c = useTranslations("common");
+  // Phase 5 Wave A sub_3c Option A: brand helper copy (placeholder + Twin)
+  const b = useTranslations("onboarding.brand");
   const router = useRouter();
   const search = useSearchParams();
   const params = useParams<{ locale: string }>();
@@ -65,6 +67,10 @@ export default function OnboardingBrandPage() {
         <h1 className="font-display text-3xl tracking-tight keep-all">{t("brand_title")}</h1>
         <p className="text-sm text-muted-foreground keep-all">{t("brand_sub")}</p>
       </div>
+      {/* Phase 5 Wave A sub_3c Option A: brand logo placeholder — sage subtle empty state */}
+      <div className="rounded-2xl border border-dashed border-[#71D083]/40 bg-[#71D083]/5 px-5 py-4">
+        <p className="text-sm text-[#71D083] keep-all">{b("helper.placeholder")}</p>
+      </div>
       {!showForm ? (
         <div className="flex flex-col gap-3">
           <Button size="lg" onClick={() => setShowForm(true)}>
@@ -77,6 +83,8 @@ export default function OnboardingBrandPage() {
           >
             {c("skip")}
           </Button>
+          {/* Phase 5 Wave A sub_3c Option A: Twin-only carve-out helper sentence */}
+          <p className="text-xs text-muted-foreground text-center keep-all mt-1">{b("helper.twin")}</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
