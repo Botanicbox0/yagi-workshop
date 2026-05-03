@@ -3,6 +3,90 @@
 Captured during Wave C.5b. Each entry records the surface, the deferred
 action, and the trigger that should pull it back into scope.
 
+## FU-C5c-04 — Phase 5 Briefing Canvas (briefing-as-conversation)
+
+- **Trigger**: Phase 5 KICKOFF (immediately after Wave D ff-merges
+  Phase 4.x). yagi locked this as the swap-in for Phase 5 — the
+  original "Artist Roster intake first" plan moves to Phase 6 entry.
+- **Risk**: The wizard form-only paradigm (3-step linear form ending
+  in 프로젝트 의뢰하기) does not match how real briefs flow — clients
+  iterate, attach references, and converse with yagi to refine
+  scope. Wave C.5c sub_03 (Twin intent UX redesign) was deferred
+  here for the same reason: polishing a doomed surface is wasted
+  energy.
+- **Action**: Replace `/app/projects/new` wizard with a multi-stage
+  Briefing Canvas (briefing-as-conversation paradigm). Spec is being
+  authored in chat with yagi; KICKOFF doc lands as Phase 5 enters.
+  Twin intent UX, brand allowlist additions, and any other wizard
+  micro-fixes get folded into the canvas spec.
+- **Owner**: yagi (product spec) + Builder (implementation when
+  greenlit).
+- **Status**: Not started. Phase 5 KICKOFF prerequisite.
+- **Registered**: 2026-05-03 (Wave C.5c v2 final).
+
+## FU-C5c-03 — yagi_admin workspace (320c1564) RLS surface
+
+- **Trigger**: Phase 5+ Artist intake or yagi-internal admin
+  surfaces.
+- **Risk**: The YAGI Internal workspace (id 320c1564-...) was
+  reclassified to `kind='yagi_admin'` via chat MCP on 2026-05-01,
+  but no dedicated RLS pathway distinguishes admin-internal data
+  from regular Brand workspaces yet. Today the workspace renders
+  through the same Brand surfaces with no special treatment.
+- **Action**: When Phase 5+ work lands a dedicated admin tool (Artist
+  intake invite-token issuance, internal commission queue, etc.),
+  carve out RLS that targets `workspaces.kind='yagi_admin'` rows
+  separately from the Brand surfaces.
+- **Owner**: Builder when greenlit.
+- **Status**: Not started.
+- **Registered**: 2026-05-03 (Wave C.5c v2 final).
+
+## FU-C5c-02 — yagi-talk-icon.png + yagi-text-logo-black.png → SVG
+
+- **Trigger**: Phase 6+ when the brand asset library gets a real
+  SVG-first refresh.
+- **Risk**: The Wave C.5c sub_04/05 brand assets are PNG (1254×1254
+  for icons, 3180×1030 for the wordmark). next/image will WebP-
+  optimise on the fly, but the flexbox sidebar header would render
+  crisper at all DPRs with vector. The talk FAB icon is the worst
+  offender (large square PNG, used at small render size).
+- **Action**: Replace the three PNGs in `public/brand/` with SVG
+  equivalents. SidebarBrand + SupportWidget can keep next/image with
+  the same dimensions; <img> with `inline-block` works too.
+- **Owner**: yagi (asset acquisition) + Builder (swap).
+- **Status**: Not started.
+- **Registered**: 2026-05-03 (Wave C.5c v2 final).
+
+## FU-C5c-01 — Supabase Dashboard email templates + redirect URLs (PKCE)
+
+- **Trigger**: Wave C.5c sub_01 ships. yagi MUST do this before any
+  user can sign up via PKCE; otherwise the email link still uses the
+  old /auth/callback?code= shape and the Gmail crawler bug recurs.
+- **Risk**: PKCE flowType is set in code, but the email template body
+  is dashboard-state. Without the paste, the `{{ .ConfirmationURL }}`
+  default (or any prior YAGI-branded variant) still ships
+  /auth/callback?code=… which DOES NOT trigger the new
+  /auth/confirm intermediate page.
+- **Action** (Supabase Dashboard → Authentication → Email Templates):
+  - Confirm signup template body — change the link to:
+      `<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}">`
+  - Same change for Magic Link + Reset Password templates.
+  - Authentication → URL Configuration → Redirect URLs allowlist
+    additions (each origin):
+      `<origin>/auth/confirm`
+      `<origin>/auth/callback` (kept for legacy OAuth code grant)
+      `<origin>/onboarding/workspace`
+      `<origin>/onboarding/brand`
+      `<origin>/onboarding/invite`
+      `<origin>/app`
+      `<origin>/app/**` (or per-page entries)
+      `<origin>/reset-password`
+    Origins: `http://localhost:3001`, `http://localhost:3003`,
+    `https://studio.yagiworkshop.xyz`.
+- **Owner**: yagi.
+- **Status**: Not started — production blocker for Wave C.5c.
+- **Registered**: 2026-05-03 (Wave C.5c v2 sub_01).
+
 ## FU-C5b-09 — Meeting type / duration UX rework
 
 - **Trigger**: Phase 4.x ff-merge → hotfix-1, OR Phase 5 entry IA
