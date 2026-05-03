@@ -138,7 +138,11 @@
     "expired_back_to_signin": "Back to sign in",
     "expired_resend_success": "Sent a new verification link. Please check your inbox.",
     "expired_resend_email_label": "Email",
-    "expired_resend_send": "Send"
+    "expired_resend_send": "Send",
+    "expired_resend_cooldown": "Try again in {seconds}s",
+    "expired_resend_rate_limited": "For security, only one request per 60 seconds is allowed. Please try again shortly.",
+    "expired_resend_invalid_email": "Please check the email format.",
+    "expired_resend_generic_error": "Send failed. Please try again in a moment."
   },
   "onboarding": {
     "display_name": "Display name",

@@ -138,7 +138,11 @@
     "expired_back_to_signin": "로그인으로 돌아가기",
     "expired_resend_success": "새 인증 링크를 보냈습니다. 메일함을 확인해 주세요.",
     "expired_resend_email_label": "이메일",
-    "expired_resend_send": "보내기"
+    "expired_resend_send": "보내기",
+    "expired_resend_cooldown": "{seconds}초 후 다시 시도",
+    "expired_resend_rate_limited": "보안을 위해 60초마다 한 번만 요청할 수 있어요. 잠시 후 다시 시도해 주세요.",
+    "expired_resend_invalid_email": "이메일 형식을 확인해 주세요.",
+    "expired_resend_generic_error": "전송에 실패했어요. 잠시 후 다시 시도해 주세요."
   },
   "onboarding": {
     "display_name": "표시 이름",
