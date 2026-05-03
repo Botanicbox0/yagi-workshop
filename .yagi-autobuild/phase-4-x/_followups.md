@@ -285,3 +285,119 @@ action, and the trigger that should pull it back into scope.
   explicit callsites expect. No sweep needed.
 - **Registered**: 2026-05-01 (Wave C.5b sub_00).
 - **Closed**: 2026-05-01 (Wave C.5b sub_00 ROLLBACK).
+
+## FU-C5d-05 — Brief-mode PDF upload via presigned URL (20MB body limit)
+
+- **Trigger**: Codex generic K-05 review (Phase 4.x branch, 2026-05-04)
+  P2 finding on `src/app/[locale]/app/projects/[id]/board-actions.ts:451-454`.
+- **Risk**: Brief-mode PDF uploads pass the `File` object into a Server
+  Action, then upload to R2 from there. Next.js default Server Action
+  body limit (1MB without explicit override) rejects PDFs well below
+  the advertised 20MB cap; users see a generic 413 / failed upload
+  with no recovery hint.
+- **Action**: Migrate brief-mode PDF upload to the same presigned PUT
+  pattern the wizard already uses (`getBoardAssetPutUrlAction` ->
+  client `fetch(putUrl, PUT, file)` -> `add_project_board_pdf` RPC).
+  Server Action body never carries the file payload, so the body
+  limit becomes irrelevant. Or, if presigned migration is too
+  invasive, raise the body limit explicitly in `next.config.ts`.
+- **Owner**: Builder.
+- **Status**: Not started. Deferred to Phase 5 Wave A — the briefing
+  canvas rewrite naturally adopts the presigned pattern across all
+  attachment surfaces, so this finding gets resolved as a side-effect
+  of that work.
+- **Registered**: 2026-05-04 (Wave C.5d sub_03f_3 generic K-05).
+
+## FU-C5d-06 — `attached_pdf` admin download URL conversion
+
+- **Trigger**: Codex generic K-05 review (Phase 4.x branch, 2026-05-04)
+  P2 finding on `src/components/admin/asset-list-panel.tsx:172-175`.
+- **Risk**: `asset_index` entries of `source: 'attached_pdf'` carry the
+  R2 storage key (`board-assets/<user>/<uuid>.pdf` after sub_03f_1) in
+  their `url` field, but the admin asset-list panel pipes that string
+  straight into an `<a href>` for download. The browser interprets it
+  as a relative app path — `https://studio.yagiworkshop.xyz/board-assets/...`
+  — so the click hits Next.js routing instead of R2 and admins get a
+  404 or HTML response.
+- **Action**: Convert `asset_index[].url` for `attached_pdf` entries to
+  a presigned R2 GET URL or to the public R2 URL (depending on the
+  bucket's ACL) before rendering the link. The existing `briefObjectPublicUrl`
+  helper in `src/lib/r2/client.ts` is the right primitive. Defer
+  selection of presigned vs public to the Phase 5 Wave A briefing
+  canvas rewrite (R2 ACL strategy is decided there).
+- **Compensating control**: yagi can still retrieve the PDF directly
+  from the R2 console using the storage key copied from the panel,
+  so this is a UX bug, not a data-loss bug.
+- **Owner**: Builder.
+- **Status**: Not started. Deferred to Phase 5 Wave A entry.
+- **Registered**: 2026-05-04 (Wave C.5d sub_03f_3 generic K-05).
+
+## FU-C5d-07 — `project_licenses` RLS uses `profiles.role` (yagi_admin path broken)
+
+- **Trigger**: Codex generic K-05 review (Phase 4.x branch, 2026-05-04)
+  P2 finding on `supabase/migrations/20260501000000_phase_4_x_workspace_kind_and_licenses.sql:73-76`.
+- **Risk**: The `project_licenses_select` and `project_licenses_insert`
+  policies look for `profiles.role = 'yagi_admin'` to grant admin
+  override. yagi_admin is modeled in `user_roles.role` (and resolved
+  through the `is_yagi_admin(uid)` SQL helper); `profiles.role` does
+  not currently include `yagi_admin` in its CHECK constraint enum.
+  Net effect: actual admins cannot SELECT or INSERT `project_licenses`
+  rows even though the policy comments claim they can.
+- **Action**: Rewrite both policies to use `is_yagi_admin(auth.uid())`
+  instead of the `profiles.role` check, matching the rest of the
+  codebase's admin-gate pattern.
+- **Compensating control**: `project_licenses` is empty in production
+  (the surface that writes to it has not shipped yet), so no admin is
+  blocked today.
+- **Owner**: Builder.
+- **Status**: Not started. Deferred to Phase 6 entry when the licenses
+  surface lands and admins actually need the policy.
+- **Registered**: 2026-05-04 (Wave C.5d sub_03f_3 generic K-05).
+
+## FU-C5d-08 — `save_project_board_document` SECURITY DEFINER RPC
+
+- **Trigger**: Wave C.5d sub_03f_2 service-role split (board-actions.ts).
+- **Risk**: Three actions in `board-actions.ts` (`updateProjectBoardAction`,
+  `restoreVersionAction`, `recomputeAndUpdateAssetIndex` helper) write
+  `asset_index` via the service-role client because the user-bound
+  client lost UPDATE permission on that column in sub_03f_2. The
+  service-role pattern works but bypasses RLS entirely; future
+  authorization changes in `project_boards_update_client` are silently
+  ignored on this path. A `save_project_board_document(board_id,
+  document)` SECURITY DEFINER RPC would centralise the auth + lock
+  + asset_index recomputation in one place and let RLS continue to
+  govern the row scope.
+- **Action**: Author the RPC, validate caller (workspace member +
+  not-locked + creator/admin), recompute asset_index server-side from
+  document + attached_*, UPDATE atomically with `is_locked=false`
+  WHERE clause. Switch the three actions to call the RPC instead of
+  service-role UPDATE. Drop the `createSupabaseService` calls in those
+  actions.
+- **Owner**: Builder.
+- **Status**: Not started. Deferred to Phase 5 entry (Briefing Canvas
+  rewrite touches all three call sites anyway).
+- **Registered**: 2026-05-04 (Wave C.5d sub_03f_2 yagi decision).
+
+## FU-C5d-09 — `assert_caller_bound_pdf_storage_key` mutable search_path
+
+- **Trigger**: Supabase advisor (security) after Wave C.5d sub_03f_5
+  prod migration apply, 2026-05-04. New WARN.
+- **Risk**: The `assert_caller_bound_pdf_storage_key` helper function
+  introduced by migration `20260504010151` is declared `IMMUTABLE` but
+  does not include `SET search_path = public, pg_temp`. Advisor flags
+  this as a function-search-path WARN. Because the function performs
+  only text comparisons against caller arguments and constants (no
+  table/function lookups by unqualified name), the practical exploit
+  surface is essentially nil — but the codebase convention is to
+  always pin `search_path` on SECURITY-sensitive helpers, and the
+  advisor warning is a CI signal we want to keep clean.
+- **Action**: `ALTER FUNCTION assert_caller_bound_pdf_storage_key(...)
+  SET search_path = public, pg_temp;` (or recreate via `CREATE OR
+  REPLACE FUNCTION ... SET search_path = public, pg_temp`). Two-line
+  migration.
+- **Compensating control**: Function body has no schema-resolved
+  identifiers, so search_path manipulation cannot redirect any call.
+- **Owner**: Builder.
+- **Status**: Not started. Bundled into the next "lint sweep"
+  migration (Phase 5+).
+- **Registered**: 2026-05-04 (Wave C.5d sub_03f_5 prod apply advisor).
