@@ -103,4 +103,10 @@ BEGIN
   IF has_column_privilege('authenticated', 'public.project_boards', 'source', 'UPDATE') THEN
     RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.source';
   END IF;
+  -- sub_03f_5 LOOP 3 F5 final closure: created_at is also server-managed
+  -- (set by INSERT default, never reissued); a writable created_at would
+  -- let clients forge audit timestamps within their own RLS row scope.
+  IF has_column_privilege('authenticated', 'public.project_boards', 'created_at', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.created_at';
+  END IF;
 END $$;
