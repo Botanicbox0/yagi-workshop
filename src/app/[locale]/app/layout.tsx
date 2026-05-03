@@ -96,9 +96,13 @@ export default async function AppLayout({
           </main>
         </div>
         {/* Phase 2.8.6 — workspace-scoped support chat. Hidden when
-            the user has no workspace (mid-onboarding edge case). */}
+            the user has no workspace (mid-onboarding edge case).
+            Wave C.5d sub_03e_3: workspaceId now reflects the cookie-
+            backed active workspace (resolved above for the sidebar)
+            instead of ctx.workspaces[0], so admins with multiple
+            memberships chat against the workspace they actually selected. */}
         <SupportWidget
-          workspaceId={ctx.workspaces[0]?.id ?? null}
+          workspaceId={activeWorkspace?.id ?? null}
           currentUserId={ctx.userId}
           currentUserName={ctx.profile.display_name ?? ""}
         />
