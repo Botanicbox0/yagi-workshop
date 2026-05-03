@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { NewProjectWizard } from "./new-project-wizard";
 
 type Props = {
@@ -23,16 +24,12 @@ export default async function NewProjectPage({ params }: Props) {
     return null;
   }
 
-  // Resolve first workspace
-  const { data: membership } = await supabase
-    .from("workspace_members")
-    .select("workspace_id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  const workspaceId = membership?.workspace_id ?? null;
+  // Wave C.5d sub_03b — replace first-membership fallback with the
+  // cookie-based active workspace resolver so brand list + downstream
+  // wizard payload reflect the workspace the user actually selected in
+  // the switcher (Codex K-05 final review LOOP 1 MED-C).
+  const active = await resolveActiveWorkspace(user.id);
+  const workspaceId = active?.id ?? null;
 
   // Fetch brands for the workspace (empty list is fine — wizard shows "None" option)
   const brands: { id: string; name: string }[] = [];
@@ -54,7 +51,7 @@ export default async function NewProjectPage({ params }: Props) {
         </h1>
       </div>
 
-      <NewProjectWizard brands={brands} />
+      <NewProjectWizard brands={brands} activeWorkspaceId={workspaceId} />
     </div>
   );
 }

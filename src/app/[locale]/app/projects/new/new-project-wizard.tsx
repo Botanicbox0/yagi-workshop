@@ -131,6 +131,11 @@ type Step = 1 | 2 | 3;
 
 interface NewProjectWizardProps {
   brands?: { id: string; name: string }[];
+  // Wave C.5d sub_03b — active workspace resolved server-side in
+  // new/page.tsx via resolveActiveWorkspace and passed down explicitly,
+  // so submitProjectAction Path A trusts a value the user-bound server
+  // verified instead of guessing from membership creation order.
+  activeWorkspaceId?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -279,7 +284,10 @@ function DeliverableChips({
 // Main wizard component
 // ---------------------------------------------------------------------------
 
-export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps) {
+export function NewProjectWizard({
+  brands: _brands = [],
+  activeWorkspaceId = null,
+}: NewProjectWizardProps) {
   const t = useTranslations("projects");
   const router = useRouter();
 
@@ -849,6 +857,10 @@ export function NewProjectWizard({ brands: _brands = [] }: NewProjectWizardProps
                 attachedPdfs,
                 attachedUrls,
                 draftProjectId,
+                // Wave C.5d sub_03b: explicit active workspace from server-
+                // resolved cookie (page.tsx). Server still re-verifies via
+                // memberSet, and falls through to its own resolver if null.
+                workspaceId: activeWorkspaceId ?? undefined,
               });
               if (result.ok) {
                 router.push(result.redirect);
