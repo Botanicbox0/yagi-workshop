@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/routing";
+import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
@@ -38,6 +38,27 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
 
   const supabase = await createSupabaseServer();
 
+  // Wave C.5d sub_03e_1 — Codex K-05 LOOP 1 MED-C (Finding 1): the
+  // projects hub query previously had no workspace_id filter and relied
+  // entirely on RLS, which lets a multi-workspace user see projects from
+  // every membership while the switcher claims one workspace is active.
+  // Resolve the active workspace up front, then pass it through both the
+  // hub list query and the MeetingRequestCard card. The same id replaces
+  // the duplicate primaryWorkspaceId fetch sub_03c added.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect({ href: "/signin", locale });
+    return null;
+  }
+  const active = await resolveActiveWorkspace(user.id);
+  if (!active) {
+    redirect({ href: "/onboarding", locale });
+    return null;
+  }
+  const activeWorkspaceId = active.id;
+
   let query = supabase
     .from("projects")
     .select(
@@ -52,6 +73,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
       brand:brands(id, name, logo_url)
     `
     )
+    .eq("workspace_id", activeWorkspaceId)
     .eq("project_type", "direct_commission")
     .order("updated_at", { ascending: false });
 
@@ -65,18 +87,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
 
   const projects = (data ?? []) as ProjectRow[];
 
-  // Wave C.5d sub_03c — primary workspace for the meeting request card
-  // now follows the active-workspace cookie (Codex K-05 final review
-  // LOOP 1 MED-C). resolveActiveWorkspace returns null when the user has
-  // no memberships, in which case MeetingRequestCard disables itself.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  let primaryWorkspaceId: string | null = null;
-  if (user) {
-    const active = await resolveActiveWorkspace(user.id);
-    primaryWorkspaceId = active?.id ?? null;
-  }
+  const primaryWorkspaceId: string | null = activeWorkspaceId;
 
   // Resolve brand name for active brand_id filter chip
   const activeBrand =
