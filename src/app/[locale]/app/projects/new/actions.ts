@@ -834,6 +834,10 @@ const SubmitInputSchema = z.object({
     .enum(["undecided", "specific_in_mind", "no_twin"])
     .optional()
     .default("undecided"),
+  // Phase 5 Wave A task_03 sub_3a — new boolean twin intent field. The Phase 5
+  // wizard (Wave B) will set this field only; legacy paths continue to write
+  // twin_intent. Both fields coexist on the same row (defense-in-depth).
+  interested_in_twin: z.boolean().default(false),
   // workspaceId is optional when draftProjectId is provided — the action
   // resolves it from the draft project row in that case. One of the two
   // must be present for workspace resolution to succeed.
@@ -939,6 +943,9 @@ export async function submitProjectAction(
       // Persistence requires task_01 migration applied (Wave D D.1) — until
       // then prod DB has no twin_intent column and this field is ignored.
       twin_intent: data.twin_intent,
+      // Phase 5 Wave A task_03 sub_3a: new boolean twin intent field.
+      // Coexists with twin_intent (defense-in-depth). Wave B wizard sets this.
+      interested_in_twin: data.interested_in_twin,
       workspace_id: resolvedWorkspaceId,
       created_by: user.id,
       status: "in_review",
