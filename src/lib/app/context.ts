@@ -1,4 +1,5 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 
 // Phase 1.1 workspace permission system — unchanged literals, renamed type.
 // Per ADR-009 (docs/design/DECISIONS.md).
@@ -79,6 +80,15 @@ export async function fetchAppContext(): Promise<AppContext | null> {
       .map((row) => row.workspaces)
       .filter((ws): ws is { id: string; name: string; slug: string } => !!ws);
 
+  // Wave C.5d sub_03e_2 — Codex K-05 sub_03 LOOP 1 MED-C Finding 2.
+  // currentWorkspaceId previously took workspaces[0] (oldest membership),
+  // which silently bypassed the workspace switcher cookie for every
+  // ctx.currentWorkspaceId consumer (settings/page.tsx, etc.). Source it
+  // from resolveActiveWorkspace so the cookie's selection is honoured;
+  // resolver still falls back to the first membership when the cookie is
+  // absent or stale, so behaviour for fresh signups is unchanged.
+  const active = await resolveActiveWorkspace(user.id);
+
   return {
     userId: user.id,
     profile: {
@@ -92,6 +102,6 @@ export async function fetchAppContext(): Promise<AppContext | null> {
     },
     workspaceRoles,
     workspaces,
-    currentWorkspaceId: workspaces[0]?.id ?? null,
+    currentWorkspaceId: active?.id ?? null,
   };
 }
