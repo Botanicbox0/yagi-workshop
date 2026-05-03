@@ -101,6 +101,67 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// Wave D sub_03i — intermediate page copy must match the OTP type.
+// The original GET handler hardcoded signup copy for every flow, so a
+// recovery / magic-link / invite / email-change user saw "이메일 인증을
+// 완료해 주세요 + 가입 완료" before clicking through, breaking trust on
+// the password-reset flow in particular. The verifyOtp branch in POST
+// is already type-aware; only the rendered HTML lagged.
+//
+// Description strings contain a literal `<br>` and originate from this
+// closed enum, so they are inserted into the HTML as-is. Title and
+// heading still flow through escapeHtml at the call site.
+function getIntermediateCopy(type: EmailOtpType): {
+  title: string;
+  heading: string;
+  description: string;
+} {
+  switch (type) {
+    case "recovery":
+      return {
+        title: "YAGI · 비밀번호 재설정",
+        heading: "비밀번호 재설정 링크 확인",
+        description:
+          "아래 버튼을 누르면 새 비밀번호 설정 페이지로 이동합니다.<br>" +
+          "Press the button below to set a new password.",
+      };
+    case "magiclink":
+      return {
+        title: "YAGI · 로그인",
+        heading: "로그인 링크 확인",
+        description:
+          "아래 버튼을 누르면 로그인되고 대시보드로 이동합니다.<br>" +
+          "Press the button below to sign in and continue.",
+      };
+    case "invite":
+      return {
+        title: "YAGI · 초대 수락",
+        heading: "초대 수락",
+        description:
+          "아래 버튼을 누르면 초대를 수락하고 워크스페이스로 이동합니다.<br>" +
+          "Press the button below to accept the invite and continue.",
+      };
+    case "email_change":
+      return {
+        title: "YAGI · 이메일 변경",
+        heading: "이메일 변경 확인",
+        description:
+          "아래 버튼을 누르면 이메일 변경이 완료됩니다.<br>" +
+          "Press the button below to confirm the email change.",
+      };
+    case "signup":
+    case "email":
+    default:
+      return {
+        title: "YAGI · 이메일 인증",
+        heading: "이메일 인증을 완료해 주세요",
+        description:
+          "아래 버튼을 누르면 가입이 완료되고 워크스페이스 만들기로 이동합니다.<br>" +
+          "Press the button below to confirm your email and continue.",
+      };
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
@@ -114,6 +175,9 @@ export async function GET(request: NextRequest) {
   // Pre-sanitise so the form can carry a clean value forward.
   const next = sanitizeNext(rawNext, origin, type);
 
+  // Wave D sub_03i — type-aware page copy. See getIntermediateCopy.
+  const copy = getIntermediateCopy(type);
+
   // Codex F2 LOOP 2 N2 fix — no external stylesheet. The token_hash sits
   // in the URL; loading a third-party CDN would risk a Referer leak even
   // with strict-origin-when-cross-origin defaulted (older browsers can
@@ -125,7 +189,7 @@ export async function GET(request: NextRequest) {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex,nofollow" />
 <meta name="referrer" content="same-origin" />
-<title>YAGI · 이메일 인증</title>
+<title>${escapeHtml(copy.title)}</title>
 <style>
   :root { color-scheme: light; }
   body { margin: 0; min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: #FAFAFA; color: #0A0A0A; font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Pretendard, sans-serif; }
@@ -138,9 +202,8 @@ export async function GET(request: NextRequest) {
 </head>
 <body>
 <main>
-  <h1>이메일 인증을 완료해 주세요</h1>
-  <p>아래 버튼을 누르면 가입이 완료되고 워크스페이스 만들기로 이동합니다.<br>
-  Press the button below to confirm your email and continue.</p>
+  <h1>${escapeHtml(copy.heading)}</h1>
+  <p>${copy.description}</p>
   <form method="POST" action="/auth/confirm">
     <input type="hidden" name="token_hash" value="${escapeHtml(tokenHash)}" />
     <input type="hidden" name="type" value="${escapeHtml(type)}" />
