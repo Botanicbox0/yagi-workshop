@@ -597,7 +597,7 @@
       "actions": {
         "continue": "다음",
         "back": "이전",
-        "submit": "의뢰 보내기",
+        "submit": "프로젝트 의뢰하기",
         "edit": "수정"
       },
       "summary": {
