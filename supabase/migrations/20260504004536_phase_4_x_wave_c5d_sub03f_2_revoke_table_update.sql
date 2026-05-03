@@ -85,4 +85,22 @@ BEGIN
   IF has_column_privilege('authenticated', 'public.project_boards', 'locked_at', 'UPDATE') THEN
     RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.locked_at';
   END IF;
+
+  -- sub_03f_5 LOOP 2 F5: extend denied-column coverage to the remaining
+  -- server-managed columns the prior assertion only mentioned in
+  -- comments. id / project_id are unique-key columns that should never
+  -- be UPDATEd from PostgREST; schema_version and source are
+  -- server-set-once during INSERT.
+  IF has_column_privilege('authenticated', 'public.project_boards', 'id', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.id';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.project_boards', 'project_id', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.project_id';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.project_boards', 'schema_version', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.schema_version';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.project_boards', 'source', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_03f_2 assert failed: authenticated still has effective UPDATE on project_boards.source';
+  END IF;
 END $$;

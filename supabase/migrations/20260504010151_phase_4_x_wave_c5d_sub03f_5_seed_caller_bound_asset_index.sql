@@ -37,6 +37,15 @@
 --   4. Keeps the existing auth + project status gates (yagi_admin OR
 --      project.created_by == caller, project.status == 'in_review').
 
+-- LOOP 2 F3a: drop the older 3-arg overload from migration
+-- 20260429124343 so an authenticated client can never reach the
+-- legacy seed path that accepts an unvalidated caller-supplied
+-- asset_index. PostgREST resolves overloads by argument set; with
+-- this DROP, only the 5-arg hardened overload remains. The
+-- TypeScript caller in submitProjectAction already passes 5 args,
+-- so removing the 3-arg version does not affect any in-tree caller.
+DROP FUNCTION IF EXISTS seed_project_board_from_wizard(uuid, jsonb, jsonb);
+
 -- Helper function — caller-bound storage_key check used by the seed
 -- function for every entry in p_initial_attached_pdfs. Mirrored on
 -- add_project_board_pdf inside migration 20260504004349 so the two
@@ -116,8 +125,26 @@ BEGIN
   FROM project_boards WHERE project_id = p_project_id;
   v_board_id := COALESCE(v_existing_board_id, gen_random_uuid());
 
+  -- ---------- LOOP 2 F3b: reject non-array attachment payloads ----------
+  -- The original validation skipped non-array values, but the upsert
+  -- below still wrote `COALESCE(p_initial_attached_pdfs, '[]'::jsonb)`
+  -- which would have persisted a malformed scalar/object as-is.
+  -- Reject early so the upsert only ever sees a NULL or a real array.
+  IF p_initial_attached_pdfs IS NOT NULL
+     AND jsonb_typeof(p_initial_attached_pdfs) != 'array' THEN
+    RAISE EXCEPTION
+      'seed_project_board_from_wizard: p_initial_attached_pdfs must be a jsonb array or null (got %)',
+      jsonb_typeof(p_initial_attached_pdfs);
+  END IF;
+  IF p_initial_attached_urls IS NOT NULL
+     AND jsonb_typeof(p_initial_attached_urls) != 'array' THEN
+    RAISE EXCEPTION
+      'seed_project_board_from_wizard: p_initial_attached_urls must be a jsonb array or null (got %)',
+      jsonb_typeof(p_initial_attached_urls);
+  END IF;
+
   -- ---------- Validate attached_pdfs ----------
-  IF p_initial_attached_pdfs IS NOT NULL AND jsonb_typeof(p_initial_attached_pdfs) = 'array' THEN
+  IF p_initial_attached_pdfs IS NOT NULL THEN
     FOR v_pdf IN SELECT * FROM jsonb_array_elements(p_initial_attached_pdfs)
     LOOP
       PERFORM assert_caller_bound_pdf_storage_key(
@@ -129,7 +156,7 @@ BEGIN
   END IF;
 
   -- ---------- Validate attached_urls (http/https only) ----------
-  IF p_initial_attached_urls IS NOT NULL AND jsonb_typeof(p_initial_attached_urls) = 'array' THEN
+  IF p_initial_attached_urls IS NOT NULL THEN
     FOR v_url IN SELECT * FROM jsonb_array_elements(p_initial_attached_urls)
     LOOP
       v_url_text := v_url->>'url';
@@ -148,7 +175,7 @@ BEGIN
   -- the first saveBoardDocumentAction call rebuilds asset_index from
   -- the document via the TypeScript extractAssetIndex helper.
   -- p_initial_asset_index is intentionally ignored.
-  IF p_initial_attached_pdfs IS NOT NULL AND jsonb_typeof(p_initial_attached_pdfs) = 'array' THEN
+  IF p_initial_attached_pdfs IS NOT NULL THEN
     SELECT COALESCE(jsonb_agg(
       jsonb_build_object(
         'id',           pdf->>'id',
@@ -168,7 +195,7 @@ BEGIN
     FROM jsonb_array_elements(p_initial_attached_pdfs) AS pdf;
   END IF;
 
-  IF p_initial_attached_urls IS NOT NULL AND jsonb_typeof(p_initial_attached_urls) = 'array' THEN
+  IF p_initial_attached_urls IS NOT NULL THEN
     SELECT COALESCE(jsonb_agg(
       jsonb_build_object(
         'id',           u->>'id',
