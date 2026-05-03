@@ -24,6 +24,7 @@ import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { CountCards } from "@/components/dashboard/count-cards";
 import { RfpRowCard } from "@/components/dashboard/rfp-row-card";
 
@@ -67,20 +68,16 @@ export default async function DashboardPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect(`/${locale}/signin`);
 
-  // Resolve active workspace: Phase 4 uses the user's first membership
-  // as the implicit active workspace. task_06 introduces an explicit
-  // cookie-based switcher; until then, use the first row.
-  const { data: membership } = await supabase
-    .from("workspace_members")
-    .select("workspace_id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!membership?.workspace_id) {
+  // Wave C.5d sub_03c — task_06 cookie resolver is now wired here so the
+  // dashboard reflects the workspace the user actually selected in the
+  // switcher (Codex K-05 final review LOOP 1 MED-C). resolveActiveWorkspace
+  // validates the cookie's uuid against workspace_members and falls back
+  // to the first membership only when the cookie is absent or stale.
+  const active = await resolveActiveWorkspace(user.id);
+  if (!active) {
     redirect(`/${locale}/onboarding`);
   }
-  const workspaceId = membership!.workspace_id;
+  const workspaceId = active!.id;
 
   // Phase 3.0/4.x columns not in generated types -> any-cast (consistent with detail page).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- columns not in generated types

@@ -79,16 +79,14 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" };
 
-  // Resolve workspace via workspace_members — no hardcoded IDs
-  const { data: membership } = await supabase
-    .from("workspace_members")
-    .select("workspace_id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (!membership?.workspace_id) return { error: "no_workspace" };
+  // Wave C.5d sub_03c — replace first-membership fallback with the
+  // cookie-based active workspace resolver (Codex K-05 final review LOOP 1
+  // MED-C). createProject is the legacy direct-INSERT path retained for
+  // backwards compatibility; the wizard goes through ensureDraftProject +
+  // submitProjectAction. Same misroute risk regardless, same fix.
+  const active = await resolveActiveWorkspace(user.id);
+  if (!active) return { error: "no_workspace" };
+  const membership = { workspace_id: active.id };
 
   const status = parsed.data.intent === "submit" ? "submitted" : "draft";
 
@@ -276,14 +274,12 @@ export async function ensureDraftProject(
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" };
 
-  const { data: membership } = await supabase
-    .from("workspace_members")
-    .select("workspace_id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (!membership?.workspace_id) return { error: "no_workspace" };
+  // Wave C.5d sub_03c — same MED-C fix: ensureDraftProject must scope to
+  // the workspace the user has selected in the switcher, not their
+  // oldest membership.
+  const active = await resolveActiveWorkspace(user.id);
+  if (!active) return { error: "no_workspace" };
+  const membership = { workspace_id: active.id };
 
   // 1. SELECT existing draft (intake_mode='brief'). Phase 2.8.1 migration
   //    guarantees at most one row matches per (workspace, user) via the

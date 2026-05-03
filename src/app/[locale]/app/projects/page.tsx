@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
 import { ProjectsHubWorkflowStrip } from "@/components/projects/projects-hub-workflow-strip";
 import { ProjectsHubCtaBanner } from "@/components/projects/projects-hub-cta-banner";
@@ -64,22 +65,17 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
 
   const projects = (data ?? []) as ProjectRow[];
 
-  // Phase 2.8.6 — primary workspace for the meeting request card.
-  // Picks the user's first workspace_member row; if the user has none
-  // (mid-onboarding), the card disables itself.
+  // Wave C.5d sub_03c — primary workspace for the meeting request card
+  // now follows the active-workspace cookie (Codex K-05 final review
+  // LOOP 1 MED-C). resolveActiveWorkspace returns null when the user has
+  // no memberships, in which case MeetingRequestCard disables itself.
   const {
     data: { user },
   } = await supabase.auth.getUser();
   let primaryWorkspaceId: string | null = null;
   if (user) {
-    const { data: ws } = await supabase
-      .from("workspace_members")
-      .select("workspace_id, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    primaryWorkspaceId = ws?.workspace_id ?? null;
+    const active = await resolveActiveWorkspace(user.id);
+    primaryWorkspaceId = active?.id ?? null;
   }
 
   // Resolve brand name for active brand_id filter chip
