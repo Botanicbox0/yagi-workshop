@@ -7,6 +7,7 @@ import { createSupabaseService } from "@/lib/supabase/service";
 import type { Json } from "@/lib/supabase/database.types";
 import { fetchVideoMetadata, type OEmbedResult } from "@/lib/oembed";
 import { extractAssetIndex } from "@/lib/board/asset-index";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 
 // -----------------------------------------------------------------------------
 // Phase 2.8.1 G_B1-B — Wizard draft mode
@@ -799,27 +800,46 @@ export async function submitProjectAction(
   } = await supabase.auth.getUser();
   if (authError || !user) return { ok: false, error: "unauthenticated" };
 
-  // Resolve workspaceId: prefer explicit workspaceId from input; fall back to
-  // looking it up from the draft project row; then fall back to user membership.
-  let resolvedWorkspaceId: string | null = data.workspaceId ?? null;
+  // Resolve workspaceId. Wave C.5d sub_03a (Codex K-05 final review LOOP 1
+  // MED-C fix): the prior `created_at asc + limit 1` first-membership
+  // fallback could misroute a project to the user's oldest workspace
+  // instead of the workspace they had selected in the switcher. Replace
+  // with three explicit paths, all gated on a single membership lookup so
+  // every accepted workspace_id is one the caller actually belongs to:
+  //   A. wizard-supplied workspaceId  (preferred; sub_03b plumbs it)
+  //   B. draft project row's workspace_id  (autosave path)
+  //   C. resolveActiveWorkspace cookie-based resolver  (final fallback)
+  // RLS already gates projects.INSERT to workspace members; this is
+  // defense-in-depth that returns a clean error path and prevents silent
+  // misrouting through the old fallback.
+  const { data: memRows } = await supabase
+    .from("workspace_members")
+    .select("workspace_id")
+    .eq("user_id", user.id);
+  const memberSet = new Set((memRows ?? []).map((r) => r.workspace_id));
+
+  let resolvedWorkspaceId: string | null = null;
+
+  if (data.workspaceId && memberSet.has(data.workspaceId)) {
+    resolvedWorkspaceId = data.workspaceId;
+  }
+
   if (!resolvedWorkspaceId && data.draftProjectId) {
     const { data: draftRow } = await supabase
       .from("projects")
       .select("workspace_id")
       .eq("id", data.draftProjectId)
       .maybeSingle();
-    resolvedWorkspaceId = draftRow?.workspace_id ?? null;
+    if (draftRow?.workspace_id && memberSet.has(draftRow.workspace_id)) {
+      resolvedWorkspaceId = draftRow.workspace_id;
+    }
   }
+
   if (!resolvedWorkspaceId) {
-    const { data: mem } = await supabase
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    resolvedWorkspaceId = mem?.workspace_id ?? null;
+    const active = await resolveActiveWorkspace(user.id);
+    if (active) resolvedWorkspaceId = active.id;
   }
+
   if (!resolvedWorkspaceId) {
     return { ok: false, error: "db", message: "workspace not found for user" };
   }
