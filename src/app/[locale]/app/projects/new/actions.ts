@@ -96,6 +96,27 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   // - `estimated_budget_range` matches exactly
   const data = parsed.data;
 
+  // Wave D sub_03g F4: verify the client-supplied brand_id (if any)
+  // belongs to the resolved workspace. RLS on `brands` already scopes
+  // SELECTs to the caller's memberships, but it does not block a
+  // cross-workspace brand_id from another workspace the caller is also
+  // a member of. Explicit check rejects the cross-workspace path
+  // before the projects INSERT trusts the value.
+  if (data.brand_id) {
+    const { data: brandRow } = await supabase
+      .from("brands")
+      .select("id")
+      .eq("id", data.brand_id)
+      .eq("workspace_id", membership.workspace_id)
+      .maybeSingle();
+    if (!brandRow) {
+      return {
+        error: "db",
+        message: "brand_id does not belong to the resolved workspace",
+      };
+    }
+  }
+
   const insertPayload = {
     workspace_id: membership.workspace_id,
     created_by: user.id,
@@ -309,6 +330,26 @@ export async function ensureDraftProject(
   //    double-mounted wizard converge — one wins, the other catches 23505
   //    and re-SELECTs.
   const fields = parsed.data.initial;
+
+  // Wave D sub_03g F4: same brand_id cross-workspace guard as
+  // createProject above. Apply on draft creation as well so a draft
+  // never carries a brand_id from a different workspace forward into
+  // submitDraftProject.
+  if (fields.brand_id) {
+    const { data: brandRow } = await supabase
+      .from("brands")
+      .select("id")
+      .eq("id", fields.brand_id)
+      .eq("workspace_id", membership.workspace_id)
+      .maybeSingle();
+    if (!brandRow) {
+      return {
+        error: "db",
+        message: "brand_id does not belong to the resolved workspace",
+      };
+    }
+  }
+
   const insertPayload = {
     workspace_id: membership.workspace_id,
     created_by: user.id,
@@ -414,6 +455,32 @@ export async function submitDraftProject(
   // delivered etc.) back to 'draft' or stomps on its fields, bypassing
   // the transition matrix in projects/[id]/actions.ts.
   if (target.status !== "draft") return { error: "forbidden" };
+
+  // Wave D sub_03g F4: brand_id cross-workspace guard. Resolve the
+  // draft's workspace_id (the row the caller is allowed to mutate)
+  // and verify any submitted brand_id belongs to it.
+  if (fields.brand_id) {
+    const { data: draftRow } = await supabase
+      .from("projects")
+      .select("workspace_id")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (!draftRow?.workspace_id) {
+      return { error: "not_found" };
+    }
+    const { data: brandRow } = await supabase
+      .from("brands")
+      .select("id")
+      .eq("id", fields.brand_id)
+      .eq("workspace_id", draftRow.workspace_id)
+      .maybeSingle();
+    if (!brandRow) {
+      return {
+        error: "db",
+        message: "brand_id does not belong to the project's workspace",
+      };
+    }
+  }
 
   const status = intent === "submit" ? "submitted" : "draft";
 
