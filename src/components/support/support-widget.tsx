@@ -166,15 +166,19 @@ export function SupportWidget({
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB — Phase 4.x Wave C.5c sub_05: 56×56 ink-primary bg with the
+          new yagi-talk-icon swapped in. Mobile inset (bottom-4 right-4)
+          tightens the FAB against the safe-area; desktop keeps 6/6.
+          Inner icon = 40×40 with 8px breathing room inside the 56 ring,
+          which is the Material / Intercom / ChannelTalk standard. */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={t("fab_label")}
         className={cn(
-          "fixed bottom-6 right-6 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full",
+          "fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full",
           "bg-foreground text-background shadow-lg shadow-black/20",
-          "hover:scale-105 hover:shadow-black/30 transition-all duration-200",
+          "hover:scale-105 hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         )}
       >
@@ -182,11 +186,11 @@ export function SupportWidget({
           <X className="h-5 w-5" />
         ) : (
           <Image
-            src="/brand/yagi-mark-white.png"
+            src="/brand/yagi-talk-icon.png"
             alt=""
-            width={28}
-            height={28}
-            className="h-7 w-auto"
+            width={40}
+            height={40}
+            className="h-10 w-10 opacity-95"
             priority={false}
           />
         )}
