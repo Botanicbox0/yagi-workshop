@@ -430,14 +430,19 @@ export function NewProjectWizard({
       toast.error("파일 업로드에 실패했습니다. 다시 시도해주세요.");
       return;
     }
-    // storage_key for wizard PDFs uses the board-assets prefix (server-generated).
-    // The publicUrl contains the full path; we extract the key by stripping the base URL.
-    // If we can't parse it, fall back to the publicUrl itself.
+    // storage_key for wizard PDFs uses the board-assets prefix that
+    // getBoardAssetPutUrlAction generated server-side. Extract the path
+    // portion of the public URL and strip the leading slash so the key
+    // matches the actual R2 object key — board-assets/<user>/<uuid>.pdf.
+    // Wave C.5d sub_03f_1: previously this prepended "project-wizard" to
+    // satisfy the add_project_board_pdf RPC validation, which left a key
+    // that did not exist in R2 and made submitted PDFs unrecoverable.
+    // Companion sub_03f_1 migration adds `board-assets/` to the RPC
+    // allowlist so the bare key passes validation.
     let storageKey = result.publicUrl;
     try {
       const urlObj = new URL(result.publicUrl);
-      // path is like /board-assets/user-id/uuid.pdf — strip leading slash
-      storageKey = "project-wizard" + urlObj.pathname;
+      storageKey = urlObj.pathname.replace(/^\//, "");
     } catch {
       // fall back to publicUrl
     }
