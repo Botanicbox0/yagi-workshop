@@ -123,7 +123,18 @@ export async function updateProjectBoardAction(
   // close the lock race window. If admin locks between our SELECT and UPDATE,
   // the WHERE clause filters it out and `updated` returns empty rows; we then
   // return error:locked WITHOUT having inserted a version snapshot.
-  const { data: updated, error: uErr } = await sb
+  //
+  // Wave C.5d sub_03f_2: the migration locks `authenticated` out of
+  // table-level UPDATE on project_boards and only re-grants
+  // (document, updated_at), so PostgREST cannot UPDATE asset_index
+  // anymore. Use the service-role client here to write asset_index in
+  // the same atomic statement; authorization (workspace + lock) was
+  // already enforced by the user-scoped SELECT above. Race guard
+  // (eq is_locked=false) is preserved through the service client.
+  const service = createSupabaseService();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  const svc = service as any;
+  const { data: updated, error: uErr } = await svc
     .from("project_boards")
     .update({
       document: parsed.data.document,
@@ -369,7 +380,14 @@ export async function restoreVersionAction(
     .eq("id", parsed.data.boardId)
     .maybeSingle();
 
-  const { error: uErr } = await sb
+  // Wave C.5d sub_03f_2: same column-grant lockdown applies — write
+  // asset_index via service role. Admin-only action (yagi_admin gate
+  // checked above) so authorization is well-established before this
+  // UPDATE runs.
+  const restoreService = createSupabaseService();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  const restoreSvc = restoreService as any;
+  const { error: uErr } = await restoreSvc
     .from("project_boards")
     .update({
       document: restoredDoc,
@@ -399,7 +417,14 @@ export async function restoreVersionAction(
 // All actions: validate input, call RPC, recompute asset_index server-side,
 // revalidate page. Trust boundary: client never supplies asset_index (L-041).
 
-// Helper: recompute asset_index from current board state and UPDATE
+// Helper: recompute asset_index from current board state and UPDATE.
+// Wave C.5d sub_03f_2: asset_index is now revoked from authenticated at
+// the table level. The helper still accepts a user-scoped client for the
+// pre-fetch SELECT so RLS gates row visibility, but the UPDATE switches
+// to the service-role client because column grants no longer let
+// authenticated write asset_index. Callers (add_project_board_pdf /
+// add_project_board_url action wrappers) have already validated auth
+// via their RPC + RLS pre-check before invoking this helper.
 async function recomputeAndUpdateAssetIndex(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sb: any,
@@ -420,7 +445,10 @@ async function recomputeAndUpdateAssetIndex(
     (board.attached_urls ?? []) as any,
   );
 
-  await sb
+  const service = createSupabaseService();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  const svc = service as any;
+  await svc
     .from("project_boards")
     .update({ asset_index: newIndex, updated_at: new Date().toISOString() })
     .eq("id", boardId);
