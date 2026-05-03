@@ -1,0 +1,59 @@
+K-05 ADVERSARIAL CODE REVIEW — Wave C.5c sub_01 PKCE flow.
+
+Repository root: C:/Users/yout4/yagi-studio/yagi-workshop
+
+Targets (uncommitted working tree):
+  1. src/lib/supabase/client.ts                — flowType: 'pkce' on browser client
+  2. src/lib/supabase/server.ts                — flowType: 'pkce' on server client
+  3. src/lib/supabase/middleware.ts            — flowType: 'pkce' on middleware client
+  4. src/app/auth/confirm/route.ts             — NEW intermediate verifyOtp endpoint
+  5. src/middleware.ts                         — added auth/confirm to negative-lookahead
+  6. src/app/[locale]/(auth)/signup/page.tsx   — emailRedirectTo flipped to final destination + sanitizeNext rejects /auth/confirm
+  7. src/app/[locale]/(auth)/forgot-password/page.tsx — resetPasswordForEmail redirectTo flipped
+  8. src/app/[locale]/auth/expired/page.tsx    — resend emailRedirectTo flipped
+  9. src/app/[locale]/auth/verify/page.tsx     — resend emailRedirectTo flipped
+  10. src/app/auth/callback/route.ts           — UNCHANGED; legacy OAuth-code-flow handler kept
+
+Background: Gmail / Outlook / corporate-mail link-preview crawlers GET email-confirm URLs before users can click them. Under the legacy `?code=...` callback, that GET single-use-consumed the OTP; real user clicks then landed on /auth/expired. PKCE moves the consume into an explicit verifyOtp() call inside our /auth/confirm route handler, gated by the code_verifier cookie that signUp() stores in the user's specific browser. A passive crawler GET fails harmlessly because it has no code_verifier cookie.
+
+Email-template change is a yagi MANUAL action in the Supabase Dashboard (tracked as FU-C5c-01); the link must change to:
+    {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}
+Same change for Magic Link + Reset Password templates. Without that paste, the email body still uses the old /auth/callback?code= URL and PKCE has zero effect.
+
+PROCESS:
+1. Read each target file in full (uncommitted working tree).
+2. Read the existing `src/app/auth/callback/route.ts` (unchanged) and reason about whether keeping it alive alongside /auth/confirm causes any conflict or false-positive expired bounces.
+3. Audit the next-param sanitisation in /auth/confirm: NEXT_ALLOWLIST_PREFIXES + sanitizeNext.
+4. Audit the verifyOtp error path: does it correctly map all expired/invalid/consumed/missing-code-verifier failures to /auth/expired without leaking the supabase error.message into the URL?
+5. Audit the locale resolution path inside /auth/confirm — profile lookup, default ko, recovery branch.
+6. Verify the SSR cookie chain: createServerClient called in a Route Handler -> next/headers cookies() is mutable -> verifyOtp's setAll writes the auth-token cookies -> NextResponse.redirect carries them.
+7. Verify middleware exclusion is right (auth/confirm is locale-free, like auth/callback).
+
+FOCUS AREAS (each must be a separate finding with explicit verdict):
+A. PKCE compliance — token_hash + type alone enough? (Supabase verifyOtp signature)
+B. `next` param open-redirect vector through allowlist + locale strip + re-prefix logic.
+C. SSR code_verifier cookie persistence — does the browser-side signUp() set the cookie that the server-side /auth/confirm verifyOtp reads? Cookie scope (path / domain) correct?
+D. Coexistence with /auth/callback — does the legacy OAuth-code-flow handler interfere with the PKCE link path?
+E. verifyOtp error branches — single bounce to /auth/expired sufficient? Any error class that should land elsewhere (e.g., structurally invalid token vs expired)?
+F. Gmail crawler invariant — under PKCE, does a crawler GET truly fail? Are we relying on cookie scope or something else?
+G. emailRedirectTo allowlist surface — what URLs must yagi add to the Supabase Dashboard "Redirect URLs" config for this to work?
+H. Open-redirect through `next` after locale strip — could a hostile email author craft `next=//evil.com` or `next=/api/...` to leak post-confirm?
+I. Recovery flow — `if (type === "recovery")` always wins over the next param. Is that correct? What if a user crafts `?type=signup&next=/reset-password`?
+J. Forgot-password page redirectTo flip — does the new `${siteUrl}/reset-password` value work with the dashboard's Recovery email template `{{ .RedirectTo }}` placeholder?
+K. flowType: 'pkce' in the middleware client — does adding flowType to the middleware-only updateSupabaseSession cause any session-refresh regression?
+L. Race / state — any window where the cookie is set but not yet readable by the redirect target?
+
+Severity scale: HIGH-A (security-critical) | HIGH-B (high-impact bug) | HIGH-C (non-auto) | MED-A (defense-in-depth, auto) | MED-B (defer) | MED-C (non-auto) | LOW.
+
+Output format (markdown), one section per finding:
+
+## Finding F<N> — <short title>
+- Severity: <level>
+- Surface: <file:lines or sql snippet>
+- Verdict: <clear>
+- Reasoning: <2-4 sentences>
+- Proposed fix: <patch sketch> OR 'no fix needed' with rationale
+
+End with a 'Verdict' line summarising HIGH-A / HIGH-B / MED-A counts and recommending APPLY / FIX / HALT.
+
+Read-only review only. Do NOT modify files.

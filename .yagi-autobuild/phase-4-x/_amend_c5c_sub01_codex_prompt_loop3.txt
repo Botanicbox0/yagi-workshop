@@ -1,0 +1,50 @@
+K-05 ADVERSARIAL CODE REVIEW — Wave C.5c sub_01 PKCE flow LOOP 3 (verify LOOP 2 N1 + N2 fixes).
+
+Repository root: C:/Users/yout4/yagi-studio/yagi-workshop
+
+LOOP 2 final verdict: HIGH-A 0 / HIGH-B 0 / MED-A 2 (NEW). The 2 NEW findings:
+
+- N1 (MED-A) — POST is vulnerable to login CSRF + clickjacking. Recommended: Origin/Referer check on POST + CSP frame-ancestors 'none' + form-action 'self' + base-uri 'none'.
+- N2 (MED-A) — Tokenized URL Referer leak to external CDN stylesheet. Recommended: drop external stylesheet OR set Referrer-Policy: no-referrer.
+- N3 (LOW) — Korean-only intermediate page. Deferred (LOW).
+
+Both N1 + N2 addressed in src/app/auth/confirm/route.ts:
+
+  N2 fix:
+    - Removed the @import of Pretendard CDN stylesheet (now system-ui fallback only).
+    - Added <meta name="referrer" content="no-referrer"> on the HTML.
+    - Added Referrer-Policy: no-referrer on the GET response header.
+
+  N1 fix:
+    - Added Content-Security-Policy header on GET:
+        default-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none';
+        form-action 'self'; base-uri 'none'
+    - Added Origin/Referer same-origin check on POST. Rejects cross-origin
+      POSTs by redirecting to /ko/signin?error=cross_origin_confirm.
+
+PROCESS:
+1. Read src/app/auth/confirm/route.ts (current working tree).
+2. Re-evaluate N1 + N2 against the new code.
+3. Look for any further regressions or NEW issues introduced by the LOOP 2 fixes:
+   - Does removing the Pretendard CDN cause any visual regression that matters? (LOW severity at most.)
+   - Does the CSP `style-src 'unsafe-inline'` weaken the page meaningfully? (Required because we have an inline <style> block.)
+   - Does the Origin/Referer check correctly handle the legitimate-user click flow? Specifically: form submitted from the same /auth/confirm page on the same origin — Origin header should be set by the browser for non-GET form submits.
+   - Edge case: Origin header may be absent for some user-agents (older mobile browsers). Falling back to Referer is the standard mitigation; verify the startsWith check is correct.
+   - Edge case: a hostile email could craft a cross-origin form pointing at the victim's /auth/confirm. With the new check, this lands on /signin?error=cross_origin_confirm. Confirm.
+   - Any issue with the CSP base-uri 'none' breaking legitimate behaviour? (It just blocks <base href> usage, which we don't use.)
+
+FOCUS AREAS for LOOP 3:
+A. N1 fix verification — Origin check + CSP block CSRF + clickjacking?
+B. N2 fix verification — token_hash never leaves the response chain?
+C. Regressions introduced by removing the CDN stylesheet (visual only, not functional).
+D. Any new attack surface opened by the CSP?
+
+Severity scale: HIGH-A | HIGH-B | HIGH-C | MED-A | MED-B | MED-C | LOW.
+
+Output format (markdown):
+- Per LOOP 2 finding (N1, N2): FIXED / RESIDUAL.
+- Per NEW finding: standard finding format.
+
+End with a 'Verdict' line summarising HIGH-A / HIGH-B / MED-A counts and recommending APPLY / FIX / HALT.
+
+Read-only review only.

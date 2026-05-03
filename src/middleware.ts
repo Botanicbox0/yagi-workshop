@@ -58,6 +58,9 @@ export const config = {
     // Phase 4.x Wave C.5b sub_02 — `u` removed (creator handle profile
     // tree at /u/<handle> is gone). Keeping it in the exclude was a
     // forward-leak from the deleted Phase 2.5 surface.
-    "/((?!api|_next|_vercel|auth/callback|showcase|challenges|.*\\..*).*)",
+    // Phase 4.x Wave C.5c sub_01 — `auth/confirm` added (PKCE
+    // intermediate verify endpoint; same locale-free shape as
+    // auth/callback).
+    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|.*\\..*).*)",
   ],
 };

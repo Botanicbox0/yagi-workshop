@@ -10,6 +10,10 @@ export async function updateSupabaseSession(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Phase 4.x Wave C.5c sub_01 — PKCE flow parity with server.ts /
+      // client.ts. Middleware reads/writes the same auth cookies; if the
+      // flowType differs across clients, code_verifier handling drifts.
+      auth: { flowType: "pkce" },
       cookies: {
         getAll() {
           return request.cookies.getAll();

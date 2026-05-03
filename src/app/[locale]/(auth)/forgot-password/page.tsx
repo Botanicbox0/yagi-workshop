@@ -32,8 +32,12 @@ export default function ForgotPasswordPage() {
     setSubmitting(true);
     const supabase = createSupabaseBrowser();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    // Phase 4.x Wave C.5c sub_01 — PKCE: redirectTo is the FINAL
+    // destination after verifyOtp succeeds at /auth/confirm. The
+    // email link itself is hard-coded in the Supabase Dashboard
+    // recovery template to /auth/confirm?type=recovery&...
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${siteUrl}/auth/callback?type=recovery`,
+      redirectTo: `${siteUrl}/reset-password`,
     });
     setSubmitting(false);
     if (error) {

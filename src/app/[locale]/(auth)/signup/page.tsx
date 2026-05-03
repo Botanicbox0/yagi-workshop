@@ -15,17 +15,26 @@ import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 // Phase 2.8.1 G_B1-H (F-PUX-003): commission flow uses `?next=` to bring
 // the user back to /app/commission/new after the email-confirm round-trip.
-// We accept any same-origin path that starts with `/` and is not the auth
-// confirm endpoint itself (avoids the trivial loop). Cross-origin URLs
-// are rejected outright so a malicious caller can't bounce the user off
-// the platform.
+// Phase 4.x Wave C.5c sub_01 (Codex F8 fix): bound the accepted paths to
+// the same allowlist used by /auth/confirm so the Supabase Dashboard
+// "Redirect URLs" allowlist scope stays small + auditable.
+const SIGNUP_NEXT_ALLOWLIST: readonly string[] = [
+  "/onboarding/workspace",
+  "/onboarding/brand",
+  "/onboarding/invite",
+  "/app",
+];
 function sanitizeNext(raw: string | null): string | null {
   if (!raw) return null;
   if (!raw.startsWith("/")) return null;
   if (raw.startsWith("//")) return null; // protocol-relative
-  if (raw.startsWith("/auth/callback")) return null;
+  if (raw.startsWith("/auth/")) return null;
   if (raw.length > 500) return null;
-  return raw;
+  const pathOnly = raw.split("?")[0];
+  for (const prefix of SIGNUP_NEXT_ALLOWLIST) {
+    if (pathOnly === prefix || pathOnly.startsWith(`${prefix}/`)) return raw;
+  }
+  return null;
 }
 
 const schema = z
@@ -56,9 +65,16 @@ export default function SignUpPage() {
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
+  // Phase 4.x Wave C.5c sub_01 — Under PKCE, the actual email-link path
+  // is hard-coded in the Supabase Dashboard email template
+  // (`{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&...`).
+  // `emailRedirectTo` becomes the FINAL destination after verifyOtp
+  // succeeds, embedded as `?next=` inside that template URL via the
+  // `{{ .RedirectTo }}` template variable. So this URL is the
+  // post-confirm landing, NOT the click target.
   function buildEmailRedirect(siteUrl: string): string {
-    const base = `${siteUrl}/auth/callback`;
-    return next ? `${base}?next=${encodeURIComponent(next)}` : base;
+    const base = `${siteUrl}/onboarding/workspace`;
+    return next ? `${siteUrl}${next}` : base;
   }
 
   async function onSubmit(values: FormValues) {

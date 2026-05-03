@@ -1,0 +1,51 @@
+K-05 ADVERSARIAL CODE REVIEW — Wave C.5c sub_01 PKCE flow LOOP 2 (verify LOOP 1 fixes).
+
+Repository root: C:/Users/yout4/yagi-studio/yagi-workshop
+
+LOOP 1 (read .yagi-autobuild/phase-4-x/_amend_c5c_sub01_codex_review_loop_1.md) returned HIGH-A 0 / HIGH-B 2 / MED-A 3, recommending FIX. The five non-LOW findings:
+
+- F1 (HIGH-B) — verifyOtp does not enforce PKCE code_verifier; passive GET still consumes OTP.
+- F7 (HIGH-B) — Gmail crawler invariant broken (same root cause as F1).
+- F2 (MED-A) — emailRedirectTo absolute URL silently rejected by sanitizeNext.
+- F8 (MED-A) — signup sanitizeNext allowed too broad a `next` surface for Dashboard allowlist scoping.
+- F9 (MED-A) — `/reset-password` allowed as generic `next` could land non-recovery confirms there.
+
+All five addressed. Targets (current working tree, uncommitted):
+
+  1. src/app/auth/confirm/route.ts — REWRITTEN. Now exports both GET and POST.
+     - GET renders a static HTML page with a `<form method="POST">` carrying token_hash/type/next as hidden inputs. NO verifyOtp call on GET. A crawler GET sees only the HTML, no OTP consumption.
+     - POST reads the form payload, calls verifyOtp, then redirects.
+     - sanitizeNext rewritten to accept absolute same-origin URLs (parsed via `new URL(raw, origin)`); strips locale; strips query string for matching; recovery uses its own RECOVERY_NEXT allowlist.
+
+  2. src/app/[locale]/(auth)/signup/page.tsx — sanitizeNext narrowed to a SIGNUP_NEXT_ALLOWLIST mirror of /auth/confirm's. Reject any `/auth/*` next.
+
+PROCESS:
+1. Read both updated files in full.
+2. Re-evaluate F1, F2, F7, F8, F9 against the new code.
+3. Look for NEW issues introduced by the rewrite:
+   - Does the GET HTML page have CSRF / clickjacking risk?
+   - The POST handler doesn't check Origin/Referer — is it vulnerable to a cross-origin form submit replaying a stolen token_hash from the user's own email?
+   - The HTML escapeHtml — XSS if token_hash or next contains exotic characters?
+   - The intermediate page is rendered at /auth/confirm with status 200; does the noindex meta tag suffice?
+   - The form submits to `/auth/confirm` (same-origin) — fine, but what if the user is on `/ko/auth/confirm` somehow? Path is locale-free per middleware, so this can't happen.
+   - F11 (LOOP 1): "@supabase/ssr already defaults both browser and server clients to PKCE" — does explicitly setting flowType break anything in the new POST + getUser sequence?
+
+FOCUS AREAS for LOOP 2:
+A. F1/F7 fix verification — does the GET-renders-form / POST-verifies pattern actually defeat the Gmail crawler? Confirm by tracing what a crawler GET sees vs what a user click does.
+B. F2 fix verification — does sanitizeNext now correctly handle `https://site/onboarding/workspace` as input?
+C. F8 fix verification — signup SIGNUP_NEXT_ALLOWLIST aligns with /auth/confirm.
+D. F9 fix verification — /reset-password only reachable via type=recovery branch.
+E. CSRF on POST — does the absence of Origin/Referer / CSRF token check matter when the only knowledge being exploited (token_hash from email) is itself the auth credential?
+F. XSS through hidden form values — escapeHtml correct?
+G. Open-redirect through the new sanitizeNext URL parser.
+H. Cookie persistence: signUp() (browser PKCE) sets verifier cookie. The server-side verifyOtp in POST reads cookies via createSupabaseServer (next/headers). Same browser session → cookie present → verify succeeds. Crawler POST scenario: would never have the verifier cookie and would have to know the token_hash — only possible if it observed the email + can replay against /auth/confirm. Mitigation?
+I. The recovery flow specifically — under PKCE, when the user clicks the password-reset email link, /auth/confirm GET renders the page, user clicks Continue, POST verifyOtp succeeds, profile.locale resolved, redirect to /reset-password. Verify the reset-password page itself reads the session and prompts for new password.
+J. Accessibility / locale of the intermediate HTML — only Korean copy + lang=ko. Acceptable for a 1-second click-through, but flag.
+
+Severity scale: HIGH-A | HIGH-B | HIGH-C | MED-A | MED-B | MED-C | LOW.
+
+Output format (markdown), one section per LOOP 1 finding (with FIXED / RESIDUAL verdict) + one section per NEW finding.
+
+End with a 'Verdict' line summarising HIGH-A / HIGH-B / MED-A counts and recommending APPLY / FIX / HALT.
+
+Read-only review only. Do NOT modify files.

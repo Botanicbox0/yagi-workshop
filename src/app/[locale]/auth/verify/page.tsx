@@ -34,7 +34,10 @@ export default function AuthVerifyPage() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: presetEmail,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+      // Phase 4.x Wave C.5c sub_01 — PKCE: emailRedirectTo is the FINAL
+      // post-verify landing; email link itself is the dashboard's
+      // /auth/confirm template URL.
+      options: { emailRedirectTo: `${siteUrl}/onboarding/workspace` },
     });
     setResending(false);
     if (error) {
