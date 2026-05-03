@@ -625,6 +625,14 @@
         "unauthenticated": "Please sign in to continue.",
         "submit_validation": "Some inputs are invalid. Please review each step.",
         "submit_failed": "Submission failed. Please try again in a moment."
+      },
+      "status": {
+        "draft": "Drafting",
+        "in_review": "In review",
+        "routing": "Matching director",
+        "in_progress": "In production",
+        "approval_pending": "Reviewing draft",
+        "delivered": "Delivered"
       }
     }
   },

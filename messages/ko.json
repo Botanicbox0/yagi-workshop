@@ -625,6 +625,14 @@
         "unauthenticated": "로그인이 필요합니다.",
         "submit_validation": "입력값에 문제가 있어요. 각 단계를 다시 확인해 주세요.",
         "submit_failed": "제출에 실패했어요. 잠시 후 다시 시도해 주세요."
+      },
+      "status": {
+        "draft": "작성 중",
+        "in_review": "검토 중",
+        "routing": "디렉터 매칭",
+        "in_progress": "작업 진행",
+        "approval_pending": "시안 확인",
+        "delivered": "최종 납품"
       }
     }
   },
