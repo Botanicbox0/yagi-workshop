@@ -39,7 +39,7 @@
           </tr>
           <tr>
             <td style="padding-bottom: 40px;">
-              <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 14px 32px; background: #71D083; color: #000000; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 12px;">
+              <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup&amp;next={{ .RedirectTo }}" style="display: inline-block; padding: 14px 32px; background: #71D083; color: #000000; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 12px;">
                 이메일 인증하기
               </a>
             </td>
@@ -48,7 +48,7 @@
             <td style="padding-bottom: 40px;">
               <p style="margin: 0; font-size: 12px; color: #7B7B7B; line-height: 1.5;">
                 버튼이 동작하지 않으면 아래 링크를 복사해 주세요:<br>
-                <span style="color: #B4B4B4; word-break: break-all;">{{ .ConfirmationURL }}</span>
+                <span style="color: #B4B4B4; word-break: break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup&amp;next={{ .RedirectTo }}</span>
               </p>
             </td>
           </tr>
