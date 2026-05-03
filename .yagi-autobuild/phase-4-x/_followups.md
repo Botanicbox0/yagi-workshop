@@ -401,3 +401,146 @@ action, and the trigger that should pull it back into scope.
 - **Status**: Not started. Bundled into the next "lint sweep"
   migration (Phase 5+).
 - **Registered**: 2026-05-04 (Wave C.5d sub_03f_5 prod apply advisor).
+
+## FU-C5d-10 — Email template KO/EN visual mixing cleanup
+
+- **Trigger**: yagi visual review of received signup confirmation
+  email (2026-05-04, after Wave C.5d sub_01 + dashboard paste).
+- **Risk**: All three production email templates (Confirm signup,
+  Magic Link, Reset Password) ship a header block with English
+  brand copy ("YAGI WORKSHOP" / "AI NATIVE ENTERTAINMENT STUDIO")
+  and a Korean body underneath. yagi flagged this as inconsistent
+  and noted it should be cleaned up later. Two interpretations are
+  possible: (a) the English header is intentional brand
+  identity (treat as wordmark, leave EN regardless of locale), or
+  (b) the entire template should follow the recipient locale. The
+  current state implicitly assumes (a) but the design has not been
+  explicitly locked, so the visual reads as a bug to non-yagi
+  reviewers.
+- **Action**: Decide which of (a) / (b) is the brand stance, then:
+  - If (a): document the policy in
+    `supabase/templates/email/README.md` so future template authors
+    know the EN header is wordmark-by-design and not subject to
+    locale switching. No code change needed.
+  - If (b): add a locale parameter to each template. Supabase email
+    templates do not natively branch on user locale, so the path is
+    likely two separate template files (`confirm.ko.html` /
+    `confirm.en.html`) wired up via the
+    `signUp({ options: { emailRedirectTo, data: { locale } } })`
+    metadata + a Supabase Edge Function or Auth Hook that routes by
+    locale. Bigger lift, but cleaner long-term.
+- **Compensating control**: Korean readers understand "YAGI
+  WORKSHOP" as a brand mark; English readers see the entire mail
+  in English already (subject is currently KO-only — separate
+  consideration). The mixing is an aesthetic concern, not a
+  comprehension bug.
+- **Owner**: yagi (brand decision) → Builder (implementation if (b)
+  is selected).
+- **Status**: Not started. Deferred to Phase 5+ when locale strategy
+  for email is decided alongside the broader Briefing Canvas i18n
+  work.
+- **Registered**: 2026-05-04 (Wave C.5d sub_02 dashboard paste +
+  yagi visual review).
+
+## FU-C5d-11 — Onboarding /brand polish + Twin-only user carve-out
+
+- **Trigger**: yagi visual review of `/ko/onboarding/brand` after
+  fresh signup smoke test, 2026-05-04.
+- **Risk**: Two distinct UX issues stack on the same surface:
+  1. **Brand logo placeholder absent.** When the workspace has not
+     yet uploaded a brand logo, the page header renders only the
+     plain "YAGI WORKSHOP / AI NATIVE ENTERTAINMENT STUDIO" text
+     wordmark — there is no graceful empty-state slot for the
+     incoming brand identity. The page reads as YAGI's own
+     branding hijacking the user's onboarding screen.
+  2. **Twin-only user mismatch.** The "첫 브랜드를 추가하시겠어요?"
+     copy and the [브랜드 이름 / 건너뛰기] button pair assume the
+     user is a Brand-side client (one who is commissioning work
+     against their own brand). PRODUCT-MASTER v1.1 §C explicitly
+     names a second user shape — the Twin-curating customer,
+     whose entry point is "we extend who you are" rather than "add
+     your brand." For that user the brand step is a confusing
+     barrier; the "건너뛰기" CTA does not signal "this step is
+     optional for your use case" — it signals "this step is
+     required but you can punt."
+- **Action** (paired with FU-C5b-08 brand-onboarding rework):
+  1. Brand logo header — add a square placeholder slot for the
+     workspace logo above the page heading. When `brands.logo_url`
+     is null, render a sage-tinted empty placeholder with helper
+     text ("브랜드 로고는 나중에 추가할 수 있어요"). When set, swap
+     in `next/image` at the same dimensions.
+  2. Twin-aware copy + CTA — either:
+     - **Option A** (small): rewrite the heading to "첫 브랜드를
+       추가해 볼까요?" and add helper copy underneath ("Twin 활용이
+       주 목적이라면 이 단계를 건너뛰고 바로 시작할 수 있어요"),
+       or
+     - **Option B** (preferred, paired with FU-C5b-08-c):
+       redesign onboarding around the question "어떤 작업으로
+       시작할까요?" with three primary cards (의뢰 / Twin / 둘 다)
+       at the workspace-creation step. The chosen path drives the
+       remaining onboarding sequence: 의뢰 → keeps current brand
+       step, Twin → skips brand and goes straight to first Twin
+       intake, 둘 다 → current flow with twin-aware copy.
+- **Recommended bundling**: pair with FU-C5b-08 (brand onboarding
+  rework, recommended option **c** = delete `/onboarding/brand`,
+  auto-create default brand at workspace bootstrap, move multi-
+  brand to `/app/settings/workspace`). Combined fix touches the
+  same surface in one PR.
+- **Affected surfaces**: `/onboarding/brand` route + page, possible
+  new `/onboarding/intent` step (Option B), `bootstrap_workspace`
+  RPC (auto-default brand if intent=Twin), i18n keys for the
+  three-card copy.
+- **Owner**: yagi (decision: Option A vs B), Builder (implementation
+  when greenlit).
+- **Status**: Not started. Deferred to Phase 5 Wave A as a polish
+  task or — preferably — bundled with FU-C5b-08 into a single
+  hotfix after Phase 4.x ff-merge. Phase 5 Wave A KICKOFF should
+  add a `task_03c (onboarding/brand polish + twin-only carve-out)`
+  entry to the task list, sequenced after task_03b (status copy
+  i18n) so the three i18n+UX adjustments ship together.
+- **Registered**: 2026-05-04 (Wave C.5d smoke test, yagi visual
+  review of fresh signup `/ko/onboarding/brand`).
+
+## FU-C5d-12 — Magic link signin UI + user-friendly 워딩 lock
+
+- **Trigger**: Magic link signin 기능을 UI 에 처음 노출하는 시점
+  (현재 미구현; PKCE intermediate page 의 `type='magiclink'` 처리
+  코드는 defense-in-depth 로 유지 중).
+- **Risk**: Wave D task_D3 Smoke 2 진행 시 발견 — `/ko/signin` page
+  가 password-only (`signInWithPassword` 만). Magic link CTA 자체가
+  UI 에 없음. 즉 *현재 PKCE 자동 verify path 의 `type='magiclink'`*
+  는 dead code (admin tool 또는 미래 도입 시 fallback). 이 상태에서
+  미래 magic link 도입 시 *dev-jargon 워딩* ("매직 링크 보내기" 같은)
+  을 *그대로 사용할 risk*. yagi 가 명시적으로 reject —
+  yagi-studio 의 target 은 비개발자 (셀럽 / 배우 / 아티스트 + brand
+  의뢰자). "매직 링크" = sketchy, trust 깨뜨림.
+- **Action**: Magic link UI 도입 시점에 다음 review 강제:
+  1. **워딩 후보** — 셋 중 yagi visual review 로 1개 선택:
+     - "이메일로 로그인 링크 받기" (직관적, 한국 users 의 카카오/
+       네이버 OTP pattern 과 유사)
+     - "비밀번호 없이 로그인" (clear, friction-free 강조)
+     - "이메일 인증으로 바로 시작" (CTA-driven, signup 과 통합 가능)
+  2. **디자인** — 메인 CTA (검정 "로그인" 버튼) 와의 위계 + 진입
+     affordance 재설계. Secondary 한 *option* 위치 (예: signin form
+     하단 "또는 이메일 링크로 로그인" 같은) 권장.
+  3. **Email template** — `type='magiclink'` 의 Resend / Supabase
+     template body 의 한국어 copy 재검토 (sub_03i 의 intermediate
+     page copy "로그인 링크 확인" 과 일관 강제).
+  4. **route handler** — `src/app/auth/confirm/route.ts` 의
+     `getIntermediateCopy()` 의 `case "magiclink"` 가 이미 있음.
+     도입 시 연결만 검증.
+- **Compensating control**: 현재 `type='magiclink'` 가 user-facing
+  trigger 0. Dead code 처럼 보이지만 *defense-in-depth*. Admin tool
+  또는 future feature 에서 magic link 발급 시 fallback path 로 작동.
+  코드 cleanup 비용 미미 (`getIntermediateCopy` case + route handler
+  branch ~10 lines), 도입 시 워딩만 review.
+- **Recommended bundling**: 미래 magic link 도입이 *passwordless
+  authentication* push 와 묶일 가능성이 큼 (Phase 6+ Artist Roster
+  intake 에서 invite-token 1-shot signup + magic link signin 조합).
+  그 시점에 워딩 + 디자인 + email template 동시 review.
+- **Owner**: yagi (워딩 + 디자인 결정) + Builder (구현) + Codex K-05
+  Tier 2 (auth flow review).
+- **Status**: Not started. Deferred to magic link 도입 시점 (Phase 6
+  Artist Roster 또는 더 이른 시점에서 yagi product 결정 시).
+- **Registered**: 2026-05-04 (Wave C.5d task_D3 Smoke 2 N/A 결정 +
+  yagi 워딩 catch).

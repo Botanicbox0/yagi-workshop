@@ -1,0 +1,51 @@
+# Wave D task_D1 K-05 final review targets — Phase 4.x branch (main..HEAD = 189 files)
+# Filtered to security-critical surfaces only (lesson from sub_03f_3 LOOP 1 = 628k tokens).
+
+# === DB migrations (14 — all security-critical) ===
+supabase/migrations/20260429113853_phase_3_1_project_board.sql
+supabase/migrations/20260429124343_phase_3_1_k05_loop_1_fixes.sql
+supabase/migrations/20260429125246_phase_3_1_k05_loop_2_drop_unsafe_seed_overload.sql
+supabase/migrations/20260429144523_phase_3_1_hotfix_3_attachments.sql
+supabase/migrations/20260429151821_phase_3_1_hotfix_3_k05_loop_1_fixes.sql
+supabase/migrations/20260429151910_phase_3_1_hotfix_3_k05_loop_1_fix_url_jsonb.sql
+supabase/migrations/20260430075826_phase_3_1_hotfix_3_meeting_preferred_at.sql
+supabase/migrations/20260501000000_phase_4_x_workspace_kind_and_licenses.sql
+supabase/migrations/20260501095935_phase_4_x_auto_profile_on_signup.sql
+supabase/migrations/20260501100806_phase_4_x_widen_profile_role_enum.sql
+supabase/migrations/20260501140308_phase_4_x_handle_new_user_search_path_hardening.sql
+supabase/migrations/20260504004349_phase_4_x_wave_c5d_sub03f_1_allow_board_assets_prefix.sql
+supabase/migrations/20260504004536_phase_4_x_wave_c5d_sub03f_2_revoke_table_update.sql
+supabase/migrations/20260504010151_phase_4_x_wave_c5d_sub03f_5_seed_caller_bound_asset_index.sql
+
+# === Auth routes (5) ===
+src/app/auth/confirm/route.ts
+src/app/auth/callback/route.ts
+src/app/[locale]/auth/expired/page.tsx
+src/app/[locale]/auth/layout.tsx
+src/app/[locale]/auth/verify/page.tsx
+
+# === Server actions + RLS-adjacent (high-impact) ===
+src/app/[locale]/app/projects/new/actions.ts
+src/app/[locale]/app/projects/[id]/board-actions.ts
+src/app/[locale]/app/projects/[id]/ref-actions.ts
+src/app/[locale]/app/settings/actions.ts
+src/app/[locale]/onboarding/profile/actions.ts
+
+# === Active-workspace cascade (sub_03 + sub_03f) ===
+src/lib/workspace/active.ts
+src/lib/app/context.ts
+src/app/[locale]/app/layout.tsx
+src/app/[locale]/app/projects/page.tsx
+src/app/[locale]/app/dashboard/page.tsx
+src/app/[locale]/app/projects/new/page.tsx
+src/app/[locale]/app/projects/new/new-project-wizard.tsx
+
+# === Email templates (PKCE wiring) ===
+supabase/templates/email/confirm.html
+supabase/templates/email/magic_link.html
+supabase/templates/email/recovery.html
+
+# === Auth UI ===
+src/app/[locale]/(auth)/signin/page.tsx
+src/app/[locale]/(auth)/signup/page.tsx
+src/app/[locale]/(auth)/forgot-password/page.tsx
