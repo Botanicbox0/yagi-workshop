@@ -35,6 +35,7 @@ import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 import { ensureBriefingDraftProject } from "./briefing-actions";
 import { BriefingCanvasStep1 } from "./briefing-canvas-step-1";
+import { BriefingCanvasStep2 } from "./briefing-canvas-step-2";
 
 // ---------------------------------------------------------------------------
 // Step 1 form schema — v3 minimal (4 fields)
@@ -183,15 +184,20 @@ export function BriefingCanvas({
             submitting={submitting}
           />
         )}
-        {stage === 2 && (
+        {stage === 2 && projectId && (
+          <BriefingCanvasStep2
+            projectId={projectId}
+            onBack={() => handleBackFromStage(1)}
+            onNext={() => handleBackFromStage(3)}
+          />
+        )}
+        {stage === 2 && !projectId && (
           <StagePlaceholder
             stepLabel={t("briefing.step2.placeholder.eyebrow")}
-            title={t("briefing.step2.placeholder.title")}
-            description={t("briefing.step2.placeholder.description")}
+            title={t("briefing.step2.placeholder.title_no_project")}
+            description={t("briefing.step2.placeholder.description_no_project")}
             onBack={() => handleBackFromStage(1)}
             backLabel={t("briefing.step2.placeholder.back")}
-            onForward={() => handleBackFromStage(3)}
-            forwardLabel={t("briefing.step2.placeholder.forward")}
           />
         )}
         {stage === 3 && (

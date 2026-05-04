@@ -55,3 +55,65 @@
 - **Owner**: Builder (Wave B lead).
 - **Status**: Deferred to Wave B.
 - **Registered**: 2026-05-04 (Wave A task_03 sub_3b audit).
+
+## FU-Phase5-3 — generic OG-meta scrape with SSRF-safe undici dispatcher
+
+- **Trigger**: Codex K-05 Wave B task_05 v3 LOOP 1 HIGH finding F1 on
+  `src/app/api/oembed/route.ts`. The original implementation resolved the
+  hostname via `dns.lookup` before `fetch()`, but `fetch()` performs its
+  own DNS lookup later — leaving a DNS-rebinding window between the
+  validate-time resolve and the actual socket connect. The sub_5 patch
+  closed F1 by removing the generic OG-meta scrape entirely (allowlist
+  YouTube/Vimeo via `lib/oembed` + Instagram bare provider tag).
+- **Risk**: Today, non-allowlisted hosts (instagram, x/twitter, tiktok,
+  arbitrary blogs, etc.) return `{ provider: 'generic', thumbnail_url:
+  null }`. Reference rows render the URL with the link-icon fallback
+  but no thumbnail. UX impact: the canvas works; references just look
+  more uniform than they could.
+- **Compensating control**: input shape validation (`validateUrlShape`)
+  blocks `.local`, `.internal`, `localhost` prefixes even though no
+  fetch happens — defense-in-depth in case the route is later extended.
+- **Action**: Re-introduce generic OG scrape using an undici `Agent`
+  with a custom `connect.lookup` that pins the validated IP for the
+  whole connection, including all redirect hops. Keep the streaming
+  size cap, manual-redirect re-validation, and timeout. Trigger when
+  external client demand for non-allowlisted providers (instagram, x,
+  tiktok) shows up in onboarding feedback OR when the briefing canvas
+  reference column needs richer thumbnails for non-video assets.
+- **Owner**: Builder.
+- **Status**: Deferred. Phase 6+ or earlier on demand.
+- **Registered**: 2026-05-03 (Wave B task_05 v3 K-05 LOOP 1, sub_5
+  patch closed F1 by removal not by hardening).
+
+## FU-Phase5-4 — projects table column-grant lockdown for briefing canvas metadata
+
+- **Trigger**: Builder grep audit during Wave B task_05 v3 sub_5 chat
+  report. The Phase 4.x sub_03f_2 → sub_03f_5 sweep applied
+  REVOKE+selective-GRANT to `projects` only for the workspaces
+  cross-table; the 9 metadata columns added in task_04 v3 migration
+  20260504162550 (purpose / channels / mood_keywords / mood_keywords_free
+  / visual_ratio / visual_ratio_custom / target_audience /
+  additional_notes / has_plan) plus 4 sidebar columns (budget_band /
+  target_delivery_at / meeting_preferred_at / interested_in_twin) plus
+  the existing brief / deliverable_types fields are reachable via
+  table-level UPDATE on `projects` for `authenticated`.
+- **Risk**: K-05 LOOP 1 finding F4 was a false positive — projects RLS
+  UPDATE policy correctly enforces `(created_by AND status='draft') OR
+  is_ws_admin OR yagi_admin`, so the policy layer denies misuse today.
+  The MISSING piece is column-grant defense-in-depth: a future PUBLIC
+  inheritance regression on `authenticated.UPDATE(projects)` would
+  bypass any column-level intent the briefing canvas action layer is
+  trying to express. The Phase 4.x cascade (sub_03f_2 → sub_03f_5)
+  established the consistency rule; projects metadata is the 4th
+  cascade waiting to be applied.
+- **Action**: Phase 5 ff-merge batch sweep migration —
+  REVOKE UPDATE ON projects FROM authenticated; GRANT UPDATE on the
+  exact column list the action layer is permitted to mutate (status
+  intentionally OMITTED — status transitions only via RPC); add
+  has_table_privilege + has_column_privilege assertions matching
+  Wave A sub_4 F3 pattern. Trigger: Wave D ff-merge prep OR
+  Phase 5.1 cleanup hotfix.
+- **Owner**: Builder.
+- **Status**: Deferred. Phase 5 ff-merge batch sweep candidate.
+- **Registered**: 2026-05-03 (Wave B task_05 v3 K-05 LOOP 1 sub_5 chat
+  report).

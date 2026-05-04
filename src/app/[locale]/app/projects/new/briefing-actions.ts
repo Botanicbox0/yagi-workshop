@@ -1,32 +1,39 @@
 "use server";
 
 // =============================================================================
-// Phase 5 Wave B task_04 v3 — Briefing Canvas server actions
+// Phase 5 Wave B briefing-canvas server actions
 //
-// Step 1 → Step 2 transition runs ensureBriefingDraftProject. The action
-// either:
-//   - INSERTs a new projects row with status='draft' (new briefing flow)
-//   - UPDATEs an existing draft owned by the caller (when sessionStorage
-//     carried a project_id forward; user navigated back+forward, or
-//     hydrated the canvas after browser restart)
+// task_04 v3 (Step 1 → Step 2 transition):
+//   - ensureBriefingDraftProject(input) — INSERT new draft OR UPDATE
+//     existing draft with Step 1's 4 fields (name + deliverable_types
+//     + purpose + description?).
 //
-// Step 2 + Step 3 actions land in task_05 (autosave + asset upload) and
-// task_06 (submitBriefingAction = status flip to 'in_review') per
-// task_plan.md Wave B section.
+// task_05 v3 (Step 2 — workspace 3-column + autosave):
+//   - getBriefingDocumentPutUrlAction(input)        — R2 presigned PUT
+//   - addBriefingDocumentAction(input)              — INSERT briefing_documents
+//   - removeBriefingDocumentAction(input)           — DELETE briefing_documents
+//   - updateBriefingDocumentNoteAction(input)       — UPDATE note/category only
+//   - updateProjectMetadataAction(input)            — autosave 7+ sidebar fields
 //
-// Authorization model (Phase 4.x sub_03f_5 F4 pattern reuse):
-//   - createSupabaseServer() (user-scoped)
-//   - resolveActiveWorkspace(user.id) for workspace_id
-//   - on UPDATE path, re-verify (created_by = user.id, status='draft',
-//     workspace_id matches active) before any write
-//   - INSERT path goes through projects_insert RLS policy (Phase 3.0
-//     hotfix already extended this to is_ws_member, not is_ws_admin)
+// Authorization model — Phase 4.x sub_03f_5 F4 pattern reused:
+//   - createSupabaseServer (user-scoped)
+//   - resolveActiveWorkspace for active workspace id
+//   - explicit project ownership / workspace-membership re-verify before
+//     any write, even though RLS already gates row scope
+//   - status='draft' guard on every Step 2 write (no metadata changes
+//     after the project transitions to in_review)
+//   - storage_key prefix bound to auth.uid() in the upload presign +
+//     re-validated on INSERT (sub_03f_5 F2 pattern)
 // =============================================================================
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import {
+  createBriefAssetPutUrl,
+  briefObjectPublicUrl,
+} from "@/lib/r2/client";
 
 // ---------------------------------------------------------------------------
 // Step 1 input schema

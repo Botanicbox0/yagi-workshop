@@ -702,12 +702,140 @@
         "cancel_to_list": "← Back to project list"
       },
       "step2": {
+        "header": {
+          "eyebrow": "STEP 2 / 3 — WORKSPACE",
+          "description": "A workspace we'll fill in together. Add only what you have; leave the rest blank — we'll catch up in the kickoff meeting."
+        },
+        "sections": {
+          "brief": {
+            "title": "Your materials",
+            "helper": "Have a brief, deck, or reference doc you've already made?",
+            "upload_cta": "Upload file",
+            "divider": "or",
+            "link_cta": "Add link",
+            "link_input_placeholder": "https://...",
+            "link_add": "Add",
+            "link_cancel": "Cancel",
+            "list_empty": "No materials added yet."
+          },
+          "reference": {
+            "title": "References",
+            "helper": "Paste a URL — we'll grab a preview automatically.",
+            "url_input_placeholder": "Paste a reference URL",
+            "add_cta": "Add",
+            "list_empty": "No references added yet.",
+            "note_placeholder": "What are you taking from this reference?",
+            "categories": {
+              "mood": "Mood",
+              "composition": "Composition",
+              "pacing": "Pacing",
+              "general": "General"
+            }
+          },
+          "detail": {
+            "title": "Details",
+            "mood": {
+              "label": "Mood / keywords",
+              "helper": "Multiple selection + free input",
+              "options": {
+                "emotional": "Emotional",
+                "sophisticated": "Sophisticated",
+                "humorous": "Humorous",
+                "dynamic": "Dynamic",
+                "minimal": "Minimal",
+                "warm": "Warm",
+                "luxurious": "Luxurious",
+                "trendy": "Trendy",
+                "friendly": "Friendly"
+              },
+              "free_input_placeholder": "Free input (e.g., monochrome tone, natural light...)"
+            },
+            "visual_ratio": {
+              "label": "Visual ratio",
+              "options": {
+                "1_1": "1:1",
+                "16_9": "16:9",
+                "9_16": "9:16",
+                "4_5": "4:5",
+                "239_1": "2.39:1",
+                "custom": "Custom"
+              },
+              "custom_placeholder": "e.g., 3:2, 21:9..."
+            },
+            "channels": {
+              "label": "Channels",
+              "helper": "Multiple selection",
+              "options": {
+                "instagram": "Instagram",
+                "youtube": "YouTube",
+                "tiktok": "TikTok",
+                "facebook": "Facebook",
+                "website": "Company website",
+                "offline": "Offline",
+                "other": "Other"
+              }
+            },
+            "has_plan": {
+              "label": "Creative plan",
+              "options": {
+                "have": "I already have one",
+                "want_proposal": "Plan with us",
+                "undecided": "Decide after meeting"
+              }
+            },
+            "target": {
+              "label": "Who's it for?",
+              "placeholder": "e.g., 20-30s women, Instagram users interested in beauty"
+            },
+            "more": {
+              "label": "Anything else?",
+              "placeholder": "Anything else we should know"
+            },
+            "budget": {
+              "label": "Budget",
+              "options": {
+                "under_1m": "Under ₩1M",
+                "1m_to_5m": "₩1M-5M",
+                "5m_to_10m": "₩5M-10M",
+                "negotiable": "Negotiable"
+              }
+            },
+            "delivery_date": {
+              "label": "Target delivery"
+            },
+            "meeting_at": {
+              "label": "Preferred meeting time",
+              "helper": "Select a date and time if you'd like a kickoff meeting"
+            },
+            "twin_toggle": {
+              "label": "🪞 Interested in AI Digital Human (Twin)",
+              "helper": "We'll suggest a Twin or workflow that fits after reviewing your brief."
+            }
+          }
+        },
+        "autosave": {
+          "saving": "Saving...",
+          "saved_at": "Saved · {time}",
+          "error": "Save failed — will retry shortly"
+        },
+        "whiteboard": {
+          "expand_cta": "Want to sketch more freely?",
+          "placeholder": "tldraw whiteboard mount lands in FU-Phase5-3. For now this is just a placeholder area."
+        },
+        "cta": {
+          "back": "← Back",
+          "next": "Continue →"
+        },
+        "toast": {
+          "upload_failed": "Upload failed. Please try again in a moment.",
+          "add_failed": "Couldn't add. Please try again in a moment.",
+          "remove_failed": "Couldn't remove. Please try again in a moment."
+        },
         "placeholder": {
           "eyebrow": "STEP 2 / 3 — WORKSPACE",
-          "title": "Step 2 in progress",
-          "description": "Brief + reference uploads and the detail sidebar land in the next task (task_05).",
-          "back": "← Back to Step 1",
-          "forward": "Preview Step 3 →"
+          "title_no_project": "Please go back to Step 1",
+          "description_no_project": "The project hasn't been created yet. Press [Next →] on Step 1 to begin.",
+          "back": "← Back to Step 1"
         }
       },
       "step3": {
