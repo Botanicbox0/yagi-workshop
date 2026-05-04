@@ -179,6 +179,282 @@ If Codex is down or misconfigured, kill-switches proceed without the Codex step 
 
 ---
 
+## Mandatory RLS multi-role audit (binding from L-049, 2026-05-04)
+
+Added after Phase 5 Wave C K-05 LOOP 1 passed CLEAN with 0 findings yet shipped
+a browser-runtime-broken `defensive soft-delete` (RLS 42501 in dev when logged
+in as a non-yagi-admin seed account). K-05 review never simulated
+non-yagi-admin perspective on RLS WITH CHECK clauses.
+
+**Rule:** Every K-05 review prompt that touches code which writes to ANY
+RLS-bound table (`projects`, `briefing_documents`, `project_boards`,
+`project_references`, `project_status_history`, `workspace_members`,
+`user_roles`, `profiles`, anything under `public.*` with `ENABLE ROW LEVEL
+SECURITY`) MUST include this 4-perspective walk verbatim:
+
+```
+MANDATORY RLS audit — walk USING + WITH CHECK from each role separately:
+
+  1. As `client` (auth.uid() = created_by, no admin role) — owner-only path.
+     Confirm every column the action layer writes is permitted by WITH CHECK
+     for this role. Flag any column write that depends on `is_yagi_admin`
+     bypass (e.g., `deleted_at`, `status`, `workspace_id`).
+  2. As `ws_admin` (workspace_admin role for the project's workspace).
+     Same column-by-column walk; flag deny-only columns.
+  3. As `yagi_admin` (cross-workspace admin) — reference "happy path".
+  4. As `different-user same-workspace` (e.g., another workspace_member who
+     is NOT the project's created_by). The most-likely fail mode in dev
+     with seed accounts. Confirm RLS USING denies the row OR action layer
+     filters reject the operation cleanly.
+
+For every column denied at WITH CHECK level for any role except
+`yagi_admin`: confirm the action layer routes that write through
+`createSupabaseService()` (RLS bypass) with authorization filters preserved
+as explicit `.eq()` clauses (L-048). Flag any user-scoped client write to
+such a column as HIGH-A.
+```
+
+This bullet block is **non-negotiable** and goes verbatim into every
+`_codex_review_prompt.md` for any wave that touches RLS-bound tables. The
+adversarial framing alone is insufficient — K-05's adversarial mindset
+defaulted to `yagi_admin` perspective in Wave C and missed the actual
+failure mode.
+
+**Companion enforcement:** Builder grep audit pre-step (Phase 5 KICKOFF
+K-05 protocol) MUST also grep for these patterns and confirm each hit is
+either (a) `createSupabaseService()` or (b) status-column transition via
+`transition_project_status` RPC:
+
+```
+# user-scoped client writes to deleted_at columns (flag for L-048 review)
+grep -rn 'deleted_at.*new Date\|deleted_at.*now()' src/ | grep -v service
+
+# user-scoped client writes to status column outside of transition RPC
+grep -rn 'status.*draft\|status.*submitted\|status.*delivered\|status.*approved' src/app/ \
+  | grep -v 'transition_project_status'
+```
+
+Any grep hit must appear either in K-05 review file list OR in an explicit
+FU registration with rationale. Silent skips are forbidden.
+
+---
+
+## K-06 — Design Review Gate (binding from 2026-05-04)
+
+Added after Phase 5 Wave C Hotfix-1 — yagi noted the absence of a dedicated
+design-quality review layer. Wave C Hotfix-1 itself surfaced from yagi's
+post-ship browser smoke discovery of 9 visual hierarchy / information weight
+/ wording issues. K-05 (Codex) is code-quality focused (RLS / auth / edge
+case). K-06 (fresh Opus instance) covers design quality, complementing K-05
+in parallel.
+
+### Why a separate gate
+
+- Different model architectures catch different blind spots (same rationale
+  as K-05 dual-model review). Code reviewer (Codex 5.5) defaults to
+  correctness; design reviewer (Opus 4.7) defaults to UX hierarchy + visual
+  weight + paradigm fit.
+- Builder self-review is biased — the same instance that wrote the code can
+  rationalize its own design choices. K-06 spawns a *fresh Opus subagent*
+  with no builder context, so it judges the diff cold.
+- Codex doesn't "see" design intent (CSS class composition, spacing
+  rhythm, sage accent placement). Opus 4.7 has the multimodal + design
+  taste + paradigm-doc reasoning needed.
+
+### When K-06 fires
+
+| Wave shape | K-06? | Reason |
+|---|---|---|
+| UI surface (component, page, layout) | **MANDATORY** | Primary use case |
+| Mixed (UI + schema/RLS/server) | MANDATORY for UI portion | Filter to UI-only files |
+| Pure schema migration | SKIP | No design surface |
+| Pure server action (no UI render) | SKIP | No design surface |
+| Hotfix touching i18n strings only | OPTIONAL | Style judgement borderline |
+
+### Reviewer setup
+
+- Spawn **fresh Opus subagent** at wave end. Use `Task` tool with subagent
+  type `general-purpose` (no builder history inherited).
+- Subagent prompt = K-06 prompt template below + paste of (a) git diff,
+  (b) PRODUCT-MASTER §C.x relevant section reference, (c) yagi-design-system
+  v1.0 SKILL reference, (d) screenshot list if available (Builder captures
+  `pnpm dev` running screenshots before subagent spawn).
+- Run K-06 in parallel with K-05 (no dependency). Both reviewers operate on
+  the same merged phase-branch tip.
+
+### K-06 prompt template (verbatim, binding)
+
+```
+ROLE: Senior design engineer with strong UX taste. Reviewing a wave for
+design quality, NOT code correctness (that's K-05's job).
+
+INPUT:
+- Diff (paths + hunks) at end of this prompt
+- Reference: yagi-design-system v1.0 (SKILL.md attached)
+- Reference: PRODUCT-MASTER.md §<wave-relevant section>
+- Screenshots (if attached): browser views of the changed surfaces
+
+FOUR-DIMENSION REVIEW (each scored HIGH/MED/LOW/PASS):
+
+1. INFORMATION HIERARCHY
+   - On first viewport, can a target user (described in PRODUCT-MASTER
+     §1 personas) identify the primary action within 5 seconds?
+   - Is there exactly one primary CTA per screen view? (Multiple competing
+     primaries = MED.)
+   - Are status / state indicators consistent with their importance to the
+     user's mental model? (e.g., "submitted" status badge prominent enough
+     for someone wondering "did my submission go through?")
+   - Flag verbose / underweight headlines, missing meta info, excessive
+     whitespace where information is expected.
+
+2. VISUAL WEIGHT DISTRIBUTION
+   - Does primary action visually dominate secondary action?
+   - Is the design system's accent color (yagi sage #71D083) used
+     deliberately or sprinkled? (Sprinkled = MED.)
+   - Are cards of equal weight — making the page feel like "scattered
+     form" instead of "prioritized layout"? Flag.
+   - Hierarchy across status pill / timeline / cards / sidebar — does
+     each have appropriate weight?
+
+3. LAYOUT / SPACING RHYTHM
+   - Card padding consistent with paradigm tone? (Per PRODUCT-MASTER
+     §C.2 — "협업 surface" tone, not enterprise admin tone.)
+   - Empty space = intentional breathing room or content gap?
+   - Border / radius / shadow tokens compliant with yagi-design-system
+     v1.0 (border subtle rgba(255,255,255,0.11), radius 24/999/12,
+     zero shadow)?
+   - Information density appropriate — not too sparse, not crowded?
+
+4. UX FLOW CONTINUITY
+   - Does the action flow (status pill → CTA → next view) feel
+     continuous?
+   - Is navigation between tabs / surfaces predictable? (e.g., scroll-to-
+     top behavior, scroll position memory, breadcrumb trail.)
+   - Hover / focus / active / disabled states defined for all interactive
+     elements?
+   - Keyboard tab order logical?
+   - Mobile responsive — does the layout collapse gracefully (not just
+     "not break") at 360px / 768px?
+   - Does the change align with PRODUCT-MASTER §C.x paradigm intent? Flag
+     drift.
+
+OUTPUT FORMAT:
+
+## K-06 Design Review — Wave <wave-id>
+
+### Summary
+- Overall: PASS / NEEDS_FIXES / BLOCK
+- One-sentence verdict.
+
+### Findings
+
+[FINDING N] DIM: <1|2|3|4>  SEVERITY: HIGH|MED|LOW
+File: <path:line range or component name>
+Issue: <one paragraph — what design intent is broken>
+Suggested fix: <one paragraph — concrete change>
+Fix cost estimate: <inline|FU>
+
+[FINDING N+1] ...
+
+### Strengths (optional, max 3)
+What the wave did well — for builder calibration.
+
+SEVERITY GUIDE:
+- HIGH = ships in current state ⇒ visible UX regression on real users.
+  Inline fix mandatory before ff-merge.
+- MED = noticeable polish gap. FU registration acceptable IF wave
+  budget allows. Otherwise hotfix-N+1.
+- LOW = nice-to-have. FU only.
+
+=== END OF K-06 PROMPT — DIFF FOLLOWS ===
+
+<git diff main..HEAD here>
+
+=== SCREENSHOTS (if any) ===
+
+<paths or paste base64>
+```
+
+### Integration with K-05
+
+Both reviewers run in parallel (no order dependency). Wave end `REVIEW`
+gate:
+
+```
+1. Builder finishes all sub-tasks + barrier ff-merge to phase branch.
+2. Builder runs `pnpm exec tsc --noEmit && pnpm lint && pnpm build`.
+3. Builder spawns BOTH reviewers in parallel:
+   - K-05: Codex via /codex:adversarial-review (focus per wave) OR
+     direct codex CLI exec (per Phase 5 protocol).
+   - K-06: Task tool fresh Opus subagent with K-06 prompt template.
+4. Builder waits for both to return.
+5. Builder merges both result files:
+   - .yagi-autobuild/<wave>/_codex_review_loop1.md     (K-05)
+   - .yagi-autobuild/<wave>/_k06_design_review.md      (K-06)
+6. Builder writes consolidated verdict → _<wave>_result.md:
+   - K-05 verdict (CLEAN / findings count by severity)
+   - K-06 verdict (PASS / NEEDS_FIXES / BLOCK + findings count)
+   - Combined recommendation: GO / GO with FU / HOLD for hotfix
+7. Chat report to yagi includes BOTH reviewer summaries.
+```
+
+### Verdict logic (binding)
+
+| K-05 | K-06 | Combined | Action |
+|---|---|---|---|
+| CLEAN or LOW only | PASS | GO | ff-merge eligible |
+| CLEAN or LOW only | NEEDS_FIXES MED | GO with FU | ff-merge + FU registered |
+| CLEAN or LOW only | NEEDS_FIXES HIGH | HOLD | inline fix or hotfix-N+1 before ff-merge |
+| CLEAN or LOW only | BLOCK | HOLD | hotfix mandatory |
+| HIGH-A/B | any | HOLD | K-05 standard halt path |
+| MED-B/C | any | yagi decision | scale-aware rule |
+
+### Skip conditions
+
+K-06 may be skipped only if:
+- Pure schema migration (no `.tsx` / `.css` / Tailwind class changes).
+- Pure server action (no UI render-affecting changes).
+- Diff is < 50 lines AND no JSX touched AND no design system token
+  reference.
+
+Skip must be declared in the `_<wave>_result.md` with a one-line
+justification. Silent skip = forbidden.
+
+### Cost
+
+- Per wave additional time: ~10–15 min (Opus subagent fresh-context call,
+  parallel with K-05 so adds 0 to wall-clock if K-05 takes longer).
+- Anthropic quota: ~30–80k tokens per K-06 review (full diff + reference
+  context). Acceptable on standard subscription.
+- ChatGPT Plus quota for K-05 unaffected.
+
+### Builder grep audit pre-step (paired with K-06)
+
+Before spawning K-06, Builder runs design-token compliance grep:
+
+```bash
+# yagi-design-system v1.0 compliance check
+grep -rn 'shadow-' src/ | grep -v 'shadow-none\|shadow-inner' && echo "FAIL: shadow used"
+grep -rn 'C8FF8C\|#C8FF8C\|lime-' src/ && echo "FAIL: legacy lime accent"
+grep -rn 'border-[24]\|border-3' src/ && echo "FAIL: thick borders"
+grep -rn 'rounded-\(none\|sm\|md\|lg\|xl\)' src/ | head -20
+# Check radius compliance: only 24/999/12 derived tokens or rounded-(2xl|3xl|full)
+```
+
+Grep findings appended to K-06 input as "static design audit" section.
+
+### Wave C Hotfix-1 retroactive K-06
+
+Hotfix-1 itself was effectively a manual K-06 — yagi did the design
+review from screenshots, found 9 issues, kicked off the hotfix wave.
+This K-06 protocol formalizes that loop: future waves run K-06 BEFORE
+yagi smoke, surfacing the same class of issue at LOOP 1 instead of
+post-ship. Hotfix-1 itself does NOT need retroactive K-06 (Builder
+self-review across 5 axes already covered it; the wave is
+yagi-smoke-pending).
+
+---
+
 **References:**
 - Plugin: https://github.com/openai/codex-plugin-cc
 - Codex config: https://developers.openai.com/codex/config-reference
