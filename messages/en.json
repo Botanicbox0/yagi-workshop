@@ -1883,7 +1883,12 @@
     "summary_card": {
       "deliverable_types": "Content types",
       "description": "Core brief",
-      "view_all": "View full brief →"
+      "view_all": "View full brief →",
+      "cta": {
+        "brief": "View full brief →",
+        "attachments": "View attachments →",
+        "comments": "View comments →"
+      }
     },
     "attachments": {
       "section_heading": "Attachments",

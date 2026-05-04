@@ -12,6 +12,7 @@
 // tab is a pure-composition server component (NextActionCTA + the modal
 // inside it are the only "use client" descendants).
 
+import Link from "next/link";
 import { StatusTimeline } from "./status-timeline";
 import {
   NextActionCTA,
@@ -62,6 +63,7 @@ type Props = {
       deliverable_types: string;
       description: string;
       view_all: string;
+      cta_brief: string;
       deliverable_options: Record<string, string>;
     };
     attachments: {
@@ -69,10 +71,12 @@ type Props = {
       count_brief: (n: number) => string;
       count_reference: (n: number) => string;
       view_all: string;
+      cta_attachments: string;
       empty: string;
     };
     comments_placeholder: string;
     comments_section_heading: string;
+    comments_cta: string;
   };
 };
 
@@ -133,6 +137,15 @@ export function StatusTab({
         <p className="text-sm text-muted-foreground/70 leading-relaxed keep-all">
           {labels.comments_placeholder}
         </p>
+        <div className="pt-1">
+          <Link
+            href="?tab=comments"
+            scroll={false}
+            className="text-xs font-medium text-foreground/70 underline-offset-4 hover:underline transition-colors keep-all"
+          >
+            {labels.comments_cta}
+          </Link>
+        </div>
       </section>
     </div>
   );

@@ -1948,7 +1948,12 @@
     "summary_card": {
       "deliverable_types": "콘텐츠 유형",
       "description": "핵심 brief",
-      "view_all": "전체 브리프 보기 →"
+      "view_all": "전체 브리프 보기 →",
+      "cta": {
+        "brief": "브리프 전체 보기 →",
+        "attachments": "첨부 자료 확인하기 →",
+        "comments": "코멘트 보기 →"
+      }
     },
     "attachments": {
       "section_heading": "첨부 자료",
