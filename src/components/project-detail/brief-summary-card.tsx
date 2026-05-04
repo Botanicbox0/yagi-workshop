@@ -21,6 +21,7 @@ type Props = {
     deliverable_types: string;
     description: string;
     view_all: string;
+    cta_brief: string;
     deliverable_options: Record<string, string>;
   };
 };
@@ -91,7 +92,7 @@ export function BriefSummaryCard({
           scroll={false}
           className="text-xs font-medium text-foreground/70 underline-offset-4 hover:underline transition-colors keep-all"
         >
-          {labels.view_all}
+          {labels.cta_brief}
         </Link>
       </div>
     </section>

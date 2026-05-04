@@ -502,6 +502,7 @@ export default async function ProjectDetailPage({
                 deliverable_types: tDetail("summary_card.deliverable_types"),
                 description: tDetail("summary_card.description"),
                 view_all: tDetail("summary_card.view_all"),
+                cta_brief: tDetail("summary_card.cta.brief"),
                 deliverable_options: {
                   image: tDetail("brief_tab.deliverable_type.image"),
                   ad_video_short: tDetail(
@@ -534,12 +535,14 @@ export default async function ProjectDetailPage({
                 count_reference: (n: number) =>
                   tDetail("attachments.count_reference", { count: n }),
                 view_all: tDetail("attachments.view_all"),
+                cta_attachments: tDetail("summary_card.cta.attachments"),
                 empty: tDetail("attachments.empty"),
               },
               comments_section_heading: tDetail(
                 "comments_thread.section_heading"
               ),
               comments_placeholder: tDetail("comments_thread.placeholder"),
+              comments_cta: tDetail("summary_card.cta.comments"),
             }}
           />
         )}

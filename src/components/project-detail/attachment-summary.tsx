@@ -36,6 +36,7 @@ type Props = {
     count_brief: (n: number) => string;
     count_reference: (n: number) => string;
     view_all: string;
+    cta_attachments: string;
     empty: string;
   };
 };
@@ -80,7 +81,7 @@ export function AttachmentSummary({
           scroll={false}
           className="text-xs font-medium text-foreground/70 underline-offset-4 hover:underline transition-colors keep-all"
         >
-          {labels.view_all}
+          {labels.cta_attachments}
         </Link>
       </div>
     </section>
