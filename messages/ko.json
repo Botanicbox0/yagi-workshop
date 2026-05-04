@@ -1807,6 +1807,73 @@
         "description": "Wave C.4 에서 Stage 1/2/3 read-only 뷰가 들어옵니다."
       }
     },
+    "brief_tab": {
+      "banner_draft": "아직 작성 중인 브리프예요. 완성하면 야기 팀에게 의뢰가 전달됩니다.",
+      "cta_complete": "브리프 완성하기 →",
+      "section_stage1": "의도",
+      "section_stage2": "조건",
+      "section_stage3": "제출 정보",
+      "field_project_name": "프로젝트 이름",
+      "field_deliverable_types": "콘텐츠 유형",
+      "field_description": "핵심 brief",
+      "field_mood_keywords": "분위기 / 키워드",
+      "field_channels": "활용 채널",
+      "field_target_audience": "타겟 오디언스",
+      "field_visual_ratio": "화면 비율",
+      "field_additional_notes": "추가 요청사항",
+      "field_budget_band": "예산",
+      "field_target_delivery_at": "납기 희망",
+      "field_meeting_preferred_at": "미팅 희망 일자",
+      "field_interested_in_twin": "AI 디지털 휴먼 관심",
+      "field_submitted_at": "제출 시각",
+      "field_creator": "제출자",
+      "empty_dash": "—",
+      "twin_interested": "관심 있음 / Interested",
+      "twin_not_interested": "관심 없음 / Not interested",
+      "twin_not_answered": "미응답 / Not answered",
+      "mood": {
+        "emotional": "감성적",
+        "sophisticated": "세련된",
+        "humorous": "유머러스",
+        "dynamic": "역동적",
+        "minimal": "미니멀",
+        "warm": "따뜻한",
+        "luxurious": "고급스러운",
+        "trendy": "트렌디한",
+        "friendly": "친근한"
+      },
+      "channel": {
+        "instagram": "인스타그램",
+        "youtube": "유튜브",
+        "tiktok": "틱톡",
+        "facebook": "페이스북",
+        "website": "자사 웹사이트",
+        "offline": "오프라인",
+        "other": "기타"
+      },
+      "visual_ratio": {
+        "1_1": "1:1",
+        "16_9": "16:9",
+        "9_16": "9:16",
+        "4_5": "4:5",
+        "239_1": "2.39:1",
+        "custom": "직접 입력"
+      },
+      "deliverable_type": {
+        "image": "이미지",
+        "ad_video_short": "광고 영상 (~30초)",
+        "ad_video_long": "광고 영상 (30초 이상)",
+        "ai_vfx_mv": "AI VFX (Music Video)",
+        "branding_video": "브랜딩 영상",
+        "ad_video": "광고 영상",
+        "ai_human": "AI 인물 활용",
+        "motion_graphics": "모션 그래픽",
+        "vfx": "VFX",
+        "branding": "브랜딩",
+        "illustration": "일러스트",
+        "other": "기타"
+      }
+    },
     "progress_tab": {
       "section": "상태 변경 이력",
       "empty": "아직 변경 이력이 없습니다.",
