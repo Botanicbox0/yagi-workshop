@@ -1,18 +1,27 @@
-// Phase 5 Wave C C_2 — Status timeline (vertical stepper, 7 active states).
+// Phase 5 Wave C C_2 + HF1_2 — Status timeline (vertical stepper, visual lift).
 //
 // Replaces the Phase 4.x horizontal pipeline component with a vertical
 // stepper per SPEC §"Status wording (PRODUCT-MASTER §C.3 v1.2)".
+// HF1_2 (2026-05-05) visual lift applied inline at lead-merge time
+// because the parallel agent's worktree branched from a stale Phase 4.x
+// base; their full-file rewrite was incompatible with C_2's prop
+// contract. The visual-lift intent is preserved here.
 //
-// Design decisions:
-// - in_revision is rendered as an inline badge on the in_progress step
-//   (KICKOFF §C_2 ON_FAIL_LOOP loop 1 preferred pattern; avoids nested
-//    sub-step which breaks timeline visual rhythm)
-// - cancelled / archived are NOT in the timeline (those route to the
-//   CancelledArchivedBanner already shipped in C_1)
-// - Sage #71D083 only on the CURRENT step (dot + label bold)
-// - Completed steps render with a check icon + muted foreground
-// - Future steps render muted with no accent
-// - Server component — no client interaction needed for C_2
+// HF1_2 visual lift (per .yagi-autobuild/phase-5-wc-hf1/SPEC.md §HF1.2):
+// - current dot adds ring-2 ring-[#71D083]/25 (subtle sage halo)
+// - current label weight = font-medium (was font-semibold — slightly
+//   lighter per spec "살짝 두껍게")
+// - upcoming label = text-foreground/55 (was muted-foreground/50 —
+//   slightly stronger per spec)
+// - 4-variant connector:
+//     completed↔completed → bg-foreground/60 (was foreground/20 — clearer)
+//     completed↔current   → sage gradient half-fill (top sage, bottom muted)
+//     current↔upcoming    → bg-border/40 (was /30 — slightly stronger)
+//     upcoming↔upcoming   → bg-border/30 (unchanged)
+// - in_revision still inline badge on in_progress step
+// - cancelled/archived → CancelledArchivedBanner (out of timeline)
+// - sage accent ONLY (no new colors)
+// - zero pulse, zero shadow (calm tone)
 //
 // 7 timeline steps:
 //   1. draft        — 작성 중 / Drafting
@@ -23,9 +32,9 @@
 //   6. approved     — 승인 완료 / Approved (terminal)
 //
 // Design tokens (yagi-design-system v1.0):
-// - sage #71D083 current step accent
-// - border-border/40 for subtle borders
-// - radius 24 (rounded-3xl) on container; 999 (rounded-full) on dots
+// - sage #71D083 current step accent + ring + gradient connector
+// - border-border/40 + foreground/60 for subtle borders
+// - radius 999 (rounded-full) on dots
 // - zero shadow; Pretendard lh ~1.18 ls -0.01em
 
 type StatusTimelineLabels = {
@@ -111,9 +120,9 @@ export function StatusTimeline({ status, labels }: Props) {
                 <div
                   className={[
                     "flex items-center justify-center rounded-full shrink-0 mt-[2px]",
-                    // Current: sage bg, white icon
+                    // Current: sage bg + halo ring (HF1_2 visual lift)
                     isCurrent
-                      ? "w-5 h-5 bg-[#71D083] text-black"
+                      ? "w-5 h-5 bg-[#71D083] text-black ring-2 ring-[#71D083]/25"
                       : // Completed: foreground bg, white checkmark
                       isCompleted
                       ? "w-5 h-5 bg-foreground/80 text-background"
@@ -130,20 +139,46 @@ export function StatusTimeline({ status, labels }: Props) {
                   {isCompleted && <CheckIcon />}
                 </div>
 
-                {/* Connector line (not on last item) */}
-                {!isLast && (
-                  <div
-                    className={[
-                      "flex-1 w-px my-1",
-                      isCompleted
-                        ? "bg-foreground/20"
-                        : "bg-border/30",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    aria-hidden="true"
-                  />
-                )}
+                {/* Connector line (not on last item) — HF1_2 4-variant.
+                    The connector links step i and step i+1; pick the
+                    variant from the relative position to activeIndex. */}
+                {!isLast && (() => {
+                  const nextIsCurrent = i + 1 === activeIndex;
+                  const bothCompleted = i + 1 < activeIndex;
+                  const fromCurrent = i === activeIndex;
+                  if (bothCompleted) {
+                    return (
+                      <div
+                        className="flex-1 w-px my-1 bg-foreground/60"
+                        aria-hidden="true"
+                      />
+                    );
+                  }
+                  if (nextIsCurrent) {
+                    // sage half-fill: top half sage, bottom half muted
+                    return (
+                      <div
+                        className="flex-1 w-px my-1 bg-gradient-to-b from-[#71D083] to-border/40"
+                        aria-hidden="true"
+                      />
+                    );
+                  }
+                  if (fromCurrent) {
+                    return (
+                      <div
+                        className="flex-1 w-px my-1 bg-border/40"
+                        aria-hidden="true"
+                      />
+                    );
+                  }
+                  // upcoming↔upcoming
+                  return (
+                    <div
+                      className="flex-1 w-px my-1 bg-border/30"
+                      aria-hidden="true"
+                    />
+                  );
+                })()}
               </div>
 
               {/* Right side — label + optional in_revision badge */}
@@ -160,10 +195,10 @@ export function StatusTimeline({ status, labels }: Props) {
                     className={[
                       "text-sm leading-[1.18] tracking-[-0.01em] keep-all",
                       isCurrent
-                        ? "font-semibold text-[#71D083]"
+                        ? "font-medium text-[#71D083]"
                         : isCompleted
                         ? "font-medium text-foreground/70"
-                        : "font-normal text-muted-foreground/50",
+                        : "font-normal text-foreground/55",
                     ]
                       .filter(Boolean)
                       .join(" ")}

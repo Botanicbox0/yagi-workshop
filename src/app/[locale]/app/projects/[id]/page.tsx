@@ -36,7 +36,6 @@ import { EmptyStateTab } from "@/components/project-detail/empty-state-tab";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
-import { RecallButton } from "./recall-button";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -411,17 +410,13 @@ export default async function ProjectDetailPage({
         />
       </div>
 
-      {/* Wave B.5 — Client recall (submitted/in_review -> draft).
-          Conditional on creator viewer + recall-window status. The
-          RPC re-checks both, this UI gate just hides the button when
-          it would be useless. Wave C will absorb this into the
-          "현황" tab next-action CTA matrix (PRODUCT-MASTER §C.4). */}
-      {(project.status === "submitted" || project.status === "in_review") &&
-        isOwner && (
-          <div className="mb-6 flex justify-end">
-            <RecallButton projectId={project.id} />
-          </div>
-        )}
+      {/* HF1_3 (2026-05-05) — RecallButton moved into StatusCard
+          secondary CTA slot (HF1_1). The previous standalone block
+          here was the original Wave B.5 placement; both RecallButton
+          renderings co-existing was the regression yagi flagged. The
+          StatusCard now owns the single visible RecallButton for
+          submitted / in_review states; non-owner viewers see no
+          recall surface (StatusCard internal gate). */}
 
       {/* L4 Tabs — Wave C C_1: 5-tab structure (status default). */}
       <div className="mb-6">
