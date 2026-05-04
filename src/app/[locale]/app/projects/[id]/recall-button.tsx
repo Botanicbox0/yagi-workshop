@@ -33,20 +33,30 @@ import {
 } from "@/components/ui/alert-dialog";
 import { recallProjectAction } from "./recall-actions";
 
-export function RecallButton({
-  projectId,
-}: {
+type RecallButtonProps = {
   projectId: string;
-  // status + locale props are documented by SPEC for future-proofing
-  // (Wave C may key UI variants on them) but are not used by the
-  // current minimal-patch render — the action layer + RPC re-validate
-  // status, and locale is read from the next-intl context. Keeping
-  // them off the prop surface for now avoids dead-code warnings.
-}) {
+  // Optional controlled props for use inside a DropdownMenu (HF2_2):
+  //   When `open` + `onOpenChange` are provided, RecallButton renders no
+  //   visible trigger — the parent (MoreActionsDropdown in status-card.tsx)
+  //   controls the AlertDialog via these props. When they are absent,
+  //   RecallButton renders its own standalone outline trigger button
+  //   (the HF1_1 / Wave B.5 standalone mode).
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function RecallButton({ projectId, open: openProp, onOpenChange }: RecallButtonProps) {
   const t = useTranslations("project_detail.recall");
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  // Controlled vs uncontrolled open state
+  const isControlled = openProp !== undefined && onOpenChange !== undefined;
+  const open = isControlled ? openProp : internalOpen;
+  const setOpen: (v: boolean) => void = isControlled
+    ? onOpenChange!
+    : setInternalOpen;
 
   const handleConfirm = () => {
     setOpen(false);
@@ -72,21 +82,26 @@ export function RecallButton({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          className="text-sm"
-        >
-          {pending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            t("cta")
-          )}
-        </Button>
-      </AlertDialogTrigger>
+      {/* In uncontrolled (standalone) mode render the original outline trigger.
+          In controlled (dropdown) mode the parent drives open state directly —
+          no visible trigger is rendered here to avoid a duplicate button. */}
+      {!isControlled && (
+        <AlertDialogTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            className="text-sm"
+          >
+            {pending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              t("cta")
+            )}
+          </Button>
+        </AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("confirm.title")}</AlertDialogTitle>
