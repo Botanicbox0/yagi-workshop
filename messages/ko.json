@@ -1782,7 +1782,8 @@
       "deliverables": "결과물"
     },
     "banner": {
-      "cancelled": "이 의뢰는 취소되었어요.",
+      "cancelled": "이 의뢰는 취소되었어요. 새 의뢰를 작성하려면",
+      "cancelled_link_text": "새 의뢰 시작",
       "archived": "이 의뢰는 보관 처리되었어요."
     },
     "wc_scaffold": {
@@ -1901,6 +1902,16 @@
       "comment_description": "Phase 5+ 부터 사용 가능합니다.",
       "deliverable_title": "결과물",
       "deliverable_description": "납품 후 표시됩니다."
+    },
+    "empty_state": {
+      "comments": {
+        "heading": "곧 만나볼 수 있어요",
+        "subtext": "Phase 5+ comment thread 본격 구현 예정"
+      },
+      "deliverables": {
+        "heading": "곧 만나볼 수 있어요",
+        "subtext": "Phase 6+ 납품물 surface 예정"
+      }
     },
     "recall": {
       "cta": "의뢰 회수 후 수정",
