@@ -1,26 +1,27 @@
-// Phase 5 Wave C C_1 — Detail page 5-tab structure.
+"use client";
+
+// Phase 5 Wave C HF1_0 — Detail page 5-tab structure.
+//
+// Now a client component (was server). The "use client" was added in
+// HF1_0 so the tab Link can attach an onClick handler that scrolls
+// to the top of the viewport on tab switch — except for the 보드
+// (board) tab, where canvas viewport is preserved per HD7 / SPEC
+// §"HF1.0".
 //
 // Tab order per SPEC §"Scope: 5 tab 구조":
-//   현황 (status) — DEFAULT, full ship in C_2/C_3 (timeline + CTA + brief
-//     summary + attachment summary + comments thread placeholder)
+//   현황 (status) — DEFAULT, full ship in C_2/C_3
 //   브리프 (brief) — read-only Stage 1/2/3 view, ships in C_4
-//   보드 (board) — wraps existing brief-board-shell-client, no change to
-//     the wrapped component (board-tab.tsx already imports it)
-//   코멘트 (comments) — placeholder, lands in FU-Phase5-10
-//   결과물 (deliverables) — placeholder, lands in FU-Phase5-11
+//   보드 (board) — wraps existing brief-board-shell-client
+//   코멘트 (comments) — placeholder, FU-Phase5-10
+//   결과물 (deliverables) — placeholder, FU-Phase5-11
 //
-// Phase 4.x's "progress" (status history) tab is removed. Its surface
-// moves into the 현황 timeline (C_2) and recent activity feed (C_3 +
-// FU-Phase5-10 thread).
-//
-// Routing convention preserved from Phase 4.x: ?tab= query param so
-// URLs are shareable and back-button-aware.
-//
-// Visual: Pretendard medium for active, muted-foreground for inactive,
-// border-b-2 underline on active, hairline divider on the strip itself.
-// Disabled placeholder tabs (comments / deliverables) keep the same
-// visual rhythm but use cursor-not-allowed + aria-disabled and DO NOT
-// render an anchor — clicks are no-ops and produce no router push.
+// Routing: ?tab= query param. Next.js Link `scroll` prop is left at
+// `false` because Next.js's path-change scroll heuristic treats
+// query-param-only navigation inconsistently in App Router; we drive
+// the scroll explicitly via onClick to guarantee deterministic UX.
+// Disabled tabs (comments / deliverables) keep the same visual rhythm
+// but use cursor-not-allowed + aria-disabled and DO NOT render an
+// anchor — clicks are no-ops and produce no router push.
 
 import Link from "next/link";
 
@@ -43,6 +44,22 @@ const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
   { key: "comments", disabled: true },
   { key: "deliverables", disabled: true },
 ];
+
+// Board tab preserves canvas viewport (no scroll) per HD7. All other
+// tabs scroll to top on switch so users land at the section heading
+// rather than mid-page (Wave C bug: tab content changes but viewport
+// stays at the previous tab's scroll offset).
+function maybeScrollToTop(targetKey: TabKey) {
+  if (targetKey === "board") return;
+  if (typeof window === "undefined") return;
+  // requestAnimationFrame defers to after Next.js Link's navigation
+  // commit so the new tab's content is mounted before we scroll.
+  // smooth behavior matches the 400ms motion token in
+  // yagi-design-system v1.0.
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
 
 export function DetailTabs({ active, labels }: Props) {
   return (
@@ -80,6 +97,7 @@ export function DetailTabs({ active, labels }: Props) {
             key={key}
             href={`?tab=${key}`}
             scroll={false}
+            onClick={() => maybeScrollToTop(key)}
             role="tab"
             aria-selected={isActive}
             className={`${baseClass} ${stateClass}`}
