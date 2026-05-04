@@ -1718,6 +1718,73 @@
         "description": "Wave C.4 lands the Stage 1/2/3 read-only view here."
       }
     },
+    "brief_tab": {
+      "banner_draft": "This brief is still in progress. Complete it to send your request to the YAGI team.",
+      "cta_complete": "Complete brief →",
+      "section_stage1": "Intent",
+      "section_stage2": "Conditions",
+      "section_stage3": "Submission info",
+      "field_project_name": "Project name",
+      "field_deliverable_types": "Content type",
+      "field_description": "Brief",
+      "field_mood_keywords": "Mood / keywords",
+      "field_channels": "Channels",
+      "field_target_audience": "Target audience",
+      "field_visual_ratio": "Aspect ratio",
+      "field_additional_notes": "Additional notes",
+      "field_budget_band": "Budget",
+      "field_target_delivery_at": "Target delivery",
+      "field_meeting_preferred_at": "Preferred meeting",
+      "field_interested_in_twin": "AI digital human interest",
+      "field_submitted_at": "Submitted at",
+      "field_creator": "Submitted by",
+      "empty_dash": "—",
+      "twin_interested": "관심 있음 / Interested",
+      "twin_not_interested": "관심 없음 / Not interested",
+      "twin_not_answered": "미응답 / Not answered",
+      "mood": {
+        "emotional": "Emotional",
+        "sophisticated": "Sophisticated",
+        "humorous": "Humorous",
+        "dynamic": "Dynamic",
+        "minimal": "Minimal",
+        "warm": "Warm",
+        "luxurious": "Luxurious",
+        "trendy": "Trendy",
+        "friendly": "Friendly"
+      },
+      "channel": {
+        "instagram": "Instagram",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "facebook": "Facebook",
+        "website": "Own website",
+        "offline": "Offline",
+        "other": "Other"
+      },
+      "visual_ratio": {
+        "1_1": "1:1",
+        "16_9": "16:9",
+        "9_16": "9:16",
+        "4_5": "4:5",
+        "239_1": "2.39:1",
+        "custom": "Custom"
+      },
+      "deliverable_type": {
+        "image": "Image",
+        "ad_video_short": "Ad video (~30s)",
+        "ad_video_long": "Ad video (30s+)",
+        "ai_vfx_mv": "AI VFX (Music Video)",
+        "branding_video": "Branding video",
+        "ad_video": "Ad video",
+        "ai_human": "AI human content",
+        "motion_graphics": "Motion graphics",
+        "vfx": "VFX",
+        "branding": "Branding",
+        "illustration": "Illustration",
+        "other": "Other"
+      }
+    },
     "progress_tab": {
       "section": "Status history",
       "empty": "No transitions yet.",

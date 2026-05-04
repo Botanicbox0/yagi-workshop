@@ -56,6 +56,17 @@ type ProjectDetail = {
   created_at: string;
   workspace: { id: string; name: string } | null;
   brand: { id: string; name: string } | null;
+  // Phase 5 Wave C C_4 — additional brief fields
+  deliverable_types: string[];
+  mood_keywords: string[];
+  mood_keywords_free: string | null;
+  visual_ratio: string | null;
+  visual_ratio_custom: string | null;
+  channels: string[];
+  target_audience: string | null;
+  additional_notes: string | null;
+  interested_in_twin: boolean | null;
+  submitted_at: string | null;
 };
 
 function parseTab(value: string | undefined): TabKey {
@@ -116,6 +127,10 @@ export default async function ProjectDetailPage({
       workspace_id, created_by,
       budget_band, target_delivery_at,
       meeting_preferred_at, twin_intent, created_at,
+      deliverable_types, mood_keywords, mood_keywords_free,
+      visual_ratio, visual_ratio_custom,
+      channels, target_audience, additional_notes,
+      interested_in_twin, submitted_at,
       brand:brands(id, name),
       workspace:workspaces(id, name)
     `
@@ -155,7 +170,45 @@ export default async function ProjectDetailPage({
     workspace: Array.isArray(workspaceRaw)
       ? ((workspaceRaw[0] as ProjectDetail["workspace"]) ?? null)
       : (workspaceRaw as ProjectDetail["workspace"]),
+    // Phase 5 Wave C C_4 — additional brief fields
+    deliverable_types:
+      (projectRaw.deliverable_types as string[] | null) ?? [],
+    mood_keywords: (projectRaw.mood_keywords as string[] | null) ?? [],
+    mood_keywords_free:
+      (projectRaw.mood_keywords_free as string | undefined | null) ?? null,
+    visual_ratio:
+      (projectRaw.visual_ratio as string | undefined | null) ?? null,
+    visual_ratio_custom:
+      (projectRaw.visual_ratio_custom as string | undefined | null) ?? null,
+    channels: (projectRaw.channels as string[] | null) ?? [],
+    target_audience:
+      (projectRaw.target_audience as string | undefined | null) ?? null,
+    additional_notes:
+      (projectRaw.additional_notes as string | undefined | null) ?? null,
+    // interested_in_twin — 3-way: true / false / null (null = not answered)
+    interested_in_twin:
+      projectRaw.interested_in_twin == null
+        ? null
+        : (projectRaw.interested_in_twin as boolean),
+    submitted_at:
+      (projectRaw.submitted_at as string | undefined | null) ?? null,
   };
+
+  // Fetch creator display name for the brief tab Stage 3 metadata.
+  // Use the same service-role bypass pattern (profiles may be RLS-restricted
+  // to own row for non-admin viewers). Falls back to null on any error.
+  let creatorDisplayName: string | null = null;
+  try {
+    const { data: creatorProfile } = await sb
+      .from("profiles")
+      .select("display_name")
+      .eq("id", project.created_by)
+      .maybeSingle();
+    creatorDisplayName =
+      (creatorProfile?.display_name as string | null) ?? null;
+  } catch {
+    // Non-fatal — brief tab shows dash for creator name
+  }
 
   // Authorization (BLOCKER 1 consistency: use created_by, NOT owner_id).
   const { data: roleRows } = await supabase
@@ -362,9 +415,95 @@ export default async function ProjectDetailPage({
         )}
         {activeTab === "brief" && (
           <BriefTab
+            locale={localeNarrow}
+            projectId={project.id}
+            status={project.status}
+            title={project.title}
+            deliverable_types={project.deliverable_types}
+            description={project.brief}
+            mood_keywords={project.mood_keywords}
+            mood_keywords_free={project.mood_keywords_free}
+            visual_ratio={project.visual_ratio}
+            visual_ratio_custom={project.visual_ratio_custom}
+            channels={project.channels}
+            target_audience={project.target_audience}
+            additional_notes={project.additional_notes}
+            budget_band={project.budget_band}
+            target_delivery_at={project.target_delivery_at}
+            meeting_preferred_at={project.meeting_preferred_at}
+            interested_in_twin={project.interested_in_twin}
+            submitted_at={project.submitted_at}
+            creator_display_name={creatorDisplayName}
             labels={{
-              title: tDetail("wc_scaffold.brief_tab.title"),
-              description: tDetail("wc_scaffold.brief_tab.description"),
+              banner_draft: tDetail("brief_tab.banner_draft"),
+              cta_complete: tDetail("brief_tab.cta_complete"),
+              section_stage1: tDetail("brief_tab.section_stage1"),
+              section_stage2: tDetail("brief_tab.section_stage2"),
+              section_stage3: tDetail("brief_tab.section_stage3"),
+              field_project_name: tDetail("brief_tab.field_project_name"),
+              field_deliverable_types: tDetail("brief_tab.field_deliverable_types"),
+              field_description: tDetail("brief_tab.field_description"),
+              field_mood_keywords: tDetail("brief_tab.field_mood_keywords"),
+              field_channels: tDetail("brief_tab.field_channels"),
+              field_target_audience: tDetail("brief_tab.field_target_audience"),
+              field_visual_ratio: tDetail("brief_tab.field_visual_ratio"),
+              field_additional_notes: tDetail("brief_tab.field_additional_notes"),
+              field_budget_band: tDetail("brief_tab.field_budget_band"),
+              field_target_delivery_at: tDetail("brief_tab.field_target_delivery_at"),
+              field_meeting_preferred_at: tDetail("brief_tab.field_meeting_preferred_at"),
+              field_interested_in_twin: tDetail("brief_tab.field_interested_in_twin"),
+              field_submitted_at: tDetail("brief_tab.field_submitted_at"),
+              field_creator: tDetail("brief_tab.field_creator"),
+              empty_dash: tDetail("brief_tab.empty_dash"),
+              twin_interested: tDetail("brief_tab.twin_interested"),
+              twin_not_interested: tDetail("brief_tab.twin_not_interested"),
+              twin_not_answered: tDetail("brief_tab.twin_not_answered"),
+              budget_under_1m: tDetail("budget.under_1m"),
+              budget_1m_to_5m: tDetail("budget.1m_to_5m"),
+              budget_5m_to_10m: tDetail("budget.5m_to_10m"),
+              budget_negotiable: tDetail("budget.negotiable"),
+              mood_options: {
+                emotional: tDetail("brief_tab.mood.emotional"),
+                sophisticated: tDetail("brief_tab.mood.sophisticated"),
+                humorous: tDetail("brief_tab.mood.humorous"),
+                dynamic: tDetail("brief_tab.mood.dynamic"),
+                minimal: tDetail("brief_tab.mood.minimal"),
+                warm: tDetail("brief_tab.mood.warm"),
+                luxurious: tDetail("brief_tab.mood.luxurious"),
+                trendy: tDetail("brief_tab.mood.trendy"),
+                friendly: tDetail("brief_tab.mood.friendly"),
+              },
+              channel_options: {
+                instagram: tDetail("brief_tab.channel.instagram"),
+                youtube: tDetail("brief_tab.channel.youtube"),
+                tiktok: tDetail("brief_tab.channel.tiktok"),
+                facebook: tDetail("brief_tab.channel.facebook"),
+                website: tDetail("brief_tab.channel.website"),
+                offline: tDetail("brief_tab.channel.offline"),
+                other: tDetail("brief_tab.channel.other"),
+              },
+              visual_ratio_options: {
+                "1_1": tDetail("brief_tab.visual_ratio.1_1"),
+                "16_9": tDetail("brief_tab.visual_ratio.16_9"),
+                "9_16": tDetail("brief_tab.visual_ratio.9_16"),
+                "4_5": tDetail("brief_tab.visual_ratio.4_5"),
+                "239_1": tDetail("brief_tab.visual_ratio.239_1"),
+                custom: tDetail("brief_tab.visual_ratio.custom"),
+              },
+              deliverable_type_options: {
+                image: tDetail("brief_tab.deliverable_type.image"),
+                ad_video_short: tDetail("brief_tab.deliverable_type.ad_video_short"),
+                ad_video_long: tDetail("brief_tab.deliverable_type.ad_video_long"),
+                ai_vfx_mv: tDetail("brief_tab.deliverable_type.ai_vfx_mv"),
+                branding_video: tDetail("brief_tab.deliverable_type.branding_video"),
+                ad_video: tDetail("brief_tab.deliverable_type.ad_video"),
+                ai_human: tDetail("brief_tab.deliverable_type.ai_human"),
+                motion_graphics: tDetail("brief_tab.deliverable_type.motion_graphics"),
+                vfx: tDetail("brief_tab.deliverable_type.vfx"),
+                branding: tDetail("brief_tab.deliverable_type.branding"),
+                illustration: tDetail("brief_tab.deliverable_type.illustration"),
+                other: tDetail("brief_tab.deliverable_type.other"),
+              },
             }}
           />
         )}
