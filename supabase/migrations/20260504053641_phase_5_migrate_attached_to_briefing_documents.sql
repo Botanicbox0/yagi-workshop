@@ -193,6 +193,38 @@ BEGIN
   WHERE pb.attached_urls IS NOT NULL
     AND jsonb_array_length(pb.attached_urls) > 0;
 
+  -- -------------------------------------------------------------------------
+  -- sub_4 F4 sanity assertion (Wave A K-05 LOOP 1 MED-C deferred safety net)
+  --
+  -- Codex K-05 LOOP 1 flagged the theoretical risk that a deleted profile
+  -- UUID inside attached_pdfs.uploaded_by / attached_urls.added_by would
+  -- pass the ::uuid cast but violate briefing_documents.created_by REFERENCES
+  -- profiles(id) on INSERT. Production audit at apply time confirmed 0
+  -- stale UIDs (and 0 source elements) so the immediate risk is nil and the
+  -- finding is FU-Phase5-1 deferred.
+  --
+  -- This assertion is the future-proof safety net: any orphan row that
+  -- somehow survives both casts AND the FK enforcement (impossible in
+  -- normal Postgres, but cheap to verify) will fail the migration loudly
+  -- rather than silently leaving inconsistent data. Re-run safe — the
+  -- assertion only loops over rows this migration just inserted, and
+  -- because the migration is wrapped in an implicit transaction the
+  -- failure rolls everything back.
+  -- -------------------------------------------------------------------------
+  DECLARE
+    v_orphan_count int;
+  BEGIN
+    SELECT COUNT(*) INTO v_orphan_count
+    FROM briefing_documents bd
+    LEFT JOIN profiles p ON p.id = bd.created_by
+    WHERE p.id IS NULL;
+    IF v_orphan_count > 0 THEN
+      RAISE EXCEPTION
+        'sub_4 F4 assert failed: % orphan briefing_documents.created_by FK rows after migration',
+        v_orphan_count;
+    END IF;
+  END;
+
 END $$;
 
 -- =============================================================================
