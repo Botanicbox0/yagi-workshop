@@ -9,6 +9,14 @@
 // CRITICAL self-review focus (KICKOFF):
 //   - project_licenses 데이터는 절대 노출하지 않음 (Phase 4 admin-only)
 //   - 모든 field 는 server-resolved props, client-side fetch 없음
+//
+// Phase 5 HF1.5: date/time formatting delegated to formatKoreanDateTime /
+// formatKoreanDate from src/lib/date/format-korean-date-time.ts
+
+import {
+  formatKoreanDate,
+  formatKoreanDateTime,
+} from "@/lib/date/format-korean-date-time";
 
 type TwinIntent = "undecided" | "specific_in_mind" | "no_twin";
 
@@ -34,28 +42,6 @@ type Props = {
   locale: "ko" | "en";
 };
 
-function formatDate(iso: string, locale: "ko" | "en"): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US", {
-    year: "numeric",
-    month: locale === "ko" ? "long" : "short",
-    day: "numeric",
-  });
-}
-
-function formatDateTime(iso: string, locale: "ko" | "en"): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(locale === "ko" ? "ko-KR" : "en-US", {
-    year: "numeric",
-    month: locale === "ko" ? "long" : "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export function InfoRail({
   createdAt,
   budgetBand,
@@ -71,7 +57,7 @@ export function InfoRail({
       : labels.notSet;
 
   const deliveryLabel = targetDeliveryAt
-    ? formatDate(targetDeliveryAt, locale)
+    ? formatKoreanDate(targetDeliveryAt, locale)
     : labels.deliveryNegotiable;
 
   const twinIntentLabel = twinIntent
@@ -79,7 +65,7 @@ export function InfoRail({
     : labels.notSet;
 
   const meetingLabel = meetingPreferredAt
-    ? formatDateTime(meetingPreferredAt, locale)
+    ? formatKoreanDateTime(meetingPreferredAt, locale)
     : labels.meetingNone;
 
   return (
@@ -91,7 +77,7 @@ export function InfoRail({
         {labels.section}
       </h2>
       <dl className="flex flex-col gap-4">
-        <Row label={labels.submittedOn} value={formatDate(createdAt, locale)} />
+        <Row label={labels.submittedOn} value={formatKoreanDate(createdAt, locale)} />
         <Row label={labels.budget} value={budgetLabel} />
         <Row label={labels.delivery} value={deliveryLabel} />
         <Row label={labels.twinIntent} value={twinIntentLabel} />

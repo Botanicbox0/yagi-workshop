@@ -15,7 +15,10 @@
 // - achromatic; no sage accent here (the hero card pill + status-timeline
 //   ribbon already carry the status accent)
 // - Pretendard, lh 1.37 for body lines
+//
+// Phase 5 HF1.5: formatDateTime delegated to formatKoreanDateTime.
 
+import { formatKoreanDateTime } from "@/lib/date/format-korean-date-time";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 type Props = {
@@ -38,18 +41,6 @@ type HistoryRow = {
   comment: string | null;
   transitioned_at: string;
 };
-
-function formatDateTime(iso: string, locale: "ko" | "en"): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(locale === "ko" ? "ko-KR" : "en-US", {
-    year: "numeric",
-    month: locale === "ko" ? "long" : "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export async function ProgressTab({ projectId, locale, labels }: Props) {
   // project_status_history is a Phase 3.0 table not in generated types.
@@ -113,7 +104,7 @@ export async function ProgressTab({ projectId, locale, labels }: Props) {
                   {labels.fromTo(fromLabel, toLabel)}
                 </p>
                 <p className="text-xs text-muted-foreground keep-all">
-                  {formatDateTime(r.transitioned_at, locale)} · {actorLabel}
+                  {formatKoreanDateTime(r.transitioned_at, locale)} · {actorLabel}
                 </p>
                 {r.comment && (
                   <p
