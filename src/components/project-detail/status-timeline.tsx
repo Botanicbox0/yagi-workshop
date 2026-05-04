@@ -1,124 +1,192 @@
-// Phase 4.x task_04 — Status timeline (5 visual stages, horizontal).
+// Phase 5 Wave C C_2 — Status timeline (vertical stepper, 7 active states).
 //
-// NOTE: There is an older src/components/projects/status-timeline.tsx that
-// renders the per-row project_status_history vertical view. This component
-// is different: it's the post-submit "pipeline ribbon" that sits at the
-// top of /app/projects/[id], summarising the 5 conceptual stages of a
-// commission. The two coexist on purpose.
+// Replaces the Phase 4.x horizontal pipeline component with a vertical
+// stepper per SPEC §"Status wording (PRODUCT-MASTER §C.3 v1.2)".
 //
-// Stage mapping to the existing 9-state projects.status CHECK constraint
-// (Phase 3.0 baseline; Phase 4.x does NOT add new statuses):
+// Design decisions:
+// - in_revision is rendered as an inline badge on the in_progress step
+//   (KICKOFF §C_2 ON_FAIL_LOOP loop 1 preferred pattern; avoids nested
+//    sub-step which breaks timeline visual rhythm)
+// - cancelled / archived are NOT in the timeline (those route to the
+//   CancelledArchivedBanner already shipped in C_1)
+// - Sage #71D083 only on the CURRENT step (dot + label bold)
+// - Completed steps render with a check icon + muted foreground
+// - Future steps render muted with no accent
+// - Server component — no client interaction needed for C_2
 //
-//   1. 검토   ← status in {draft, submitted, in_review}
-//   2. 라우팅 ← (no current status maps here -- inactive slot)
-//   3. 진행   ← status in {in_progress, in_revision}
-//   4. 시안   ← (Phase 5+ approval_pending slot -- inactive)
-//   5. 납품   ← status in {delivered, approved}
+// 7 timeline steps:
+//   1. draft        — 작성 중 / Drafting
+//   2. submitted    — 의뢰 접수 / Submitted
+//   3. in_review    — 검토 중 / In review
+//   4. in_progress  — 작업 진행 / In production  [in_revision badge if sub-state]
+//   5. delivered    — 시안 도착 / Draft delivered
+//   6. approved     — 승인 완료 / Approved (terminal)
 //
-// The 라우팅 / 시안 slots are visible but never marked active in Phase 4
-// because their states do not exist on projects.status yet. That's
-// intentional per KICKOFF section task_04 spec ("시안 slot 잡아둠" + Phase 5+
-// follow-up). The cancelled / archived statuses do not advance the bar
-// visually -- the last reached active stage stays highlighted and the
-// pill on the hero card surfaces the actual cancelled/archived state.
-//
-// Design v1.0:
-// - Pretendard, lh 1.18 / 1.37, ls -0.01em / 0
-// - achromatic + sage #71D083 accent (current stage only)
-// - radius 999 on dots, hairline connectors via border-border/40
-// - zero shadow
-// - Mobile (<= sm): connectors collapse to a vertical layout
+// Design tokens (yagi-design-system v1.0):
+// - sage #71D083 current step accent
+// - border-border/40 for subtle borders
+// - radius 24 (rounded-3xl) on container; 999 (rounded-full) on dots
+// - zero shadow; Pretendard lh ~1.18 ls -0.01em
+
+type StatusTimelineLabels = {
+  draft: string;
+  submitted: string;
+  in_review: string;
+  in_progress: string;
+  in_revision: string;
+  delivered: string;
+  approved: string;
+};
 
 type Props = {
   status: string;
-  labels: {
-    review: string;
-    routing: string;
-    progress: string;
-    proposal: string;
-    delivered: string;
-  };
+  labels: StatusTimelineLabels;
 };
 
-type StageKey = "review" | "routing" | "progress" | "proposal" | "delivered";
-
-const STAGE_ORDER: StageKey[] = [
-  "review",
-  "routing",
-  "progress",
-  "proposal",
-  "delivered",
+// Ordered list of the 7 timeline steps. in_revision maps to the same
+// step index as in_progress (step 3, zero-based).
+const TIMELINE_STEPS: Array<{ key: string; statusKeys: string[] }> = [
+  { key: "draft", statusKeys: ["draft"] },
+  { key: "submitted", statusKeys: ["submitted"] },
+  { key: "in_review", statusKeys: ["in_review"] },
+  { key: "in_progress", statusKeys: ["in_progress", "in_revision"] },
+  { key: "delivered", statusKeys: ["delivered"] },
+  { key: "approved", statusKeys: ["approved"] },
 ];
 
-function deriveActiveIndex(status: string): number {
-  if (status === "draft" || status === "submitted" || status === "in_review") {
-    return 0; // 검토
+function deriveStepIndex(status: string): number {
+  for (let i = 0; i < TIMELINE_STEPS.length; i++) {
+    if (TIMELINE_STEPS[i].statusKeys.includes(status)) return i;
   }
-  if (status === "in_progress" || status === "in_revision") {
-    return 2; // 진행
-  }
-  if (status === "delivered" || status === "approved") {
-    return 4; // 납품
-  }
-  // cancelled / archived: do not advance the timeline. Anchor at 검토
-  // (the hero card status pill already surfaces the actual state).
-  return 0;
+  // cancelled / archived do not appear in timeline — return -1 sentinel.
+  // Callers should not render this component for those statuses.
+  return -1;
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path
+        d="M1.5 5L4 7.5L8.5 2.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export function StatusTimeline({ status, labels }: Props) {
-  const activeIndex = deriveActiveIndex(status);
+  const activeIndex = deriveStepIndex(status);
+  const isInRevision = status === "in_revision";
+
+  // For cancelled / archived: render nothing — the CancelledArchivedBanner
+  // handles those. The parent page should not render StatusTimeline for
+  // those statuses, but guard defensively.
+  if (activeIndex === -1) return null;
 
   return (
-    <ol
-      className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center w-full"
-      role="list"
-      aria-label="Status timeline"
-    >
-      {STAGE_ORDER.map((key, i) => {
-        const isActive = i === activeIndex;
-        const isPassed = i < activeIndex;
-        const label = labels[key];
-        const isLast = i === STAGE_ORDER.length - 1;
-        // Slots without a real status mapping (라우팅 i=1, 시안 i=3)
-        // are always rendered but never "passed" or "active" until their
-        // states exist. They stay neutral.
-        const isSlotOnly = key === "routing" || key === "proposal";
-        const dotClassName = isActive && !isSlotOnly
-          ? "bg-[#71D083]"
-          : isPassed && !isSlotOnly
-          ? "bg-foreground"
-          : "bg-border";
-        const labelClassName = isActive && !isSlotOnly
-          ? "text-foreground font-medium"
-          : isPassed && !isSlotOnly
-          ? "text-foreground"
-          : "text-muted-foreground";
+    <nav aria-label="Project status timeline">
+      <ol className="flex flex-col gap-0" role="list">
+        {TIMELINE_STEPS.map((step, i) => {
+          const isCurrent = i === activeIndex;
+          const isCompleted = i < activeIndex;
+          const isLast = i === TIMELINE_STEPS.length - 1;
+          const label = labels[step.key as keyof StatusTimelineLabels];
+          const showRevisionBadge = isCurrent && isInRevision;
 
-        return (
-          <li
-            key={key}
-            className="flex sm:flex-1 items-center gap-3 sm:gap-2 min-w-0"
-          >
-            <div className="flex items-center gap-2 shrink-0">
-              <span
-                className={`block h-2 w-2 rounded-full ${dotClassName}`}
-                aria-hidden="true"
-              />
-              <span
-                className={`text-xs uppercase tracking-[0.10em] ${labelClassName} keep-all`}
+          return (
+            <li key={step.key} className="flex gap-3 min-w-0">
+              {/* Left track — dot + connector line */}
+              <div className="flex flex-col items-center shrink-0 w-5">
+                {/* Dot */}
+                <div
+                  className={[
+                    "flex items-center justify-center rounded-full shrink-0 mt-[2px]",
+                    // Current: sage bg, white icon
+                    isCurrent
+                      ? "w-5 h-5 bg-[#71D083] text-black"
+                      : // Completed: foreground bg, white checkmark
+                      isCompleted
+                      ? "w-5 h-5 bg-foreground/80 text-background"
+                      : // Future: muted border, no fill
+                        "w-3 h-3 mt-[5px] border border-border/40 bg-background",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-hidden="true"
+                >
+                  {isCurrent && (
+                    <span className="block w-2 h-2 rounded-full bg-black/20" />
+                  )}
+                  {isCompleted && <CheckIcon />}
+                </div>
+
+                {/* Connector line (not on last item) */}
+                {!isLast && (
+                  <div
+                    className={[
+                      "flex-1 w-px my-1",
+                      isCompleted
+                        ? "bg-foreground/20"
+                        : "bg-border/30",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+
+              {/* Right side — label + optional in_revision badge */}
+              <div
+                className={[
+                  "flex-1 flex flex-col gap-1 pb-5",
+                  isLast ? "pb-0" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
-                {label}
-              </span>
-            </div>
-            {!isLast && (
-              <span
-                className="hidden sm:block flex-1 border-t border-border/40 mx-2"
-                aria-hidden="true"
-              />
-            )}
-          </li>
-        );
-      })}
-    </ol>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={[
+                      "text-sm leading-[1.18] tracking-[-0.01em] keep-all",
+                      isCurrent
+                        ? "font-semibold text-[#71D083]"
+                        : isCompleted
+                        ? "font-medium text-foreground/70"
+                        : "font-normal text-muted-foreground/50",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {label}
+                  </span>
+
+                  {/* in_revision inline badge — only on in_progress step when
+                      actual status is in_revision (current step) */}
+                  {showRevisionBadge && (
+                    <span
+                      className="inline-flex items-center rounded-full border border-[#71D083]/30 bg-[#71D083]/8 px-2 py-0.5 text-[11px] font-medium text-[#71D083] tracking-[0.02em] keep-all"
+                      aria-label={`(${labels.in_revision})`}
+                    >
+                      {labels.in_revision}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }

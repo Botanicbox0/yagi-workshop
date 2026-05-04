@@ -239,16 +239,27 @@ export default async function ProjectDetailPage({
         </span>
       </nav>
 
-      {/* L2 Status timeline */}
+      {/* L2 Status timeline — C_2 vertical stepper.
+          Labels from projects.status.label namespace (shared across surfaces).
+          eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <div className="mb-8">
         <StatusTimeline
           status={project.status}
           labels={{
-            review: tDetail("timeline.review"),
-            routing: tDetail("timeline.routing"),
-            progress: tDetail("timeline.progress"),
-            proposal: tDetail("timeline.proposal"),
-            delivered: tDetail("timeline.delivered"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            draft: (tStatus as any)("status.label.draft"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            submitted: (tStatus as any)("status.label.submitted"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            in_review: (tStatus as any)("status.label.in_review"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            in_progress: (tStatus as any)("status.label.in_progress"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            in_revision: (tStatus as any)("status.label.in_revision"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delivered: (tStatus as any)("status.label.delivered"),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            approved: (tStatus as any)("status.label.approved"),
           }}
         />
       </div>

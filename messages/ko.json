@@ -883,6 +883,30 @@
           "back": "← Step 2 로 돌아가기"
         }
       }
+    },
+    "status": {
+      "label": {
+        "draft": "작성 중",
+        "submitted": "의뢰 접수",
+        "in_review": "검토 중",
+        "in_progress": "작업 진행",
+        "in_revision": "수정 진행",
+        "delivered": "시안 도착",
+        "approved": "승인 완료",
+        "cancelled": "취소됨",
+        "archived": "보관됨"
+      },
+      "helper": {
+        "draft": "브리프를 완성하고 제출해 주세요.",
+        "submitted": "야기 팀 검토 시작 대기 중",
+        "in_review": "야기 팀이 의뢰를 검토하고 있어요.",
+        "in_progress": "야기 팀이 작업을 진행하고 있어요.",
+        "in_revision": "수정 작업이 진행 중이에요.",
+        "delivered": "시안이 도착했어요. 검토 후 승인 또는 수정 요청을 해주세요.",
+        "approved": "의뢰가 최종 승인되었어요.",
+        "cancelled": "이 의뢰는 취소되었어요.",
+        "archived": "이 의뢰는 보관 처리되었어요."
+      }
     }
   },
   "admin_trash": {
@@ -1823,6 +1847,24 @@
         "invalid_transition": "야기 팀이 이미 작업을 시작했어요. 새로고침 후 다시 시도해 주세요.",
         "forbidden": "이 프로젝트를 회수할 권한이 없어요.",
         "unknown": "회수 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
+      }
+    },
+    "status": {
+      "cta": {
+        "draft": "브리프 완성하기 →",
+        "submitted": "",
+        "in_review": "자료 추가하기",
+        "in_progress": "코멘트 작성",
+        "in_revision": "수정 의견 코멘트",
+        "delivered": "시안 보기 →",
+        "approved": "프로젝트 평가하기"
+      },
+      "banner": {
+        "cancelled": "이 의뢰는 취소되었어요.",
+        "archived": "이 의뢰는 보관 처리되었어요."
+      },
+      "empty_state": {
+        "submitted": "야기 팀 검토 시작 대기 중"
       }
     }
   },

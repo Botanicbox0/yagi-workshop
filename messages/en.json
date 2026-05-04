@@ -883,6 +883,30 @@
           "back": "← Back to Step 2"
         }
       }
+    },
+    "status": {
+      "label": {
+        "draft": "Drafting",
+        "submitted": "Submitted",
+        "in_review": "In review",
+        "in_progress": "In production",
+        "in_revision": "In revision",
+        "delivered": "Draft delivered",
+        "approved": "Approved",
+        "cancelled": "Cancelled",
+        "archived": "Archived"
+      },
+      "helper": {
+        "draft": "Complete and submit your brief.",
+        "submitted": "Waiting for YAGI to start review",
+        "in_review": "The YAGI team is reviewing your brief.",
+        "in_progress": "The YAGI team is working on your project.",
+        "in_revision": "Revision work is in progress.",
+        "delivered": "Your draft has arrived. Please review and approve or request a revision.",
+        "approved": "The project has been approved.",
+        "cancelled": "This brief was cancelled.",
+        "archived": "This brief has been archived."
+      }
     }
   },
   "admin_trash": {
@@ -1758,6 +1782,24 @@
         "invalid_transition": "YAGI has already started reviewing. Refresh and try again.",
         "forbidden": "You don't have permission to recall this project.",
         "unknown": "Failed to recall. Please try again."
+      }
+    },
+    "status": {
+      "cta": {
+        "draft": "Complete brief →",
+        "submitted": "",
+        "in_review": "Add materials",
+        "in_progress": "Add comment",
+        "in_revision": "Comment on revision",
+        "delivered": "View draft →",
+        "approved": "Rate project"
+      },
+      "banner": {
+        "cancelled": "This brief was cancelled.",
+        "archived": "This brief has been archived."
+      },
+      "empty_state": {
+        "submitted": "Waiting for YAGI to start review"
       }
     }
   },
