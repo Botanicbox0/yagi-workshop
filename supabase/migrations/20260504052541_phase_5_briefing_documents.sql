@@ -222,4 +222,28 @@ BEGIN
   IF has_column_privilege('authenticated', 'public.briefing_documents', 'url', 'UPDATE') THEN
     RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.url';
   END IF;
+  -- sub_4 LOOP 2 PARTIAL closure — extend the deny list to every
+  -- server-managed column the schema defines. The REVOKE / selective
+  -- GRANT above already denies these at the privilege layer, but the
+  -- assertion list left them unverified, so a future PUBLIC inheritance
+  -- regression on any of them would have escaped the migration's own
+  -- guardrail.
+  IF has_column_privilege('authenticated', 'public.briefing_documents', 'filename', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.filename';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.briefing_documents', 'size_bytes', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.size_bytes';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.briefing_documents', 'mime_type', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.mime_type';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.briefing_documents', 'provider', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.provider';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.briefing_documents', 'thumbnail_url', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.thumbnail_url';
+  END IF;
+  IF has_column_privilege('authenticated', 'public.briefing_documents', 'oembed_html', 'UPDATE') THEN
+    RAISE EXCEPTION 'sub_4 F3 assert failed: authenticated still has UPDATE on briefing_documents.oembed_html';
+  END IF;
 END $$;
