@@ -14,10 +14,8 @@
 
 import Link from "next/link";
 import { StatusTimeline } from "./status-timeline";
-import {
-  NextActionCTA,
-  type MaterialAppendModalLabels,
-} from "./next-action-cta";
+import { type MaterialAppendModalLabels } from "./next-action-cta";
+import { StatusCard } from "./status-card";
 import { BriefSummaryCard } from "./brief-summary-card";
 import {
   AttachmentSummary,
@@ -100,14 +98,15 @@ export function StatusTab({
         <StatusTimeline status={status} labels={labels.timeline} />
       </div>
 
-      {/* Right column 1: Next action CTA */}
+      {/* Right column 1: Status card (submitted = rich content + dual CTA;
+          other statuses = NextActionCTA helper-text passthrough via StatusCard) */}
       <section className="rounded-3xl border border-border/40 p-6 lg:p-8 bg-background flex flex-col gap-3">
-        <NextActionCTA
-          projectId={projectId}
+        <StatusCard
           status={status}
           isOwner={isOwner}
+          projectId={projectId}
           locale={locale}
-          labels={labels.cta}
+          ctaLabels={labels.cta}
         />
       </section>
 
