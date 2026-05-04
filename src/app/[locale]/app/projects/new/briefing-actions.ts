@@ -29,6 +29,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 
 // ---------------------------------------------------------------------------
@@ -172,7 +173,20 @@ export async function ensureBriefingDraftProject(
   // briefing_documents under the soft-deleted project become dangling
   // rows + dangling R2 objects (FU-Phase5-5 — R2 orphan cleanup,
   // deferred until a real-user signup or storage cost trigger).
-  const { error: defensiveDelErr } = await sb
+  //
+  // RLS bypass via service-role client (FU-Phase5-17, applied 2026-05-04):
+  // The user-scoped client fails the projects_update WITH CHECK with 42501
+  // because the policy explicitly denies any deleted_at write from non-
+  // yagi_admin clients ("no writing deleted_at" — see
+  // 20260427164421_phase_3_0_projects_lifecycle.sql section I).
+  // The defensive soft-delete is data-integrity scaffolding (frees the
+  // partial unique index slot before INSERT), not an authorization
+  // surface, so RLS bypass is correct here. Authorization is preserved
+  // via the explicit created_by = user.id + workspace_id = active.id
+  // filter — service role can only ever wipe the caller's own dangling
+  // drafts in the caller's active workspace.
+  const sbAdmin = createSupabaseService();
+  const { error: defensiveDelErr } = await sbAdmin
     .from("projects")
     .update({ deleted_at: new Date().toISOString() })
     .eq("workspace_id", active.id)
