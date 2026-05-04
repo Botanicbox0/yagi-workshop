@@ -772,41 +772,9 @@
                 "other": "기타"
               }
             },
-            "has_plan": {
-              "label": "영상 기획",
-              "options": {
-                "have": "이미 가지고 있어요",
-                "want_proposal": "함께 기획하고 싶어요",
-                "undecided": "미팅 후 정할게요"
-              }
-            },
             "target": {
               "label": "누구를 위한 건가요?",
               "placeholder": "예: 20-30대 여성, 뷰티에 관심 있는 인스타그램 유저"
-            },
-            "more": {
-              "label": "더 알려주실 게 있나요?",
-              "placeholder": "추가로 알려주실 내용이 있으면 자유롭게 작성해주세요"
-            },
-            "budget": {
-              "label": "예산",
-              "options": {
-                "under_1m": "100만원 미만",
-                "1m_to_5m": "100-500만원",
-                "5m_to_10m": "500-1000만원",
-                "negotiable": "협의"
-              }
-            },
-            "delivery_date": {
-              "label": "원하는 납기"
-            },
-            "meeting_at": {
-              "label": "미팅 가능한 일자",
-              "helper": "미팅을 희망하시는 경우 일자와 시간을 선택해주세요"
-            },
-            "twin_toggle": {
-              "label": "🪞 AI 디지털 휴먼 (Twin) 활용에 관심 있어요",
-              "helper": "브리프 검토 후 야기 팀이 추천 Twin 또는 활용 방식을 제안드려요."
             }
           }
         },
@@ -821,7 +789,7 @@
         },
         "cta": {
           "back": "← 이전",
-          "next": "확인 →"
+          "next": "다음 →"
         },
         "toast": {
           "upload_failed": "파일 업로드에 실패했어요. 잠시 후 다시 시도해주세요.",
@@ -836,10 +804,81 @@
         }
       },
       "step3": {
+        "header": {
+          "eyebrow": "STEP 3 / 3 — 마무리",
+          "title": "마지막으로 검토해주세요",
+          "subtitle": "필요한 항목만 채우셔도 괜찮습니다. 의뢰 후에도 야기 팀과 함께 세부 사항을 다듬어갑니다."
+        },
+        "summary": {
+          "title": "요약",
+          "empty_placeholder": "—",
+          "project_name": "프로젝트 이름",
+          "deliverable_types": "콘텐츠",
+          "description": "핵심 brief",
+          "documents_brief": "{count}개 자료",
+          "documents_reference": "{count}개 레퍼런스",
+          "mood": "분위기",
+          "visual_ratio": "화면 비율",
+          "channels": "채널",
+          "target_audience": "타겟",
+          "edit_step1": "Step 1 수정",
+          "edit_step2": "Step 2 수정"
+        },
+        "commit": {
+          "title": "조건",
+          "budget": {
+            "label": "예산",
+            "options": {
+              "under_1m": "100만원 미만",
+              "1m_to_5m": "100-500만원",
+              "5m_to_10m": "500-1000만원",
+              "negotiable": "협의"
+            }
+          },
+          "delivery": {
+            "label": "원하는 납기"
+          },
+          "meeting": {
+            "label": "미팅 가능한 일자",
+            "helper": "미팅을 희망하시는 경우 일자와 시간을 선택해주세요"
+          },
+          "twin": {
+            "label": "🪞 Digital Twin 활용 의향이 있어요",
+            "helper": "브리프 검토 후 야기 팀이 적합한 Twin 또는 활용 방식을 제안드려요.",
+            "tooltip_aria": "Digital Twin 정보",
+            "tooltip": "Digital Twin은 실존 인물(아티스트, 배우, 가수 등) 기반의 AI 자산입니다. YAGI가 라이선스를 보유한 인물의 Twin을 광고/콘텐츠 제작에 사용할 수 있습니다.\n\nDigital Twin 없이 가상 인물 / VFX만으로도 진행 가능합니다."
+          }
+        },
+        "notes": {
+          "label": "더 알려주실 게 있나요?",
+          "placeholder": "추가로 알려주실 내용이 있으면 자유롭게 작성해주세요. 없으셔도 괜찮습니다."
+        },
+        "cta": {
+          "back": "← 이전",
+          "submit": "의뢰하기 →"
+        },
+        "confirm": {
+          "title": "의뢰를 시작할까요?",
+          "body": "지금 의뢰하시면 야기 팀이 검토를 시작합니다. 이후에는 보드에서 추가 메시지로 디테일을 보강하실 수 있어요.",
+          "cancel": "취소",
+          "proceed": "네, 의뢰할게요"
+        },
+        "autosave": {
+          "saving": "자동 저장 중...",
+          "saved_at": "자동 저장됨 · {time}",
+          "error": "저장 실패",
+          "stale": "이미 의뢰된 프로젝트"
+        },
+        "toast": {
+          "submit_success": "의뢰가 접수됐어요. 야기 팀이 곧 검토를 시작합니다.",
+          "submit_failed": "의뢰에 실패했습니다. 다시 시도해주세요.",
+          "submit_unauthorized": "권한이 없습니다. 다시 로그인해주세요.",
+          "submit_wrong_status": "이미 의뢰된 프로젝트입니다."
+        },
         "placeholder": {
           "eyebrow": "STEP 3 / 3 — 확인",
-          "title": "Step 3 작업 중",
-          "description": "최종 확인과 의뢰하기 CTA 는 다음 작업(task_06)에서 추가됩니다.",
+          "title": "Step 1 으로 돌아가 주세요",
+          "description": "프로젝트가 아직 생성되지 않았어요. Step 1 의 [다음 →] 버튼을 눌러 시작해주세요.",
           "back": "← Step 2 로 돌아가기"
         }
       }

@@ -12,7 +12,12 @@
 //   - addBriefingDocumentAction(input)          — INSERT briefing_documents
 //   - removeBriefingDocumentAction(input)       — DELETE briefing_documents
 //   - updateBriefingDocumentNoteAction(input)   — UPDATE note + category only
-//   - updateProjectMetadataAction(input)        — autosave 12 sidebar fields
+//   - updateProjectMetadataAction(input)        — autosave 6 creative-
+//                                                  direction fields (mood,
+//                                                  visual_ratio, channels,
+//                                                  target_audience). Step 3
+//                                                  commit fields live in
+//                                                  briefing-step3-actions.ts.
 //
 // Authorization model — Phase 4.x sub_03f_5 F4 pattern reused, plus the
 // briefing_documents column-grant lockdown landed in Wave A sub_4 F3:
@@ -517,29 +522,21 @@ export async function updateBriefingDocumentNoteAction(
 // 5. updateProjectMetadataAction — Step 2 sidebar autosave
 // ===========================================================================
 
+// Step 2 owns 6 creative-direction fields. The remaining 5 commit fields
+// (budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin,
+// additional_notes) live in updateProjectCommitAction in
+// briefing-step3-actions.ts — kept on a separate action so each surface
+// is responsible for exactly its own write set, no cross-step partials.
+// has_plan was deleted entirely in hotfix-5; the DB column stays but is
+// never touched by the briefing canvas anymore.
 const metadataInput = z.object({
   projectId: z.string().uuid(),
-  // 12 sidebar fields per yagi-locked Schema Option A. All optional —
-  // every field can stay blank through submit. undefined = "don't
-  // change", null = "clear to NULL".
   mood_keywords: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
   mood_keywords_free: z.string().trim().max(200).optional().nullable(),
   visual_ratio: z.string().trim().max(60).optional().nullable(),
   visual_ratio_custom: z.string().trim().max(60).optional().nullable(),
   channels: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
-  has_plan: z
-    .enum(["have", "want_proposal", "undecided"])
-    .optional()
-    .nullable(),
   target_audience: z.string().trim().max(500).optional().nullable(),
-  additional_notes: z.string().trim().max(2000).optional().nullable(),
-  budget_band: z
-    .enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"])
-    .optional()
-    .nullable(),
-  target_delivery_at: z.string().nullable().optional(),
-  meeting_preferred_at: z.string().datetime().nullable().optional(),
-  interested_in_twin: z.boolean().optional(),
 });
 
 export type UpdateProjectMetadataResult =
@@ -573,13 +570,7 @@ export async function updateProjectMetadataAction(
     "visual_ratio",
     "visual_ratio_custom",
     "channels",
-    "has_plan",
     "target_audience",
-    "additional_notes",
-    "budget_band",
-    "target_delivery_at",
-    "meeting_preferred_at",
-    "interested_in_twin",
   ] as const;
   for (const f of fields) {
     const v = parsed.data[f];

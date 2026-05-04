@@ -772,41 +772,9 @@
                 "other": "Other"
               }
             },
-            "has_plan": {
-              "label": "Creative plan",
-              "options": {
-                "have": "I already have one",
-                "want_proposal": "Plan with us",
-                "undecided": "Decide after meeting"
-              }
-            },
             "target": {
               "label": "Who's it for?",
               "placeholder": "e.g., 20-30s women, Instagram users interested in beauty"
-            },
-            "more": {
-              "label": "Anything else?",
-              "placeholder": "Anything else we should know"
-            },
-            "budget": {
-              "label": "Budget",
-              "options": {
-                "under_1m": "Under ₩1M",
-                "1m_to_5m": "₩1M-5M",
-                "5m_to_10m": "₩5M-10M",
-                "negotiable": "Negotiable"
-              }
-            },
-            "delivery_date": {
-              "label": "Target delivery"
-            },
-            "meeting_at": {
-              "label": "Preferred meeting time",
-              "helper": "Select a date and time if you'd like a kickoff meeting"
-            },
-            "twin_toggle": {
-              "label": "🪞 Interested in AI Digital Human (Twin)",
-              "helper": "We'll suggest a Twin or workflow that fits after reviewing your brief."
             }
           }
         },
@@ -821,7 +789,7 @@
         },
         "cta": {
           "back": "← Back",
-          "next": "Continue →"
+          "next": "Next →"
         },
         "toast": {
           "upload_failed": "Upload failed. Please try again in a moment.",
@@ -836,10 +804,81 @@
         }
       },
       "step3": {
+        "header": {
+          "eyebrow": "STEP 3 / 3 — WRAP UP",
+          "title": "One last review",
+          "subtitle": "Fill in only what you have. We'll refine the details together with the YAGI team after you submit."
+        },
+        "summary": {
+          "title": "Summary",
+          "empty_placeholder": "—",
+          "project_name": "Project name",
+          "deliverable_types": "Content",
+          "description": "Core brief",
+          "documents_brief": "{count} materials",
+          "documents_reference": "{count} references",
+          "mood": "Mood",
+          "visual_ratio": "Visual ratio",
+          "channels": "Channels",
+          "target_audience": "Audience",
+          "edit_step1": "Edit Step 1",
+          "edit_step2": "Edit Step 2"
+        },
+        "commit": {
+          "title": "Conditions",
+          "budget": {
+            "label": "Budget",
+            "options": {
+              "under_1m": "Under ₩1M",
+              "1m_to_5m": "₩1M-5M",
+              "5m_to_10m": "₩5M-10M",
+              "negotiable": "Negotiable"
+            }
+          },
+          "delivery": {
+            "label": "Target delivery"
+          },
+          "meeting": {
+            "label": "Preferred meeting time",
+            "helper": "Select a date and time if you'd like a kickoff meeting"
+          },
+          "twin": {
+            "label": "🪞 Interested in Digital Twin",
+            "helper": "We'll suggest a Twin or approach that fits after reviewing your brief.",
+            "tooltip_aria": "Digital Twin info",
+            "tooltip": "Digital Twin is an AI asset based on real people (artists, actors, singers, etc.). YAGI can use Twins of licensed individuals in ads and content production.\n\nDigital Twin is optional — projects can run with virtual humans / VFX only."
+          }
+        },
+        "notes": {
+          "label": "Anything else to share?",
+          "placeholder": "Add anything else we should know. Optional."
+        },
+        "cta": {
+          "back": "← Back",
+          "submit": "Submit →"
+        },
+        "confirm": {
+          "title": "Submit this project?",
+          "body": "Submitting now starts the YAGI team's review. You can still send messages on the project board to add details afterward.",
+          "cancel": "Cancel",
+          "proceed": "Yes, submit"
+        },
+        "autosave": {
+          "saving": "Saving...",
+          "saved_at": "Saved · {time}",
+          "error": "Save failed",
+          "stale": "Already submitted"
+        },
+        "toast": {
+          "submit_success": "Submitted. The YAGI team will start the review shortly.",
+          "submit_failed": "Submission failed. Please try again.",
+          "submit_unauthorized": "Not authorized. Please sign in again.",
+          "submit_wrong_status": "This project has already been submitted."
+        },
         "placeholder": {
           "eyebrow": "STEP 3 / 3 — CONFIRM",
-          "title": "Step 3 in progress",
-          "description": "Final review and the submit CTA land in the next task (task_06).",
+          "title": "Please go back to Step 1",
+          "description": "The project hasn't been created yet. Press [Next →] on Step 1 to begin.",
           "back": "← Back to Step 2"
         }
       }

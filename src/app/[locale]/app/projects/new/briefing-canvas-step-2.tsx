@@ -46,13 +46,7 @@ type ProjectMetadata = {
   visual_ratio: string | null;
   visual_ratio_custom: string | null;
   channels: string[] | null;
-  has_plan: string | null;
   target_audience: string | null;
-  additional_notes: string | null;
-  budget_band: string | null;
-  target_delivery_at: string | null;
-  meeting_preferred_at: string | null;
-  interested_in_twin: boolean | null;
 };
 
 const EMPTY_SIDEBAR: SidebarFormData = {
@@ -61,13 +55,7 @@ const EMPTY_SIDEBAR: SidebarFormData = {
   visual_ratio: "",
   visual_ratio_custom: "",
   channels: [],
-  has_plan: "",
   target_audience: "",
-  additional_notes: "",
-  budget_band: "",
-  target_delivery_at: "",
-  meeting_preferred_at: "",
-  interested_in_twin: false,
 };
 
 function formatSavedAt(iso?: string): string {
@@ -117,7 +105,7 @@ export function BriefingCanvasStep2({
         sb
           .from("projects")
           .select(
-            "mood_keywords, mood_keywords_free, visual_ratio, visual_ratio_custom, channels, has_plan, target_audience, additional_notes, budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin",
+            "mood_keywords, mood_keywords_free, visual_ratio, visual_ratio_custom, channels, target_audience",
           )
           .eq("id", projectId)
           .maybeSingle(),
@@ -168,18 +156,7 @@ export function BriefingCanvasStep2({
         visual_ratio: meta?.visual_ratio ?? "",
         visual_ratio_custom: meta?.visual_ratio_custom ?? "",
         channels: meta?.channels ?? [],
-        has_plan: (meta?.has_plan as SidebarFormData["has_plan"]) ?? "",
         target_audience: meta?.target_audience ?? "",
-        additional_notes: meta?.additional_notes ?? "",
-        budget_band:
-          (meta?.budget_band as SidebarFormData["budget_band"]) ?? "",
-        target_delivery_at: meta?.target_delivery_at
-          ? meta.target_delivery_at.slice(0, 10)
-          : "",
-        meeting_preferred_at: meta?.meeting_preferred_at
-          ? meta.meeting_preferred_at.slice(0, 16)
-          : "",
-        interested_in_twin: meta?.interested_in_twin ?? false,
       });
       setLoading(false);
     })();

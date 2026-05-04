@@ -1,12 +1,31 @@
 "use client";
 
 // =============================================================================
-// Phase 5 Wave B task_05 v3 sub_5 — Step 2 right column (디테일 sidebar + autosave)
+// Phase 5 Wave B task_05 v3 hotfix-5 — Step 2 detail (4 fields + autosave)
 //
-// 12 sidebar fields, all optional. Local form state debounces 5 seconds
-// then commits via updateProjectMetadataAction. Visible status indicator
-// in the sticky CTA bar lives in the parent orchestrator (this component
-// reports state via the onAutosaveState callback).
+// Down from 12 fields to 4 after yagi visual review. Step 2 now hosts
+// only the "shape of the work" inputs:
+//   - mood_keywords + mood_keywords_free
+//   - visual_ratio + visual_ratio_custom
+//   - channels
+//   - target_audience
+//
+// The remaining 6 fields (has_plan, additional_notes, budget_band,
+// target_delivery_at, meeting_preferred_at, interested_in_twin) move
+// to Step 3 (지원 정보 + 마지막 한 마디 + commit) and land there in
+// task_06 v3. The DB columns are unchanged; updateProjectMetadataAction
+// keeps the full 12-field schema (every field optional / partial-update
+// safe) so Step 3 can reuse it.
+//
+// Layout (lg+):
+//   Row 1: mood             | visual_ratio
+//   Row 2: channels         | target_audience
+// (mobile stacks single column.)
+//
+// Local form state debounces 5 seconds then commits via
+// updateProjectMetadataAction. Visible status indicator in the sticky
+// CTA bar lives in the parent orchestrator (this component reports
+// state via the onAutosaveState callback).
 //
 // K-05 LOOP 1 finding F5 (MED, autosave race) fix:
 //   The previous AbortController approach only suppressed *UI* handling
@@ -33,7 +52,6 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { updateProjectMetadataAction } from "./briefing-step2-actions";
 
 // ---------------------------------------------------------------------------
@@ -71,16 +89,10 @@ const VISUAL_RATIO_OPTIONS = [
   "custom",
 ] as const;
 
-const HAS_PLAN_OPTIONS = ["have", "want_proposal", "undecided"] as const;
-const BUDGET_OPTIONS = [
-  "under_1m",
-  "1m_to_5m",
-  "5m_to_10m",
-  "negotiable",
-] as const;
-
 // ---------------------------------------------------------------------------
-// Form state shape
+// Form state shape — 4 fields after hotfix-5. The remaining DB columns
+// (has_plan, additional_notes, budget_band, target_delivery_at,
+// meeting_preferred_at, interested_in_twin) ship in Step 3.
 // ---------------------------------------------------------------------------
 
 export type SidebarFormData = {
@@ -89,13 +101,7 @@ export type SidebarFormData = {
   visual_ratio: string;
   visual_ratio_custom: string;
   channels: string[];
-  has_plan: "have" | "want_proposal" | "undecided" | "";
   target_audience: string;
-  additional_notes: string;
-  budget_band: "under_1m" | "1m_to_5m" | "5m_to_10m" | "negotiable" | "";
-  target_delivery_at: string;
-  meeting_preferred_at: string;
-  interested_in_twin: boolean;
 };
 
 export type AutosaveState = "idle" | "saving" | "saved" | "error";
@@ -240,6 +246,11 @@ export function Step2Sidebar({
     inFlightRef.current = true;
     try {
       onAutosaveStateRef.current("saving");
+      // Step 2 owns 4 fields. Step 3 (task_06 v3) sends the remaining
+      // 6 (has_plan, additional_notes, budget_band, target_delivery_at,
+      // meeting_preferred_at, interested_in_twin). The action's metadata
+      // schema treats every field as optional / partial-update safe, so
+      // omitting them here leaves their stored values untouched.
       const res = await updateProjectMetadataAction({
         projectId,
         mood_keywords: snapshot.mood_keywords,
@@ -247,16 +258,7 @@ export function Step2Sidebar({
         visual_ratio: snapshot.visual_ratio || null,
         visual_ratio_custom: snapshot.visual_ratio_custom || null,
         channels: snapshot.channels,
-        has_plan: snapshot.has_plan || null,
         target_audience: snapshot.target_audience || null,
-        additional_notes: snapshot.additional_notes || null,
-        budget_band: snapshot.budget_band || null,
-        target_delivery_at: snapshot.target_delivery_at || null,
-        meeting_preferred_at:
-          snapshot.meeting_preferred_at && snapshot.meeting_preferred_at !== ""
-            ? new Date(snapshot.meeting_preferred_at).toISOString()
-            : null,
-        interested_in_twin: snapshot.interested_in_twin,
       });
       if (res.ok) {
         lastCommittedRef.current = JSON.stringify(snapshot);
@@ -379,32 +381,6 @@ export function Step2Sidebar({
           />
         </FieldBlock>
 
-        <FieldBlock title={t("briefing.step2.sections.detail.has_plan.label")}>
-          <RadioGroup
-            value={form.has_plan}
-            onValueChange={(v) =>
-              set("has_plan", v as SidebarFormData["has_plan"])
-            }
-            className="flex flex-col gap-2"
-          >
-            {HAS_PLAN_OPTIONS.map((opt) => (
-              <div key={opt} className="flex items-center gap-2">
-                <RadioGroupItem value={opt} id={`has-plan-${opt}`} />
-                <Label
-                  htmlFor={`has-plan-${opt}`}
-                  className="text-sm font-normal cursor-pointer keep-all"
-                >
-                  {t(
-                    `briefing.step2.sections.detail.has_plan.options.${opt}` as Parameters<
-                      typeof t
-                    >[0],
-                  )}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </FieldBlock>
-
         <FieldBlock title={t("briefing.step2.sections.detail.target.label")}>
           <Textarea
             value={form.target_audience}
@@ -416,89 +392,6 @@ export function Step2Sidebar({
             className="resize-none text-sm"
           />
         </FieldBlock>
-
-        <FieldBlock title={t("briefing.step2.sections.detail.more.label")}>
-          <Textarea
-            value={form.additional_notes}
-            onChange={(e) => set("additional_notes", e.target.value)}
-            placeholder={t(
-              "briefing.step2.sections.detail.more.placeholder",
-            )}
-            rows={3}
-            className="resize-none text-sm"
-          />
-        </FieldBlock>
-
-        {/* Full-width divider between content/intent fields and budget/timing. */}
-        <div className="lg:col-span-2 h-px bg-border/40" />
-
-        <FieldBlock title={t("briefing.step2.sections.detail.budget.label")}>
-          <ChipSingle
-            options={BUDGET_OPTIONS}
-            value={form.budget_band}
-            onChange={(v) =>
-              set("budget_band", v as SidebarFormData["budget_band"])
-            }
-            labelOf={(k) =>
-              t(
-                `briefing.step2.sections.detail.budget.options.${k}` as Parameters<
-                  typeof t
-                >[0],
-              )
-            }
-          />
-        </FieldBlock>
-
-        <FieldBlock
-          title={t("briefing.step2.sections.detail.delivery_date.label")}
-        >
-          <Input
-            type="date"
-            value={form.target_delivery_at}
-            onChange={(e) => set("target_delivery_at", e.target.value)}
-            className="text-sm max-w-xs"
-          />
-        </FieldBlock>
-
-        <FieldBlock
-          title={t("briefing.step2.sections.detail.meeting_at.label")}
-          helper={t("briefing.step2.sections.detail.meeting_at.helper")}
-        >
-          <Input
-            type="datetime-local"
-            value={form.meeting_preferred_at}
-            onChange={(e) => set("meeting_preferred_at", e.target.value)}
-            className="text-sm max-w-xs"
-          />
-        </FieldBlock>
-
-        <div
-          className={cn(
-            "rounded-2xl p-4 flex items-start gap-3 self-start",
-            form.interested_in_twin
-              ? "bg-emerald-50 border border-emerald-200"
-              : "border border-border/40",
-          )}
-        >
-          <input
-            type="checkbox"
-            id="twin-toggle"
-            checked={form.interested_in_twin}
-            onChange={(e) => set("interested_in_twin", e.target.checked)}
-            className="mt-1"
-          />
-          <div className="flex flex-col gap-1">
-            <Label
-              htmlFor="twin-toggle"
-              className="text-sm font-semibold cursor-pointer keep-all"
-            >
-              {t("briefing.step2.sections.detail.twin_toggle.label")}
-            </Label>
-            <p className="text-xs text-muted-foreground keep-all leading-relaxed">
-              {t("briefing.step2.sections.detail.twin_toggle.helper")}
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );

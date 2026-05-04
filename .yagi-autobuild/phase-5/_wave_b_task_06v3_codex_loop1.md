@@ -1,0 +1,9 @@
+## VERDICT: NEEDS-ATTENTION
+
+[FINDING 1] MED: `src/app/[locale]/app/projects/new/briefing-step3-actions.ts:204` — Cross-tab already-submitted path often returns `forbidden`, not `wrong_status`. `assertProjectMutationAuth` rejects non-draft before `submitBriefingAction` reaches the atomic `UPDATE ... status='draft' RETURNING id`, so a second tab submitting after the first commit sees generic failure instead of `wrong_status`. Recommended fix: for submit, allow auth to pass creator/workspace checks without pre-rejecting non-draft, then let the guarded UPDATE map 0-row to `wrong_status`, or explicitly translate the helper’s non-draft rejection to `wrong_status`.
+
+[FINDING 2] MED: `src/app/[locale]/app/projects/new/briefing-step3-actions.ts:161` — `updateProjectCommitAction` can report `ok: true` on a 0-row UPDATE after a status flip. The `.eq("status", "draft")` guard prevents the write, but without `.select("id").maybeSingle()` the action cannot distinguish “updated” from “matched no rows,” so the client can mark unsaved commit fields as saved. Recommended fix: request the updated id and return `forbidden` or `wrong_status` when no row is returned.
+
+[FINDING 3] MED: `src/app/[locale]/app/projects/new/briefing-canvas-step-3.tsx:455` — Commit fields remain editable while `submitting` is true, so edits made after the submit snapshot but before the status flip can be queued behind the flush and then dropped/reported saved incorrectly once the project is `in_review`. Recommended fix: disable Step 3 inputs, chip buttons, checkbox, edit-step links, back button, and dialog controls while submitting, or add a one-shot submitted/submitting guard that freezes the form before flushing.
+
+Run log summary: Step 3 submit atomic UPDATE is solid, but pre-submit status rejection plus autosave 0-row success handling leave cross-tab and late-keystroke paths needing a small inline fix before Wave C.

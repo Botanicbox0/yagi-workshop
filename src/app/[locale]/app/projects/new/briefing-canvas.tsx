@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { ensureBriefingDraftProject } from "./briefing-actions";
 import { BriefingCanvasStep1 } from "./briefing-canvas-step-1";
 import { BriefingCanvasStep2 } from "./briefing-canvas-step-2";
+import { BriefingCanvasStep3 } from "./briefing-canvas-step-3";
 
 // ---------------------------------------------------------------------------
 // Step 1 form schema — v3 minimal (3 fields after hotfix-4 purpose removal)
@@ -218,7 +219,14 @@ export function BriefingCanvas({
             backLabel={t("briefing.step2.placeholder.back")}
           />
         )}
-        {stage === 3 && (
+        {stage === 3 && projectId && (
+          <BriefingCanvasStep3
+            projectId={projectId}
+            onBack={() => handleBackFromStage(2)}
+            onJumpToStep={(s) => handleBackFromStage(s)}
+          />
+        )}
+        {stage === 3 && !projectId && (
           <StagePlaceholder
             stepLabel={t("briefing.step3.placeholder.eyebrow")}
             title={t("briefing.step3.placeholder.title")}
