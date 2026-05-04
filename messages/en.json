@@ -1879,6 +1879,43 @@
       "empty_state": {
         "submitted": "Waiting for YAGI to start review"
       }
+    },
+    "summary_card": {
+      "deliverable_types": "Content types",
+      "description": "Core brief",
+      "view_all": "View full brief →"
+    },
+    "attachments": {
+      "section_heading": "Attachments",
+      "count_brief": "{count} materials",
+      "count_reference": "{count} references",
+      "view_all": "View all →",
+      "empty": "No attachments yet."
+    },
+    "comments_thread": {
+      "section_heading": "YAGI comments",
+      "placeholder": "YAGI team comments will appear here."
+    },
+    "delivered_placeholder": "The draft viewing surface lands in a future phase. (Phase 6+)",
+    "material_append": {
+      "trigger": "Add materials",
+      "title": "Add materials?",
+      "description": "You can attach more materials during review. Classify each as brief or reference.",
+      "kind_label": "Type",
+      "kind_brief": "Brief",
+      "kind_reference": "Reference",
+      "source_label": "Source",
+      "source_upload": "Upload file",
+      "source_url": "Link",
+      "file_label": "Select file",
+      "url_label": "URL",
+      "url_placeholder": "https://...",
+      "cancel": "Cancel",
+      "submit": "Add",
+      "success_toast": "Material added.",
+      "error_forbidden": "Not authorized. Please sign in again.",
+      "error_rls_pending": "Adding materials during review is coming soon. (FU-Phase5-16)",
+      "error_unknown": "Failed to add. Please try again."
     }
   },
   "brief_board": {

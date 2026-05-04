@@ -1944,6 +1944,43 @@
       "empty_state": {
         "submitted": "야기 팀 검토 시작 대기 중"
       }
+    },
+    "summary_card": {
+      "deliverable_types": "콘텐츠 유형",
+      "description": "핵심 brief",
+      "view_all": "전체 브리프 보기 →"
+    },
+    "attachments": {
+      "section_heading": "첨부 자료",
+      "count_brief": "기획서 {count}개",
+      "count_reference": "레퍼런스 {count}개",
+      "view_all": "전체 보기 →",
+      "empty": "아직 첨부된 자료가 없어요."
+    },
+    "comments_thread": {
+      "section_heading": "야기 코멘트",
+      "placeholder": "야기 팀이 코멘트를 남기면 여기에 표시돼요."
+    },
+    "delivered_placeholder": "시안 보기 화면은 다음 phase 에서 들어옵니다. (Phase 6+)",
+    "material_append": {
+      "trigger": "자료 추가하기",
+      "title": "자료를 추가할까요?",
+      "description": "검토 단계에서도 추가 자료를 보낼 수 있어요. 기획서/레퍼런스로 분류해주세요.",
+      "kind_label": "자료 종류",
+      "kind_brief": "기획서",
+      "kind_reference": "레퍼런스",
+      "source_label": "추가 방법",
+      "source_upload": "파일 업로드",
+      "source_url": "링크",
+      "file_label": "파일 선택",
+      "url_label": "URL",
+      "url_placeholder": "https://...",
+      "cancel": "취소",
+      "submit": "추가하기",
+      "success_toast": "자료를 추가했어요.",
+      "error_forbidden": "권한이 없어요. 다시 로그인해주세요.",
+      "error_rls_pending": "검토 단계에서의 자료 추가 기능은 곧 열릴 예정이에요. (FU-Phase5-16)",
+      "error_unknown": "추가 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
     }
   },
   "brief_board": {

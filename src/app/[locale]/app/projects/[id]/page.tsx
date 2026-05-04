@@ -211,6 +211,48 @@ export default async function ProjectDetailPage({
     // Non-fatal — brief tab shows dash for creator name
   }
 
+  // Phase 5 Wave C C_3 — Fetch briefing_documents for the 첨부자료 요약
+  // (현황 tab right column). RLS scopes via project_id; only members of
+  // the project's workspace get rows. We slice top-3 here and keep the
+  // count-by-kind for the section header.
+  let briefDocsCount = 0;
+  let referenceDocsCount = 0;
+  let topThreeDocs: Array<{
+    id: string;
+    kind: "brief" | "reference";
+    source_type: "upload" | "url";
+    thumbnail_url: string | null;
+    filename: string | null;
+    url: string | null;
+  }> = [];
+  try {
+    const { data: docsRaw } = await sb
+      .from("briefing_documents")
+      .select(
+        "id, kind, source_type, thumbnail_url, filename, url, created_at"
+      )
+      .eq("project_id", project.id)
+      .order("created_at", { ascending: true });
+    const docs = (docsRaw ?? []) as Array<{
+      id: string;
+      kind: "brief" | "reference";
+      source_type: "upload" | "url";
+      thumbnail_url: string | null;
+      filename: string | null;
+      url: string | null;
+    }>;
+    briefDocsCount = docs.filter((d) => d.kind === "brief").length;
+    referenceDocsCount = docs.filter((d) => d.kind === "reference").length;
+    // SPEC §"첨부자료 요약" — 기획서 우선 → 레퍼런스. Stable sort by kind
+    // then keep insertion order within each kind. slice(0, 3).
+    topThreeDocs = [
+      ...docs.filter((d) => d.kind === "brief"),
+      ...docs.filter((d) => d.kind === "reference"),
+    ].slice(0, 3);
+  } catch {
+    // Non-fatal — render empty attachments section
+  }
+
   // Authorization (BLOCKER 1 consistency: use created_by, NOT owner_id).
   const { data: roleRows } = await supabase
     .from("user_roles")
@@ -399,31 +441,105 @@ export default async function ProjectDetailPage({
       <div className="mb-10">
         {activeTab === "status" && (
           <StatusTab
+            status={project.status}
+            isOwner={isOwner}
+            projectId={project.id}
+            locale={locale}
+            title={project.title}
+            deliverableTypes={project.deliverable_types}
+            description={project.brief}
+            briefCount={briefDocsCount}
+            referenceCount={referenceDocsCount}
+            topThree={topThreeDocs}
             labels={{
-              sectionTimeline: tDetail("wc_scaffold.status_tab.section.timeline"),
-              sectionCta: tDetail("wc_scaffold.status_tab.section.cta"),
-              sectionBrief: tDetail("wc_scaffold.status_tab.section.brief"),
-              sectionAttachments: tDetail(
-                "wc_scaffold.status_tab.section.attachments"
+              timeline: {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                draft: (tStatus as any)("status.label.draft"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                submitted: (tStatus as any)("status.label.submitted"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                in_review: (tStatus as any)("status.label.in_review"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                in_progress: (tStatus as any)("status.label.in_progress"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                in_revision: (tStatus as any)("status.label.in_revision"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                delivered: (tStatus as any)("status.label.delivered"),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                approved: (tStatus as any)("status.label.approved"),
+              },
+              cta: {
+                cta_draft: tDetail("status.cta.draft"),
+                cta_in_review: tDetail("status.cta.in_review"),
+                cta_in_progress: tDetail("status.cta.in_progress"),
+                cta_in_revision: tDetail("status.cta.in_revision"),
+                cta_delivered: tDetail("status.cta.delivered"),
+                cta_approved: tDetail("status.cta.approved"),
+                empty_state_submitted: tDetail("status.empty_state.submitted"),
+                delivered_placeholder: tDetail("delivered_placeholder"),
+                modal: {
+                  trigger: tDetail("material_append.trigger"),
+                  title: tDetail("material_append.title"),
+                  description: tDetail("material_append.description"),
+                  kindLabel: tDetail("material_append.kind_label"),
+                  kindBrief: tDetail("material_append.kind_brief"),
+                  kindReference: tDetail("material_append.kind_reference"),
+                  sourceLabel: tDetail("material_append.source_label"),
+                  sourceUpload: tDetail("material_append.source_upload"),
+                  sourceUrl: tDetail("material_append.source_url"),
+                  fileLabel: tDetail("material_append.file_label"),
+                  urlLabel: tDetail("material_append.url_label"),
+                  urlPlaceholder: tDetail("material_append.url_placeholder"),
+                  cancel: tDetail("material_append.cancel"),
+                  submit: tDetail("material_append.submit"),
+                  successToast: tDetail("material_append.success_toast"),
+                  errorForbidden: tDetail("material_append.error_forbidden"),
+                  errorRlsPending: tDetail("material_append.error_rls_pending"),
+                  errorUnknown: tDetail("material_append.error_unknown"),
+                },
+              },
+              brief: {
+                deliverable_types: tDetail("summary_card.deliverable_types"),
+                description: tDetail("summary_card.description"),
+                view_all: tDetail("summary_card.view_all"),
+                deliverable_options: {
+                  image: tDetail("brief_tab.deliverable_type.image"),
+                  ad_video_short: tDetail(
+                    "brief_tab.deliverable_type.ad_video_short"
+                  ),
+                  ad_video_long: tDetail(
+                    "brief_tab.deliverable_type.ad_video_long"
+                  ),
+                  ai_vfx_mv: tDetail("brief_tab.deliverable_type.ai_vfx_mv"),
+                  branding_video: tDetail(
+                    "brief_tab.deliverable_type.branding_video"
+                  ),
+                  ad_video: tDetail("brief_tab.deliverable_type.ad_video"),
+                  ai_human: tDetail("brief_tab.deliverable_type.ai_human"),
+                  motion_graphics: tDetail(
+                    "brief_tab.deliverable_type.motion_graphics"
+                  ),
+                  vfx: tDetail("brief_tab.deliverable_type.vfx"),
+                  branding: tDetail("brief_tab.deliverable_type.branding"),
+                  illustration: tDetail(
+                    "brief_tab.deliverable_type.illustration"
+                  ),
+                  other: tDetail("brief_tab.deliverable_type.other"),
+                },
+              },
+              attachments: {
+                section_heading: tDetail("attachments.section_heading"),
+                count_brief: (n: number) =>
+                  tDetail("attachments.count_brief", { count: n }),
+                count_reference: (n: number) =>
+                  tDetail("attachments.count_reference", { count: n }),
+                view_all: tDetail("attachments.view_all"),
+                empty: tDetail("attachments.empty"),
+              },
+              comments_section_heading: tDetail(
+                "comments_thread.section_heading"
               ),
-              sectionComments: tDetail(
-                "wc_scaffold.status_tab.section.comments"
-              ),
-              placeholderTimeline: tDetail(
-                "wc_scaffold.status_tab.placeholder.timeline"
-              ),
-              placeholderCta: tDetail(
-                "wc_scaffold.status_tab.placeholder.cta"
-              ),
-              placeholderBrief: tDetail(
-                "wc_scaffold.status_tab.placeholder.brief"
-              ),
-              placeholderAttachments: tDetail(
-                "wc_scaffold.status_tab.placeholder.attachments"
-              ),
-              placeholderComments: tDetail(
-                "wc_scaffold.status_tab.placeholder.comments"
-              ),
+              comments_placeholder: tDetail("comments_thread.placeholder"),
             }}
           />
         )}
