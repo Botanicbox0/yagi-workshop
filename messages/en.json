@@ -1712,6 +1712,20 @@
       "comment_description": "Available from Phase 5+.",
       "deliverable_title": "Deliverables",
       "deliverable_description": "Visible after delivery."
+    },
+    "recall": {
+      "cta": "Recall and edit",
+      "confirm": {
+        "title": "Recall this submission?",
+        "body": "Recalling removes this from YAGI's review queue. You'll need to resubmit after editing.",
+        "action": "Recall",
+        "cancel": "Cancel"
+      },
+      "error": {
+        "invalid_transition": "YAGI has already started reviewing. Refresh and try again.",
+        "forbidden": "You don't have permission to recall this project.",
+        "unknown": "Failed to recall. Please try again."
+      }
     }
   },
   "brief_board": {

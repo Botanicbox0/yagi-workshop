@@ -33,6 +33,7 @@ import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
 import { ProgressTab } from "@/components/project-detail/progress-tab";
 import { PlaceholderTab } from "@/components/project-detail/placeholder-tab";
+import { RecallButton } from "./recall-button";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -274,6 +275,18 @@ export default async function ProjectDetailPage({
           }}
         />
       </div>
+
+      {/* Wave B.5 — Client recall (submitted/in_review -> draft).
+          Conditional on creator viewer + recall-window status. The
+          RPC re-checks both, this UI gate just hides the button when
+          it would be useless. Wave C will absorb this into the
+          "현황" tab next-action CTA matrix (PRODUCT-MASTER §C.4). */}
+      {(project.status === "submitted" || project.status === "in_review") &&
+        isOwner && (
+          <div className="mb-6 flex justify-end">
+            <RecallButton projectId={project.id} />
+          </div>
+        )}
 
       {/* L4 Tabs */}
       <div className="mb-6">

@@ -1777,6 +1777,20 @@
       "comment_description": "Phase 5+ 부터 사용 가능합니다.",
       "deliverable_title": "결과물",
       "deliverable_description": "납품 후 표시됩니다."
+    },
+    "recall": {
+      "cta": "의뢰 회수 후 수정",
+      "confirm": {
+        "title": "의뢰를 회수할까요?",
+        "body": "회수하면 야기 팀의 검토 큐에서 빠지고, 수정 후 다시 제출하셔야 해요.",
+        "action": "회수하기",
+        "cancel": "취소"
+      },
+      "error": {
+        "invalid_transition": "야기 팀이 이미 작업을 시작했어요. 새로고침 후 다시 시도해 주세요.",
+        "forbidden": "이 프로젝트를 회수할 권한이 없어요.",
+        "unknown": "회수 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
+      }
     }
   },
   "brief_board": {
