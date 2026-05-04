@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      artist_profile: {
+        Row: {
+          activated_at: string | null
+          auto_decline_categories: string[]
+          bypass_brand_ids: string[]
+          created_at: string
+          display_name: string | null
+          instagram_handle: string | null
+          short_bio: string | null
+          twin_r2_prefix: string | null
+          twin_status: string
+          updated_at: string
+          visibility_mode: string
+          workspace_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          auto_decline_categories?: string[]
+          bypass_brand_ids?: string[]
+          created_at?: string
+          display_name?: string | null
+          instagram_handle?: string | null
+          short_bio?: string | null
+          twin_r2_prefix?: string | null
+          twin_status?: string
+          updated_at?: string
+          visibility_mode?: string
+          workspace_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          auto_decline_categories?: string[]
+          bypass_brand_ids?: string[]
+          created_at?: string
+          display_name?: string | null
+          instagram_handle?: string | null
+          short_bio?: string | null
+          twin_r2_prefix?: string | null
+          twin_status?: string
+          updated_at?: string
+          visibility_mode?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_profile_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           brand_guide: Json
@@ -57,6 +110,78 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      briefing_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          filename: string | null
+          id: string
+          kind: string
+          mime_type: string | null
+          note: string | null
+          oembed_html: string | null
+          project_id: string
+          provider: string | null
+          size_bytes: number | null
+          source_type: string
+          storage_key: string | null
+          thumbnail_url: string | null
+          url: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          filename?: string | null
+          id?: string
+          kind: string
+          mime_type?: string | null
+          note?: string | null
+          oembed_html?: string | null
+          project_id: string
+          provider?: string | null
+          size_bytes?: number | null
+          source_type: string
+          storage_key?: string | null
+          thumbnail_url?: string | null
+          url?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          filename?: string | null
+          id?: string
+          kind?: string
+          mime_type?: string | null
+          note?: string | null
+          oembed_html?: string | null
+          project_id?: string
+          provider?: string | null
+          size_bytes?: number | null
+          source_type?: string
+          storage_key?: string | null
+          thumbnail_url?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefing_documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefing_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -1496,6 +1621,69 @@ export type Database = {
           },
         ]
       }
+      project_licenses: {
+        Row: {
+          artist_share_percent: number
+          campaign_name: string
+          created_at: string
+          created_by: string
+          end_date: string | null
+          fee_amount_krw: number
+          fee_currency: string
+          id: string
+          project_id: string
+          region: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          artist_share_percent?: number
+          campaign_name: string
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          fee_amount_krw?: number
+          fee_currency?: string
+          id?: string
+          project_id: string
+          region?: string
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          artist_share_percent?: number
+          campaign_name?: string
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          fee_amount_krw?: number
+          fee_currency?: string
+          id?: string
+          project_id?: string
+          region?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_licenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_licenses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_milestones: {
         Row: {
           created_at: string
@@ -1709,78 +1897,111 @@ export type Database = {
       }
       projects: {
         Row: {
+          additional_notes: string | null
           brand_id: string | null
           brief: string | null
           budget_band: string | null
+          channels: string[]
           created_at: string
           created_by: string
           deleted_at: string | null
           deliverable_types: string[]
           estimated_budget_range: string | null
+          has_plan: string | null
           id: string
           intake_mode: string
+          interested_in_twin: boolean
           kind: string
           meeting_preferred_at: string | null
+          mood_keywords: string[]
+          mood_keywords_free: string | null
           project_type: string
           proposal_audience: string | null
           proposal_budget_range: string | null
           proposal_goal: string | null
           proposal_timeline: string | null
+          purpose: string[]
           status: string
           submitted_at: string | null
+          target_audience: string | null
           target_delivery_at: string | null
           title: string
+          twin_intent: string
           updated_at: string
+          visual_ratio: string | null
+          visual_ratio_custom: string | null
           workspace_id: string
         }
         Insert: {
+          additional_notes?: string | null
           brand_id?: string | null
           brief?: string | null
           budget_band?: string | null
+          channels?: string[]
           created_at?: string
           created_by: string
           deleted_at?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
+          has_plan?: string | null
           id?: string
           intake_mode?: string
+          interested_in_twin?: boolean
           kind?: string
           meeting_preferred_at?: string | null
+          mood_keywords?: string[]
+          mood_keywords_free?: string | null
           project_type?: string
           proposal_audience?: string | null
           proposal_budget_range?: string | null
           proposal_goal?: string | null
           proposal_timeline?: string | null
+          purpose?: string[]
           status?: string
           submitted_at?: string | null
+          target_audience?: string | null
           target_delivery_at?: string | null
           title: string
+          twin_intent?: string
           updated_at?: string
+          visual_ratio?: string | null
+          visual_ratio_custom?: string | null
           workspace_id: string
         }
         Update: {
+          additional_notes?: string | null
           brand_id?: string | null
           brief?: string | null
           budget_band?: string | null
+          channels?: string[]
           created_at?: string
           created_by?: string
           deleted_at?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
+          has_plan?: string | null
           id?: string
           intake_mode?: string
+          interested_in_twin?: boolean
           kind?: string
           meeting_preferred_at?: string | null
+          mood_keywords?: string[]
+          mood_keywords_free?: string | null
           project_type?: string
           proposal_audience?: string | null
           proposal_budget_range?: string | null
           proposal_goal?: string | null
           proposal_timeline?: string | null
+          purpose?: string[]
           status?: string
           submitted_at?: string | null
+          target_audience?: string | null
           target_delivery_at?: string | null
           title?: string
+          twin_intent?: string
           updated_at?: string
+          visual_ratio?: string | null
+          visual_ratio_custom?: string | null
           workspace_id?: string
         }
         Relationships: [
@@ -2555,6 +2776,7 @@ export type Database = {
           business_type: string | null
           created_at: string
           id: string
+          kind: string
           logo_url: string | null
           name: string
           plan: string
@@ -2572,6 +2794,7 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           id?: string
+          kind?: string
           logo_url?: string | null
           name: string
           plan?: string
@@ -2589,6 +2812,7 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           id?: string
+          kind?: string
           logo_url?: string | null
           name?: string
           plan?: string
@@ -2624,6 +2848,10 @@ export type Database = {
           p_url: string
         }
         Returns: string
+      }
+      assert_caller_bound_pdf_storage_key: {
+        Args: { p_board_id: string; p_caller_id: string; p_storage_key: string }
+        Returns: undefined
       }
       bootstrap_workspace: {
         Args: { p_logo_url?: string; p_name: string; p_slug: string }
@@ -2680,25 +2908,16 @@ export type Database = {
         Args: { p_label?: string; p_project_id: string }
         Returns: Json
       }
-      seed_project_board_from_wizard:
-        | {
-            Args: {
-              p_initial_asset_index?: Json
-              p_initial_document: Json
-              p_project_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_initial_asset_index?: Json
-              p_initial_attached_pdfs?: Json
-              p_initial_attached_urls?: Json
-              p_initial_document: Json
-              p_project_id: string
-            }
-            Returns: string
-          }
+      seed_project_board_from_wizard: {
+        Args: {
+          p_initial_asset_index?: Json
+          p_initial_attached_pdfs?: Json
+          p_initial_attached_urls?: Json
+          p_initial_document: Json
+          p_project_id: string
+        }
+        Returns: string
+      }
       toggle_project_board_lock: {
         Args: { p_board_id: string; p_locked: boolean }
         Returns: undefined
