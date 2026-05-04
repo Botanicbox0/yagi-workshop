@@ -1,28 +1,29 @@
 "use client";
 
 // =============================================================================
-// Phase 5 Wave B task_04 — Briefing Canvas wrapper (3-stage paradigm)
+// Phase 5 Wave B task_04 v3 — Briefing Canvas wrapper
 //
-// Stage 1 (this commit): intent form (3-col grid, 9 fields) — KICKOFF
-//                        v1.2 §task_04 spec.
-// Stage 2 (task_05):     asset workspace (기획서 / 레퍼런스 분리 +
-//                        budget/timeline sidebar). Placeholder mounts
-//                        until task_05 lands.
-// Stage 3 (task_06):     review + submit. Placeholder until task_06.
+// 3-step paradigm — "프로젝트 생애주기의 시작 3단계":
+//   Step 1 (this commit) — Brief Start. Minimal intent (name + content
+//                          type + purpose + optional description).
+//                          "다음 →" CTA calls ensureBriefingDraftProject,
+//                          gets project_id, transitions to Step 2.
+//   Step 2 (task_05 v3)  — Workspace. 3-column (보유 자료 / 레퍼런스 /
+//                          디테일 sidebar) + autosave + expandable
+//                          whiteboard. Placeholder until task_05.
+//   Step 3 (task_06 v3)  — Confirm. Minimal 4-line summary + 의뢰하기.
+//                          Placeholder until task_06.
 //
-// State strategy (Wave B kickoff): the seven new Stage-1-only fields
-// (purpose / channels / visual_ratio / target_audience / has_plan /
-// mood_keywords / additional_notes) are held in client state — the
-// projects table doesn't have columns for them yet, and the schema
-// decision (extend projects vs JSON column vs add columns) is locked
-// in task_06 spec per task_plan.md. "임시 저장" persists state to
-// sessionStorage; the next visit hydrates from there. "다음 단계"
-// transitions stage state inside this wrapper. Stage 3 submit will
-// flush the full payload to a new server action.
+// State machine:
+//   - sessionStorage key "briefing_canvas_v3_state" holds:
+//       { name, deliverable_types, purpose, description, projectId? }
+//   - Step 1 → 2: handleNext runs zod validation → ensureBriefingDraftProject
+//                 → on success persists projectId + transitions stage state
+//   - Step 2 → 3: stage state only (Step 2 autosaves to DB directly)
+//   - Step 3 → submit (in task_06 v3)
 //
-// "← 이전으로" on Stage 1 navigates to /app/projects — there is no
-// separate Stage 0 page in the current codebase; the project name is
-// captured at the top of Stage 1.
+// "임시 저장" button is REMOVED in v3. Step 1 has only "[다음 →]"; Step 2
+// uses autosave (5s debounce + visible "자동 저장됨 · {ts}" cue).
 // =============================================================================
 
 import { useState, useMemo } from "react";
@@ -32,56 +33,42 @@ import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-import { BriefingCanvasStage1 } from "./briefing-canvas-stage-1";
+import { ensureBriefingDraftProject } from "./briefing-actions";
+import { BriefingCanvasStep1 } from "./briefing-canvas-step-1";
 
 // ---------------------------------------------------------------------------
-// Form schema
+// Step 1 form schema — v3 minimal (4 fields)
 // ---------------------------------------------------------------------------
 
-export const stage1Schema = z.object({
-  // Project name (no separate Stage 0 page yet — captured at top of Stage 1).
+export const step1Schema = z.object({
   name: z.string().trim().min(1).max(200),
-
-  // Existing column-mappable
-  deliverable_types: z.array(z.string()).default([]),
-  description: z.string().trim().min(1).max(500),
-
-  // Phase 5 new fields (client-state-only for Wave B; persisted in Stage 3)
-  purpose: z.array(z.string()).default([]),
-  channels: z.array(z.string()).default([]),
-  visual_ratio: z.string().optional(),
-  visual_ratio_custom: z.string().trim().max(60).optional(),
-  target_audience: z.string().trim().max(500).optional(),
-  has_plan: z.enum(["have", "want_proposal", "undecided"]).optional(),
-  mood_keywords: z.array(z.string()).default([]),
-  mood_keywords_free: z.string().trim().max(200).optional(),
-  additional_notes: z.string().trim().max(2000).optional(),
+  deliverable_types: z.array(z.string()).min(1),
+  purpose: z.array(z.string()).min(1),
+  description: z.string().trim().max(500).optional(),
 });
 
-// Use z.input so the form data type allows the same optionality the
-// schema accepts at parse time. z.output applies the .default([]) +
-// trim transforms which would otherwise mismatch the resolver's input
-// shape and trip a TS2322 on useForm's defaultValues.
-export type Stage1FormData = z.input<typeof stage1Schema>;
+export type Step1FormData = z.input<typeof step1Schema>;
 
-const SESSION_STORAGE_KEY = "briefing_canvas_stage1_draft";
+// ---------------------------------------------------------------------------
+// Canvas state
+// ---------------------------------------------------------------------------
 
-const EMPTY_DEFAULT: Stage1FormData = {
-  name: "",
-  deliverable_types: [],
-  description: "",
-  purpose: [],
-  channels: [],
-  mood_keywords: [],
+const SESSION_STORAGE_KEY = "briefing_canvas_v3_state";
+
+type CanvasState = Step1FormData & {
+  projectId?: string;
 };
 
-// ---------------------------------------------------------------------------
-// Wrapper component
-// ---------------------------------------------------------------------------
+const EMPTY_STATE: CanvasState = {
+  name: "",
+  deliverable_types: [],
+  purpose: [],
+  description: "",
+};
+
+type Stage = 1 | 2 | 3;
 
 type Props = {
-  // Reserved for future stages — Stage 2 reads brand list, Stage 3 reads
-  // active workspace id. Stage 1 doesn't need either.
   brands?: { id: string; name: string }[];
   activeWorkspaceId?: string | null;
 };
@@ -90,102 +77,144 @@ export function BriefingCanvas({
   brands: _brands = [],
   activeWorkspaceId: _activeWorkspaceId = null,
 }: Props) {
-  // Reserved for future stages.
   void _brands;
   void _activeWorkspaceId;
 
   const t = useTranslations("projects");
   const router = useRouter();
-  const [stage, setStage] = useState<1 | 2 | 3>(1);
+  const [stage, setStage] = useState<Stage>(1);
+  const [projectId, setProjectId] = useState<string | undefined>(undefined);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Hydrate Stage 1 form state from sessionStorage if a previous "임시 저장"
-  // wrote a draft.
-  const initialValues = useMemo<Stage1FormData>(() => {
-    if (typeof window === "undefined") return EMPTY_DEFAULT;
+  // Hydrate Step 1 form + projectId from sessionStorage if present.
+  const initialState = useMemo<CanvasState>(() => {
+    if (typeof window === "undefined") return EMPTY_STATE;
     try {
       const raw = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
-      if (!raw) return EMPTY_DEFAULT;
-      const parsed = JSON.parse(raw) as Partial<Stage1FormData>;
+      if (!raw) return EMPTY_STATE;
+      const parsed = JSON.parse(raw) as Partial<CanvasState>;
       return {
-        ...EMPTY_DEFAULT,
-        ...parsed,
+        name: parsed.name ?? "",
         deliverable_types: parsed.deliverable_types ?? [],
         purpose: parsed.purpose ?? [],
-        channels: parsed.channels ?? [],
-        mood_keywords: parsed.mood_keywords ?? [],
+        description: parsed.description ?? "",
+        projectId: parsed.projectId,
       };
     } catch {
-      // Corrupted sessionStorage — fall back to empty.
-      return EMPTY_DEFAULT;
+      return EMPTY_STATE;
     }
   }, []);
 
-  const methods = useForm<Stage1FormData>({
-    resolver: zodResolver(stage1Schema),
-    defaultValues: initialValues,
+  // Restore projectId on mount (canvas state persists across reloads).
+  useMemo(() => {
+    if (initialState.projectId) {
+      setProjectId(initialState.projectId);
+    }
+  }, [initialState.projectId]);
+
+  const methods = useForm<Step1FormData>({
+    resolver: zodResolver(step1Schema),
+    defaultValues: {
+      name: initialState.name,
+      deliverable_types: initialState.deliverable_types,
+      purpose: initialState.purpose,
+      description: initialState.description,
+    },
     mode: "onBlur",
   });
 
-  const handleSaveDraft = () => {
-    const values = methods.getValues();
+  const persistSession = (next: Partial<CanvasState>) => {
     try {
+      const merged: CanvasState = {
+        ...initialState,
+        ...methods.getValues(),
+        ...next,
+      };
       window.sessionStorage.setItem(
         SESSION_STORAGE_KEY,
-        JSON.stringify(values),
+        JSON.stringify(merged),
       );
-      toast.success(t("briefing.stage1.toast.draft_saved"));
     } catch {
-      toast.error(t("briefing.stage1.toast.draft_failed"));
+      // Swallow — sessionStorage failure shouldn't block flow.
     }
   };
 
-  const handleBack = () => {
-    if (stage === 1) {
-      router.push("/app/projects");
-      return;
-    }
-    setStage((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : 1));
-  };
-
-  const handleNext = methods.handleSubmit((values) => {
+  const handleNextFromStep1 = methods.handleSubmit(async (values) => {
+    setSubmitting(true);
     try {
-      window.sessionStorage.setItem(
-        SESSION_STORAGE_KEY,
-        JSON.stringify(values),
-      );
-    } catch {
-      // Swallow — sessionStorage failure shouldn't block stage transition.
+      const result = await ensureBriefingDraftProject({
+        projectId,
+        name: values.name,
+        deliverable_types: values.deliverable_types ?? [],
+        purpose: values.purpose ?? [],
+        description: values.description ?? null,
+      });
+      if (!result.ok) {
+        const errorKey =
+          result.error === "unauthenticated"
+            ? "briefing.step1.toast.unauthenticated"
+            : result.error === "no_workspace"
+              ? "briefing.step1.toast.no_workspace"
+              : "briefing.step1.toast.draft_failed";
+        toast.error(t(errorKey));
+        return;
+      }
+      setProjectId(result.projectId);
+      persistSession({ ...values, projectId: result.projectId });
+      setStage(2);
+    } catch (e) {
+      console.error("[BriefingCanvas] ensureBriefingDraftProject threw:", e);
+      toast.error(t("briefing.step1.toast.draft_failed"));
+    } finally {
+      setSubmitting(false);
     }
-    setStage((s) => (s < 3 ? ((s + 1) as 1 | 2 | 3) : 3));
   });
+
+  const handleBackFromStage = (target: Stage) => {
+    setStage(target);
+  };
 
   return (
     <FormProvider {...methods}>
       <div className="min-h-dvh bg-background">
         {stage === 1 && (
-          <BriefingCanvasStage1
-            onBack={handleBack}
-            onSaveDraft={handleSaveDraft}
-            onNext={handleNext}
+          <BriefingCanvasStep1
+            onNext={handleNextFromStep1}
+            submitting={submitting}
           />
         )}
         {stage === 2 && (
           <StagePlaceholder
-            stepLabel="STEP 2 / 3"
-            title={t("briefing.stage1.stage2_placeholder.title")}
-            description={t("briefing.stage1.stage2_placeholder.description")}
-            onBack={handleBack}
-            backLabel={t("briefing.stage1.stage2_placeholder.back_to_stage1")}
+            stepLabel={t("briefing.step2.placeholder.eyebrow")}
+            title={t("briefing.step2.placeholder.title")}
+            description={t("briefing.step2.placeholder.description")}
+            onBack={() => handleBackFromStage(1)}
+            backLabel={t("briefing.step2.placeholder.back")}
+            onForward={() => handleBackFromStage(3)}
+            forwardLabel={t("briefing.step2.placeholder.forward")}
           />
         )}
         {stage === 3 && (
           <StagePlaceholder
-            stepLabel="STEP 3 / 3"
-            title={t("briefing.stage1.stage3_placeholder.title")}
-            description={t("briefing.stage1.stage3_placeholder.description")}
-            onBack={handleBack}
-            backLabel={t("briefing.stage1.stage3_placeholder.back_to_stage2")}
+            stepLabel={t("briefing.step3.placeholder.eyebrow")}
+            title={t("briefing.step3.placeholder.title")}
+            description={t("briefing.step3.placeholder.description")}
+            onBack={() => handleBackFromStage(2)}
+            backLabel={t("briefing.step3.placeholder.back")}
           />
+        )}
+
+        {/* Project list link — accessible from Step 1 only. */}
+        {stage === 1 && (
+          <div className="text-center pb-12">
+            <button
+              type="button"
+              onClick={() => router.push("/app/projects")}
+              className="text-xs text-muted-foreground underline-offset-4 hover:underline transition-colors"
+            >
+              {t("briefing.step1.cancel_to_list")}
+            </button>
+          </div>
         )}
       </div>
     </FormProvider>
@@ -193,7 +222,7 @@ export function BriefingCanvas({
 }
 
 // ---------------------------------------------------------------------------
-// Stage 2 / 3 placeholder — replaced by task_05 / task_06 in subsequent commits.
+// Step 2 / 3 placeholder — replaced by task_05 v3 / task_06 v3 in subsequent commits.
 // ---------------------------------------------------------------------------
 
 function StagePlaceholder({
@@ -202,12 +231,16 @@ function StagePlaceholder({
   description,
   onBack,
   backLabel,
+  onForward,
+  forwardLabel,
 }: {
   stepLabel: string;
   title: string;
   description: string;
   onBack: () => void;
   backLabel: string;
+  onForward?: () => void;
+  forwardLabel?: string;
 }) {
   return (
     <div className="max-w-2xl mx-auto px-6 py-24 text-center">
@@ -220,13 +253,24 @@ function StagePlaceholder({
       <p className="text-sm text-muted-foreground leading-relaxed mb-12 keep-all">
         {description}
       </p>
-      <button
-        type="button"
-        onClick={onBack}
-        className="text-sm text-muted-foreground underline-offset-4 hover:underline transition-colors"
-      >
-        {backLabel}
-      </button>
+      <div className="flex items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline transition-colors"
+        >
+          {backLabel}
+        </button>
+        {onForward && forwardLabel && (
+          <button
+            type="button"
+            onClick={onForward}
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline transition-colors"
+          >
+            {forwardLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

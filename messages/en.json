@@ -642,11 +642,11 @@
       }
     },
     "briefing": {
-      "stage1": {
+      "step1": {
         "header": {
-          "eyebrow": "STEP 1 / 3 — INTENT",
-          "title": "What do you want to create?",
-          "description": "Tell us your intent and mood and the YAGI team will match a director who fits."
+          "eyebrow": "STEP 1 / 3 — START",
+          "title": "What kind of project?",
+          "description": "Just the basics for now. We'll fill in the rest together."
         },
         "field": {
           "name": {
@@ -657,20 +657,18 @@
             "label": "What kind of content?",
             "helper": "Multiple selection",
             "options": {
-              "ad_video_15": "Ad video (~15s)",
-              "ad_video_30": "Ad video (~30s)",
-              "ad_video_long": "Ad video (30s+)",
-              "image_lookbook": "Image (lookbook, product shot)",
-              "ai_human": "AI human content",
+              "ad_video": "Ad video",
+              "image": "Image",
+              "ai_human": "AI human",
               "motion_graphics": "Motion graphics",
-              "illustration": "Illustration",
               "vfx": "VFX",
               "branding": "Branding",
+              "illustration": "Illustration",
               "other": "Other"
             }
           },
           "purpose": {
-            "label": "What's the purpose?",
+            "label": "Where will this run?",
             "helper": "Multiple selection",
             "options": {
               "sns_ad": "Social ad",
@@ -681,91 +679,43 @@
               "other": "Other"
             }
           },
-          "channels": {
-            "label": "Where will this run?",
-            "helper": "Multiple selection",
-            "options": {
-              "instagram": "Instagram",
-              "youtube": "YouTube",
-              "tiktok": "TikTok",
-              "facebook": "Facebook",
-              "website": "Company website",
-              "offline": "Offline",
-              "other": "Other"
-            }
-          },
           "description": {
-            "label": "Describe the content briefly",
-            "placeholder": "e.g., spring season campaign video, product intro social content..."
-          },
-          "visual_ratio": {
-            "label": "Visual ratio",
-            "options": {
-              "1_1": "1:1",
-              "16_9": "16:9",
-              "9_16": "9:16",
-              "4_5": "4:5",
-              "239_1": "2.39:1",
-              "custom": "Custom"
-            },
-            "custom_placeholder": "e.g., 3:2, 21:9..."
-          },
-          "target_audience": {
-            "label": "Primary target audience",
-            "placeholder": "e.g., 20-30s women, Instagram users interested in beauty"
-          },
-          "has_plan": {
-            "label": "Do you have a creative plan?",
-            "options": {
-              "have": "Have a plan (brief in hand)",
-              "want_proposal": "Want a proposal (plan with us)",
-              "undecided": "Undecided / decide after meeting"
-            }
-          },
-          "mood_keywords": {
-            "label": "Mood / reference keywords",
-            "helper": "Multiple selection + free input",
-            "options": {
-              "emotional": "Emotional",
-              "sophisticated": "Sophisticated",
-              "humorous": "Humorous",
-              "dynamic": "Dynamic",
-              "minimal": "Minimal",
-              "warm": "Warm",
-              "luxurious": "Luxurious",
-              "trendy": "Trendy",
-              "friendly": "Friendly"
-            },
-            "free_input_placeholder": "Free input (e.g., monochrome tone, natural light...)"
-          },
-          "additional_notes": {
-            "label": "Additional notes",
-            "helper": "Reference images, links, and PDFs can be added in the next step",
-            "placeholder": "Anything else we should know"
+            "label": "Briefly describe the project",
+            "helper": "Optional. The rest can wait until the next step.",
+            "optional": "(optional)",
+            "placeholder": "e.g., spring season product launch. We need short Instagram Reels content."
           }
         },
         "cta": {
-          "back": "← Back",
-          "save_draft": "Save draft",
-          "next": "Save and continue →"
+          "next": "Next →"
         },
         "error": {
-          "name_required": "Please enter the project name",
-          "description_required": "Please describe the content"
+          "name_required": "Please enter a project name",
+          "deliverable_types_required": "Pick at least one content type",
+          "purpose_required": "Pick at least one purpose"
         },
         "toast": {
-          "draft_saved": "Draft saved",
-          "draft_failed": "Failed to save draft. Please try again."
+          "unauthenticated": "You need to be signed in. Please sign in and try again.",
+          "no_workspace": "Workspace not found.",
+          "draft_failed": "Couldn't create the draft. Please try again in a moment."
         },
-        "stage2_placeholder": {
-          "title": "Stage 2 in progress",
-          "description": "Brief + reference upload step lands in the next task.",
-          "back_to_stage1": "← Back to Stage 1"
-        },
-        "stage3_placeholder": {
-          "title": "Stage 3 in progress",
-          "description": "Final review + submit step lands in the next task.",
-          "back_to_stage2": "← Back to Stage 2"
+        "cancel_to_list": "← Back to project list"
+      },
+      "step2": {
+        "placeholder": {
+          "eyebrow": "STEP 2 / 3 — WORKSPACE",
+          "title": "Step 2 in progress",
+          "description": "Brief + reference uploads and the detail sidebar land in the next task (task_05).",
+          "back": "← Back to Step 1",
+          "forward": "Preview Step 3 →"
+        }
+      },
+      "step3": {
+        "placeholder": {
+          "eyebrow": "STEP 3 / 3 — CONFIRM",
+          "title": "Step 3 in progress",
+          "description": "Final review and the submit CTA land in the next task (task_06).",
+          "back": "← Back to Step 2"
         }
       }
     }
