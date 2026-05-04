@@ -67,22 +67,33 @@ None for security/state-machine. One UX gap captured as FU.
   spec'd redirect to `/projects/${projectId}/edit?step=commit` — that
   edit route does not exist in this repo. Builder substituted
   `/[locale]/app/projects/new?project={projectId}&step=commit`. The
-  current `briefing-canvas.tsx` (Wave B) hydrates `projectId` from
-  `sessionStorage`, not query params; after recall the canvas opens
-  empty, then the hotfix-6 defensive guard re-soft-deletes the
-  just-recalled draft.
-- **Risk today**: UX-only — user can still re-create a draft from
-  scratch and submit. No data leak / no security regression.
-  prod = test-only state, real-user impact = 0.
-- **Fix scope (Wave C or follow-up)**: ~10 lines in
-  `briefing-canvas.tsx` — read `?project=` and `?step=` query params,
-  seed sessionStorage / state machine accordingly. `briefing-actions.ts`
-  UPDATE path already handles the alive-draft-with-projectId case.
-- **Owner**: Builder.
-- **Status**: Deferred. Resolve in Wave C (detail page redesign +
-  status-action CTA matrix per PRODUCT-MASTER §C.4) or earlier if a
-  real user attempts the recall round-trip.
-- **Registered**: 2026-05-04 (Wave B.5 K-05 LOOP 1).
+  original `briefing-canvas.tsx` (Wave B) hydrated `projectId` from
+  `sessionStorage` only; after recall the canvas opened empty, then
+  the hotfix-6 defensive guard re-soft-deleted the just-recalled draft.
+- **Resolution (Wave B.5 extension, commit `<HASH>`)**: closed inline
+  via ~22 lines in `briefing-canvas.tsx`:
+  - Imported `useSearchParams` from `next/navigation`.
+  - Read `?project=` and `?step=` once at mount. `?project=` becomes
+    the initial `projectId` state and overrides any stale
+    `sessionStorage.projectId`. `?step=commit` / `?step=workspace`
+    seed the initial `stage` (Step 3 / Step 2 respectively).
+  - Action layer (`briefing-actions.ts`) untouched — passing a
+    non-empty projectId steers `ensureBriefingDraftProject` into the
+    UPDATE branch, which already validates `existing.status === 'draft'`
+    and `existing.deleted_at IS NULL` from hotfix-6. Defensive
+    soft-delete in the wipe path is naturally bypassed.
+  - Step 3 component's existing on-mount fetch hydrates the commit
+    form fields (budget / delivery / meeting / twin / notes) for the
+    recalled draft.
+- **Out-of-scope** (still deferred to Wave C if needed): Step 1 form
+  prefill from DB when user navigates back from Step 3. Today the user
+  who clicks [← 이전] all the way to Step 1 sees an empty form because
+  sessionStorage was cleared on the original submit. zod validation on
+  [다음 →] catches the empty submission with a toast — no data loss.
+  Recall round-trip happy path (Step 3 edit + resubmit) is unaffected.
+- **Owner**: Builder. Closed (round-trip happy path) in Wave B.5
+  extension. Step-1-back-nav prefill remains a Wave C nicety.
+- **Registered**: 2026-05-04. **Closed**: 2026-05-04 (extension commit).
 
 ## Ready-to-merge: **YES**
 

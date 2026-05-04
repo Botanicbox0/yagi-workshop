@@ -106,3 +106,21 @@ in this repo). The current Briefing Canvas hydrates `projectId` from
 canvas after recall and the defensive soft-delete in Wave B's
 hotfix-6 will then re-soft-delete the just-recalled draft. Filed as
 **FU-Phase5-9** below; not a Wave B.5 security blocker per Codex.
+
+### Wave B.5 extension (FU-Phase5-9 close)
+
+After Codex CLEAN, 야기 authorized closing the redirect-hydration gap
+inline (still part of Wave B.5, separate commit, no LOOP 2 since
+UX-only).
+
+- File: `src/app/[locale]/app/projects/new/briefing-canvas.tsx`
+- Change: ~22 lines — added `useSearchParams` import, query-param
+  read at mount, projectId / stage seeded from `?project=` / `?step=`.
+- Action layer untouched: passing non-empty projectId steers
+  `ensureBriefingDraftProject` into the UPDATE branch, which already
+  validates `status='draft'` and `deleted_at IS NULL` (hotfix-6).
+  Defensive soft-delete in the wipe path is naturally bypassed.
+- Step 3 component's existing on-mount fetch picks up the recalled
+  draft's commit fields without changes.
+- tsc / lint / build re-verified PASS post-change.
+- Smoke 9-13 now ready to execute end-to-end.

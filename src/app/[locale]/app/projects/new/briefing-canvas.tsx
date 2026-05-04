@@ -32,6 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ensureBriefingDraftProject } from "./briefing-actions";
 import { BriefingCanvasStep1 } from "./briefing-canvas-step-1";
@@ -82,8 +83,28 @@ export function BriefingCanvas({
 
   const t = useTranslations("projects");
   const router = useRouter();
-  const [stage, setStage] = useState<Stage>(1);
-  const [projectId, setProjectId] = useState<string | undefined>(undefined);
+  const searchParams = useSearchParams();
+
+  // Wave B.5 — query-param hydration for the recall round-trip.
+  // RecallButton redirects to ?project=<id>&step=commit; the canvas
+  // must seed projectId + stage from those params before the first
+  // render so:
+  //   1. Step 3 mount-fetch hits the recalled draft (not a fresh canvas).
+  //   2. The next handleNextFromStep1 call passes a non-empty projectId,
+  //      sending the action through its UPDATE branch (data.projectId
+  //      truthy) instead of the wipe-then-INSERT fall-through that would
+  //      otherwise re-soft-delete the just-recalled draft.
+  // Query-param projectId is treated as the source of truth and wins
+  // over any stale value still sitting in sessionStorage.
+  const queryProjectId = searchParams?.get("project") ?? null;
+  const queryStep = searchParams?.get("step") ?? null;
+  const initialStage: Stage =
+    queryStep === "commit" ? 3 : queryStep === "workspace" ? 2 : 1;
+
+  const [stage, setStage] = useState<Stage>(initialStage);
+  const [projectId, setProjectId] = useState<string | undefined>(
+    queryProjectId ?? undefined,
+  );
   const [submitting, setSubmitting] = useState(false);
 
   // Hydrate Step 1 form + projectId from sessionStorage if present.
@@ -97,11 +118,14 @@ export function BriefingCanvas({
         name: parsed.name ?? "",
         deliverable_types: parsed.deliverable_types ?? [],
         description: parsed.description ?? "",
-        projectId: parsed.projectId,
+        // Query param wins — see hydration comment above.
+        projectId: queryProjectId ?? parsed.projectId,
       };
     } catch {
       return EMPTY_STATE;
     }
+    // Initial-mount snapshot only; query param is a one-shot read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- queryProjectId is captured at mount
   }, []);
 
   // Restore projectId on mount (canvas state persists across reloads).
