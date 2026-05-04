@@ -212,15 +212,23 @@ export async function submitBriefingAction(
     return { ok: false, error: "validation", message: parsed.error.message };
   }
 
-  // F1 fix (K-05 LOOP 1 MED): submitBriefingAction does NOT use the
-  // shared assertProjectMutationAuth helper because that helper rejects
-  // non-draft with `forbidden` before reaching the atomic UPDATE — which
-  // collapses cross-tab "already submitted" cases into a generic submit_failed
-  // toast instead of the explicit submit_wrong_status copy. Inline the
-  // status branch here so wrong_status surfaces honestly on:
-  //   (a) cross-tab double-submit (status='in_review' at SELECT time)
-  //   (b) concurrent same-tab race (status='draft' at SELECT, flips before
-  //       UPDATE → 0-row UPDATE → wrong_status)
+  // hotfix-6: direct UPDATE of projects.status is rejected by the
+  // BEFORE-UPDATE trigger trg_guard_projects_status (raises
+  // 'direct_status_update_forbidden'). Every status transition must go
+  // through the SECURITY DEFINER `transition_project_status` RPC, which:
+  //   - validates auth.uid() (client may only transition own projects)
+  //   - takes a row-level FOR UPDATE lock so concurrent submits serialize
+  //   - validates the transition against the state-machine matrix
+  //     (client: draft → submitted is allowed; draft → in_review is NOT —
+  //     in_review is reserved for system / yagi_admin)
+  //   - sets submitted_at when p_to_status='submitted'
+  //   - inserts a project_status_history audit row inside the same
+  //     transaction
+  //   - returns the new history id
+  //
+  // Auth helper is not needed — the RPC verifies auth.uid() and ownership
+  // via SECURITY DEFINER. We still call createSupabaseServer to ensure the
+  // RPC sees the caller's auth.uid() (anon-key client would NULL it).
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -228,54 +236,52 @@ export async function submitBriefingAction(
   } = await supabase.auth.getUser();
   if (authErr || !user) return { ok: false, error: "unauthenticated" };
 
+  // resolveActiveWorkspace is intentionally called before the RPC even
+  // though the RPC does not consult workspace context — it surfaces a
+  // clean no_workspace error to the client (mid-onboarding edge) before
+  // round-tripping to Postgres.
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { ok: false, error: "no_workspace" };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 5 columns not in generated types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC name not in generated types
   const sb = supabase as any;
 
-  const { data: project, error: selErr } = await sb
-    .from("projects")
-    .select("id, status, created_by")
-    .eq("id", parsed.data.projectId)
-    .maybeSingle();
-  if (selErr) {
-    console.error("[submitBriefingAction] SELECT error:", selErr);
-    return { ok: false, error: "db", message: selErr.message };
-  }
-  // not_owner covers both "row missing under RLS scope" and "row exists
-  // but caller is not the creator" — semantically equivalent to the user.
-  if (!project || project.created_by !== user.id) {
-    return { ok: false, error: "not_owner" };
-  }
-  if (project.status !== "draft") {
-    return { ok: false, error: "wrong_status" };
+  const { data: historyId, error: rpcErr } = await sb.rpc(
+    "transition_project_status",
+    {
+      p_project_id: parsed.data.projectId,
+      p_to_status: "submitted",
+      // p_comment defaults to NULL; only required for in_revision
+      // transitions (which the client cannot trigger).
+    },
+  );
+
+  if (rpcErr) {
+    console.error("[submitBriefingAction] RPC error:", rpcErr);
+    // Map RPC RAISE EXCEPTION codes to client-facing error union.
+    const code = rpcErr.code as string | undefined;
+    const msg = (rpcErr.message ?? "") as string;
+    if (code === "42501" && msg.includes("unauthenticated")) {
+      return { ok: false, error: "unauthenticated" };
+    }
+    if (code === "42501" && msg.includes("forbidden")) {
+      return { ok: false, error: "not_owner" };
+    }
+    if (code === "P0002") {
+      // project_not_found — RLS scope or hard delete
+      return { ok: false, error: "not_owner" };
+    }
+    if (code === "23514") {
+      // invalid_transition — already submitted, or status no longer draft
+      return { ok: false, error: "wrong_status" };
+    }
+    return { ok: false, error: "db", message: msg };
   }
 
-  // Atomic status transition. WHERE status='draft' AND created_by=auth.uid()
-  // is a race-safety net: even if status was 'draft' at the SELECT above,
-  // a concurrent flip between SELECT and UPDATE collapses to 0 rows.
-  // .select('id').maybeSingle() makes a 0-row result distinguishable from
-  // a successful flip (returns null vs the row).
-  const { data: updated, error: updErr } = await sb
-    .from("projects")
-    .update({
-      status: "in_review",
-      submitted_at: new Date().toISOString(),
-    })
-    .eq("id", parsed.data.projectId)
-    .eq("created_by", user.id)
-    .eq("status", "draft")
-    .select("id")
-    .maybeSingle();
-  if (updErr) {
-    console.error("[submitBriefingAction] UPDATE error:", updErr);
-    return { ok: false, error: "db", message: updErr.message };
-  }
-  if (!updated) {
-    return { ok: false, error: "wrong_status" };
+  if (!historyId) {
+    return { ok: false, error: "db", message: "RPC returned null history id" };
   }
 
   revalidatePath("/[locale]/app/projects", "page");
-  return { ok: true, projectId: updated.id };
+  return { ok: true, projectId: parsed.data.projectId };
 }

@@ -1,0 +1,5 @@
+## VERDICT: NEEDS-ATTENTION
+
+[FINDING 1] HIGH: src/app/[locale]/app/projects/new/briefing-step3-actions.ts:248 — `submitBriefingAction` now relies on `transition_project_status`, but that RPC classifies callers with `workspace_admin` / `yagi_admin` roles as admin actors before checking creator ownership. The current `is_valid_transition` admin matrix does not allow `draft -> submitted`, so workspace owners/admins submitting their own draft will get `23514` and see the wrong-status toast. Since `bootstrap_workspace` grants creators `workspace_admin`, this can block the primary submit path. Recommended fix: add a DB migration that makes the RPC treat `draft -> submitted` by `projects.created_by = auth.uid()` as the client/owner transition, or otherwise explicitly allows owner-admin `draft -> submitted` without opening non-owner admin submit.
+
+Run log summary: hotfix-6 is structurally correct, but submit via RPC needs an owner-admin role fix before migration apply + visual review.

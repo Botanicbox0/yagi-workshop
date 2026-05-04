@@ -873,7 +873,8 @@
           "submit_success": "Submitted. The YAGI team will start the review shortly.",
           "submit_failed": "Submission failed. Please try again.",
           "submit_unauthorized": "Not authorized. Please sign in again.",
-          "submit_wrong_status": "This project has already been submitted."
+          "submit_wrong_status": "This project has already been submitted.",
+          "submit_not_owner": "You do not have permission to submit this project."
         },
         "placeholder": {
           "eyebrow": "STEP 3 / 3 — CONFIRM",

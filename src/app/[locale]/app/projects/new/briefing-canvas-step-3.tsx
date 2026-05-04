@@ -309,7 +309,9 @@ export function BriefingCanvasStep3({
             ? "briefing.step3.toast.submit_unauthorized"
             : result.error === "wrong_status"
               ? "briefing.step3.toast.submit_wrong_status"
-              : "briefing.step3.toast.submit_failed";
+              : result.error === "not_owner"
+                ? "briefing.step3.toast.submit_not_owner"
+                : "briefing.step3.toast.submit_failed";
         toast.error(t(key));
         return;
       }

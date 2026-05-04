@@ -95,107 +95,100 @@ export async function ensureBriefingDraftProject(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new Phase 5 columns not in generated types
   const sb = supabase as any;
 
-  // ---------- UPDATE path ----------
+  // ---------- UPDATE path (only when caller passes an alive draft id) ----------
+  //
+  // hotfix-6: SELECT now also reads deleted_at. If the projectId points to
+  // a wiped or hard-deleted row (sessionStorage stale after a prior wipe,
+  // or a different tab triggered a wipe), we do NOT surface 'not_found' —
+  // we silently fall through to the wipe-then-INSERT path below so the
+  // user gets a fresh canvas. The "new project" mental model wins over
+  // the "resume your draft" mental model per yagi visual review.
   if (data.projectId) {
     const { data: existing, error: selErr } = await sb
       .from("projects")
-      .select("id, status, created_by, workspace_id")
+      .select("id, status, created_by, workspace_id, deleted_at")
       .eq("id", data.projectId)
       .maybeSingle();
     if (selErr) {
       console.error("[ensureBriefingDraftProject] SELECT error:", selErr);
       return { ok: false, error: "db", message: selErr.message };
     }
-    if (!existing) {
-      return { ok: false, error: "not_found" };
-    }
-    if (existing.created_by !== user.id) {
-      return { ok: false, error: "forbidden" };
-    }
-    if (existing.status !== "draft") {
-      return {
-        ok: false,
-        error: "forbidden",
-        message: "project is no longer draft",
-      };
-    }
-    if (existing.workspace_id !== active.id) {
-      return {
-        ok: false,
-        error: "forbidden",
-        message: "workspace mismatch",
-      };
-    }
 
-    const { error: updErr } = await sb
-      .from("projects")
-      .update({
-        title: data.name,
-        deliverable_types: data.deliverable_types,
-        brief: data.description ?? null,
-      })
-      .eq("id", data.projectId)
-      .eq("created_by", user.id)
-      .eq("status", "draft");
-    if (updErr) {
-      console.error("[ensureBriefingDraftProject] UPDATE error:", updErr);
-      return { ok: false, error: "db", message: updErr.message };
-    }
+    if (existing && !existing.deleted_at) {
+      // Alive row — validate and UPDATE.
+      if (existing.created_by !== user.id) {
+        return { ok: false, error: "forbidden" };
+      }
+      if (existing.status !== "draft") {
+        return {
+          ok: false,
+          error: "forbidden",
+          message: "project is no longer draft",
+        };
+      }
+      if (existing.workspace_id !== active.id) {
+        return {
+          ok: false,
+          error: "forbidden",
+          message: "workspace mismatch",
+        };
+      }
 
-    revalidatePath("/[locale]/app/projects", "page");
-    return { ok: true, projectId: data.projectId };
+      const { error: updErr } = await sb
+        .from("projects")
+        .update({
+          title: data.name,
+          deliverable_types: data.deliverable_types,
+          brief: data.description ?? null,
+        })
+        .eq("id", data.projectId)
+        .eq("created_by", user.id)
+        .eq("status", "draft");
+      if (updErr) {
+        console.error("[ensureBriefingDraftProject] UPDATE error:", updErr);
+        return { ok: false, error: "db", message: updErr.message };
+      }
+
+      revalidatePath("/[locale]/app/projects", "page");
+      return { ok: true, projectId: data.projectId };
+    }
+    // existing missing OR existing.deleted_at set → fall through.
   }
 
-  // ---------- Reuse-or-INSERT path (idempotent draft) ----------
+  // ---------- Fresh INSERT (with defensive soft-delete) ----------
   //
-  // Phase 5 invariant — one user has at most one in-flight brief draft
-  // per workspace. Enforced at the DB layer by `projects_wizard_draft_uniq`
-  // (UNIQUE on (workspace_id, created_by) WHERE status='draft' AND
-  // intake_mode='brief'). The action layer mirrors that intent: if a
-  // draft already exists, reuse it instead of hitting 23505. This matches
-  // the Briefing Canvas paradigm — re-entering /projects/new resumes the
-  // open draft rather than opening a parallel one.
-  const { data: existingDraft, error: selDraftErr } = await sb
+  // hotfix-6 sub_2 simplification (yagi authorized after test-data
+  // cleanup migration 20260504200002 wiped all in-flight brief drafts):
+  // the action no longer reuses or actively wipes prior drafts. The
+  // "새 프로젝트" mental model is the only path. We just defensively
+  // soft-delete any dangling alive draft for (workspace, user, brief)
+  // immediately before the INSERT — this is a 1-statement guard for
+  // the edge case where two browser tabs race to create a draft for
+  // the same (workspace, user) pair. Without it, the second INSERT
+  // would hit the partial unique index `projects_wizard_draft_uniq`
+  // (which after migration 20260504200000 only matches alive drafts)
+  // and 23505. The soft-delete frees the unique slot.
+  //
+  // briefing_documents under the soft-deleted project become dangling
+  // rows + dangling R2 objects (FU-Phase5-5 — R2 orphan cleanup,
+  // deferred until a real-user signup or storage cost trigger).
+  const { error: defensiveDelErr } = await sb
     .from("projects")
-    .select("id")
+    .update({ deleted_at: new Date().toISOString() })
     .eq("workspace_id", active.id)
     .eq("created_by", user.id)
     .eq("status", "draft")
     .eq("intake_mode", "brief")
-    .is("deleted_at", null)
-    .limit(1)
-    .maybeSingle();
-  if (selDraftErr) {
+    .is("deleted_at", null);
+  if (defensiveDelErr) {
     console.error(
-      "[ensureBriefingDraftProject] reuse SELECT error:",
-      selDraftErr,
+      "[ensureBriefingDraftProject] defensive soft-delete error:",
+      defensiveDelErr,
     );
-    return { ok: false, error: "db", message: selDraftErr.message };
+    return { ok: false, error: "db", message: defensiveDelErr.message };
   }
 
-  if (existingDraft) {
-    const { error: reuseUpdErr } = await sb
-      .from("projects")
-      .update({
-        title: data.name,
-        deliverable_types: data.deliverable_types,
-        brief: data.description ?? null,
-      })
-      .eq("id", existingDraft.id)
-      .eq("created_by", user.id)
-      .eq("status", "draft");
-    if (reuseUpdErr) {
-      console.error(
-        "[ensureBriefingDraftProject] reuse UPDATE error:",
-        reuseUpdErr,
-      );
-      return { ok: false, error: "db", message: reuseUpdErr.message };
-    }
-    revalidatePath("/[locale]/app/projects", "page");
-    return { ok: true, projectId: existingDraft.id };
-  }
-
-  // No existing draft for (workspace, user, brief) — fresh INSERT.
+  // Fresh INSERT — unique slot is now free.
   const { data: project, error: insErr } = await sb
     .from("projects")
     .insert({

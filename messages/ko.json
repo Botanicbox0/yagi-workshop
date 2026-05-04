@@ -873,7 +873,8 @@
           "submit_success": "의뢰가 접수됐어요. 야기 팀이 곧 검토를 시작합니다.",
           "submit_failed": "의뢰에 실패했습니다. 다시 시도해주세요.",
           "submit_unauthorized": "권한이 없습니다. 다시 로그인해주세요.",
-          "submit_wrong_status": "이미 의뢰된 프로젝트입니다."
+          "submit_wrong_status": "이미 의뢰된 프로젝트입니다.",
+          "submit_not_owner": "이 프로젝트를 의뢰할 권한이 없습니다."
         },
         "placeholder": {
           "eyebrow": "STEP 3 / 3 — 확인",
