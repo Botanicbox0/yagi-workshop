@@ -1750,6 +1750,39 @@
       "comment": "코멘트",
       "deliverable": "결과물"
     },
+    "tab": {
+      "status": "현황",
+      "brief": "브리프",
+      "board": "보드",
+      "comments": "코멘트",
+      "deliverables": "결과물"
+    },
+    "banner": {
+      "cancelled": "이 의뢰는 취소되었어요.",
+      "archived": "이 의뢰는 보관 처리되었어요."
+    },
+    "wc_scaffold": {
+      "status_tab": {
+        "section": {
+          "timeline": "Status timeline",
+          "cta": "Next action",
+          "brief": "브리프 요약",
+          "attachments": "첨부 자료",
+          "comments": "야기 코멘트"
+        },
+        "placeholder": {
+          "timeline": "Wave C.2 에서 9-state 타임라인이 들어옵니다.",
+          "cta": "Wave C.3 에서 status 별 next action CTA 가 들어옵니다.",
+          "brief": "Wave C.3 에서 브리프 핵심 요약 카드가 들어옵니다.",
+          "attachments": "Wave C.3 에서 첨부 자료 top 3 thumbnail strip 이 들어옵니다.",
+          "comments": "야기 팀이 코멘트를 남기면 여기에 표시돼요. (Phase 5+)"
+        }
+      },
+      "brief_tab": {
+        "title": "브리프 요약",
+        "description": "Wave C.4 에서 Stage 1/2/3 read-only 뷰가 들어옵니다."
+      }
+    },
     "progress_tab": {
       "section": "상태 변경 이력",
       "empty": "아직 변경 이력이 없습니다.",

@@ -1685,6 +1685,39 @@
       "comment": "Comments",
       "deliverable": "Deliverables"
     },
+    "tab": {
+      "status": "Status",
+      "brief": "Brief",
+      "board": "Board",
+      "comments": "Comments",
+      "deliverables": "Deliverables"
+    },
+    "banner": {
+      "cancelled": "This brief was cancelled.",
+      "archived": "This brief has been archived."
+    },
+    "wc_scaffold": {
+      "status_tab": {
+        "section": {
+          "timeline": "Status timeline",
+          "cta": "Next action",
+          "brief": "Brief summary",
+          "attachments": "Attachments",
+          "comments": "YAGI comments"
+        },
+        "placeholder": {
+          "timeline": "Wave C.2 lands the 9-state timeline here.",
+          "cta": "Wave C.3 lands the status-specific next-action CTA here.",
+          "brief": "Wave C.3 lands the brief summary card here.",
+          "attachments": "Wave C.3 lands the top-3 attachment thumbnail strip here.",
+          "comments": "YAGI team comments will appear here. (Phase 5+)"
+        }
+      },
+      "brief_tab": {
+        "title": "Brief summary",
+        "description": "Wave C.4 lands the Stage 1/2/3 read-only view here."
+      }
+    },
     "progress_tab": {
       "section": "Status history",
       "empty": "No transitions yet.",

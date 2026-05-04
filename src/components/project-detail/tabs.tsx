@@ -1,44 +1,47 @@
-// Phase 4.x task_04 — Detail page tabs (4 tabs: 보드 / 진행 / 코멘트 / 결과물).
+// Phase 5 Wave C C_1 — Detail page 5-tab structure.
 //
-// 보드 + 진행 are active in Phase 4. 코멘트 + 결과물 are disabled
-// placeholders for Phase 5+. Disabled tabs:
-//   - render the same way visually (no jarring strikethrough) but with
-//     muted color + cursor-not-allowed
-//   - aria-disabled="true"
-//   - clicking does nothing (no link, no router push)
-//   - the corresponding tab content panel is just <PlaceholderTab /> --
-//     enforced at page.tsx level. No server data is fetched.
+// Tab order per SPEC §"Scope: 5 tab 구조":
+//   현황 (status) — DEFAULT, full ship in C_2/C_3 (timeline + CTA + brief
+//     summary + attachment summary + comments thread placeholder)
+//   브리프 (brief) — read-only Stage 1/2/3 view, ships in C_4
+//   보드 (board) — wraps existing brief-board-shell-client, no change to
+//     the wrapped component (board-tab.tsx already imports it)
+//   코멘트 (comments) — placeholder, lands in FU-Phase5-10
+//   결과물 (deliverables) — placeholder, lands in FU-Phase5-11
 //
-// We use ?tab= query param so the URL is shareable + back-button-aware
-// (matches the existing detail page Phase 3 convention). Server reads
-// the param in page.tsx and selects the panel.
+// Phase 4.x's "progress" (status history) tab is removed. Its surface
+// moves into the 현황 timeline (C_2) and recent activity feed (C_3 +
+// FU-Phase5-10 thread).
 //
-// Design v1.0:
-// - Pretendard, font-medium for active, regular muted-foreground for
-//   inactive
-// - underline indicator on active (border-b-2 foreground)
-// - hairline divider between tab strip and content (border-b border-border/40)
-// - mobile: horizontal scroll-x on overflow
+// Routing convention preserved from Phase 4.x: ?tab= query param so
+// URLs are shareable and back-button-aware.
+//
+// Visual: Pretendard medium for active, muted-foreground for inactive,
+// border-b-2 underline on active, hairline divider on the strip itself.
+// Disabled placeholder tabs (comments / deliverables) keep the same
+// visual rhythm but use cursor-not-allowed + aria-disabled and DO NOT
+// render an anchor — clicks are no-ops and produce no router push.
 
 import Link from "next/link";
 
-export type TabKey = "board" | "progress" | "comment" | "deliverable";
+export type TabKey =
+  | "status"
+  | "brief"
+  | "board"
+  | "comments"
+  | "deliverables";
 
 type Props = {
   active: TabKey;
-  labels: {
-    board: string;
-    progress: string;
-    comment: string;
-    deliverable: string;
-  };
+  labels: Record<TabKey, string>;
 };
 
 const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
+  { key: "status", disabled: false },
+  { key: "brief", disabled: false },
   { key: "board", disabled: false },
-  { key: "progress", disabled: false },
-  { key: "comment", disabled: true },
-  { key: "deliverable", disabled: true },
+  { key: "comments", disabled: true },
+  { key: "deliverables", disabled: true },
 ];
 
 export function DetailTabs({ active, labels }: Props) {
@@ -55,8 +58,8 @@ export function DetailTabs({ active, labels }: Props) {
         const stateClass = disabled
           ? "border-transparent text-muted-foreground/60 cursor-not-allowed"
           : isActive
-          ? "border-foreground text-foreground font-medium"
-          : "border-transparent text-muted-foreground hover:text-foreground";
+            ? "border-foreground text-foreground font-medium"
+            : "border-transparent text-muted-foreground hover:text-foreground";
 
         if (disabled) {
           return (

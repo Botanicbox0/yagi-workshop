@@ -31,8 +31,10 @@ import { HeroCard } from "@/components/project-detail/hero-card";
 import { InfoRail, type TwinIntent } from "@/components/project-detail/info-rail";
 import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
-import { ProgressTab } from "@/components/project-detail/progress-tab";
 import { PlaceholderTab } from "@/components/project-detail/placeholder-tab";
+import { StatusTab } from "@/components/project-detail/status-tab";
+import { BriefTab } from "@/components/project-detail/brief-tab";
+import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
 import { RecallButton } from "./recall-button";
 
 type Props = {
@@ -57,10 +59,17 @@ type ProjectDetail = {
 };
 
 function parseTab(value: string | undefined): TabKey {
-  if (value === "progress" || value === "comment" || value === "deliverable") {
+  // Phase 5 Wave C C_1 — 5-tab structure. "status" is the default
+  // (현황 tab) per SPEC §"Scope: 5 tab 구조".
+  if (
+    value === "brief" ||
+    value === "board" ||
+    value === "comments" ||
+    value === "deliverables"
+  ) {
     return value;
   }
-  return "board";
+  return "status";
 }
 
 function narrowTwinIntent(value: string | null): TwinIntent | null {
@@ -186,8 +195,25 @@ export default async function ProjectDetailPage({
         (tStatus as any)(`status_${project.status}`)
       : project.status;
 
+  // Phase 5 Wave C C_1 — Cancelled / Archived banner. Renders above
+  // the entire page chrome when status terminates the lifecycle. Full
+  // styling + the [새 의뢰 시작] link variant land in C_5; for now this
+  // is a text-only placeholder so the gate is observable.
+  const isTerminalStatus =
+    project.status === "cancelled" || project.status === "archived";
+
   return (
     <div className="px-6 md:px-10 py-10 max-w-[1280px] mx-auto">
+      {isTerminalStatus && (
+        <CancelledArchivedBanner
+          variant={project.status as "cancelled" | "archived"}
+          labels={{
+            cancelled: tDetail("banner.cancelled"),
+            archived: tDetail("banner.archived"),
+          }}
+        />
+      )}
+
       {/* L1 Breadcrumb */}
       <nav
         aria-label="breadcrumb"
@@ -288,21 +314,60 @@ export default async function ProjectDetailPage({
           </div>
         )}
 
-      {/* L4 Tabs */}
+      {/* L4 Tabs — Wave C C_1: 5-tab structure (status default). */}
       <div className="mb-6">
         <DetailTabs
           active={activeTab}
           labels={{
-            board: tDetail("tabs.board"),
-            progress: tDetail("tabs.progress"),
-            comment: tDetail("tabs.comment"),
-            deliverable: tDetail("tabs.deliverable"),
+            status: tDetail("tab.status"),
+            brief: tDetail("tab.brief"),
+            board: tDetail("tab.board"),
+            comments: tDetail("tab.comments"),
+            deliverables: tDetail("tab.deliverables"),
           }}
         />
       </div>
 
       {/* L5 Tab content panel */}
       <div className="mb-10">
+        {activeTab === "status" && (
+          <StatusTab
+            labels={{
+              sectionTimeline: tDetail("wc_scaffold.status_tab.section.timeline"),
+              sectionCta: tDetail("wc_scaffold.status_tab.section.cta"),
+              sectionBrief: tDetail("wc_scaffold.status_tab.section.brief"),
+              sectionAttachments: tDetail(
+                "wc_scaffold.status_tab.section.attachments"
+              ),
+              sectionComments: tDetail(
+                "wc_scaffold.status_tab.section.comments"
+              ),
+              placeholderTimeline: tDetail(
+                "wc_scaffold.status_tab.placeholder.timeline"
+              ),
+              placeholderCta: tDetail(
+                "wc_scaffold.status_tab.placeholder.cta"
+              ),
+              placeholderBrief: tDetail(
+                "wc_scaffold.status_tab.placeholder.brief"
+              ),
+              placeholderAttachments: tDetail(
+                "wc_scaffold.status_tab.placeholder.attachments"
+              ),
+              placeholderComments: tDetail(
+                "wc_scaffold.status_tab.placeholder.comments"
+              ),
+            }}
+          />
+        )}
+        {activeTab === "brief" && (
+          <BriefTab
+            labels={{
+              title: tDetail("wc_scaffold.brief_tab.title"),
+              description: tDetail("wc_scaffold.brief_tab.description"),
+            }}
+          />
+        )}
         {activeTab === "board" && (
           <BoardTab
             projectId={project.id}
@@ -310,42 +375,13 @@ export default async function ProjectDetailPage({
             locale={localeNarrow}
           />
         )}
-        {activeTab === "progress" && (
-          <ProgressTab
-            projectId={project.id}
-            locale={localeNarrow}
-            labels={{
-              section: tDetail("progress_tab.section"),
-              empty: tDetail("progress_tab.empty"),
-              fromTo: (from, to) =>
-                tDetail("progress_tab.from_to", { from, to }),
-              statusMap: {
-                draft: tDetail("status.draft"),
-                submitted: tDetail("status.submitted"),
-                in_review: tDetail("status.in_review"),
-                in_progress: tDetail("status.in_progress"),
-                in_revision: tDetail("status.in_revision"),
-                delivered: tDetail("status.delivered"),
-                approved: tDetail("status.approved"),
-                cancelled: tDetail("status.cancelled"),
-                archived: tDetail("status.archived"),
-              },
-              actorRoleMap: {
-                client: tDetail("actor.client"),
-                yagi_admin: tDetail("actor.yagi_admin"),
-                workspace_admin: tDetail("actor.workspace_admin"),
-                system: tDetail("actor.system"),
-              },
-            }}
-          />
-        )}
-        {activeTab === "comment" && (
+        {activeTab === "comments" && (
           <PlaceholderTab
             title={tDetail("placeholder.comment_title")}
             description={tDetail("placeholder.comment_description")}
           />
         )}
-        {activeTab === "deliverable" && (
+        {activeTab === "deliverables" && (
           <PlaceholderTab
             title={tDetail("placeholder.deliverable_title")}
             description={tDetail("placeholder.deliverable_description")}
