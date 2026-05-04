@@ -113,17 +113,32 @@ export async function deleteProjectAction(
   //                               between our SELECT and this UPDATE
   //      deleted_at IS NULL    →  idempotency: concurrent delete attempt is a no-op
   const sbAdmin = createSupabaseService();
-  const { error: updateErr } = await sbAdmin
+  // K-05 LOOP 1 MED fix (post-merge): Supabase / PostgREST returns no
+  // error when the WHERE-filter chain matches 0 rows. Without inspecting
+  // the result, a TOCTOU race (admin transitions status to in_progress
+  // between our SELECT and this UPDATE) would silently succeed: the
+  // project survives, but the action returns ok:true and the user sees
+  // a success toast + redirect. Add `.select("id")` to surface the row
+  // count and return forbidden_status if the filter chain matched 0.
+  const { data: updatedRows, error: updateErr } = await sbAdmin
     .from("projects")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", projectId)
     .eq("created_by", user.id)
     .in("status", ["submitted", "in_review"])
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .select("id");
 
   if (updateErr) {
     console.error("[deleteProjectAction] UPDATE error:", updateErr);
     return { ok: false, error: "db", message: updateErr.message };
+  }
+  if (!updatedRows || updatedRows.length === 0) {
+    // Race: status flipped between our SELECT (forbidden_status check
+    // passed) and this UPDATE (status no longer in deletable set).
+    // Surface the same forbidden_status the user would have seen if
+    // the race hadn't happened.
+    return { ok: false, error: "forbidden_status" };
   }
 
   // 7. Invalidate project list cache
