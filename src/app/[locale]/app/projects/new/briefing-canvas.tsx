@@ -205,6 +205,7 @@ export function BriefingCanvas({
         {stage === 1 && (
           <BriefingCanvasStep1
             onNext={handleNextFromStep1}
+            onCancel={() => router.push("/app/projects")}
             submitting={submitting}
           />
         )}
@@ -232,19 +233,6 @@ export function BriefingCanvas({
             onBack={() => handleBackFromStage(2)}
             backLabel={t("briefing.step3.placeholder.back")}
           />
-        )}
-
-        {/* Project list link — accessible from Step 1 only. */}
-        {stage === 1 && (
-          <div className="text-center pb-12">
-            <button
-              type="button"
-              onClick={() => router.push("/app/projects")}
-              className="text-xs text-muted-foreground underline-offset-4 hover:underline transition-colors"
-            >
-              {t("briefing.step1.cancel_to_list")}
-            </button>
-          </div>
         )}
       </div>
     </FormProvider>

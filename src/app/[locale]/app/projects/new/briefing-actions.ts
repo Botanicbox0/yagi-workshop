@@ -30,10 +30,6 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
-import {
-  createBriefAssetPutUrl,
-  briefObjectPublicUrl,
-} from "@/lib/r2/client";
 
 // ---------------------------------------------------------------------------
 // Step 1 input schema
@@ -155,7 +151,57 @@ export async function ensureBriefingDraftProject(
     return { ok: true, projectId: data.projectId };
   }
 
-  // ---------- INSERT path ----------
+  // ---------- Reuse-or-INSERT path (idempotent draft) ----------
+  //
+  // Phase 5 invariant — one user has at most one in-flight brief draft
+  // per workspace. Enforced at the DB layer by `projects_wizard_draft_uniq`
+  // (UNIQUE on (workspace_id, created_by) WHERE status='draft' AND
+  // intake_mode='brief'). The action layer mirrors that intent: if a
+  // draft already exists, reuse it instead of hitting 23505. This matches
+  // the Briefing Canvas paradigm — re-entering /projects/new resumes the
+  // open draft rather than opening a parallel one.
+  const { data: existingDraft, error: selDraftErr } = await sb
+    .from("projects")
+    .select("id")
+    .eq("workspace_id", active.id)
+    .eq("created_by", user.id)
+    .eq("status", "draft")
+    .eq("intake_mode", "brief")
+    .is("deleted_at", null)
+    .limit(1)
+    .maybeSingle();
+  if (selDraftErr) {
+    console.error(
+      "[ensureBriefingDraftProject] reuse SELECT error:",
+      selDraftErr,
+    );
+    return { ok: false, error: "db", message: selDraftErr.message };
+  }
+
+  if (existingDraft) {
+    const { error: reuseUpdErr } = await sb
+      .from("projects")
+      .update({
+        title: data.name,
+        deliverable_types: data.deliverable_types,
+        purpose: data.purpose,
+        brief: data.description ?? null,
+      })
+      .eq("id", existingDraft.id)
+      .eq("created_by", user.id)
+      .eq("status", "draft");
+    if (reuseUpdErr) {
+      console.error(
+        "[ensureBriefingDraftProject] reuse UPDATE error:",
+        reuseUpdErr,
+      );
+      return { ok: false, error: "db", message: reuseUpdErr.message };
+    }
+    revalidatePath("/[locale]/app/projects", "page");
+    return { ok: true, projectId: existingDraft.id };
+  }
+
+  // No existing draft for (workspace, user, brief) — fresh INSERT.
   const { data: project, error: insErr } = await sb
     .from("projects")
     .insert({

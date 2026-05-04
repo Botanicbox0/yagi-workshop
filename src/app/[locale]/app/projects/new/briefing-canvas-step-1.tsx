@@ -153,9 +153,11 @@ function SectionBlock({
 
 export function BriefingCanvasStep1({
   onNext,
+  onCancel,
   submitting,
 }: {
   onNext: () => void;
+  onCancel: () => void;
   submitting: boolean;
 }) {
   const t = useTranslations("projects");
@@ -276,9 +278,16 @@ export function BriefingCanvasStep1({
         </SectionBlock>
       </div>
 
-      {/* Sticky bottom CTA — single button, right-aligned */}
+      {/* Sticky bottom CTA — left: cancel-to-list, right: primary [다음 →]. */}
       <div className="fixed bottom-0 inset-x-0 border-t border-border/40 bg-background/95 backdrop-blur-md">
-        <div className="max-w-2xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-end">
+        <div className="max-w-2xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-xs text-muted-foreground underline-offset-4 hover:underline transition-colors keep-all"
+          >
+            {t("briefing.step1.cancel_to_list")}
+          </button>
           <Button
             type="button"
             onClick={onNext}
