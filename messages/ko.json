@@ -680,11 +680,11 @@
           "purpose": {
             "label": "이 콘텐츠를 어디에 쓰시나요?",
             "options": {
+              "sns_channel": "SNS 채널 업로드용",
               "sns_ad": "SNS 광고",
               "branding": "브랜딩 / 이미지 구축",
-              "sns_channel": "SNS 채널 운영용",
-              "event": "이벤트 홍보",
-              "offline": "오프라인 활용 (매장, 옥외 등)",
+              "event_campaign": "이벤트 / 캠페인 홍보",
+              "offline_tvcf": "오프라인 / TV 커머셜",
               "other": "기타"
             }
           },
@@ -777,7 +777,7 @@
               "options": {
                 "instagram": "인스타그램",
                 "youtube": "유튜브",
-                "tiktok": "틱킡",
+                "tiktok": "틱톡",
                 "facebook": "페이스북",
                 "website": "자사 웹사이트",
                 "offline": "오프라인",

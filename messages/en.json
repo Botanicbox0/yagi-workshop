@@ -680,11 +680,11 @@
           "purpose": {
             "label": "Where will this run?",
             "options": {
-              "sns_ad": "Social ad",
-              "branding": "Branding / image building",
-              "sns_channel": "Social channel content",
-              "event": "Event promotion",
-              "offline": "Offline (store, OOH, etc.)",
+              "sns_channel": "SNS Channel Content",
+              "sns_ad": "SNS Advertising",
+              "branding": "Branding / Identity Building",
+              "event_campaign": "Event / Campaign Promotion",
+              "offline_tvcf": "Offline / TV Commercial",
               "other": "Other"
             }
           },

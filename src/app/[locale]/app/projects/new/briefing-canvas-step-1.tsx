@@ -40,11 +40,11 @@ const DELIVERABLE_OPTIONS = [
 ] as const;
 
 const PURPOSE_OPTIONS = [
+  "sns_channel",
   "sns_ad",
   "branding",
-  "sns_channel",
-  "event",
-  "offline",
+  "event_campaign",
+  "offline_tvcf",
   "other",
 ] as const;
 
