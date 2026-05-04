@@ -121,7 +121,11 @@ export function BriefingCanvas({
       purpose: initialState.purpose,
       description: initialState.description,
     },
-    mode: "onBlur",
+    // Hotfix: was 'onBlur'. Korean IME composition fired blur mid-compose
+    // and let zod's resolver silently reject the form, so [다음 →] looked
+    // like a no-op. 'onSubmit' triggers a single full validation on click.
+    mode: "onSubmit",
+    shouldFocusError: true,
   });
 
   const persistSession = (next: Partial<CanvasState>) => {
@@ -140,36 +144,56 @@ export function BriefingCanvas({
     }
   };
 
-  const handleNextFromStep1 = methods.handleSubmit(async (values) => {
-    setSubmitting(true);
-    try {
-      const result = await ensureBriefingDraftProject({
-        projectId,
-        name: values.name,
-        deliverable_types: values.deliverable_types ?? [],
-        purpose: values.purpose ?? [],
-        description: values.description ?? null,
-      });
-      if (!result.ok) {
-        const errorKey =
-          result.error === "unauthenticated"
-            ? "briefing.step1.toast.unauthenticated"
-            : result.error === "no_workspace"
-              ? "briefing.step1.toast.no_workspace"
-              : "briefing.step1.toast.draft_failed";
-        toast.error(t(errorKey));
-        return;
+  const handleNextFromStep1 = methods.handleSubmit(
+    async (values) => {
+      setSubmitting(true);
+      try {
+        const result = await ensureBriefingDraftProject({
+          projectId,
+          name: values.name,
+          deliverable_types: values.deliverable_types ?? [],
+          purpose: values.purpose ?? [],
+          description: values.description ?? null,
+        });
+        if (!result.ok) {
+          const errorKey =
+            result.error === "unauthenticated"
+              ? "briefing.step1.toast.unauthenticated"
+              : result.error === "no_workspace"
+                ? "briefing.step1.toast.no_workspace"
+                : "briefing.step1.toast.draft_failed";
+          toast.error(t(errorKey));
+          return;
+        }
+        setProjectId(result.projectId);
+        persistSession({ ...values, projectId: result.projectId });
+        setStage(2);
+      } catch (e) {
+        console.error("[BriefingCanvas] ensureBriefingDraftProject threw:", e);
+        toast.error(t("briefing.step1.toast.draft_failed"));
+      } finally {
+        setSubmitting(false);
       }
-      setProjectId(result.projectId);
-      persistSession({ ...values, projectId: result.projectId });
-      setStage(2);
-    } catch (e) {
-      console.error("[BriefingCanvas] ensureBriefingDraftProject threw:", e);
-      toast.error(t("briefing.step1.toast.draft_failed"));
-    } finally {
-      setSubmitting(false);
-    }
-  });
+    },
+    // Hotfix: validation-fail path was previously a silent drop, so a
+    // user with an unfilled required field saw no feedback when pressing
+    // [다음 →]. Surface a toast pointing at the first missing field.
+    (formErrors) => {
+      console.warn("[BriefingCanvas] step1 validation failed:", formErrors);
+      const firstKey = (
+        Object.keys(formErrors) as Array<keyof typeof formErrors>
+      )[0];
+      const errorKey =
+        firstKey === "name"
+          ? "briefing.step1.error.name_required"
+          : firstKey === "deliverable_types"
+            ? "briefing.step1.error.deliverable_types_required"
+            : firstKey === "purpose"
+              ? "briefing.step1.error.purpose_required"
+              : "briefing.step1.toast.draft_failed";
+      toast.error(t(errorKey));
+    },
+  );
 
   const handleBackFromStage = (target: Stage) => {
     setStage(target);

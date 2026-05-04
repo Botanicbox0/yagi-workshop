@@ -3,25 +3,23 @@
 // =============================================================================
 // Phase 5 Wave B task_04 v3 — Briefing Canvas Step 1 (minimal intent)
 //
-// Paradigm shift from db0295f's 9-field 3-col grid: Step 1 is now a tight
-// "프로젝트 시작 (~30s)" surface that only captures what's needed to spin
-// up a draft project on the server. Everything else (mood, channels,
-// budget, audience, …) lives in Step 2's workspace surface.
-//
-// Form fields (4):
-//   - 프로젝트 이름 (text, required)
-//   - 어떤 콘텐츠인가요? (multi-chip, required, 1+)
-//   - 이 콘텐츠를 어디에 쓰시나요? (multi-chip, required, 1+)
-//   - 간단히 설명해주세요 (textarea, optional)
-//
-// Single CTA: [다음 →]. No back button — Step 1 is the entry point. No
-// "임시 저장" button — Step 1 stays in sessionStorage between renders;
-// pressing 다음 commits to the server (ensureBriefingDraftProject).
+// Hotfix (yagi visual review):
+//   - DELIVERABLE_OPTIONS reduced from 8 → 5 with sharper enum names that
+//     map directly to the request type (image / ad_video_short /
+//     ad_video_long / ai_vfx_mv / branding_video).
+//   - Layout switched from horizontal chip flex-wrap to vertical
+//     radio-list rows with checkbox affordance + sub-description per
+//     option, fixing the wrap-visibility bleed yagi saw on Step 1.
+//   - Per-section "복수 선택 가능" helper removed — checkbox affordance
+//     carries the multi-select signal without prose redundancy.
+//   - Form-mode + fail-handler fix lives in briefing-canvas.tsx
+//     (mode='onSubmit' + handleSubmit fail callback) so silent
+//     validation drops can no longer block the [다음 →] transition.
 // =============================================================================
 
 import { useFormContext, Controller } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,18 +28,15 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Step1FormData } from "./briefing-canvas";
 
 // ---------------------------------------------------------------------------
-// Field option enums (i18n-keyed labels, identical preset to Wave A spec)
+// Field option enums (i18n-keyed labels)
 // ---------------------------------------------------------------------------
 
 const DELIVERABLE_OPTIONS = [
-  "ad_video",
   "image",
-  "ai_human", // Phase 5 Q-508 hybrid Twin option (the "C" half)
-  "motion_graphics",
-  "vfx",
-  "branding",
-  "illustration",
-  "other",
+  "ad_video_short",
+  "ad_video_long",
+  "ai_vfx_mv",
+  "branding_video",
 ] as const;
 
 const PURPOSE_OPTIONS = [
@@ -54,24 +49,29 @@ const PURPOSE_OPTIONS = [
 ] as const;
 
 // ---------------------------------------------------------------------------
-// Multi-select chip
+// Multi-select vertical list. Each row = checkbox + label (+ optional
+// description). aria-pressed retained so screen readers still announce
+// state; role attribute kept implicit (button), letting Enter/Space toggle.
 // ---------------------------------------------------------------------------
 
-function ChipMulti({
+function MultiList({
   options,
   value,
   onChange,
   labelOf,
+  descriptionOf,
 }: {
   options: readonly string[];
   value: string[];
   onChange: (next: string[]) => void;
   labelOf: (opt: string) => string;
+  descriptionOf?: (opt: string) => string | null;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-col gap-2">
       {options.map((opt) => {
         const selected = value.includes(opt);
+        const desc = descriptionOf ? descriptionOf(opt) : null;
         return (
           <button
             key={opt}
@@ -83,13 +83,33 @@ function ChipMulti({
             }
             aria-pressed={selected}
             className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-medium transition-colors keep-all",
+              "flex items-center gap-3 px-4 py-3 rounded-xl text-left",
+              "border transition-colors",
               selected
-                ? "bg-foreground text-background"
-                : "border border-border/60 hover:border-border",
+                ? "border-foreground bg-foreground/5"
+                : "border-border/40 hover:border-border",
             )}
           >
-            {labelOf(opt)}
+            <span
+              className={cn(
+                "w-4 h-4 rounded border flex items-center justify-center shrink-0",
+                selected
+                  ? "border-foreground bg-foreground"
+                  : "border-border/60",
+              )}
+            >
+              {selected && <Check className="w-3 h-3 text-background" />}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium keep-all">
+                {labelOf(opt)}
+              </div>
+              {desc && (
+                <div className="text-xs text-muted-foreground mt-0.5 keep-all">
+                  {desc}
+                </div>
+              )}
+            </div>
           </button>
         );
       })}
@@ -103,12 +123,10 @@ function ChipMulti({
 
 function SectionBlock({
   title,
-  helper,
   optional,
   children,
 }: {
   title: string;
-  helper?: string;
   optional?: string;
   children: React.ReactNode;
 }) {
@@ -123,11 +141,6 @@ function SectionBlock({
             <span className="text-xs text-muted-foreground">{optional}</span>
           )}
         </div>
-        {helper && (
-          <p className="text-xs text-muted-foreground mt-1.5 keep-all leading-relaxed">
-            {helper}
-          </p>
-        )}
       </header>
       <div>{children}</div>
     </section>
@@ -155,6 +168,12 @@ export function BriefingCanvasStep1({
   const labelDeliverable = (k: string) =>
     t(
       `briefing.step1.field.deliverable_types.options.${k}` as Parameters<
+        typeof t
+      >[0],
+    );
+  const descriptionDeliverable = (k: string) =>
+    t(
+      `briefing.step1.field.deliverable_types.descriptions.${k}` as Parameters<
         typeof t
       >[0],
     );
@@ -201,17 +220,17 @@ export function BriefingCanvasStep1({
         {/* Deliverable types */}
         <SectionBlock
           title={t("briefing.step1.field.deliverable_types.label")}
-          helper={t("briefing.step1.field.deliverable_types.helper")}
         >
           <Controller
             control={control}
             name="deliverable_types"
             render={({ field }) => (
-              <ChipMulti
+              <MultiList
                 options={DELIVERABLE_OPTIONS}
                 value={field.value ?? []}
                 onChange={field.onChange}
                 labelOf={labelDeliverable}
+                descriptionOf={descriptionDeliverable}
               />
             )}
           />
@@ -223,15 +242,12 @@ export function BriefingCanvasStep1({
         </SectionBlock>
 
         {/* Purpose */}
-        <SectionBlock
-          title={t("briefing.step1.field.purpose.label")}
-          helper={t("briefing.step1.field.purpose.helper")}
-        >
+        <SectionBlock title={t("briefing.step1.field.purpose.label")}>
           <Controller
             control={control}
             name="purpose"
             render={({ field }) => (
-              <ChipMulti
+              <MultiList
                 options={PURPOSE_OPTIONS}
                 value={field.value ?? []}
                 onChange={field.onChange}
@@ -249,7 +265,6 @@ export function BriefingCanvasStep1({
         {/* Description (optional) */}
         <SectionBlock
           title={t("briefing.step1.field.description.label")}
-          helper={t("briefing.step1.field.description.helper")}
           optional={t("briefing.step1.field.description.optional")}
         >
           <Textarea

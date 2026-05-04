@@ -655,21 +655,30 @@
           },
           "deliverable_types": {
             "label": "어떤 콘텐츠인가요?",
-            "helper": "복수 선택 가능",
             "options": {
-              "ad_video": "광고 영상",
               "image": "이미지",
+              "ad_video_short": "광고 영상 (~30초)",
+              "ad_video_long": "광고 영상 (30초 이상)",
+              "ai_vfx_mv": "AI VFX (Music Video)",
+              "branding_video": "브랜딩 영상",
+              "ad_video": "광고 영상",
               "ai_human": "AI 인물 활용",
               "motion_graphics": "모션 그래픽",
               "vfx": "VFX",
               "branding": "브랜딩",
               "illustration": "일러스트",
               "other": "기타"
+            },
+            "descriptions": {
+              "image": "제품샷, 룩북, SNS 카드뉴스 등",
+              "ad_video_short": "인스타 릴스, 유튜브 숏츠 등",
+              "ad_video_long": "유튜브 광고, TVCF, 브랜드 필름 등",
+              "ai_vfx_mv": "뮤직비디오, 콘셉트 영상, 비주얼 시퀀스 등",
+              "branding_video": "기업 소개, 제품 런칭, 메이킹 영상 등"
             }
           },
           "purpose": {
             "label": "이 콘텐츠를 어디에 쓰시나요?",
-            "helper": "복수 선택 가능",
             "options": {
               "sns_ad": "SNS 광고",
               "branding": "브랜딩 / 이미지 구축",

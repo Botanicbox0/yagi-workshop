@@ -655,21 +655,30 @@
           },
           "deliverable_types": {
             "label": "What kind of content?",
-            "helper": "Multiple selection",
             "options": {
-              "ad_video": "Ad video",
               "image": "Image",
+              "ad_video_short": "Short Ad Video (~30s)",
+              "ad_video_long": "Long Ad Video (30s+)",
+              "ai_vfx_mv": "AI VFX (Music Video)",
+              "branding_video": "Branding Video",
+              "ad_video": "Ad video",
               "ai_human": "AI human",
               "motion_graphics": "Motion graphics",
               "vfx": "VFX",
               "branding": "Branding",
               "illustration": "Illustration",
               "other": "Other"
+            },
+            "descriptions": {
+              "image": "Product shots, lookbooks, SNS cards, etc.",
+              "ad_video_short": "Instagram Reels, YouTube Shorts, etc.",
+              "ad_video_long": "YouTube ads, TVCFs, brand films, etc.",
+              "ai_vfx_mv": "Music videos, concept videos, visual sequences, etc.",
+              "branding_video": "Company intros, product launches, making videos, etc."
             }
           },
           "purpose": {
             "label": "Where will this run?",
-            "helper": "Multiple selection",
             "options": {
               "sns_ad": "Social ad",
               "branding": "Branding / image building",
