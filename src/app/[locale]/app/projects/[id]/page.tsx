@@ -27,9 +27,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { MessageSquare, Package } from "lucide-react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
-import { StatusTimeline } from "@/components/project-detail/status-timeline";
-import { HeroCard } from "@/components/project-detail/hero-card";
-import { InfoRail, type TwinIntent } from "@/components/project-detail/info-rail";
+import { type TwinIntent } from "@/components/project-detail/info-rail";
 import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
 import { EmptyStateTab } from "@/components/project-detail/empty-state-tab";
@@ -336,87 +334,12 @@ export default async function ProjectDetailPage({
         </span>
       </nav>
 
-      {/* L2 Status timeline — C_2 vertical stepper.
-          Labels from projects.status.label namespace (shared across surfaces).
-          eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <div className="mb-8">
-        <StatusTimeline
-          status={project.status}
-          labels={{
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            draft: (tStatus as any)("status.label.draft"),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            submitted: (tStatus as any)("status.label.submitted"),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            in_review: (tStatus as any)("status.label.in_review"),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            in_progress: (tStatus as any)("status.label.in_progress"),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            in_revision: (tStatus as any)("status.label.in_revision"),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delivered: (tStatus as any)("status.label.delivered"),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            approved: (tStatus as any)("status.label.approved"),
-          }}
-        />
-      </div>
-
-      {/* L3 Hero card + Info rail */}
-      <div className="mb-10 flex flex-col md:flex-row gap-6">
-        <div className="flex-1 min-w-0">
-          <HeroCard
-            title={project.title}
-            description={project.brief}
-            status={project.status}
-            statusLabel={statusLabel}
-            bannerLine={
-              project.status === "in_review" ||
-              project.status === "submitted" ||
-              project.status === "draft"
-                ? tDetail("hero.banner_in_review")
-                : null
-            }
-          />
-        </div>
-        <InfoRail
-          createdAt={project.created_at}
-          budgetBand={project.budget_band}
-          targetDeliveryAt={project.target_delivery_at}
-          twinIntent={narrowTwinIntent(project.twin_intent)}
-          meetingPreferredAt={project.meeting_preferred_at}
-          locale={localeNarrow}
-          labels={{
-            section: tDetail("info_rail.section"),
-            submittedOn: tDetail("info_rail.submitted_on"),
-            budget: tDetail("info_rail.budget"),
-            delivery: tDetail("info_rail.delivery"),
-            deliveryNegotiable: tDetail("info_rail.delivery_negotiable"),
-            twinIntent: tDetail("info_rail.twin_intent"),
-            meeting: tDetail("info_rail.meeting"),
-            meetingNone: tDetail("info_rail.meeting_none"),
-            notSet: tDetail("info_rail.not_set"),
-            budgetMap: {
-              under_1m: tDetail("budget.under_1m"),
-              "1m_to_5m": tDetail("budget.1m_to_5m"),
-              "5m_to_10m": tDetail("budget.5m_to_10m"),
-              negotiable: tDetail("budget.negotiable"),
-            },
-            twinIntentMap: {
-              undecided: tDetail("twin_intent.undecided"),
-              specific_in_mind: tDetail("twin_intent.specific_in_mind"),
-              no_twin: tDetail("twin_intent.no_twin"),
-            },
-          }}
-        />
-      </div>
-
-      {/* HF1_3 (2026-05-05) — RecallButton moved into StatusCard
-          secondary CTA slot (HF1_1). The previous standalone block
-          here was the original Wave B.5 placement; both RecallButton
-          renderings co-existing was the regression yagi flagged. The
-          StatusCard now owns the single visible RecallButton for
-          submitted / in_review states; non-owner viewers see no
-          recall surface (StatusCard internal gate). */}
+      {/* L2 (StatusTimeline) + L3 (HeroCard + InfoRail) removed in
+          Hotfix-2 HF2_1 — both surfaces were Phase 4.x carry-overs that
+          duplicated content the Wave C 현황 tab now owns. The status
+          tab's internal grid (timeline col-2 / status-card col-7 /
+          InfoRail col-3) is the single home for these elements per
+          PRODUCT-MASTER §C.4 v1.2 + H2D1 / H2D2 / H2D3. */}
 
       {/* L4 Tabs — Wave C C_1: 5-tab structure (status default). */}
       <div className="mb-6">
@@ -437,6 +360,7 @@ export default async function ProjectDetailPage({
         {activeTab === "status" && (
           <StatusTab
             status={project.status}
+            statusLabel={statusLabel}
             isOwner={isOwner}
             projectId={project.id}
             locale={locale}
@@ -446,6 +370,12 @@ export default async function ProjectDetailPage({
             briefCount={briefDocsCount}
             referenceCount={referenceDocsCount}
             topThree={topThreeDocs}
+            createdAt={project.created_at}
+            budgetBand={project.budget_band}
+            targetDeliveryAt={project.target_delivery_at}
+            twinIntent={narrowTwinIntent(project.twin_intent)}
+            meetingPreferredAt={project.meeting_preferred_at}
+            localeNarrow={localeNarrow}
             labels={{
               timeline: {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -538,6 +468,28 @@ export default async function ProjectDetailPage({
               ),
               comments_placeholder: tDetail("comments_thread.placeholder"),
               comments_cta: tDetail("summary_card.cta.comments"),
+              infoRail: {
+                section: tDetail("info_rail.section"),
+                submittedOn: tDetail("info_rail.submitted_on"),
+                budget: tDetail("info_rail.budget"),
+                delivery: tDetail("info_rail.delivery"),
+                deliveryNegotiable: tDetail("info_rail.delivery_negotiable"),
+                twinIntent: tDetail("info_rail.twin_intent"),
+                meeting: tDetail("info_rail.meeting"),
+                meetingNone: tDetail("info_rail.meeting_none"),
+                notSet: tDetail("info_rail.not_set"),
+                budgetMap: {
+                  under_1m: tDetail("budget.under_1m"),
+                  "1m_to_5m": tDetail("budget.1m_to_5m"),
+                  "5m_to_10m": tDetail("budget.5m_to_10m"),
+                  negotiable: tDetail("budget.negotiable"),
+                },
+                twinIntentMap: {
+                  undecided: tDetail("twin_intent.undecided"),
+                  specific_in_mind: tDetail("twin_intent.specific_in_mind"),
+                  no_twin: tDetail("twin_intent.no_twin"),
+                },
+              },
             }}
           />
         )}
