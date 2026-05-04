@@ -75,6 +75,10 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     )
     .eq("workspace_id", activeWorkspaceId)
     .eq("project_type", "direct_commission")
+    // HF2_2 defense-in-depth: exclude soft-deleted projects even if RLS
+    // USING clause already filters them — explicit filter makes intent
+    // observable in code review.
+    .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
   if (sp.status) query = query.eq("status", sp.status);
