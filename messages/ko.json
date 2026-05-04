@@ -1943,6 +1943,29 @@
       },
       "empty_state": {
         "submitted": "야기 팀 검토 시작 대기 중"
+      },
+      "card": {
+        "submitted": {
+          "title": "의뢰가 접수되었습니다",
+          "body": "YAGI 팀이 브리프를 검토 중입니다."
+        },
+        "meta": {
+          "expected_response": {
+            "label": "예상 답변",
+            "value": "1–2 영업일 내"
+          },
+          "next_step": {
+            "label": "다음 단계",
+            "submitted": "검토 완료 후 코멘트 또는 미팅 일정 안내"
+          },
+          "team": {
+            "label": "담당 팀",
+            "value": "YAGI Creative Team"
+          }
+        },
+        "cta": {
+          "view_full_brief": "브리프 전체 보기 →"
+        }
       }
     },
     "summary_card": {

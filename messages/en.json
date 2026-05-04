@@ -1878,6 +1878,29 @@
       },
       "empty_state": {
         "submitted": "Waiting for YAGI to start review"
+      },
+      "card": {
+        "submitted": {
+          "title": "Brief submitted",
+          "body": "YAGI is reviewing your brief."
+        },
+        "meta": {
+          "expected_response": {
+            "label": "Expected response",
+            "value": "Within 1–2 business days"
+          },
+          "next_step": {
+            "label": "Next step",
+            "submitted": "Review → comment or meeting schedule"
+          },
+          "team": {
+            "label": "Assigned team",
+            "value": "YAGI Creative Team"
+          }
+        },
+        "cta": {
+          "view_full_brief": "View full brief →"
+        }
       }
     },
     "summary_card": {
