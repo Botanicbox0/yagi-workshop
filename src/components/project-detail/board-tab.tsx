@@ -2,7 +2,7 @@
 // detail page. Wraps the existing Phase 3.1 BriefBoardShellClient so
 // the redesigned page.tsx stays slim. Fetches its own data so the
 // disabled tabs (코멘트 / 결과물) never trigger this code path -- they
-// short-circuit to PlaceholderTab in page.tsx.
+// short-circuit to EmptyStateTab in page.tsx.
 //
 // Self-review (KICKOFF section task_04):
 // - project-scope authorization is the responsibility of page.tsx
@@ -11,9 +11,16 @@
 // - The board RLS itself enforces row-scope (project_boards policy).
 //
 // Phase 3.1 routing rule preserved: when only a legacy project_briefs
-// row exists with no new-system board, render the legacy read-only
-// banner. New-system board (source IN wizard_seed/admin_init) takes
-// priority.
+// row exists with no new-system board row at all, render the legacy
+// read-only banner.
+//
+// HF1.6 fix (Hypothesis B): the original source IN ('wizard_seed',
+// 'admin_init') check was too narrow — boards with source='migrated'
+// (and any other future source values) were silently falling through to
+// the "보드가 곧 준비됩니다" placeholder instead of mounting tldraw.
+// Fix: ANY project_boards row is treated as a renderable board and passed
+// to BriefBoardShellClient. The legacy banner is reserved exclusively for
+// projects with NO board row but with an old project_briefs row.
 
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
@@ -60,13 +67,14 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
     .eq("project_id", projectId)
     .maybeSingle()) as { data: BriefRow | null };
 
-  const hasNewSystemBoard =
-    !!boardRow &&
-    (boardRow.source === "wizard_seed" || boardRow.source === "admin_init");
+  // HF1.6: any board row (regardless of source) is renderable via
+  // BriefBoardShellClient. The legacy-only check was the regression.
+  const hasBoardRow = !!boardRow;
   const hasLegacyBrief = !!briefRow && !!briefRow.content_json;
-  const useLegacyBanner = !hasNewSystemBoard && hasLegacyBrief;
+  // Legacy banner only when there is NO board row but there IS a legacy brief.
+  const useLegacyBanner = !hasBoardRow && hasLegacyBrief;
 
-  if (hasNewSystemBoard && boardRow) {
+  if (hasBoardRow && boardRow) {
     const { data: bvRaw } = (await supabase
       .from("project_board_versions")
       .select("id, version, created_at, label")
