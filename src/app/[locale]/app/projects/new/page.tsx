@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
-import { NewProjectWizard } from "./new-project-wizard";
+import { BriefingCanvas } from "./briefing-canvas";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -42,16 +42,16 @@ export default async function NewProjectPage({ params }: Props) {
     brands.push(...(brandsData ?? []));
   }
 
+  // Phase 5 Wave B task_04 — paradigm shift from form-only wizard to
+  // 3-stage Briefing Canvas. The canvas owns its own header (the project
+  // title input lives at the top of Stage 1), so we no longer render a
+  // page-level header here. The legacy NewProjectWizard component stays
+  // in src/ for now — it is no longer mounted from any route, and the
+  // cleanup commit lands in Phase 5 ff-merge hotfix-1 per KICKOFF §제약.
+  // Suppress the unused t() import (the new-page header was the only
+  // consumer here).
+  void t;
   return (
-    <div className="min-h-dvh bg-background">
-      {/* Page header */}
-      <div className="px-6 pt-10 pb-0 max-w-2xl mx-auto">
-        <h1 className="font-display text-3xl tracking-tight mb-1">
-          {t("new")}
-        </h1>
-      </div>
-
-      <NewProjectWizard brands={brands} activeWorkspaceId={workspaceId} />
-    </div>
+    <BriefingCanvas brands={brands} activeWorkspaceId={workspaceId} />
   );
 }
