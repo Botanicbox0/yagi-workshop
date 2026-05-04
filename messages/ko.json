@@ -1965,6 +1965,19 @@
         },
         "cta": {
           "view_full_brief": "브리프 전체 보기 →"
+        },
+        "dropdown": {
+          "trigger_label": "더 보기",
+          "recall": "의뢰 회수 후 수정",
+          "delete": "의뢰 삭제",
+          "delete_confirm": {
+            "title": "이 의뢰를 삭제할까요?",
+            "description": "삭제하면 복구할 수 없어요. 같은 내용으로 다시 의뢰하시려면 새 프로젝트를 시작해주세요.",
+            "cancel": "취소",
+            "submit": "삭제"
+          },
+          "delete_success_toast": "의뢰가 삭제되었어요",
+          "delete_error_toast": "의뢰를 삭제하지 못했어요. 잠시 후 다시 시도해주세요."
         }
       }
     },

@@ -1900,6 +1900,19 @@
         },
         "cta": {
           "view_full_brief": "View full brief →"
+        },
+        "dropdown": {
+          "trigger_label": "More options",
+          "recall": "Recall to edit",
+          "delete": "Delete brief",
+          "delete_confirm": {
+            "title": "Delete this brief?",
+            "description": "This action can't be undone. Start a new project to re-submit.",
+            "cancel": "Cancel",
+            "submit": "Delete"
+          },
+          "delete_success_toast": "Brief deleted",
+          "delete_error_toast": "Could not delete brief. Try again shortly."
         }
       }
     },
