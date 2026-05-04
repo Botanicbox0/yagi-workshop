@@ -1,17 +1,21 @@
 "use client";
 
 // =============================================================================
-// Phase 5 Wave B task_05 v3 — Step 2 orchestrator (Briefing Canvas Workspace)
+// Phase 5 Wave B task_05 v3 hotfix-1 — Step 2 orchestrator (2-row layout)
 //
-// Layout (lg:grid-cols-3 / mobile stack):
-//   Col 1: Step2BriefColumn — 보유 자료 (briefing_documents kind='brief')
-//   Col 2: Step2ReferenceColumn — 레퍼런스 (kind='reference', oembed)
-//   Col 3: Step2Sidebar — 디테일 (12 fields, 5s autosave)
+// Layout:
+//   Row 1 (lg:grid-cols-2 / mobile stack):
+//     • Step2BriefColumn      — 보유 자료 (briefing_documents kind='brief')
+//     • Step2ReferenceColumn  — 레퍼런스 (kind='reference', oembed)
+//   Row 2 (full-width):
+//     • Step2Sidebar          — 디테일 (12 fields, internal 2-col form
+//                               grid; was vertical sidebar in original
+//                               3-col layout).
 //
-// Sticky bottom CTA bar:
+// Sticky bottom CTA bar (sidebar-offset on md+):
 //   [← 이전]  ·  자동 저장 status indicator  ·  [확인 →]
 //
-// Whiteboard expandable mounts under the 3-col grid; collapsed by default
+// Whiteboard expandable mounts under the detail row; collapsed by default
 // per KICKOFF v1.2 §task_05 (90% 안 씀).
 //
 // Initial data:
@@ -204,29 +208,31 @@ export function BriefingCanvasStep2({
         </p>
       </div>
 
-      {/* 3-col grid */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Step2BriefColumn
-          projectId={projectId}
-          documents={briefDocs}
-          onAdded={(d) => setBriefDocs((prev) => [...prev, d])}
-          onRemoved={(id) =>
-            setBriefDocs((prev) => prev.filter((d) => d.id !== id))
-          }
-        />
-        <Step2ReferenceColumn
-          projectId={projectId}
-          documents={refDocs}
-          onAdded={(d) => setRefDocs((prev) => [...prev, d])}
-          onRemoved={(id) =>
-            setRefDocs((prev) => prev.filter((d) => d.id !== id))
-          }
-          onUpdated={(id, patch) =>
-            setRefDocs((prev) =>
-              prev.map((d) => (d.id === id ? { ...d, ...patch } : d)),
-            )
-          }
-        />
+      {/* 2-row layout: top = brief + reference (2-col on lg), bottom = full-width detail */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Step2BriefColumn
+            projectId={projectId}
+            documents={briefDocs}
+            onAdded={(d) => setBriefDocs((prev) => [...prev, d])}
+            onRemoved={(id) =>
+              setBriefDocs((prev) => prev.filter((d) => d.id !== id))
+            }
+          />
+          <Step2ReferenceColumn
+            projectId={projectId}
+            documents={refDocs}
+            onAdded={(d) => setRefDocs((prev) => [...prev, d])}
+            onRemoved={(id) =>
+              setRefDocs((prev) => prev.filter((d) => d.id !== id))
+            }
+            onUpdated={(id, patch) =>
+              setRefDocs((prev) =>
+                prev.map((d) => (d.id === id ? { ...d, ...patch } : d)),
+              )
+            }
+          />
+        </div>
         <Step2Sidebar
           projectId={projectId}
           initial={sidebarInitial}
@@ -255,8 +261,8 @@ export function BriefingCanvasStep2({
         </details>
       </div>
 
-      {/* Sticky bottom CTA */}
-      <div className="fixed bottom-0 inset-x-0 border-t border-border/40 bg-background/95 backdrop-blur-md">
+      {/* Sticky bottom CTA — sidebar-offset on md+ (sidebar is 240px wide) */}
+      <div className="fixed bottom-0 left-0 right-0 md:left-[240px] border-t border-border/40 bg-background/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between gap-3">
           <Button
             type="button"

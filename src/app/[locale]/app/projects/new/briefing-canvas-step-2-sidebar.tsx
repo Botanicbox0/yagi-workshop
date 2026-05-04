@@ -298,199 +298,208 @@ export function Step2Sidebar({
   ) => setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <aside className="rounded-3xl border border-border/40 p-6 bg-background flex flex-col gap-6">
+    <section className="rounded-3xl border border-border/40 p-6 lg:p-8 bg-background flex flex-col gap-8">
       <header>
         <h2 className="text-base font-semibold tracking-tight keep-all">
           {t("briefing.step2.sections.detail.title")}
         </h2>
       </header>
 
-      <FieldBlock
-        title={t("briefing.step2.sections.detail.mood.label")}
-        helper={t("briefing.step2.sections.detail.mood.helper")}
-      >
-        <ChipMulti
-          options={MOOD_OPTIONS}
-          value={form.mood_keywords}
-          onChange={(v) => set("mood_keywords", v)}
-          labelOf={(k) =>
-            t(
-              `briefing.step2.sections.detail.mood.options.${k}` as Parameters<
-                typeof t
-              >[0],
-            )
-          }
-        />
-        <Input
-          value={form.mood_keywords_free}
-          onChange={(e) => set("mood_keywords_free", e.target.value)}
-          placeholder={t(
-            "briefing.step2.sections.detail.mood.free_input_placeholder",
-          )}
-          className="text-sm"
-        />
-      </FieldBlock>
-
-      <FieldBlock title={t("briefing.step2.sections.detail.visual_ratio.label")}>
-        <ChipSingle
-          options={VISUAL_RATIO_OPTIONS}
-          value={form.visual_ratio}
-          onChange={(v) => set("visual_ratio", v)}
-          labelOf={(k) =>
-            t(
-              `briefing.step2.sections.detail.visual_ratio.options.${k}` as Parameters<
-                typeof t
-              >[0],
-            )
-          }
-        />
-        {form.visual_ratio === "custom" && (
+      {/* Internal 2-col form grid (full-width row). Mood / channels /
+          textareas span single cells; the divider span the full row. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
+        <FieldBlock
+          title={t("briefing.step2.sections.detail.mood.label")}
+          helper={t("briefing.step2.sections.detail.mood.helper")}
+        >
+          <ChipMulti
+            options={MOOD_OPTIONS}
+            value={form.mood_keywords}
+            onChange={(v) => set("mood_keywords", v)}
+            labelOf={(k) =>
+              t(
+                `briefing.step2.sections.detail.mood.options.${k}` as Parameters<
+                  typeof t
+                >[0],
+              )
+            }
+          />
           <Input
-            value={form.visual_ratio_custom}
-            onChange={(e) => set("visual_ratio_custom", e.target.value)}
+            value={form.mood_keywords_free}
+            onChange={(e) => set("mood_keywords_free", e.target.value)}
             placeholder={t(
-              "briefing.step2.sections.detail.visual_ratio.custom_placeholder",
+              "briefing.step2.sections.detail.mood.free_input_placeholder",
             )}
+            className="text-sm"
+          />
+        </FieldBlock>
+
+        <FieldBlock
+          title={t("briefing.step2.sections.detail.visual_ratio.label")}
+        >
+          <ChipSingle
+            options={VISUAL_RATIO_OPTIONS}
+            value={form.visual_ratio}
+            onChange={(v) => set("visual_ratio", v)}
+            labelOf={(k) =>
+              t(
+                `briefing.step2.sections.detail.visual_ratio.options.${k}` as Parameters<
+                  typeof t
+                >[0],
+              )
+            }
+          />
+          {form.visual_ratio === "custom" && (
+            <Input
+              value={form.visual_ratio_custom}
+              onChange={(e) => set("visual_ratio_custom", e.target.value)}
+              placeholder={t(
+                "briefing.step2.sections.detail.visual_ratio.custom_placeholder",
+              )}
+              className="text-sm max-w-xs"
+            />
+          )}
+        </FieldBlock>
+
+        <FieldBlock
+          title={t("briefing.step2.sections.detail.channels.label")}
+          helper={t("briefing.step2.sections.detail.channels.helper")}
+        >
+          <ChipMulti
+            options={CHANNEL_OPTIONS}
+            value={form.channels}
+            onChange={(v) => set("channels", v)}
+            labelOf={(k) =>
+              t(
+                `briefing.step2.sections.detail.channels.options.${k}` as Parameters<
+                  typeof t
+                >[0],
+              )
+            }
+          />
+        </FieldBlock>
+
+        <FieldBlock title={t("briefing.step2.sections.detail.has_plan.label")}>
+          <RadioGroup
+            value={form.has_plan}
+            onValueChange={(v) =>
+              set("has_plan", v as SidebarFormData["has_plan"])
+            }
+            className="flex flex-col gap-2"
+          >
+            {HAS_PLAN_OPTIONS.map((opt) => (
+              <div key={opt} className="flex items-center gap-2">
+                <RadioGroupItem value={opt} id={`has-plan-${opt}`} />
+                <Label
+                  htmlFor={`has-plan-${opt}`}
+                  className="text-sm font-normal cursor-pointer keep-all"
+                >
+                  {t(
+                    `briefing.step2.sections.detail.has_plan.options.${opt}` as Parameters<
+                      typeof t
+                    >[0],
+                  )}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </FieldBlock>
+
+        <FieldBlock title={t("briefing.step2.sections.detail.target.label")}>
+          <Textarea
+            value={form.target_audience}
+            onChange={(e) => set("target_audience", e.target.value)}
+            placeholder={t(
+              "briefing.step2.sections.detail.target.placeholder",
+            )}
+            rows={3}
+            className="resize-none text-sm"
+          />
+        </FieldBlock>
+
+        <FieldBlock title={t("briefing.step2.sections.detail.more.label")}>
+          <Textarea
+            value={form.additional_notes}
+            onChange={(e) => set("additional_notes", e.target.value)}
+            placeholder={t(
+              "briefing.step2.sections.detail.more.placeholder",
+            )}
+            rows={3}
+            className="resize-none text-sm"
+          />
+        </FieldBlock>
+
+        {/* Full-width divider between content/intent fields and budget/timing. */}
+        <div className="lg:col-span-2 h-px bg-border/40" />
+
+        <FieldBlock title={t("briefing.step2.sections.detail.budget.label")}>
+          <ChipSingle
+            options={BUDGET_OPTIONS}
+            value={form.budget_band}
+            onChange={(v) =>
+              set("budget_band", v as SidebarFormData["budget_band"])
+            }
+            labelOf={(k) =>
+              t(
+                `briefing.step2.sections.detail.budget.options.${k}` as Parameters<
+                  typeof t
+                >[0],
+              )
+            }
+          />
+        </FieldBlock>
+
+        <FieldBlock
+          title={t("briefing.step2.sections.detail.delivery_date.label")}
+        >
+          <Input
+            type="date"
+            value={form.target_delivery_at}
+            onChange={(e) => set("target_delivery_at", e.target.value)}
             className="text-sm max-w-xs"
           />
-        )}
-      </FieldBlock>
+        </FieldBlock>
 
-      <FieldBlock
-        title={t("briefing.step2.sections.detail.channels.label")}
-        helper={t("briefing.step2.sections.detail.channels.helper")}
-      >
-        <ChipMulti
-          options={CHANNEL_OPTIONS}
-          value={form.channels}
-          onChange={(v) => set("channels", v)}
-          labelOf={(k) =>
-            t(
-              `briefing.step2.sections.detail.channels.options.${k}` as Parameters<
-                typeof t
-              >[0],
-            )
-          }
-        />
-      </FieldBlock>
-
-      <FieldBlock title={t("briefing.step2.sections.detail.has_plan.label")}>
-        <RadioGroup
-          value={form.has_plan}
-          onValueChange={(v) =>
-            set("has_plan", v as SidebarFormData["has_plan"])
-          }
-          className="flex flex-col gap-2"
+        <FieldBlock
+          title={t("briefing.step2.sections.detail.meeting_at.label")}
+          helper={t("briefing.step2.sections.detail.meeting_at.helper")}
         >
-          {HAS_PLAN_OPTIONS.map((opt) => (
-            <div key={opt} className="flex items-center gap-2">
-              <RadioGroupItem value={opt} id={`has-plan-${opt}`} />
-              <Label
-                htmlFor={`has-plan-${opt}`}
-                className="text-sm font-normal cursor-pointer keep-all"
-              >
-                {t(
-                  `briefing.step2.sections.detail.has_plan.options.${opt}` as Parameters<
-                    typeof t
-                  >[0],
-                )}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </FieldBlock>
+          <Input
+            type="datetime-local"
+            value={form.meeting_preferred_at}
+            onChange={(e) => set("meeting_preferred_at", e.target.value)}
+            className="text-sm max-w-xs"
+          />
+        </FieldBlock>
 
-      <FieldBlock title={t("briefing.step2.sections.detail.target.label")}>
-        <Textarea
-          value={form.target_audience}
-          onChange={(e) => set("target_audience", e.target.value)}
-          placeholder={t(
-            "briefing.step2.sections.detail.target.placeholder",
+        <div
+          className={cn(
+            "rounded-2xl p-4 flex items-start gap-3 self-start",
+            form.interested_in_twin
+              ? "bg-emerald-50 border border-emerald-200"
+              : "border border-border/40",
           )}
-          rows={3}
-          className="resize-none text-sm"
-        />
-      </FieldBlock>
-
-      <FieldBlock title={t("briefing.step2.sections.detail.more.label")}>
-        <Textarea
-          value={form.additional_notes}
-          onChange={(e) => set("additional_notes", e.target.value)}
-          placeholder={t(
-            "briefing.step2.sections.detail.more.placeholder",
-          )}
-          rows={4}
-          className="resize-none text-sm"
-        />
-      </FieldBlock>
-
-      <div className="h-px bg-border/40" />
-
-      <FieldBlock title={t("briefing.step2.sections.detail.budget.label")}>
-        <ChipSingle
-          options={BUDGET_OPTIONS}
-          value={form.budget_band}
-          onChange={(v) =>
-            set("budget_band", v as SidebarFormData["budget_band"])
-          }
-          labelOf={(k) =>
-            t(
-              `briefing.step2.sections.detail.budget.options.${k}` as Parameters<
-                typeof t
-              >[0],
-            )
-          }
-        />
-      </FieldBlock>
-
-      <FieldBlock title={t("briefing.step2.sections.detail.delivery_date.label")}>
-        <Input
-          type="date"
-          value={form.target_delivery_at}
-          onChange={(e) => set("target_delivery_at", e.target.value)}
-          className="text-sm max-w-xs"
-        />
-      </FieldBlock>
-
-      <FieldBlock
-        title={t("briefing.step2.sections.detail.meeting_at.label")}
-        helper={t("briefing.step2.sections.detail.meeting_at.helper")}
-      >
-        <Input
-          type="datetime-local"
-          value={form.meeting_preferred_at}
-          onChange={(e) => set("meeting_preferred_at", e.target.value)}
-          className="text-sm max-w-xs"
-        />
-      </FieldBlock>
-
-      <div
-        className={cn(
-          "rounded-2xl p-4 flex items-start gap-3",
-          form.interested_in_twin
-            ? "bg-emerald-50 border border-emerald-200"
-            : "border border-border/40",
-        )}
-      >
-        <input
-          type="checkbox"
-          id="twin-toggle"
-          checked={form.interested_in_twin}
-          onChange={(e) => set("interested_in_twin", e.target.checked)}
-          className="mt-1"
-        />
-        <div className="flex flex-col gap-1">
-          <Label
-            htmlFor="twin-toggle"
-            className="text-sm font-semibold cursor-pointer keep-all"
-          >
-            {t("briefing.step2.sections.detail.twin_toggle.label")}
-          </Label>
-          <p className="text-xs text-muted-foreground keep-all leading-relaxed">
-            {t("briefing.step2.sections.detail.twin_toggle.helper")}
-          </p>
+        >
+          <input
+            type="checkbox"
+            id="twin-toggle"
+            checked={form.interested_in_twin}
+            onChange={(e) => set("interested_in_twin", e.target.checked)}
+            className="mt-1"
+          />
+          <div className="flex flex-col gap-1">
+            <Label
+              htmlFor="twin-toggle"
+              className="text-sm font-semibold cursor-pointer keep-all"
+            >
+              {t("briefing.step2.sections.detail.twin_toggle.label")}
+            </Label>
+            <p className="text-xs text-muted-foreground keep-all leading-relaxed">
+              {t("briefing.step2.sections.detail.twin_toggle.helper")}
+            </p>
+          </div>
         </div>
       </div>
-    </aside>
+    </section>
   );
 }

@@ -39,15 +39,6 @@ const DELIVERABLE_OPTIONS = [
   "branding_video",
 ] as const;
 
-const PURPOSE_OPTIONS = [
-  "sns_channel",
-  "sns_ad",
-  "branding",
-  "event_campaign",
-  "offline_tvcf",
-  "other",
-] as const;
-
 // ---------------------------------------------------------------------------
 // Multi-select vertical list. Each row = checkbox + label (+ optional
 // description). aria-pressed retained so screen readers still announce
@@ -179,10 +170,6 @@ export function BriefingCanvasStep1({
         typeof t
       >[0],
     );
-  const labelPurpose = (k: string) =>
-    t(
-      `briefing.step1.field.purpose.options.${k}` as Parameters<typeof t>[0],
-    );
 
   return (
     <div className="pb-32">
@@ -243,27 +230,6 @@ export function BriefingCanvasStep1({
           )}
         </SectionBlock>
 
-        {/* Purpose */}
-        <SectionBlock title={t("briefing.step1.field.purpose.label")}>
-          <Controller
-            control={control}
-            name="purpose"
-            render={({ field }) => (
-              <MultiList
-                options={PURPOSE_OPTIONS}
-                value={field.value ?? []}
-                onChange={field.onChange}
-                labelOf={labelPurpose}
-              />
-            )}
-          />
-          {errors.purpose && (
-            <p className="text-xs text-destructive mt-2 keep-all">
-              {t("briefing.step1.error.purpose_required")}
-            </p>
-          )}
-        </SectionBlock>
-
         {/* Description (optional) */}
         <SectionBlock
           title={t("briefing.step1.field.description.label")}
@@ -278,8 +244,9 @@ export function BriefingCanvasStep1({
         </SectionBlock>
       </div>
 
-      {/* Sticky bottom CTA — left: cancel-to-list, right: primary [다음 →]. */}
-      <div className="fixed bottom-0 inset-x-0 border-t border-border/40 bg-background/95 backdrop-blur-md">
+      {/* Sticky bottom CTA — left: cancel-to-list, right: primary [다음 →].
+          sidebar-offset on md+ (app sidebar is 240px wide). */}
+      <div className="fixed bottom-0 left-0 right-0 md:left-[240px] border-t border-border/40 bg-background/95 backdrop-blur-md">
         <div className="max-w-2xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between gap-3">
           <button
             type="button"

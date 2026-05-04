@@ -46,10 +46,6 @@ const ensureBriefingDraftInput = z.object({
     .array(z.string().trim().min(1).max(60))
     .min(1)
     .max(15),
-  purpose: z
-    .array(z.string().trim().min(1).max(60))
-    .min(1)
-    .max(15),
   description: z.string().trim().max(500).optional().nullable(),
 });
 
@@ -136,7 +132,6 @@ export async function ensureBriefingDraftProject(
       .update({
         title: data.name,
         deliverable_types: data.deliverable_types,
-        purpose: data.purpose,
         brief: data.description ?? null,
       })
       .eq("id", data.projectId)
@@ -184,7 +179,6 @@ export async function ensureBriefingDraftProject(
       .update({
         title: data.name,
         deliverable_types: data.deliverable_types,
-        purpose: data.purpose,
         brief: data.description ?? null,
       })
       .eq("id", existingDraft.id)
@@ -213,7 +207,6 @@ export async function ensureBriefingDraftProject(
       intake_mode: "brief" as const,
       title: data.name,
       deliverable_types: data.deliverable_types,
-      purpose: data.purpose,
       brief: data.description ?? null,
     })
     .select("id")

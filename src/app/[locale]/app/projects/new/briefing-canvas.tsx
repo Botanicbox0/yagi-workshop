@@ -4,19 +4,19 @@
 // Phase 5 Wave B task_04 v3 — Briefing Canvas wrapper
 //
 // 3-step paradigm — "프로젝트 생애주기의 시작 3단계":
-//   Step 1 (this commit) — Brief Start. Minimal intent (name + content
-//                          type + purpose + optional description).
-//                          "다음 →" CTA calls ensureBriefingDraftProject,
-//                          gets project_id, transitions to Step 2.
-//   Step 2 (task_05 v3)  — Workspace. 3-column (보유 자료 / 레퍼런스 /
-//                          디테일 sidebar) + autosave + expandable
-//                          whiteboard. Placeholder until task_05.
-//   Step 3 (task_06 v3)  — Confirm. Minimal 4-line summary + 의뢰하기.
-//                          Placeholder until task_06.
+//   Step 1 — Brief Start. Minimal intent: name + deliverable_types +
+//            optional description. (purpose was removed in hotfix-4 —
+//            it duplicated Step 2's "활용 채널" sidebar field.)
+//   Step 2 — Workspace. 2-row layout: top row = 보유 자료 + 레퍼런스
+//            (2-col on lg+); bottom row = full-width 디테일 with its
+//            own internal 2-col form grid. Autosave + expandable
+//            whiteboard.
+//   Step 3 — Confirm. Minimal summary + 의뢰하기. (placeholder; lands
+//            in task_06 v3.)
 //
 // State machine:
 //   - sessionStorage key "briefing_canvas_v3_state" holds:
-//       { name, deliverable_types, purpose, description, projectId? }
+//       { name, deliverable_types, description, projectId? }
 //   - Step 1 → 2: handleNext runs zod validation → ensureBriefingDraftProject
 //                 → on success persists projectId + transitions stage state
 //   - Step 2 → 3: stage state only (Step 2 autosaves to DB directly)
@@ -38,13 +38,12 @@ import { BriefingCanvasStep1 } from "./briefing-canvas-step-1";
 import { BriefingCanvasStep2 } from "./briefing-canvas-step-2";
 
 // ---------------------------------------------------------------------------
-// Step 1 form schema — v3 minimal (4 fields)
+// Step 1 form schema — v3 minimal (3 fields after hotfix-4 purpose removal)
 // ---------------------------------------------------------------------------
 
 export const step1Schema = z.object({
   name: z.string().trim().min(1).max(200),
   deliverable_types: z.array(z.string()).min(1),
-  purpose: z.array(z.string()).min(1),
   description: z.string().trim().max(500).optional(),
 });
 
@@ -63,7 +62,6 @@ type CanvasState = Step1FormData & {
 const EMPTY_STATE: CanvasState = {
   name: "",
   deliverable_types: [],
-  purpose: [],
   description: "",
 };
 
@@ -97,7 +95,6 @@ export function BriefingCanvas({
       return {
         name: parsed.name ?? "",
         deliverable_types: parsed.deliverable_types ?? [],
-        purpose: parsed.purpose ?? [],
         description: parsed.description ?? "",
         projectId: parsed.projectId,
       };
@@ -118,7 +115,6 @@ export function BriefingCanvas({
     defaultValues: {
       name: initialState.name,
       deliverable_types: initialState.deliverable_types,
-      purpose: initialState.purpose,
       description: initialState.description,
     },
     // Hotfix: was 'onBlur'. Korean IME composition fired blur mid-compose
@@ -152,7 +148,6 @@ export function BriefingCanvas({
           projectId,
           name: values.name,
           deliverable_types: values.deliverable_types ?? [],
-          purpose: values.purpose ?? [],
           description: values.description ?? null,
         });
         if (!result.ok) {
@@ -188,9 +183,7 @@ export function BriefingCanvas({
           ? "briefing.step1.error.name_required"
           : firstKey === "deliverable_types"
             ? "briefing.step1.error.deliverable_types_required"
-            : firstKey === "purpose"
-              ? "briefing.step1.error.purpose_required"
-              : "briefing.step1.toast.draft_failed";
+            : "briefing.step1.toast.draft_failed";
       toast.error(t(errorKey));
     },
   );

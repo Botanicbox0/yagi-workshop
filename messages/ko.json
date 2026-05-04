@@ -677,17 +677,6 @@
               "branding_video": "기업 소개, 제품 런칭, 메이킹 영상 등"
             }
           },
-          "purpose": {
-            "label": "이 콘텐츠를 어디에 쓰시나요?",
-            "options": {
-              "sns_channel": "SNS 채널 업로드용",
-              "sns_ad": "SNS 광고",
-              "branding": "브랜딩 / 이미지 구축",
-              "event_campaign": "이벤트 / 캠페인 홍보",
-              "offline_tvcf": "오프라인 / TV 커머셜",
-              "other": "기타"
-            }
-          },
           "description": {
             "label": "간단히 설명해주세요",
             "helper": "선택 사항입니다. 나머지는 다음 단계에서 채울 수 있어요.",
@@ -700,8 +689,7 @@
         },
         "error": {
           "name_required": "프로젝트 이름을 입력해주세요",
-          "deliverable_types_required": "콘텐츠 유형을 1개 이상 선택해주세요",
-          "purpose_required": "활용 목적을 1개 이상 선택해주세요"
+          "deliverable_types_required": "콘텐츠 유형을 1개 이상 선택해주세요"
         },
         "toast": {
           "unauthenticated": "로그인이 필요해요. 다시 로그인 후 시도해주세요.",
@@ -718,14 +706,14 @@
         "sections": {
           "brief": {
             "title": "보유 자료",
-            "helper": "직접 만든 기획서나 자료가 있으신가요?",
+            "helper": "전달주실 기획서나 자료가 있으신가요?",
             "upload_cta": "파일 업로드",
             "divider": "또는",
             "link_cta": "링크 추가",
             "link_input_placeholder": "https://...",
             "link_add": "추가",
             "link_cancel": "취소",
-            "list_empty": "아직 추가된 자료가 없어요."
+            "list_empty": "지금 당장 없어도 괜찮습니다."
           },
           "reference": {
             "title": "레퍼런스",
