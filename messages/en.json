@@ -1693,7 +1693,8 @@
       "deliverables": "Deliverables"
     },
     "banner": {
-      "cancelled": "This brief was cancelled.",
+      "cancelled": "This brief was cancelled. To start a new one,",
+      "cancelled_link_text": "start a new brief",
       "archived": "This brief has been archived."
     },
     "wc_scaffold": {
@@ -1745,6 +1746,16 @@
       "comment_description": "Available from Phase 5+.",
       "deliverable_title": "Deliverables",
       "deliverable_description": "Visible after delivery."
+    },
+    "empty_state": {
+      "comments": {
+        "heading": "Coming soon",
+        "subtext": "Full comment thread lands in Phase 5+"
+      },
+      "deliverables": {
+        "heading": "Coming soon",
+        "subtext": "Deliverables surface lands in Phase 6+"
+      }
     },
     "recall": {
       "cta": "Recall and edit",

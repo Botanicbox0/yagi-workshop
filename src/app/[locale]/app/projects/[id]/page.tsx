@@ -24,6 +24,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { MessageSquare, Package } from "lucide-react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import { StatusTimeline } from "@/components/project-detail/status-timeline";
@@ -31,7 +32,7 @@ import { HeroCard } from "@/components/project-detail/hero-card";
 import { InfoRail, type TwinIntent } from "@/components/project-detail/info-rail";
 import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
-import { PlaceholderTab } from "@/components/project-detail/placeholder-tab";
+import { EmptyStateTab } from "@/components/project-detail/empty-state-tab";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
@@ -207,8 +208,10 @@ export default async function ProjectDetailPage({
       {isTerminalStatus && (
         <CancelledArchivedBanner
           variant={project.status as "cancelled" | "archived"}
+          locale={locale}
           labels={{
             cancelled: tDetail("banner.cancelled"),
+            cancelledLinkText: tDetail("banner.cancelled_link_text"),
             archived: tDetail("banner.archived"),
           }}
         />
@@ -376,15 +379,17 @@ export default async function ProjectDetailPage({
           />
         )}
         {activeTab === "comments" && (
-          <PlaceholderTab
-            title={tDetail("placeholder.comment_title")}
-            description={tDetail("placeholder.comment_description")}
+          <EmptyStateTab
+            heading={tDetail("empty_state.comments.heading")}
+            subtext={tDetail("empty_state.comments.subtext")}
+            Icon={MessageSquare}
           />
         )}
         {activeTab === "deliverables" && (
-          <PlaceholderTab
-            title={tDetail("placeholder.deliverable_title")}
-            description={tDetail("placeholder.deliverable_description")}
+          <EmptyStateTab
+            heading={tDetail("empty_state.deliverables.heading")}
+            subtext={tDetail("empty_state.deliverables.subtext")}
+            Icon={Package}
           />
         )}
       </div>
