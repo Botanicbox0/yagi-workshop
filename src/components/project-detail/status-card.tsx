@@ -98,6 +98,7 @@ function MoreActionsDropdown({
 }: {
   projectId: string;
 }) {
+  const t = useTranslations("project_detail.status.card.dropdown");
   const router = useRouter();
   const [recallOpen, setRecallOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -108,21 +109,10 @@ function MoreActionsDropdown({
     startDeleteTransition(async () => {
       const result = await deleteProjectAction({ projectId });
       if (!result.ok) {
-        // Map error enum to toast message (hardcoded KO — HF2_3 replaces)
-        const msg =
-          result.error === "forbidden_owner"
-            ? "본인의 의뢰만 삭제할 수 있어요."
-            : result.error === "forbidden_status"
-              ? "이 단계의 의뢰는 삭제할 수 없어요."
-              : result.error === "not_found"
-                ? "의뢰를 찾을 수 없어요."
-                : result.error === "unauthenticated"
-                  ? "로그인이 필요해요."
-                  : "삭제 중 오류가 발생했어요. 다시 시도해 주세요.";
-        toast.error(msg);
+        toast.error(t("delete_error_toast"));
         return;
       }
-      toast.success("의뢰가 삭제되었어요.");
+      toast.success(t("delete_success_toast"));
       router.push("/app/projects");
     });
   };
@@ -135,7 +125,7 @@ function MoreActionsDropdown({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="더 보기"
+            aria-label={t("trigger_label")}
             className="h-9 w-9 shrink-0"
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -149,7 +139,7 @@ function MoreActionsDropdown({
               setRecallOpen(true);
             }}
           >
-            의뢰 회수 후 수정
+            {t("recall")}
           </DropdownMenuItem>
           {/* Delete item — opens delete confirmation AlertDialog */}
           <DropdownMenuItem
@@ -159,7 +149,7 @@ function MoreActionsDropdown({
             }}
             className="text-destructive focus:text-destructive"
           >
-            의뢰 삭제
+            {t("delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -171,28 +161,30 @@ function MoreActionsDropdown({
         onOpenChange={setRecallOpen}
       />
 
-      {/* Delete confirmation AlertDialog */}
+      {/* Delete confirmation AlertDialog. Uses the design-system
+          `bg-destructive` token (calmer than tailwind red-500) per
+          yagi-design-system v1.0 hard rule "no additional accent
+          colors" + H2D9 ("destructive token if available"). */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="keep-all">
-              이 의뢰를 삭제할까요?
+              {t("delete_confirm.title")}
             </AlertDialogTitle>
             <AlertDialogDescription className="keep-all leading-relaxed">
-              삭제된 의뢰는 복구할 수 없어요. 의뢰 내용과 첨부 파일이 모두
-              사라져요.
+              {t("delete_confirm.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deletePending}>
-              취소
+              {t("delete_confirm.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={deletePending}
-              className="bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-400/40 border-0 shadow-none"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/40 border-0 shadow-none"
             >
-              {deletePending ? "삭제 중…" : "삭제"}
+              {t("delete_confirm.submit")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
