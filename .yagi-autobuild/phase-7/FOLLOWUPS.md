@@ -214,6 +214,115 @@ Format mirrors Phase 6 FOLLOWUPS.md (Trigger / Risk / Action / Owner / Status / 
 
 ---
 
+## FU-Phase7-B-K05-F1-rpc-jsonb-history-append
+
+- **Trigger**: `transitionRequestStatus` in
+  `src/app/[locale]/app/admin/campaigns/_actions/campaign-actions.ts` builds
+  `decision_metadata.history` from a prior fetched snapshot, then writes the
+  whole JSONB. The K-05 LOOP-1 inline fix added a CAS UPDATE
+  (`.in("status", requireFromStatus)`) so two admins racing the same source
+  state cannot both transition — but if both pass the source-state check on
+  *different* transitions (e.g., approve + decline both see `in_review`),
+  whichever lands second still loses its history entry.
+- **Risk**: LOW (admin-only surface; admin team is currently 1 person).
+  Concurrent admin race only meaningful at scale.
+- **Action**: Move the transition into a SQL RPC with `SELECT ... FOR UPDATE`
+  on the campaigns row and JSONB array append (`history || jsonb_build_array(...)`)
+  inside the locked transaction. RPC also lets us return the resulting state
+  so the action layer can display the freshest snapshot. Pair with a `version`
+  / optimistic-locking column if we want client-side conflict UX.
+- **Owner**: builder (Phase 8 candidate).
+- **Status**: deferred.
+- **Registered**: 2026-05-06 (Phase 7 Wave B K-05 LOOP-1 finding 1, MED-B —
+  inline CAS fix shipped in LOOP-2 commit; full RPC fix here).
+
+---
+
+## FU-Phase7-B-K06-F4-sage-hex-tokenization
+
+- **Trigger**: Inline `style={{ backgroundColor: "#71D083", color: "#000" }}`
+  + `bg-[#71D083]` literals across `request-form.tsx:373`,
+  `review-actions.tsx:186`, `admin/campaigns/page.tsx:132,274`. Bypasses the
+  design-token system. Same root cause as
+  `FU-Phase7-A-K06-F9-inline-hex-to-sage-utility`.
+- **Risk**: LOW (visual hygiene, no UX regression).
+- **Action**: Bundle with FU-Phase7-A-K06-F9 — single sweep across all
+  campaign + admin/campaigns surfaces. Add `bg-sage-fill` /
+  `text-sage-foreground` utilities (or extend the existing `bg-sage` to
+  carry the black foreground via a `&` selector) so the inline-style hack
+  is no longer needed.
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-06 (Phase 7 Wave B K-06 LOOP-1 finding 4, LOW).
+
+---
+
+## FU-Phase7-B-K06-F5-empty-state-anemic
+
+- **Trigger**: `own-requests-list.tsx:73-78` empty state is a single muted
+  line in a rounded card. The form sits directly above, so the card adds
+  noise without information.
+- **Risk**: LOW (cosmetic).
+- **Action**: Either hide the empty card entirely on first visit, or add a
+  soft "↑ 위 폼에서 첫 캠페인 요청을 보내보세요" / "↑ Send your first request
+  using the form above" voice line. Recommended: hide on first visit
+  (cleaner editorial choice).
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-06 (Phase 7 Wave B K-06 LOOP-1 finding 5, LOW).
+
+---
+
+## FU-Phase7-B-K06-F6-own-requests-post-approval-state
+
+- **Trigger**: `own-requests-list.tsx:25-34` `statusKey()` collapses every
+  post-`declined` lifecycle (draft / published / submission_closed /
+  distributing / archived) into a single "progressed" / "캠페인 작성 중" /
+  "Drafting campaign" pill. Once a sponsor's campaign is published, their
+  own-requests list still says "Drafting campaign" — factually wrong.
+- **Risk**: LOW (sponsor lookup surface, not a transactional path; Wave D
+  sponsor distribution dashboard will surface the real state).
+- **Action**: Add at least one more state mapping for
+  `published`/`submission_closed`/`distributing` → "live" / "공개 중" / "Live"
+  with a deep-link to `/campaigns/[slug]`. Coordinate with Wave D dashboard
+  so the two surfaces don't duplicate state.
+- **Owner**: builder (Wave D candidate).
+- **Status**: deferred — pair with Wave D sponsor dashboard.
+- **Registered**: 2026-05-06 (Phase 7 Wave B K-06 LOOP-1 finding 6, LOW).
+
+---
+
+## FU-Phase7-B-K06-F7-yagi-self-host-wording-polish
+
+- **Trigger**: `admin_campaigns.sponsor_self_host` value `"YAGI self-host"`
+  (en) reads slightly internal — "self-host" is engineering jargon. Korean
+  "야기 자체" stays natural.
+- **Risk**: LOW (cosmetic).
+- **Action**: EN → "YAGI hosted" or just "YAGI" (proper noun alone).
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-06 (Phase 7 Wave B K-06 LOOP-1 finding 7, LOW).
+
+---
+
+## FU-Phase7-B-K06-F9-sidebar-cta-orphan
+
+- **Trigger**: `[+ 캠페인 요청]` CTA in `sidebar-nav.tsx:325-341` is rendered
+  before any group label, sitting visually orphaned above the
+  WORK/COMMUNICATION/etc. section structure. Reads as "another nav item
+  shaped differently" rather than "the entry point".
+- **Risk**: LOW (discoverability — sponsor will likely find it on first
+  scan, but the spatial divider would make it obvious).
+- **Action**: Either add a hairline divider below the CTA before the first
+  group starts (`<div className="border-b border-border/30 mx-1 mt-1" />`),
+  or add a quiet eyebrow above it (`text-[10px] uppercase tracking-[0.12em]
+  text-muted-foreground`).
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-06 (Phase 7 Wave B K-06 LOOP-1 finding 9, LOW).
+
+---
+
 ## FU-Phase7-A-K06-F17-hex-literal-in-border
 
 - **Trigger**: A hex literal (e.g., `border-[#...]`) appears in a campaign

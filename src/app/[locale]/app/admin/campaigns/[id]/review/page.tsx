@@ -121,8 +121,12 @@ export default async function AdminCampaignReviewPage({ params }: Props) {
     <div className="px-6 md:px-10 py-12 max-w-3xl space-y-10">
       {/* Header */}
       <div className="space-y-3">
+        {/* K-06 LOOP-1 F3 fix: back link drops admin onto the tab they came
+            from (matches campaign.status), not always 'requested'. Falls back
+            to 'requested' for non-request stages so admins land in the
+            primary queue when navigating back from a stale link. */}
         <Link
-          href="/app/admin/campaigns?status=requested"
+          href={`/app/admin/campaigns?status=${isRequestStage ? campaign.status : "requested"}`}
           className="text-xs text-muted-foreground hover:underline underline-offset-2"
         >
           {t("review.back_to_list")}

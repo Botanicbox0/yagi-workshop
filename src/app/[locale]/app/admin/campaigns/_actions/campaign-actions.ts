@@ -544,23 +544,41 @@ async function transitionRequestStatus(
     comment: comment ?? null,
   });
 
-  const { error: updateErr } = await sbAdmin
+  // K-05 LOOP-1 MED-B fix: TOCTOU race on concurrent admin transitions.
+  // Without a status guard on the UPDATE, two admins acting on an in_review
+  // row could both pass the source-state check and last-write-wins.
+  // The .in("status", requireFromStatus) makes the UPDATE itself a CAS:
+  // it only writes if the row is still in one of the expected source states.
+  // Returning rows tells us whether the CAS succeeded.
+  // Note: decision_metadata.history is still built from the prior fetched
+  // state and could lose a concurrent peer's history entry. RPC-based
+  // jsonb concat is the full fix — registered as Wave B FU for Phase 8.
+  const { data: updated, error: updateErr } = await sbAdmin
     .from("campaigns")
     .update({
       status: options.nextStatus,
       decision_metadata: newMetadata as Json,
       updated_at: nowIso,
     })
-    .eq("id", campaignId);
+    .eq("id", campaignId)
+    .in("status", options.requireFromStatus)
+    .select("id");
 
   if (updateErr) {
     console.error("[transitionRequestStatus] update error:", updateErr.message);
     return { ok: false, error: "update_failed" };
   }
+  if (!updated || updated.length === 0) {
+    // Source-state guard saw the expected status but the UPDATE didn't match
+    // — another admin transitioned the row in between. Surface a friendly
+    // error so the caller can refresh and retry.
+    return { ok: false, error: "stale_status" };
+  }
 
   // Notify the original requester (created_by) — they always have visibility
   // even after switching workspaces. Workspace context preserved so the
-  // notification surfaces in the right bell.
+  // notification surfaces in the right bell. Only fired after the CAS UPDATE
+  // succeeded so racing admins don't both notify.
   await notifyRequester(
     campaignId,
     row.created_by,

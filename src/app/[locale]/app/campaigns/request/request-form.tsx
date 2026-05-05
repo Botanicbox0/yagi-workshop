@@ -223,32 +223,40 @@ export function RequestCampaignForm({
       <div className="space-y-3">
         <Label>{t("form.reference_assets_label")}</Label>
         {referenceAssets.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {referenceAssets.map((asset, idx) => (
-              <div key={idx} className="flex gap-2">
+              // K-06 LOOP-1 F1 fix: stack URL + label vertically on mobile so
+              // the URL field doesn't collapse to ~120px on a 360px viewport.
+              // sm: breakpoint restores the inline 3-column layout.
+              <div
+                key={idx}
+                className="flex flex-col sm:flex-row gap-2"
+              >
                 <Input
                   type="url"
                   placeholder="https://..."
                   value={asset.url}
                   onChange={(e) => updateAsset(idx, "url", e.target.value)}
-                  className="flex-1 rounded-[12px]"
+                  className="flex-1 min-w-0 rounded-[12px]"
                 />
-                <Input
-                  placeholder={t("form.reference_label_placeholder")}
-                  value={asset.label}
-                  onChange={(e) => updateAsset(idx, "label", e.target.value)}
-                  maxLength={200}
-                  className="w-40 rounded-[12px]"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeAsset(idx)}
-                  className="text-muted-foreground"
-                >
-                  {t("form.remove_asset")}
-                </Button>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t("form.reference_label_placeholder")}
+                    value={asset.label}
+                    onChange={(e) => updateAsset(idx, "label", e.target.value)}
+                    maxLength={200}
+                    className="flex-1 sm:w-40 sm:flex-none rounded-[12px]"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAsset(idx)}
+                    className="text-muted-foreground shrink-0"
+                  >
+                    {t("form.remove_asset")}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

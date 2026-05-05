@@ -65,6 +65,10 @@ export function ReviewActions({
       if (!result.ok) {
         if (result.error === "comment_required") {
           toast.error(t("toast_decline_comment_required"));
+        } else if (result.error === "stale_status") {
+          toast.error(t("toast_stale_status"));
+          // Refresh so the page reflects the current server-side status.
+          router.refresh();
         } else {
           toast.error(t("toast_error"));
         }
@@ -117,14 +121,21 @@ export function ReviewActions({
           maxLength={2000}
           className="rounded-[12px]"
         />
+        {/* K-06 LOOP-1 F2 fix: replace 3 per-button helper paragraphs (which
+            visually competed with the action buttons and blunted the
+            primary-action signal) with a single quiet guidance line. */}
+        {actionsForStatus.length > 1 && (
+          <p className="text-[11px] text-muted-foreground keep-all leading-snug">
+            {t("actions_summary")}
+          </p>
+        )}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex flex-wrap gap-3">
+      {/* Action buttons — primary first, ghost (decline) last per visual weight */}
+      <div className="flex flex-wrap gap-3 items-center">
         {actionsForStatus.includes("review") && (
           <ActionButton
             label={t("action_review")}
-            helper={t("action_review_helper")}
             disabled={isPending}
             isLoading={isPending && pendingAction === "review"}
             onClick={() => run("review")}
@@ -134,7 +145,6 @@ export function ReviewActions({
         {actionsForStatus.includes("approve") && (
           <ActionButton
             label={t("action_approve")}
-            helper={t("action_approve_helper")}
             disabled={isPending}
             isLoading={isPending && pendingAction === "approve"}
             onClick={() => run("approve")}
@@ -144,7 +154,6 @@ export function ReviewActions({
         {actionsForStatus.includes("more_info") && (
           <ActionButton
             label={t("action_more_info")}
-            helper={t("action_more_info_helper")}
             disabled={isPending}
             isLoading={isPending && pendingAction === "more_info"}
             onClick={() => run("more_info")}
@@ -154,7 +163,6 @@ export function ReviewActions({
         {actionsForStatus.includes("decline") && (
           <ActionButton
             label={t("action_decline")}
-            helper={t("action_decline_helper")}
             disabled={isPending}
             isLoading={isPending && pendingAction === "decline"}
             onClick={() => run("decline")}
@@ -168,14 +176,12 @@ export function ReviewActions({
 
 function ActionButton({
   label,
-  helper,
   onClick,
   disabled,
   isLoading,
   variant,
 }: {
   label: string;
-  helper: string;
   onClick: () => void;
   disabled: boolean;
   isLoading: boolean;
@@ -188,20 +194,15 @@ function ActionButton({
   const buttonVariant =
     variant === "primary" ? "default" : variant === "outline" ? "outline" : "ghost";
   return (
-    <div className="flex flex-col gap-1.5 max-w-[280px]">
-      <Button
-        type="button"
-        size="pill"
-        variant={buttonVariant}
-        onClick={onClick}
-        disabled={disabled}
-        style={style}
-      >
-        {isLoading ? "..." : label}
-      </Button>
-      <p className="text-[11px] text-muted-foreground keep-all leading-snug">
-        {helper}
-      </p>
-    </div>
+    <Button
+      type="button"
+      size="pill"
+      variant={buttonVariant}
+      onClick={onClick}
+      disabled={disabled}
+      style={style}
+    >
+      {isLoading ? "..." : label}
+    </Button>
   );
 }
