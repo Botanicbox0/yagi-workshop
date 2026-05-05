@@ -1,8 +1,18 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import {
+  Megaphone,
+  Trophy,
+  Mailbox,
+  Users,
+  Receipt,
+  MessageSquare,
+  Trash2,
+} from "lucide-react";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { GoogleIntegrationStatus } from "@/components/admin/google-integration-status";
+import { SubtoolCard } from "@/components/admin/subtool-card";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -116,6 +126,57 @@ export default async function AdminDashboardPage({ params }: Props) {
           {t("title")}
         </h1>
       </div>
+
+      {/* Admin sub-tools — Phase 7 Hotfix-4 entry grid */}
+      <section className="mb-12">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+          {t("subtools_title")}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SubtoolCard
+            href="/app/admin/campaigns"
+            title={t("subtools.campaigns.title")}
+            description={t("subtools.campaigns.description")}
+            icon={Megaphone}
+          />
+          <SubtoolCard
+            href="/app/admin/challenges"
+            title={t("subtools.challenges.title")}
+            description={t("subtools.challenges.description")}
+            icon={Trophy}
+          />
+          <SubtoolCard
+            href="/app/admin/commissions"
+            title={t("subtools.commissions.title")}
+            description={t("subtools.commissions.description")}
+            icon={Mailbox}
+          />
+          <SubtoolCard
+            href="/app/admin/artists"
+            title={t("subtools.artists.title")}
+            description={t("subtools.artists.description")}
+            icon={Users}
+          />
+          <SubtoolCard
+            href="/app/admin/invoices"
+            title={t("subtools.invoices.title")}
+            description={t("subtools.invoices.description")}
+            icon={Receipt}
+          />
+          <SubtoolCard
+            href="/app/admin/support"
+            title={t("subtools.support.title")}
+            description={t("subtools.support.description")}
+            icon={MessageSquare}
+          />
+          <SubtoolCard
+            href="/app/admin/trash"
+            title={t("subtools.trash.title")}
+            description={t("subtools.trash.description")}
+            icon={Trash2}
+          />
+        </div>
+      </section>
 
       {/* Integrations */}
       <section className="mb-12">

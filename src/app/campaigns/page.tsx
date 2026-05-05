@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "캠페인 · YAGI Workshop",
   description:
-    "야기 워크숍의 크리에이터 캠페인 — AI 크리에이터가 함께 만드는 콘텐츠 캠페인에 참여하세요.",
+    "음악인을 위한 AI 비주얼 스튜디오 — 신곡 뮤직비디오, 콘셉트 영상, 컴백 콘텐츠를 AI와 창작자 네트워크가 함께 만듭니다.",
   robots: { index: true },
 };
 
@@ -99,22 +99,50 @@ function CampaignCard({
   );
 }
 
+function HeroSection({ t }: { t: Awaited<ReturnType<typeof getTranslations>> }) {
+  return (
+    <section className="px-6 md:px-8 py-16 md:py-24 max-w-5xl">
+      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3">
+        {t("hero_eyebrow")}
+      </p>
+      <h1
+        className="font-display text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.05] mb-3 keep-all"
+        style={{ letterSpacing: "-0.02em" }}
+      >
+        {t("hero_title_line1")}
+        <br />
+        {t("hero_title_line2")}
+      </h1>
+      <p className="text-2xl md:text-3xl font-display text-muted-foreground mb-6 keep-all">
+        {t("hero_subtitle_kr")}
+      </p>
+      <p className="text-base md:text-lg text-muted-foreground max-w-2xl keep-all leading-relaxed">
+        {t("hero_tagline_line1")}
+        <br />
+        {t("hero_tagline_line2")}
+      </p>
+    </section>
+  );
+}
+
 export default async function CampaignsListPage() {
   const t = await getTranslations("public_campaigns");
   const campaigns = await getCampaignsList();
 
   if (campaigns.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-24 text-center space-y-4">
-        {/* Empty state placeholder visual */}
-        <div className="mx-auto w-20 h-20 rounded-[24px] bg-sage-soft flex items-center justify-center mb-6">
-          <div className="w-8 h-8 rounded-full bg-sage opacity-40" />
-        </div>
-        <h1 className="font-display italic text-2xl md:text-3xl keep-all">
-          {t("list_title")}
-        </h1>
-        <p className="text-muted-foreground">{t("list_empty")}</p>
-        <p className="text-sm text-muted-foreground">{t("list_empty_subtitle")}</p>
+      <div className="max-w-7xl mx-auto">
+        <HeroSection t={t} />
+
+        <section className="px-6 md:px-8 pb-24">
+          <div className="rounded-[24px] border border-border bg-card p-12 md:p-16 text-center">
+            <p className="text-base text-muted-foreground keep-all leading-relaxed">
+              {t("list_empty")}
+              <br />
+              {t("list_empty_subtitle")}
+            </p>
+          </div>
+        </section>
       </div>
     );
   }
@@ -126,53 +154,57 @@ export default async function CampaignsListPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 space-y-12">
-      <h1
-        className="font-display italic text-3xl md:text-4xl keep-all"
-        style={{ lineHeight: "1.15", letterSpacing: "-0.01em" }}
-      >
-        {t("list_title")}
-      </h1>
+    <div className="max-w-7xl mx-auto">
+      <HeroSection t={t} />
 
-      {/* Active campaigns */}
-      {active.length > 0 && (
-        <section aria-label={t("status.published")}>
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">
-            {t("status.published")}
+      <div className="px-6 md:px-8 pb-24 space-y-12">
+        {/* Section divider */}
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-1">
+            {t("section_title_eyebrow")}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {active.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                statusLabel={t("status.published")}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+          <p className="text-sm text-muted-foreground keep-all">
+            {t("section_title_kr")}
+          </p>
+        </div>
 
-      {/* Distributing + archived */}
-      {closed.length > 0 && (
-        <section aria-label="종료된 캠페인">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">
-            종료된 캠페인
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {closed.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                statusLabel={
-                  t(
-                    `status.${campaign.status as "submission_closed" | "distributing" | "archived"}`
-                  )
-                }
-              />
-            ))}
-          </div>
-        </section>
-      )}
+        {/* Active campaigns */}
+        {active.length > 0 && (
+          <section aria-label={t("status.published")}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {active.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  statusLabel={t("status.published")}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Distributing + archived */}
+        {closed.length > 0 && (
+          <section aria-label={t("section_closed_kr")}>
+            <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground mb-4">
+              {t("section_closed_kr")}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {closed.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  statusLabel={
+                    t(
+                      `status.${campaign.status as "submission_closed" | "distributing" | "archived"}`
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

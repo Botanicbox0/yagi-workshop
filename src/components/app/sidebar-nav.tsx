@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Sparkles,
   Mailbox,
+  Megaphone,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -89,6 +90,17 @@ const GROUPS: NavGroup[] = [
           { key: "challenges_all", href: "/app/admin/challenges" },
           { key: "challenges_new", href: "/app/admin/challenges/new" },
           { key: "challenges_open", href: "/app/admin/challenges?state=open" },
+        ],
+      },
+      {
+        // Phase 7 Wave A.2 + Hotfix-4: yagi_admin campaign console.
+        key: "campaigns",
+        icon: Megaphone,
+        roles: ["yagi_admin"],
+        children: [
+          { key: "campaigns_all", href: "/app/admin/campaigns" },
+          { key: "campaigns_new", href: "/app/admin/campaigns/new" },
+          { key: "campaigns_published", href: "/app/admin/campaigns?status=published" },
         ],
       },
       // Phase 2.7.1: preprod / showcases / storyboards / brands removed

@@ -197,6 +197,10 @@
     "challenges_all": "전체",
     "challenges_new": "새 챌린지",
     "challenges_open": "공개중",
+    "campaigns": "캠페인",
+    "campaigns_all": "전체",
+    "campaigns_new": "새 캠페인",
+    "campaigns_published": "공개 진행 중",
     "admin_commissions": "의뢰 관리",
     "admin_trash": "휴지통",
     "admin_support": "지원 채팅"
@@ -655,10 +659,10 @@
           "deliverable_types": {
             "label": "어떤 콘텐츠인가요?",
             "options": {
+              "ai_vfx_mv": "AI 뮤직비디오 제작",
               "image": "이미지",
               "ad_video_short": "광고 영상 (~30초)",
               "ad_video_long": "광고 영상 (30초 이상)",
-              "ai_vfx_mv": "AI VFX (Music Video)",
               "branding_video": "브랜딩 영상",
               "ad_video": "광고 영상",
               "ai_human": "AI 인물 활용",
@@ -669,10 +673,10 @@
               "other": "기타"
             },
             "descriptions": {
+              "ai_vfx_mv": "신곡 뮤비, 콘셉트 영상, 컴백 콘텐츠, AI VFX 합성 등",
               "image": "제품샷, 룩북, SNS 카드뉴스 등",
               "ad_video_short": "인스타 릴스, 유튜브 숏츠 등",
               "ad_video_long": "유튜브 광고, TVCF, 브랜드 필름 등",
-              "ai_vfx_mv": "뮤직비디오, 콘셉트 영상, 비주얼 시퀀스 등",
               "branding_video": "기업 소개, 제품 런칭, 메이킹 영상 등"
             }
           },
@@ -1008,6 +1012,37 @@
     "filter_status": "상태 필터",
     "filter_workspace": "워크스페이스 필터",
     "filter_all": "전체",
+    "subtools_title": "관리 메뉴",
+    "subtools": {
+      "campaigns": {
+        "title": "캠페인",
+        "description": "AI 뮤직비디오 캠페인을 만들고 관리합니다."
+      },
+      "challenges": {
+        "title": "챌린지",
+        "description": "공모전 형태의 챌린지를 관리합니다."
+      },
+      "commissions": {
+        "title": "의뢰 큐",
+        "description": "공개 의뢰 폼으로 들어온 요청을 응대합니다."
+      },
+      "artists": {
+        "title": "아티스트 명단",
+        "description": "소속 아티스트를 영입하고 관리합니다."
+      },
+      "invoices": {
+        "title": "인보이스",
+        "description": "결제 내역과 송장을 관리합니다."
+      },
+      "support": {
+        "title": "고객 지원",
+        "description": "사용자 문의에 응대합니다."
+      },
+      "trash": {
+        "title": "삭제 보관함",
+        "description": "삭제된 프로젝트를 복구하거나 영구 삭제합니다."
+      }
+    },
     "google": {
       "title": "Google 연동",
       "synced": "연동됨",
@@ -2233,6 +2268,20 @@
       "remove_category": "삭제",
       "fixed_fee_per_creator_label": "크리에이터당 보상금 (원)"
     },
+    "template": {
+      "banner": "신곡 뮤비 캠페인 기본 템플릿입니다. 자유롭게 수정하거나 처음부터 작성하실 수 있어요.",
+      "musicvideo": {
+        "title_placeholder": "[가수명] [신곡명] AI 뮤비 캠페인",
+        "brief_default": "신곡 [곡명]의 AI 뮤직비디오를 다양한 angle로 제작합니다.\n각 창작자가 본인 채널(TikTok / Instagram / YouTube Shorts)에 게시해\n신곡의 멀티채널 노출을 극대화합니다.",
+        "cat1_name": "리믹스 / 재해석 영상 (가로형)",
+        "cat1_description": "유튜브 채널 게시용 가로형 AI 뮤비 영상",
+        "cat1_format_spec": "16:9, 1080p+, 1-3분",
+        "cat2_name": "Short-form 뮤비 (세로형)",
+        "cat2_description": "TikTok / Instagram Reels / YouTube Shorts 게시용 세로형 영상",
+        "cat2_format_spec": "9:16, 60초 이내",
+        "asset_label_default": "곡 demo / 가사 / 콘셉트 reference"
+      }
+    },
     "toast_created": "캠페인이 생성되었습니다.",
     "toast_saved": "저장되었습니다.",
     "toast_published": "캠페인이 공개되었습니다.",
@@ -2241,13 +2290,22 @@
     "status_draft": "초안",
     "status_published": "공개",
     "status_submission_closed": "접수 마감",
-    "status_distributing": "배포 중",
+    "status_distributing": "공개 진행 중",
     "status_archived": "보관"
   },
   "public_campaigns": {
+    "hero_eyebrow": "AI VISUAL STUDIO",
+    "hero_title_line1": "AI VISUAL STUDIO",
+    "hero_title_line2": "FOR MUSICIANS",
+    "hero_subtitle_kr": "음악인을 위한 AI 비주얼 스튜디오",
+    "hero_tagline_line1": "뮤직비디오는 더 빠르게, 더 다양하게.",
+    "hero_tagline_line2": "AI와 창작자 네트워크가 만드는 음악인의 비주얼 콘텐츠.",
+    "section_title_eyebrow": "OUR CAMPAIGNS",
+    "section_title_kr": "현재 진행 중인 캠페인",
+    "section_closed_kr": "종료된 캠페인",
     "list_title": "진행 중인 캠페인",
-    "list_empty": "현재 진행 중인 캠페인이 없습니다.",
-    "list_empty_subtitle": "곧 첫 캠페인이 공개됩니다.",
+    "list_empty": "곧 첫 캠페인이 시작됩니다.",
+    "list_empty_subtitle": "새로운 캠페인 알림을 받고 싶다면 가입해주세요.",
     "detail": {
       "brief_label": "브리프",
       "references_label": "참고 자료",

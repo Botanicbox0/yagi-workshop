@@ -34,15 +34,25 @@ export default function NewCampaignPage() {
   const t = useTranslations("admin_campaigns");
   const [isPending, startTransition] = useTransition();
 
-  // Form state
+  // Form state — pre-populated with 신곡 뮤비 template (Phase 7 Hotfix-4).
+  // yagi can submit as-is or freely edit any field.
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [brief, setBrief] = useState("");
+  const [brief, setBrief] = useState(t("template.musicvideo.brief_default"));
   const [referenceAssets, setReferenceAssets] = useState<ReferenceAsset[]>([
-    { url: "", label: "" },
+    { url: "", label: t("template.musicvideo.asset_label_default") },
   ]);
   const [categories, setCategories] = useState<CategoryInput[]>([
-    { name: "", description: "", format_spec: "" },
+    {
+      name: t("template.musicvideo.cat1_name"),
+      description: t("template.musicvideo.cat1_description"),
+      format_spec: t("template.musicvideo.cat1_format_spec"),
+    },
+    {
+      name: t("template.musicvideo.cat2_name"),
+      description: t("template.musicvideo.cat2_description"),
+      format_spec: t("template.musicvideo.cat2_format_spec"),
+    },
   ]);
   const [allowR2Upload, setAllowR2Upload] = useState(true);
   const [allowExternalUrl, setAllowExternalUrl] = useState(true);
@@ -141,6 +151,13 @@ export default function NewCampaignPage() {
         {t("new_cta")}
       </h1>
 
+      {/* Template guidance banner */}
+      <div className="rounded-[24px] border border-border bg-muted/30 p-4">
+        <p className="text-xs text-muted-foreground keep-all leading-relaxed">
+          {t("template.banner")}
+        </p>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Title */}
         <div className="space-y-2">
@@ -149,6 +166,7 @@ export default function NewCampaignPage() {
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("template.musicvideo.title_placeholder")}
             maxLength={200}
             required
             className="rounded-[12px]"

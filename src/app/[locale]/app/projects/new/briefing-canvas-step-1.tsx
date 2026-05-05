@@ -31,11 +31,14 @@ import type { Step1FormData } from "./briefing-canvas";
 // Field option enums (i18n-keyed labels)
 // ---------------------------------------------------------------------------
 
+// Phase 7 Hotfix-4 — Musicians-first priority per PRODUCT-MASTER §Z v1.7.
+// `ai_vfx_mv` enum key preserved (no schema change); only display label +
+// description retitled to "AI 뮤직비디오 제작" and pushed to first position.
 const DELIVERABLE_OPTIONS = [
+  "ai_vfx_mv",
   "image",
   "ad_video_short",
   "ad_video_long",
-  "ai_vfx_mv",
   "branding_video",
 ] as const;
 
