@@ -1,12 +1,13 @@
 "use client";
 
 // Phase 4.x task_06 — Workspace switcher (sidebar top-left, dropdown).
+// Phase 6/A.2 — artist kind support + yagi_admin-gated "+ 새 워크스페이스 만들기".
 //
 // Shape (KICKOFF section task_06):
 //   - Box: padding 8px 12px, radius 12, border subtle, bg surface
 //   - Click -> DropdownMenu opens
-//   - Groups: Brands / Artists / YAGI Admin
-//   - Disabled '+ 새 workspace 추가' (locked option B; Phase 5+)
+//   - Groups: 브랜드 / 아티스트 / YAGI Admin
+//   - '+ 새 워크스페이스 만들기' visible to yagi_admin only (isYagiAdmin prop)
 //   - Selecting a workspace calls setActiveWorkspaceAction (cookie set
 //     + revalidate) and triggers a soft refresh.
 //
@@ -45,9 +46,11 @@ export type WorkspaceItem = {
 type Props = {
   current: WorkspaceItem;
   workspaces: WorkspaceItem[];
+  /** Phase 6/A.2 — show "+ 새 워크스페이스 만들기" only for yagi_admin */
+  isYagiAdmin?: boolean;
 };
 
-export function WorkspaceSwitcher({ current, workspaces }: Props) {
+export function WorkspaceSwitcher({ current, workspaces, isYagiAdmin = false }: Props) {
   const t = useTranslations("workspace.switcher");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -153,18 +156,17 @@ export function WorkspaceSwitcher({ current, workspaces }: Props) {
             </DropdownMenuGroup>
           </>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled
-          className="opacity-60"
-          title={t("add_new_disabled")}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span className="text-sm">{t("add_new")}</span>
-          <span className="ml-auto text-[10px] uppercase tracking-[0.10em] text-muted-foreground">
-            {t("add_new_disabled")}
-          </span>
-        </DropdownMenuItem>
+        {/* Phase 6/A.2 — "+ 새 워크스페이스 만들기" is yagi_admin only.
+            Non-admin users (Artist / Brand) must not see this item. */}
+        {isYagiAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled className="opacity-60">
+              <Plus className="h-3.5 w-3.5" />
+              <span className="text-sm">{t("add_new")}</span>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

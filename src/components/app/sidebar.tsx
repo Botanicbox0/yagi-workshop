@@ -39,6 +39,8 @@ function SidebarBody({
   onNavigate,
 }: SidebarProps & { onNavigate?: () => void }) {
   const internalMember = isYagiInternal(context);
+  // Phase 6/A.2 — gate "+ 새 워크스페이스 만들기" to yagi_admin role only.
+  const isYagiAdmin = context.workspaceRoles.includes("yagi_admin");
   return (
     <div
       className="flex flex-col h-full min-h-0"
@@ -60,6 +62,7 @@ function SidebarBody({
             <WorkspaceSwitcher
               current={activeWorkspace}
               workspaces={workspaces}
+              isYagiAdmin={isYagiAdmin}
             />
           </div>
         )}

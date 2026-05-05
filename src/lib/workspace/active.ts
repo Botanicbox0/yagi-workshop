@@ -91,9 +91,16 @@ export async function listOwnWorkspaces(
 /**
  * Resolve the user's currently-active workspace. Reads the
  * 'yagi_active_workspace' cookie, validates membership against
- * workspace_members, and falls back to the first membership when
- * the cookie is absent, malformed, or doesn't correspond to a
- * valid membership for this user.
+ * workspace_members, and falls back when the cookie is absent,
+ * malformed, or doesn't correspond to a valid membership.
+ *
+ * Phase 6/A.2 — Artist sign-in default:
+ * When no valid cookie exists, prefer the user's most-recently-joined
+ * Artist workspace over the simple first-membership fallback. This
+ * ensures Artist users land in their own Artist workspace by default
+ * rather than a Brand workspace they may also belong to.
+ * listOwnWorkspaces returns memberships ordered by created_at ASC, so
+ * we scan in reverse to pick the most recently joined artist workspace.
  *
  * Returns null when the user has no workspace memberships at all
  * (caller should redirect to /onboarding).
@@ -110,12 +117,20 @@ export async function resolveActiveWorkspace(
   if (cookieValue && UUID_RE.test(cookieValue)) {
     const match = memberships.find((m) => m.id === cookieValue);
     if (match) return match;
-    // Fall through to first-membership fallback. We deliberately do NOT
-    // attempt to clear the cookie here -- this resolver is read-only
-    // (cookies() in next/headers is read in server components). The
+    // Fall through to default selection. We deliberately do NOT attempt
+    // to clear the cookie here -- this resolver is read-only (cookies()
+    // in next/headers is read in server components). The
     // setActiveWorkspace server action is the only writer; if a stale
     // cookie keeps arriving here, the resolver silently falls back
     // without leaking which workspace_id the user does NOT belong to.
+  }
+
+  // Phase 6/A.2 — Artist sign-in default: prefer the most-recently-joined
+  // Artist workspace so Artist users enter their own workspace by default.
+  // listOwnWorkspaces orders by created_at ASC; we want most-recent,
+  // so iterate in reverse.
+  for (let i = memberships.length - 1; i >= 0; i--) {
+    if (memberships[i].kind === "artist") return memberships[i];
   }
 
   return memberships[0];

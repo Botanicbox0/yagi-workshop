@@ -296,11 +296,10 @@
     "switch": "Switch workshop",
     "no_workspace": "No workshop",
     "switcher": {
-      "brands_group": "Brands",
-      "artists_group": "Artists",
+      "brands_group": "Brand",
+      "artists_group": "Artist",
       "admin_group": "YAGI",
-      "add_new": "+ Add new workspace",
-      "add_new_disabled": "Available in Phase 5",
+      "add_new": "+ New workspace",
       "errors": {
         "unauthenticated": "Please sign in.",
         "not_a_member": "You are not a member of this workspace.",
@@ -1816,53 +1815,6 @@
       "from_to": "{from} → {to}"
     },
     "status": {
-      "draft": "Draft",
-      "submitted": "Submitted",
-      "in_review": "In review",
-      "in_progress": "In progress",
-      "in_revision": "In revision",
-      "delivered": "Delivered",
-      "approved": "Approved",
-      "cancelled": "Cancelled",
-      "archived": "Archived"
-    },
-    "actor": {
-      "client": "Client",
-      "yagi_admin": "YAGI admin",
-      "workspace_admin": "Workspace admin",
-      "system": "System"
-    },
-    "placeholder": {
-      "comment_title": "Comments",
-      "comment_description": "Available from Phase 5+.",
-      "deliverable_title": "Deliverables",
-      "deliverable_description": "Visible after delivery."
-    },
-    "empty_state": {
-      "comments": {
-        "heading": "Coming soon",
-        "subtext": "Full comment thread lands in Phase 5+"
-      },
-      "deliverables": {
-        "heading": "Coming soon",
-        "subtext": "Deliverables surface lands in Phase 6+"
-      }
-    },
-    "recall": {
-      "cta": "Recall and edit",
-      "confirm": {
-        "title": "Recall this submission?",
-        "body": "Recalling removes this from YAGI's review queue. You'll need to resubmit after editing.",
-        "action": "Recall",
-        "cancel": "Cancel"
-      },
-      "error": {
-        "invalid_transition": "YAGI has already started reviewing. Refresh and try again.",
-        "forbidden": "You don't have permission to recall this project.",
-        "unknown": "Failed to recall. Please try again."
-      }
-    },
-    "status": {
       "cta": {
         "draft": "Complete brief →",
         "submitted": "",
@@ -1914,6 +1866,42 @@
           "delete_success_toast": "Brief deleted",
           "delete_error_toast": "Could not delete brief. Try again shortly."
         }
+      }
+    },
+    "actor": {
+      "client": "Client",
+      "yagi_admin": "YAGI admin",
+      "workspace_admin": "Workspace admin",
+      "system": "System"
+    },
+    "placeholder": {
+      "comment_title": "Comments",
+      "comment_description": "Available from Phase 5+.",
+      "deliverable_title": "Deliverables",
+      "deliverable_description": "Visible after delivery."
+    },
+    "empty_state": {
+      "comments": {
+        "heading": "Coming soon",
+        "subtext": "Full comment thread lands in Phase 5+"
+      },
+      "deliverables": {
+        "heading": "Coming soon",
+        "subtext": "Deliverables surface lands in Phase 6+"
+      }
+    },
+    "recall": {
+      "cta": "Recall and edit",
+      "confirm": {
+        "title": "Recall this submission?",
+        "body": "Recalling removes this from YAGI's review queue. You'll need to resubmit after editing.",
+        "action": "Recall",
+        "cancel": "Cancel"
+      },
+      "error": {
+        "invalid_transition": "YAGI has already started reviewing. Refresh and try again.",
+        "forbidden": "You don't have permission to recall this project.",
+        "unknown": "Failed to recall. Please try again."
       }
     },
     "summary_card": {
@@ -2106,5 +2094,11 @@
       },
       "banner_for_client": "Admin has locked this board. Editing disabled."
     }
+  },
+  "workspace_switcher": {
+    "current_label": "Current workspace",
+    "group_brand": "Brand",
+    "group_artist": "Artist",
+    "add_new": "+ New workspace"
   }
 }

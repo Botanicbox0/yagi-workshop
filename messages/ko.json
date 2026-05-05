@@ -296,11 +296,10 @@
     "switch": "워크스페이스 전환",
     "no_workspace": "워크스페이스 없음",
     "switcher": {
-      "brands_group": "Brands",
-      "artists_group": "Artists",
+      "brands_group": "브랜드",
+      "artists_group": "아티스트",
       "admin_group": "YAGI",
-      "add_new": "+ 새 workspace 추가",
-      "add_new_disabled": "Phase 5 부터 가능",
+      "add_new": "+ 새 워크스페이스 만들기",
       "errors": {
         "unauthenticated": "로그인이 필요해요.",
         "not_a_member": "이 워크스페이스에 속해 있지 않아요.",
@@ -1881,53 +1880,6 @@
       "from_to": "{from} → {to}"
     },
     "status": {
-      "draft": "임시 저장",
-      "submitted": "제출됨",
-      "in_review": "검토 중",
-      "in_progress": "진행 중",
-      "in_revision": "수정 중",
-      "delivered": "납품됨",
-      "approved": "승인됨",
-      "cancelled": "취소됨",
-      "archived": "보관됨"
-    },
-    "actor": {
-      "client": "클라이언트",
-      "yagi_admin": "YAGI 운영자",
-      "workspace_admin": "워크스페이스 관리자",
-      "system": "시스템"
-    },
-    "placeholder": {
-      "comment_title": "코멘트",
-      "comment_description": "Phase 5+ 부터 사용 가능합니다.",
-      "deliverable_title": "결과물",
-      "deliverable_description": "납품 후 표시됩니다."
-    },
-    "empty_state": {
-      "comments": {
-        "heading": "곧 만나볼 수 있어요",
-        "subtext": "Phase 5+ comment thread 본격 구현 예정"
-      },
-      "deliverables": {
-        "heading": "곧 만나볼 수 있어요",
-        "subtext": "Phase 6+ 납품물 surface 예정"
-      }
-    },
-    "recall": {
-      "cta": "의뢰 회수 후 수정",
-      "confirm": {
-        "title": "의뢰를 회수할까요?",
-        "body": "회수하면 야기 팀의 검토 큐에서 빠지고, 수정 후 다시 제출하셔야 해요.",
-        "action": "회수하기",
-        "cancel": "취소"
-      },
-      "error": {
-        "invalid_transition": "야기 팀이 이미 작업을 시작했어요. 새로고침 후 다시 시도해 주세요.",
-        "forbidden": "이 프로젝트를 회수할 권한이 없어요.",
-        "unknown": "회수 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
-      }
-    },
-    "status": {
       "cta": {
         "draft": "브리프 완성하기 →",
         "submitted": "",
@@ -1979,6 +1931,42 @@
           "delete_success_toast": "의뢰가 삭제되었어요",
           "delete_error_toast": "의뢰를 삭제하지 못했어요. 잠시 후 다시 시도해주세요."
         }
+      }
+    },
+    "actor": {
+      "client": "클라이언트",
+      "yagi_admin": "YAGI 운영자",
+      "workspace_admin": "워크스페이스 관리자",
+      "system": "시스템"
+    },
+    "placeholder": {
+      "comment_title": "코멘트",
+      "comment_description": "Phase 5+ 부터 사용 가능합니다.",
+      "deliverable_title": "결과물",
+      "deliverable_description": "납품 후 표시됩니다."
+    },
+    "empty_state": {
+      "comments": {
+        "heading": "곧 만나볼 수 있어요",
+        "subtext": "Phase 5+ comment thread 본격 구현 예정"
+      },
+      "deliverables": {
+        "heading": "곧 만나볼 수 있어요",
+        "subtext": "Phase 6+ 납품물 surface 예정"
+      }
+    },
+    "recall": {
+      "cta": "의뢰 회수 후 수정",
+      "confirm": {
+        "title": "의뢰를 회수할까요?",
+        "body": "회수하면 야기 팀의 검토 큐에서 빠지고, 수정 후 다시 제출하셔야 해요.",
+        "action": "회수하기",
+        "cancel": "취소"
+      },
+      "error": {
+        "invalid_transition": "야기 팀이 이미 작업을 시작했어요. 새로고침 후 다시 시도해 주세요.",
+        "forbidden": "이 프로젝트를 회수할 권한이 없어요.",
+        "unknown": "회수 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
       }
     },
     "summary_card": {
@@ -2171,5 +2159,11 @@
       },
       "banner_for_client": "관리자가 보드를 잠갔습니다. 편집할 수 없습니다."
     }
+  },
+  "workspace_switcher": {
+    "current_label": "현재 워크스페이스",
+    "group_brand": "브랜드",
+    "group_artist": "아티스트",
+    "add_new": "+ 새 워크스페이스 만들기"
   }
 }
