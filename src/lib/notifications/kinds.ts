@@ -30,7 +30,13 @@ export type NotificationKind =
   | "meeting_cancelled"
   | "support_message_new"
   // Phase 3.0 task_04 — project lifecycle
-  | "project_submitted";
+  | "project_submitted"
+  // Phase 7 Wave B — sponsor-side campaign request lifecycle (5 transitions)
+  | "campaign_request_received"
+  | "campaign_request_in_review"
+  | "campaign_request_approved"
+  | "campaign_request_declined"
+  | "campaign_request_more_info";
 
 export type NotificationSeverity = "high" | "medium" | "low";
 
@@ -59,6 +65,12 @@ export const SEVERITY_BY_KIND: Record<NotificationKind, NotificationSeverity> = 
   support_message_new: "medium",
   // Phase 3.0 task_04
   project_submitted: "high",
+  // Phase 7 Wave B — sponsor sees these in their workspace bell
+  campaign_request_received: "medium",
+  campaign_request_in_review: "medium",
+  campaign_request_approved: "high",
+  campaign_request_declined: "high",
+  campaign_request_more_info: "high",
 };
 
 export function severityOf(kind: NotificationKind): NotificationSeverity {

@@ -29,6 +29,11 @@ import {
 import { SidebarGroupLabel } from "./sidebar-group-label";
 import type { ProfileRole, WorkspaceRole } from "@/lib/app/context";
 
+// Phase 7 Wave B.1 — must mirror WorkspaceItem.kind in workspace-switcher.tsx.
+// Wave C.1 expands this to include 'creator'; the CTA below already excludes
+// non-sponsor kinds, so adding 'creator' there is a no-op for this component.
+type WorkspaceKindForNav = "brand" | "artist" | "yagi_admin" | "creator";
+
 type NavItem = {
   key: string;
   href?: string;
@@ -264,10 +269,14 @@ export function SidebarNav({
   roles,
   profileRole,
   isYagiInternalMember,
+  activeWorkspaceKind,
 }: {
   roles: WorkspaceRole[];
   profileRole: ProfileRole | null;
   isYagiInternalMember: boolean;
+  /** Phase 7 Wave B.1 — current active workspace's kind. Used to gate the
+   *  [+ 캠페인 요청] CTA to brand + artist sponsor-eligible workspaces only. */
+  activeWorkspaceKind?: WorkspaceKindForNav | null;
 }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
@@ -303,9 +312,33 @@ export function SidebarNav({
   );
   const activeKey = computeActiveKey(allLeaves, pathname, searchParams);
 
+  // Phase 7 Wave B.1 — sponsor-eligible workspaces (brand/artist) get a
+  // prominent [+ 캠페인 요청] CTA at the top of the nav. Creator + yagi_admin
+  // workspaces don't see it (admin uses /app/admin/campaigns/new directly).
+  const showCampaignRequestCta =
+    activeWorkspaceKind === "brand" || activeWorkspaceKind === "artist";
+  const campaignRequestActive = pathname === "/app/campaigns/request";
+
   return (
     <TooltipProvider delayDuration={300}>
       <nav className="flex flex-col px-2 pb-3" aria-label="Operations">
+        {showCampaignRequestCta && (
+          <div className="px-1 pt-2 pb-3">
+            <Link
+              href="/app/campaigns/request"
+              aria-current={campaignRequestActive ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-full text-[13px] font-medium border transition-colors",
+                campaignRequestActive
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border hover:border-foreground/40 hover:bg-accent/50",
+              )}
+            >
+              <span aria-hidden="true">+</span>
+              <span>{t("request_campaign_cta")}</span>
+            </Link>
+          </div>
+        )}
         {visibleGroups.map((group) => {
           const showLabel = group.items.length >= 2;
           return (

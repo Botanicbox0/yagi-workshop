@@ -72,6 +72,7 @@ function SidebarBody({
           roles={context.workspaceRoles}
           profileRole={context.profile.role}
           isYagiInternalMember={internalMember}
+          activeWorkspaceKind={activeWorkspace?.kind ?? null}
         />
       </div>
       <div className="p-3 border-t border-border">

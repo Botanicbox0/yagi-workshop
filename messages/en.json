@@ -201,6 +201,7 @@
     "campaigns_all": "All",
     "campaigns_new": "New campaign",
     "campaigns_published": "Open now",
+    "request_campaign_cta": "Request a campaign",
     "admin_commissions": "Commission queue",
     "admin_trash": "Trash",
     "admin_support": "Support chat"
@@ -1521,6 +1522,26 @@
       "project_submitted": {
         "title": "Project received",
         "body": "\"{project_name}\" is now under review. We will respond within 1 business day."
+      },
+      "campaign_request_received": {
+        "title": "Campaign request received",
+        "body": "Your \"{title}\" campaign request is in. The YAGI team will review and respond shortly."
+      },
+      "campaign_request_in_review": {
+        "title": "Campaign request under review",
+        "body": "The YAGI team is reviewing your \"{title}\" campaign request."
+      },
+      "campaign_request_approved": {
+        "title": "Campaign request approved",
+        "body": "Your \"{title}\" campaign request was approved. The YAGI team will draft the campaign next."
+      },
+      "campaign_request_declined": {
+        "title": "Campaign request decision",
+        "body": "We can't move forward with the \"{title}\" campaign request. The YAGI team will follow up with details."
+      },
+      "campaign_request_more_info": {
+        "title": "Additional information needed",
+        "body": "We need more information for your \"{title}\" campaign request. Check the page for the team's notes and update your request."
       }
     }
   },
@@ -2135,6 +2156,66 @@
       "banner_for_client": "Admin has locked this board. Editing disabled."
     }
   },
+  "campaign_request": {
+    "title": "Campaign request",
+    "intro": "Send a campaign request to the YAGI team. We'll review and reply within 1-2 business days.",
+    "requester_label": "Requester",
+    "guard_not_eligible": "Campaign requests aren't available from this workspace. Switch to a brand or artist workspace and try again.",
+    "form": {
+      "title_label": "Campaign title",
+      "title_placeholder": "e.g., [Song title] AI music video campaign",
+      "brief_label": "Campaign description",
+      "brief_placeholder": "Outline the campaign's goal, the kind of work you're hoping for, and the message you'd like creators to focus on.",
+      "contact_phone_label": "Contact phone",
+      "contact_phone_placeholder": "010-1234-5678",
+      "contact_phone_helper": "Used by the YAGI team when responding to your request. Not exposed externally.",
+      "reference_assets_label": "Reference assets (optional)",
+      "reference_assets_helper": "Add URLs for the song demo, lyrics, or concept reference images / videos.",
+      "reference_label_placeholder": "Label",
+      "add_asset": "+ Add URL",
+      "remove_asset": "Remove",
+      "schedule_intent_label": "Schedule intent (optional)",
+      "schedule_intent_placeholder": "e.g., Open submissions in late May, run for 2 weeks, start distribution in mid-June",
+      "sponsorship_intent_label": "Funding intent (optional)",
+      "sponsorship_intent_placeholder": "Select",
+      "sponsorship_self": "Self-funded",
+      "sponsorship_co_sponsor": "Partner / shared funding",
+      "sponsorship_yagi_assist": "Leave to the YAGI team",
+      "compensation_intent_label": "Creator compensation intent (optional)",
+      "compensation_intent_placeholder": "Select",
+      "compensation_exposure_only": "Exposure only (no separate compensation)",
+      "compensation_fixed_fee": "Fixed fee per creator",
+      "fixed_fee_amount_label": "Amount per creator (KRW)",
+      "notes_label": "Additional notes (optional)",
+      "notes_placeholder": "Anything else you'd like the YAGI team to know up front.",
+      "submit_cta": "Send campaign request"
+    },
+    "error": {
+      "phone_required": "Please enter a contact phone number.",
+      "phone_too_short": "Contact phone number is too short.",
+      "phone_too_long": "Contact phone number is too long.",
+      "title_required": "Please enter a campaign title.",
+      "brief_required": "Please enter a campaign description.",
+      "fixed_fee_required": "Please enter the per-creator amount.",
+      "fixed_fee_amount_required": "Fixed-fee option requires an amount.",
+      "input_invalid": "Some inputs need attention. Please review.",
+      "unauthorized": "Please sign in.",
+      "not_a_member": "You are not a member of this workspace.",
+      "workspace_not_sponsor_eligible": "Campaign requests aren't available from this workspace.",
+      "insert_failed": "Could not save your request. Please try again shortly.",
+      "submit_failed": "Could not process your request. Please try again shortly."
+    },
+    "toast_submitted": "Campaign request sent. The YAGI team will reply soon.",
+    "own_list_title": "Your past requests",
+    "own_list_empty": "No requests yet.",
+    "own_decision_note": "Note from the YAGI team",
+    "status": {
+      "requested": "Awaiting review",
+      "in_review": "Under review",
+      "declined": "Not moving forward",
+      "progressed": "Drafting campaign"
+    }
+  },
   "admin_artists": {
     "title": "Roster",
     "invite_cta": "+ Invite new Artist",
@@ -2222,11 +2303,59 @@
     "toast_published": "Campaign published.",
     "toast_error": "Something went wrong. Please try again.",
     "status_all": "All",
+    "status_requested": "Awaiting review",
+    "status_in_review": "Under review",
+    "status_declined": "Not moving forward",
     "status_draft": "Draft",
     "status_published": "Published",
     "status_submission_closed": "Closed",
     "status_distributing": "Open now",
-    "status_archived": "Archived"
+    "status_archived": "Archived",
+    "sponsor_col_label": "Requester",
+    "sponsor_self_host": "YAGI self-host",
+    "review_cta": "Review",
+    "edit_cta": "Edit",
+    "review": {
+      "page_title": "Review campaign request",
+      "back_to_list": "← Back to list",
+      "request_metadata_title": "Request details",
+      "field_title": "Campaign title",
+      "field_brief": "Campaign description",
+      "field_sponsor": "Requester",
+      "field_contact_phone": "Contact phone",
+      "field_schedule_intent": "Schedule intent",
+      "field_sponsorship_intent": "Funding intent",
+      "field_compensation_intent": "Creator compensation intent",
+      "field_compensation_fixed_fee": "Amount per creator",
+      "field_notes": "Additional notes",
+      "field_reference_assets": "Reference assets",
+      "field_created_at": "Submitted",
+      "field_decision_history": "Decision history",
+      "no_metadata": "No additional details",
+      "actions_title": "Review actions",
+      "comment_label": "Note (optional, sent to the requester)",
+      "comment_placeholder": "Decline reason, requested follow-ups, etc. Included in the decision notification.",
+      "action_review": "Start review",
+      "action_approve": "Approve (move to draft)",
+      "action_decline": "Decline",
+      "action_more_info": "Request more info",
+      "action_review_helper": "Sends an \"under review\" notification to the requester.",
+      "action_approve_helper": "Moves the campaign to draft so the YAGI team can author it.",
+      "action_decline_helper": "Add the decline reason in the note field.",
+      "action_more_info_helper": "Returns the request to the requester with your follow-up notes.",
+      "toast_review_started": "Review started.",
+      "toast_approved": "Campaign request approved. Moved to draft.",
+      "toast_declined": "Campaign request declined.",
+      "toast_more_info_requested": "Sent the requester a follow-up.",
+      "toast_error": "Could not complete the action. Please try again.",
+      "toast_decline_comment_required": "Decline requires a reason in the note field.",
+      "guard_not_request_stage": "This campaign is no longer in the request stage. Use the regular edit view instead.",
+      "compensation_exposure_only": "Exposure only",
+      "compensation_fixed_fee": "Fixed fee",
+      "sponsorship_self": "Self-funded",
+      "sponsorship_co_sponsor": "Shared funding",
+      "sponsorship_yagi_assist": "Leave to the YAGI team"
+    }
   },
   "public_campaigns": {
     "hero_eyebrow": "AI VISUAL STUDIO",

@@ -12,6 +12,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import { emitNotification } from "@/lib/notifications/emit";
+import type { NotificationKind } from "@/lib/notifications/kinds";
 import type { Database, Json } from "@/lib/supabase/database.types";
 
 type CampaignUpdate = Database["public"]["Tables"]["campaigns"]["Update"];
@@ -397,4 +399,230 @@ export async function addCategoryAction(
 
   revalidateCampaigns(campaignId);
   return { ok: true, id: cat.id };
+}
+
+// ===========================================================================
+// Phase 7 Wave B.2 — Sponsor request review workflow (4 transitions)
+//
+// Transitions modeled per KICKOFF §B.2:
+//   reviewCampaignRequestAction       requested  → in_review
+//   approveCampaignRequestAction      in_review  → draft
+//   declineCampaignRequestAction      in_review  → declined
+//   requestMoreInfoAction             in_review  → requested
+//
+// All four are admin-only (getAuthenticatedAdmin gate). All writes go through
+// service-role because campaigns.status + decision_metadata are admin-only
+// per the migration's column-level GRANT lockdown. Each transition appends
+// to decision_metadata.history (audit trail) and emits a sponsor-side
+// notification.
+// ===========================================================================
+
+type DecisionHistoryEntry = {
+  at: string;
+  by: string;
+  action: "review_started" | "approved" | "declined" | "more_info_requested";
+  comment: string | null;
+};
+
+type DecisionMetadataShape = {
+  history?: DecisionHistoryEntry[];
+  // last applied note — kept at top level for cheap UI preview
+  note?: string | null;
+};
+
+const ReviewCommentSchema = z.string().trim().max(2000).optional();
+
+async function fetchCampaignForReview(
+  campaignId: string,
+): Promise<
+  | {
+      ok: true;
+      row: {
+        id: string;
+        title: string;
+        status: string;
+        sponsor_workspace_id: string | null;
+        decision_metadata: DecisionMetadataShape | null;
+        created_by: string;
+      };
+    }
+  | { ok: false; error: string }
+> {
+  const sbAdmin = createSupabaseService();
+  const { data, error } = await sbAdmin
+    .from("campaigns")
+    .select(
+      "id, title, status, sponsor_workspace_id, decision_metadata, created_by",
+    )
+    .eq("id", campaignId)
+    .maybeSingle();
+  if (error || !data) return { ok: false, error: "not_found" };
+  return {
+    ok: true,
+    row: data as {
+      id: string;
+      title: string;
+      status: string;
+      sponsor_workspace_id: string | null;
+      decision_metadata: DecisionMetadataShape | null;
+      created_by: string;
+    },
+  };
+}
+
+function appendHistory(
+  prior: DecisionMetadataShape | null,
+  entry: DecisionHistoryEntry,
+): DecisionMetadataShape {
+  const history = prior?.history ?? [];
+  return {
+    ...(prior ?? {}),
+    history: [...history, entry],
+    note: entry.comment,
+  };
+}
+
+async function notifyRequester(
+  campaignId: string,
+  recipientUserId: string,
+  workspaceId: string | null,
+  kind: NotificationKind,
+  title: string,
+): Promise<void> {
+  try {
+    await emitNotification({
+      user_id: recipientUserId,
+      kind,
+      workspace_id: workspaceId ?? undefined,
+      payload: { title },
+      url_path: `/app/campaigns/request`,
+    });
+  } catch (err) {
+    // Non-fatal: status transition has already committed.
+    console.error(`[campaign-actions] notify ${kind} failed:`, err);
+  }
+  void campaignId;
+}
+
+async function transitionRequestStatus(
+  campaignId: string,
+  options: {
+    requireFromStatus: string[];
+    nextStatus: "in_review" | "draft" | "declined" | "requested";
+    historyAction: DecisionHistoryEntry["action"];
+    notificationKind: NotificationKind;
+    rawComment?: unknown;
+    requireComment?: boolean;
+  },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const auth = await getAuthenticatedAdmin();
+  if (!auth.ok) return { ok: false, error: auth.error };
+
+  const commentParse = ReviewCommentSchema.safeParse(options.rawComment ?? undefined);
+  if (!commentParse.success) return { ok: false, error: "comment_invalid" };
+  const comment = commentParse.data ?? null;
+
+  if (options.requireComment && (!comment || comment.length === 0)) {
+    return { ok: false, error: "comment_required" };
+  }
+
+  const fetched = await fetchCampaignForReview(campaignId);
+  if (!fetched.ok) return { ok: false, error: fetched.error };
+  const row = fetched.row;
+
+  if (!options.requireFromStatus.includes(row.status)) {
+    return { ok: false, error: "wrong_status" };
+  }
+
+  const sbAdmin = createSupabaseService();
+  const nowIso = new Date().toISOString();
+
+  const newMetadata = appendHistory(row.decision_metadata, {
+    at: nowIso,
+    by: auth.userId,
+    action: options.historyAction,
+    comment: comment ?? null,
+  });
+
+  const { error: updateErr } = await sbAdmin
+    .from("campaigns")
+    .update({
+      status: options.nextStatus,
+      decision_metadata: newMetadata as Json,
+      updated_at: nowIso,
+    })
+    .eq("id", campaignId);
+
+  if (updateErr) {
+    console.error("[transitionRequestStatus] update error:", updateErr.message);
+    return { ok: false, error: "update_failed" };
+  }
+
+  // Notify the original requester (created_by) — they always have visibility
+  // even after switching workspaces. Workspace context preserved so the
+  // notification surfaces in the right bell.
+  await notifyRequester(
+    campaignId,
+    row.created_by,
+    row.sponsor_workspace_id,
+    options.notificationKind,
+    row.title,
+  );
+
+  revalidateCampaigns(campaignId);
+  return { ok: true };
+}
+
+export async function reviewCampaignRequestAction(
+  campaignId: string,
+  rawComment?: unknown,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  return transitionRequestStatus(campaignId, {
+    requireFromStatus: ["requested"],
+    nextStatus: "in_review",
+    historyAction: "review_started",
+    notificationKind: "campaign_request_in_review",
+    rawComment,
+  });
+}
+
+export async function approveCampaignRequestAction(
+  campaignId: string,
+  rawComment?: unknown,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  return transitionRequestStatus(campaignId, {
+    requireFromStatus: ["in_review"],
+    nextStatus: "draft",
+    historyAction: "approved",
+    notificationKind: "campaign_request_approved",
+    rawComment,
+  });
+}
+
+export async function declineCampaignRequestAction(
+  campaignId: string,
+  rawComment?: unknown,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  return transitionRequestStatus(campaignId, {
+    requireFromStatus: ["in_review"],
+    nextStatus: "declined",
+    historyAction: "declined",
+    notificationKind: "campaign_request_declined",
+    rawComment,
+    requireComment: true,
+  });
+}
+
+export async function requestMoreInfoAction(
+  campaignId: string,
+  rawComment?: unknown,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  return transitionRequestStatus(campaignId, {
+    requireFromStatus: ["in_review"],
+    nextStatus: "requested",
+    historyAction: "more_info_requested",
+    notificationKind: "campaign_request_more_info",
+    rawComment,
+    requireComment: true,
+  });
 }
