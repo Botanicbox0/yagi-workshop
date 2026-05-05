@@ -2243,5 +2243,32 @@
     "status_submission_closed": "접수 마감",
     "status_distributing": "배포 중",
     "status_archived": "보관"
+  },
+  "public_campaigns": {
+    "list_title": "진행 중인 캠페인",
+    "list_empty": "현재 진행 중인 캠페인이 없습니다.",
+    "list_empty_subtitle": "곧 첫 캠페인이 공개됩니다.",
+    "detail": {
+      "brief_label": "브리프",
+      "references_label": "참고 자료",
+      "categories_label": "참여 부문",
+      "submit_cta": "응모하기",
+      "submission_closes_in": "마감 {time}",
+      "submission_closed": "응모 마감",
+      "showcase_title": "공개된 작품",
+      "showcase_empty_for_status": "응모 마감 후 작품 공개 예정",
+      "channel_tiktok": "TikTok",
+      "channel_instagram": "Instagram",
+      "channel_youtube": "YouTube",
+      "channel_youtube_shorts": "YouTube Shorts",
+      "channel_x": "X",
+      "channel_other": "기타"
+    },
+    "status": {
+      "published": "응모 진행 중",
+      "submission_closed": "응모 마감",
+      "distributing": "유포 중",
+      "archived": "마감"
+    }
   }
 }

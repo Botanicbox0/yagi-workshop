@@ -2178,5 +2178,32 @@
     "status_submission_closed": "Closed",
     "status_distributing": "Distributing",
     "status_archived": "Archived"
+  },
+  "public_campaigns": {
+    "list_title": "Active campaigns",
+    "list_empty": "No active campaigns at the moment.",
+    "list_empty_subtitle": "First campaign launching soon.",
+    "detail": {
+      "brief_label": "Brief",
+      "references_label": "Reference materials",
+      "categories_label": "Categories",
+      "submit_cta": "Submit work",
+      "submission_closes_in": "Closes in {time}",
+      "submission_closed": "Submissions closed",
+      "showcase_title": "Published works",
+      "showcase_empty_for_status": "Works published after review",
+      "channel_tiktok": "TikTok",
+      "channel_instagram": "Instagram",
+      "channel_youtube": "YouTube",
+      "channel_youtube_shorts": "YouTube Shorts",
+      "channel_x": "X",
+      "channel_other": "Other"
+    },
+    "status": {
+      "published": "Open for submissions",
+      "submission_closed": "Submissions closed",
+      "distributing": "Distributing",
+      "archived": "Archived"
+    }
   }
 }
