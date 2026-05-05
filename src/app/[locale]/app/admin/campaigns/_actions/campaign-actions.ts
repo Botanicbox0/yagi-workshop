@@ -9,11 +9,58 @@
 // so the check runs in the caller's auth context.
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import type { Database, Json } from "@/lib/supabase/database.types";
 
 type CampaignUpdate = Database["public"]["Tables"]["campaigns"]["Update"];
+
+// ---------------------------------------------------------------------------
+// Zod schemas for JSONB fields (K-05 MED-A inline fix)
+// ---------------------------------------------------------------------------
+
+const ReferenceAssetSchema = z.object({
+  url: z.string().url(),
+  label: z.string().min(1).max(200),
+});
+
+const ReferenceAssetsSchema = z
+  .array(ReferenceAssetSchema)
+  .max(20);
+
+/** Base compensation metadata — flat record, no nested objects */
+const CompensationMetadataBaseSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean()])
+);
+
+/** Shaped validation: fixed_fee model requires fixed_fee_per_creator */
+function validateCompensationMetadata(
+  model: string | undefined,
+  raw: Record<string, unknown> | null | undefined
+): { ok: true } | { ok: false; error: string } {
+  if (raw === null || raw === undefined) return { ok: true };
+
+  const baseResult = CompensationMetadataBaseSchema.safeParse(raw);
+  if (!baseResult.success) {
+    return { ok: false, error: "compensation_metadata_invalid" };
+  }
+
+  if (model === "fixed_fee") {
+    const feeResult = z
+      .object({ fixed_fee_per_creator: z.number().positive() })
+      .safeParse(raw);
+    if (!feeResult.success) {
+      return {
+        ok: false,
+        error: "compensation_metadata_fixed_fee_per_creator_required",
+      };
+    }
+  }
+
+  return { ok: true };
+}
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -126,6 +173,19 @@ export async function createCampaignAction(
     return { ok: false, error: "categories_required" };
   }
 
+  // Validate JSONB fields (K-05 MED-A)
+  if (input.reference_assets !== undefined) {
+    const refResult = ReferenceAssetsSchema.safeParse(input.reference_assets);
+    if (!refResult.success) {
+      return { ok: false, error: "reference_assets_invalid" };
+    }
+  }
+  const compCheck = validateCompensationMetadata(
+    input.compensation_model,
+    input.compensation_metadata
+  );
+  if (!compCheck.ok) return { ok: false, error: compCheck.error };
+
   const slug = generateSlug(title);
   const sbAdmin = createSupabaseService();
 
@@ -195,6 +255,21 @@ export async function updateCampaignAction(
       return { ok: false, error: "title_invalid" };
     }
     patch = { ...patch, title: t };
+  }
+
+  // Validate JSONB fields (K-05 MED-A)
+  if (patch.reference_assets !== undefined) {
+    const refResult = ReferenceAssetsSchema.safeParse(patch.reference_assets);
+    if (!refResult.success) {
+      return { ok: false, error: "reference_assets_invalid" };
+    }
+  }
+  if (patch.compensation_metadata !== undefined && patch.compensation_metadata !== null) {
+    const compCheck = validateCompensationMetadata(
+      patch.compensation_model,
+      patch.compensation_metadata
+    );
+    if (!compCheck.ok) return { ok: false, error: compCheck.error };
   }
 
   const sbAdmin = createSupabaseService();

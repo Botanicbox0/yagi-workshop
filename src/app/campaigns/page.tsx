@@ -75,7 +75,7 @@ function CampaignCard({
       <div className="p-6 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <h2
-            className="font-semibold text-lg leading-snug word-break-keep-all group-hover:text-sage transition-colors"
+            className="font-semibold text-lg leading-snug keep-all group-hover:text-sage transition-colors"
             style={{ letterSpacing: "-0.01em" }}
           >
             {campaign.title}
@@ -84,7 +84,7 @@ function CampaignCard({
         </div>
 
         {briefPreview && (
-          <p className="text-sm text-muted-foreground word-break-keep-all line-clamp-3 leading-relaxed">
+          <p className="text-sm text-muted-foreground keep-all line-clamp-3 leading-relaxed">
             {briefPreview}
           </p>
         )}
@@ -110,7 +110,7 @@ export default async function CampaignsListPage() {
         <div className="mx-auto w-20 h-20 rounded-[24px] bg-sage-soft flex items-center justify-center mb-6">
           <div className="w-8 h-8 rounded-full bg-sage opacity-40" />
         </div>
-        <h1 className="font-display italic text-2xl md:text-3xl word-break-keep-all">
+        <h1 className="font-display italic text-2xl md:text-3xl keep-all">
           {t("list_title")}
         </h1>
         <p className="text-muted-foreground">{t("list_empty")}</p>
@@ -128,7 +128,7 @@ export default async function CampaignsListPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 space-y-12">
       <h1
-        className="font-display italic text-3xl md:text-4xl word-break-keep-all"
+        className="font-display italic text-3xl md:text-4xl keep-all"
         style={{ lineHeight: "1.15", letterSpacing: "-0.01em" }}
       >
         {t("list_title")}

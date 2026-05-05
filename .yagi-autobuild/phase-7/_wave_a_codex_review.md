@@ -1,0 +1,5 @@
+## VERDICT: NEEDS-ATTENTION
+
+[FINDING 1] CLASS: MED: `src/app/[locale]/app/admin/campaigns/_actions/campaign-actions.ts:139` — Service-role create/update paths persist `reference_assets` and `compensation_metadata` with TypeScript-only validation; malformed JSON or unsafe public links can be written after the admin gate. Recommended fix: add server-side Zod parsing after `getAuthenticatedAdmin()` and before `createSupabaseService()`, validating bounded `reference_assets` as http(s) URL + label objects and `compensation_metadata` as a plain object shaped per `compensation_model`.
+
+Summary: Auth/RLS integration is otherwise sound: all 4 actions gate before service-role writes, public A.3 uses standard RLS-scoped clients with explicit status filters, `/campaigns` is excluded by middleware, and KO campaign copy has no forbidden English internal terms.

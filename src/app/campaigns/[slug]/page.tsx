@@ -54,21 +54,11 @@ function channelLabel(
   }
 }
 
-/** Channel icon — simple text badge; icon set can be wired later */
-function ChannelBadge({ channel, label }: { channel: string; label: string }) {
-  const colorMap: Record<string, string> = {
-    tiktok: "bg-black text-white",
-    instagram:
-      "bg-gradient-to-r from-purple-500 to-pink-500 text-white",
-    youtube: "bg-red-600 text-white",
-    youtube_shorts: "bg-red-500 text-white",
-    x: "bg-black text-white",
-  };
-  const cls = colorMap[channel] ?? "bg-muted text-muted-foreground";
-
+/** Channel badge — neutral chip only (sage-only hard rule: no platform tints) */
+function ChannelBadge({ label }: { channel: string; label: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${cls}`}
+      className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-muted text-foreground border border-border"
     >
       {label}
     </span>
@@ -125,7 +115,7 @@ function ShowcaseGallery({
   return (
     <section className="space-y-6">
       <h2
-        className="font-semibold text-xl word-break-keep-all"
+        className="font-semibold text-xl keep-all"
         style={{ lineHeight: "1.18", letterSpacing: "-0.01em" }}
       >
         {t("detail.showcase_title")}
@@ -152,10 +142,10 @@ function ShowcaseGallery({
             >
               {/* Creator header */}
               <div className="space-y-0.5">
-                <p className="font-semibold text-sm word-break-keep-all">
+                <p className="font-semibold text-sm keep-all">
                   {creatorName}
                 </p>
-                <p className="text-xs text-muted-foreground word-break-keep-all line-clamp-2">
+                <p className="text-xs text-muted-foreground keep-all line-clamp-2">
                   {sub.title}
                 </p>
               </div>
@@ -198,7 +188,7 @@ function CategoriesSection({
   return (
     <section className="space-y-4">
       <h2
-        className="font-semibold text-xl word-break-keep-all"
+        className="font-semibold text-xl keep-all"
         style={{ lineHeight: "1.18", letterSpacing: "-0.01em" }}
       >
         {t("detail.categories_label")}
@@ -209,11 +199,11 @@ function CategoriesSection({
             key={cat.id}
             className="rounded-[24px] border border-border bg-background p-5 space-y-2"
           >
-            <h3 className="font-semibold text-base word-break-keep-all">
+            <h3 className="font-semibold text-base keep-all">
               {cat.name}
             </h3>
             {cat.description && (
-              <p className="text-sm text-muted-foreground word-break-keep-all leading-relaxed">
+              <p className="text-sm text-muted-foreground keep-all leading-relaxed">
                 {cat.description}
               </p>
             )}
@@ -284,14 +274,14 @@ export default async function CampaignDetailPage({ params }: Props) {
         </div>
 
         <h1
-          className="font-semibold text-3xl md:text-4xl word-break-keep-all"
+          className="font-semibold text-3xl md:text-4xl keep-all"
           style={{ lineHeight: "1.18", letterSpacing: "-0.01em" }}
         >
           {campaign.title}
         </h1>
 
         {campaign.description && (
-          <p className="text-muted-foreground leading-relaxed word-break-keep-all">
+          <p className="text-muted-foreground leading-relaxed keep-all">
             {campaign.description}
           </p>
         )}
@@ -304,7 +294,7 @@ export default async function CampaignDetailPage({ params }: Props) {
             {t("detail.brief_label")}
           </h2>
           <div className="rounded-[24px] border border-border bg-background p-6">
-            <p className="text-sm leading-relaxed word-break-keep-all whitespace-pre-wrap">
+            <p className="text-sm leading-relaxed keep-all whitespace-pre-wrap">
               {campaign.brief}
             </p>
           </div>
@@ -358,7 +348,7 @@ export default async function CampaignDetailPage({ params }: Props) {
       {showShowcase && distributions.length === 0 && (
         <section className="space-y-3">
           <h2
-            className="font-semibold text-xl word-break-keep-all"
+            className="font-semibold text-xl keep-all"
             style={{ lineHeight: "1.18", letterSpacing: "-0.01em" }}
           >
             {t("detail.showcase_title")}

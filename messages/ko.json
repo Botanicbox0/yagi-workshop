@@ -2267,7 +2267,7 @@
     "status": {
       "published": "응모 진행 중",
       "submission_closed": "응모 마감",
-      "distributing": "유포 중",
+      "distributing": "공개 진행 중",
       "archived": "마감"
     }
   }
