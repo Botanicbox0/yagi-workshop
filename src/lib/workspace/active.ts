@@ -21,7 +21,16 @@
 import { cookies } from "next/headers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
-export type WorkspaceKind = "brand" | "artist" | "yagi_admin";
+// Phase 7 Wave C.1 — 'creator' added by migration 20260506200000.
+// Lightweight workspace kind auto-created at campaign submission time
+// (Talenthouse pattern). 'agency' is reserved for Phase 11 compensation
+// routing partnerships.
+export type WorkspaceKind =
+  | "brand"
+  | "agency"
+  | "artist"
+  | "creator"
+  | "yagi_admin";
 
 export type ActiveWorkspaceMembership = {
   id: string;
@@ -35,7 +44,13 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function narrowKind(value: unknown): WorkspaceKind {
-  if (value === "brand" || value === "artist" || value === "yagi_admin") {
+  if (
+    value === "brand" ||
+    value === "agency" ||
+    value === "artist" ||
+    value === "creator" ||
+    value === "yagi_admin"
+  ) {
     return value;
   }
   return "brand";

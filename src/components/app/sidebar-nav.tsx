@@ -10,11 +10,11 @@ import {
   Settings,
   ShieldCheck,
   MessageSquare,
-  Trophy,
   Briefcase,
   LayoutDashboard,
   Sparkles,
-  Mailbox,
+  Plus,
+  FolderOpen,
   Megaphone,
   ChevronDown,
   type LucideIcon,
@@ -29,10 +29,16 @@ import {
 import { SidebarGroupLabel } from "./sidebar-group-label";
 import type { ProfileRole, WorkspaceRole } from "@/lib/app/context";
 
-// Phase 7 Wave B.1 — must mirror WorkspaceItem.kind in workspace-switcher.tsx.
-// Wave C.1 expands this to include 'creator'; the CTA below already excludes
-// non-sponsor kinds, so adding 'creator' there is a no-op for this component.
-type WorkspaceKindForNav = "brand" | "artist" | "yagi_admin" | "creator";
+// Phase 7 Wave C.0 — must mirror WorkspaceItem.kind in workspace-switcher.tsx.
+// Wave C.1 migration adds 'creator' + 'agency'. The CTAs already exclude
+// non-sponsor kinds, so adding both here is a no-op for any item that gates
+// on `kinds`.
+type WorkspaceKindForNav =
+  | "brand"
+  | "agency"
+  | "artist"
+  | "creator"
+  | "yagi_admin";
 
 type NavItem = {
   key: string;
@@ -46,71 +52,68 @@ type NavItem = {
   /** Visible if user's `profile.role` matches one of these. See ADR-009 for why
    *  profile-role and workspace-role are split. */
   profileRoles?: ProfileRole[];
+  /** Phase 7 Wave C.0 — gate by the active workspace's `kind` column. When set,
+   *  the entry is visible only if the user's currently active workspace's kind
+   *  is in this list. Combined with `roles`/`profileRoles` via AND when present
+   *  alongside them; when used alone, kind alone gates. */
+  kinds?: WorkspaceKindForNav[];
   children?: NavItem[];
 };
 
 type NavGroup = {
-  key: "work" | "communication" | "billing" | "system";
+  key: "work" | "communication" | "billing" | "system" | "operations";
   items: NavItem[];
 };
 
+// Phase 7 Wave C.0 IA refactor:
+//   - Removed: challenges parent + 3 children, campaigns parent + 3 children,
+//     admin_commissions, admin_trash, admin_support sidebar entries.
+//     All admin sub-tools accessed via /app/admin dashboard 7-card grid (HF4).
+//   - Added: operations group (yagi_admin only) with single YAGI 관리 entry,
+//     my_submissions entry (creator workspace only),
+//     [+ 새 프로젝트 시작] standalone primary CTA at top (brand/artist only),
+//     kind-gated [+ 캠페인 요청] now inside work group (was top-level CTA).
 const GROUPS: NavGroup[] = [
   {
     key: "work",
     items: [
       {
-        // Phase 4.x task_05: Brand workspace dashboard. First WORK item
-        // per KICKOFF section task_05 spec; sits above 프로젝트.
         key: "dashboard",
         href: "/app/dashboard",
         icon: LayoutDashboard,
+        kinds: ["brand", "artist", "yagi_admin"],
       },
       {
-        // Phase 2.7.2: projects hub restored as the canonical commission
-        // surface (Option C — funnel split). `/commission` stays as the
-        // public-facing landing form for anonymous intake; once a user is
-        // logged in, `/app/projects` is the hub (full 4-step wizard,
-        // references, review). Visible to every authenticated user;
-        // admin/internal members rely on this entry to QA the client
-        // flow without leaving to the public site.
         key: "projects",
         href: "/app/projects",
         icon: Briefcase,
+        kinds: ["brand", "artist", "yagi_admin"],
       },
       {
-        // Phase 4.x task_05 + Q-103: 추천 Artist disabled placeholder
-        // for Phase 7+. Renders as a disabled link with 'Coming soon'
-        // tooltip. Q-103 option A: 라이선스 entry is HIDDEN (Phase 6+),
-        // intentionally not added here.
+        // Phase 7 Wave B.1 + Wave C.0: moved from top-level CTA into work
+        // group as a regular entry (still kind-gated to brand/artist).
+        key: "campaign_request",
+        href: "/app/campaigns/request",
+        icon: Megaphone,
+        kinds: ["brand", "artist"],
+      },
+      {
+        // Phase 7 Wave C.3: creator workspace's only work entry. Page ships
+        // in C.3; the route stub renders a list of own submissions.
+        key: "my_submissions",
+        href: "/app/my-submissions",
+        icon: FolderOpen,
+        kinds: ["creator"],
+      },
+      {
+        // Phase 4.x task_05 + Q-103 + Wave C.0 matrix: 추천 Artist disabled
+        // placeholder, brand workspace only (Phase 10 Inbound Track ships
+        // the activated form).
         key: "recommended_artist",
         icon: Sparkles,
         disabled: true,
+        kinds: ["brand"],
       },
-      {
-        // Phase 2.5 admin challenge console — yagi_admin only.
-        key: "challenges",
-        icon: Trophy,
-        roles: ["yagi_admin"],
-        children: [
-          { key: "challenges_all", href: "/app/admin/challenges" },
-          { key: "challenges_new", href: "/app/admin/challenges/new" },
-          { key: "challenges_open", href: "/app/admin/challenges?state=open" },
-        ],
-      },
-      {
-        // Phase 7 Wave A.2 + Hotfix-4: yagi_admin campaign console.
-        key: "campaigns",
-        icon: Megaphone,
-        roles: ["yagi_admin"],
-        children: [
-          { key: "campaigns_all", href: "/app/admin/campaigns" },
-          { key: "campaigns_new", href: "/app/admin/campaigns/new" },
-          { key: "campaigns_published", href: "/app/admin/campaigns?status=published" },
-        ],
-      },
-      // Phase 2.7.1: preprod / showcases / storyboards / brands removed
-      // from the active sidebar. Routes still work for direct navigation;
-      // phasing out from primary IA per visibility pass.
     ],
   },
   {
@@ -120,14 +123,9 @@ const GROUPS: NavGroup[] = [
         key: "meetings",
         href: "/app/meetings",
         icon: CalendarDays,
-        roles: ["workspace_admin", "workspace_member"],
+        // Wave C.0 matrix: brand/artist/yagi_admin only. Creator excluded.
+        kinds: ["brand", "artist", "yagi_admin"],
       },
-      // Phase 2.8.5 — `notifications` removed from sidebar. Yagi:
-      // duplicates the top-right bell + the route surfaced an error.
-      // The /app/notifications page itself stays (the bell links to
-      // it); only the sidebar entry is gone. The `nav.notifications`
-      // i18n key is preserved in messages/* — the bell's tooltip and
-      // the page header still read it.
       // `team` is injected at render time when the user is a yagi-internal member.
     ],
   },
@@ -151,26 +149,22 @@ const GROUPS: NavGroup[] = [
   {
     key: "system",
     items: [
+      // Wave C.0: settings is the only system entry — admin/commissions,
+      // admin/trash, admin/support all moved into the admin dashboard
+      // 7-card grid (HF4). Sidebar exposure removed.
       { key: "settings", href: "/app/settings", icon: Settings },
-      { key: "admin", href: "/app/admin", icon: ShieldCheck, roles: ["yagi_admin"] },
+    ],
+  },
+  {
+    // Phase 7 Wave C.0 — NEW group, yagi_admin only. Single entry that
+    // lands the admin dashboard, where the 7-card grid (HF4) navigates to
+    // every admin sub-tool.
+    key: "operations",
+    items: [
       {
-        // G3 lands /app/admin/commissions queue + [id] response form.
-        key: "admin_commissions",
-        href: "/app/admin/commissions",
-        icon: Mailbox,
-        roles: ["yagi_admin"],
-      },
-      {
-        // Phase 2.8.2 G_B2_A — yagi_admin trash console for soft-deleted
-        // projects. 3-day undelete window + permanent delete action.
-        key: "admin_trash",
-        href: "/app/admin/trash",
-        roles: ["yagi_admin"],
-      },
-      {
-        // Phase 2.8.6 — yagi_admin support chat reply surface.
-        key: "admin_support",
-        href: "/app/admin/support",
+        key: "admin",
+        href: "/app/admin",
+        icon: ShieldCheck,
         roles: ["yagi_admin"],
       },
     ],
@@ -195,8 +189,17 @@ function isRoleVisible(
   return wsMatch || profileMatch;
 }
 
+function isKindVisible(
+  item: NavItem,
+  activeKind: WorkspaceKindForNav | null | undefined,
+): boolean {
+  if (!item.kinds || item.kinds.length === 0) return true;
+  if (!activeKind) return false;
+  return item.kinds.includes(activeKind);
+}
+
 /**
- * Filter an item by role.
+ * Filter an item by role + kind.
  * - Leaf: returns self if visible, else null.
  * - Parent (has children): filter children recursively. If 0 → null. If 1 → collapse
  *   into the single child so the parent wrapper disappears (IMPLEMENTATION §1 rule).
@@ -205,11 +208,13 @@ function filterItem(
   item: NavItem,
   roles: WorkspaceRole[],
   profileRole: ProfileRole | null,
+  activeKind: WorkspaceKindForNav | null | undefined,
 ): NavItem | null {
   if (!isRoleVisible(item, roles, profileRole)) return null;
+  if (!isKindVisible(item, activeKind)) return null;
   if (!item.children) return item;
   const kept = item.children
-    .map((c) => filterItem(c, roles, profileRole))
+    .map((c) => filterItem(c, roles, profileRole, activeKind))
     .filter((c): c is NavItem => c !== null);
   if (kept.length === 0) return null;
   if (kept.length === 1) return kept[0];
@@ -274,8 +279,10 @@ export function SidebarNav({
   roles: WorkspaceRole[];
   profileRole: ProfileRole | null;
   isYagiInternalMember: boolean;
-  /** Phase 7 Wave B.1 — current active workspace's kind. Used to gate the
-   *  [+ 캠페인 요청] CTA to brand + artist sponsor-eligible workspaces only. */
+  /** Phase 7 Wave B.1 + C.0 — current active workspace's kind. Used to gate
+   *  every kind-bound entry in the GROUPS table (dashboard / projects /
+   *  campaign_request / my_submissions / recommended_artist / meetings) plus
+   *  the standalone [+ 새 프로젝트 시작] CTA at top. */
   activeWorkspaceKind?: WorkspaceKindForNav | null;
 }) {
   const t = useTranslations("nav");
@@ -300,7 +307,7 @@ export function SidebarNav({
   const visibleGroups = runtimeGroups
     .map((g) => {
       const items = g.items
-        .map((it) => filterItem(it, roles, profileRole))
+        .map((it) => filterItem(it, roles, profileRole, activeWorkspaceKind))
         .filter((it): it is NavItem => it !== null);
       return { ...g, items };
     })
@@ -312,30 +319,32 @@ export function SidebarNav({
   );
   const activeKey = computeActiveKey(allLeaves, pathname, searchParams);
 
-  // Phase 7 Wave B.1 — sponsor-eligible workspaces (brand/artist) get a
-  // prominent [+ 캠페인 요청] CTA at the top of the nav. Creator + yagi_admin
-  // workspaces don't see it (admin uses /app/admin/campaigns/new directly).
-  const showCampaignRequestCta =
+  // Phase 7 Wave C.0 — [+ 새 프로젝트 시작] is the standalone primary CTA at
+  // the top, replacing the Wave B [+ 캠페인 요청] in that slot. Same
+  // brand/artist kind gate (creator + plain yagi_admin admin workspace
+  // wouldn't start a project from this surface).
+  const showNewProjectCta =
     activeWorkspaceKind === "brand" || activeWorkspaceKind === "artist";
-  const campaignRequestActive = pathname === "/app/campaigns/request";
+  const newProjectActive =
+    pathname === "/app/projects/new" || pathname.startsWith("/app/projects/new/");
 
   return (
     <TooltipProvider delayDuration={300}>
       <nav className="flex flex-col px-2 pb-3" aria-label="Operations">
-        {showCampaignRequestCta && (
+        {showNewProjectCta && (
           <div className="px-1 pt-2 pb-3">
             <Link
-              href="/app/campaigns/request"
-              aria-current={campaignRequestActive ? "page" : undefined}
+              href="/app/projects/new"
+              aria-current={newProjectActive ? "page" : undefined}
               className={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-full text-[13px] font-medium border transition-colors",
-                campaignRequestActive
+                newProjectActive
                   ? "bg-foreground text-background border-foreground"
                   : "bg-card text-foreground border-border hover:border-foreground/40 hover:bg-accent/50",
               )}
             >
-              <span aria-hidden="true">+</span>
-              <span>{t("request_campaign_cta")}</span>
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("new_project_cta")}</span>
             </Link>
           </div>
         )}

@@ -173,13 +173,17 @@
   },
   "nav": {
     "groups": {
-      "work": "워크스페이스",
+      "work": "작업",
       "communication": "소통",
-      "billing": "결제",
-      "system": "시스템"
+      "billing": "정산",
+      "system": "시스템",
+      "operations": "운영"
     },
+    "new_project_cta": "새 프로젝트 시작",
     "dashboard": "대시보드",
     "projects": "프로젝트",
+    "campaign_request": "캠페인 요청",
+    "my_submissions": "내 응모작",
     "recommended_artist": "추천 Artist",
     "showcases": "쇼케이스",
     "storyboards": "스토리보드",
@@ -192,7 +196,7 @@
     "notifications": "알림",
     "preprod": "사전제작",
     "invoices": "받은 송장",
-    "billing_group": "결제",
+    "billing_group": "정산",
     "challenges": "챌린지",
     "challenges_all": "전체",
     "challenges_new": "새 챌린지",
@@ -2420,6 +2424,68 @@
       "sponsorship_yagi_assist": "야기 일임"
     }
   },
+  "my_submissions": {
+    "title": "내 응모작",
+    "intro": "현재 워크스페이스에서 보낸 응모작과 검수 결과를 확인할 수 있어요.",
+    "workspace_label": "워크스페이스",
+    "campaign_unknown": "캠페인 정보 없음",
+    "empty_body": "아직 보낸 응모작이 없어요. 진행 중인 캠페인을 살펴보세요.",
+    "empty_browse_cta": "캠페인 둘러보기",
+    "status": {
+      "submitted": "검토 대기",
+      "approved_for_distribution": "유포 승인",
+      "declined": "비채택",
+      "revision_requested": "수정 요청",
+      "distributed": "유포 완료",
+      "withdrawn": "철회"
+    },
+    "detail": {
+      "description_label": "작품 설명",
+      "decision_label": "검수 결과",
+      "decision": {
+        "approved": "승인 (유포 진행 가능)",
+        "declined": "비채택",
+        "revision_requested": "수정 요청"
+      }
+    },
+    "distribution": {
+      "title": "유포 채널 관리",
+      "intro_pre_distribution": "유포한 채널의 URL을 추가해주세요. URL 등록 시 자동으로 \"유포 완료\" 상태로 변경됩니다.",
+      "intro_post_distribution": "유포한 채널의 조회 / 좋아요 / 댓글 수를 직접 입력해 기록할 수 있어요.",
+      "channel_label": "채널",
+      "url_label": "유포 URL",
+      "url_placeholder": "https://www.tiktok.com/@me/video/...",
+      "add_cta": "추가하기",
+      "add_another_cta": "다른 채널 추가",
+      "cancel_cta": "취소",
+      "metric_views": "조회",
+      "metric_likes": "좋아요",
+      "metric_comments": "댓글",
+      "edit_metric_cta": "수치 입력",
+      "save_metric_cta": "저장",
+      "toast_added": "유포 채널을 추가했어요.",
+      "toast_metric_saved": "수치를 저장했어요.",
+      "channel": {
+        "tiktok": "TikTok",
+        "instagram": "Instagram",
+        "youtube": "YouTube",
+        "youtube_shorts": "YouTube Shorts",
+        "x": "X",
+        "other": "기타"
+      },
+      "error": {
+        "url_required": "유포 URL을 입력해주세요.",
+        "input_invalid": "입력값에 문제가 있어요.",
+        "unauthorized": "로그인이 필요해요.",
+        "submission_not_found": "응모작을 찾을 수 없어요.",
+        "wrong_status": "현재 상태에서는 추가할 수 없어요.",
+        "insert_failed": "유포 정보를 저장하지 못했어요.",
+        "update_failed": "수치를 저장하지 못했어요.",
+        "metric_save_failed": "수치 저장에 실패했어요.",
+        "add_failed": "추가에 실패했어요. 잠시 후 다시 시도해주세요."
+      }
+    }
+  },
   "public_campaigns": {
     "hero_eyebrow": "AI VISUAL STUDIO",
     "hero_title_line1": "AI VISUAL STUDIO",
@@ -2454,6 +2520,67 @@
       "submission_closed": "응모 마감",
       "distributing": "공개 진행 중",
       "archived": "마감"
+    },
+    "submit": {
+      "page_title": "응모하기",
+      "page_intro": "응모 정보를 입력하고 작품을 제출해주세요. 처음 이용하시는 경우 자동으로 계정이 생성되고, 입력한 이메일로 로그인 링크가 발송됩니다.",
+      "back_to_campaign": "← 캠페인으로 돌아가기",
+      "closed_title": "응모 기간이 아니에요",
+      "closed_body": "이 캠페인은 현재 응모를 받지 않아요. 다른 진행 중인 캠페인을 확인해주세요.",
+      "no_categories_title": "준비 중인 캠페인이에요",
+      "no_categories_body": "캠페인 부문이 아직 정해지지 않았어요. 곧 다시 확인해주세요.",
+      "category_label": "참여 부문",
+      "category_placeholder": "부문을 선택해주세요",
+      "email_label": "이메일",
+      "email_placeholder": "you@example.com",
+      "name_label": "작가명",
+      "name_placeholder": "공개될 이름이에요",
+      "phone_label": "담당자 번호",
+      "phone_placeholder": "010-1234-5678",
+      "team_label": "팀명 (선택)",
+      "team_placeholder": "팀으로 응모하실 경우",
+      "work_title_label": "작품 제목",
+      "work_title_placeholder": "예: [신곡명] AI 뮤비 — 가로형 v1",
+      "work_description_label": "작품 설명 (선택)",
+      "work_description_placeholder": "작품의 콘셉트, 사용한 도구, 강조하고 싶은 포인트 등을 자유롭게 적어주세요.",
+      "work_content_label": "작품 콘텐츠",
+      "file_label": "파일 업로드",
+      "file_remove": "삭제",
+      "uploading": "업로드 중",
+      "or_separator": "또는",
+      "external_url_label": "외부 URL",
+      "external_url_placeholder": "https://...",
+      "external_url_helper": "이미 게시한 작품의 링크 (YouTube, Vimeo, Drive 등) 를 붙여넣어주세요.",
+      "submit_cta": "응모 보내기",
+      "submitting": "전송 중...",
+      "submit_legal": "응모 시 야기 캠페인 약관에 동의하는 것으로 간주합니다.",
+      "toast_submitted": "응모가 완료되었어요!",
+      "success_eyebrow": "응모 완료",
+      "success_title": "잘 받았어요!",
+      "success_body": "{email}로 로그인 링크를 발송했어요. 링크를 눌러 로그인하시면 \"{campaign}\" 캠페인 응모 상태와 검수 결과를 확인하실 수 있어요.",
+      "success_next_steps": "검수가 완료되면 이메일로 결과를 알려드려요. 일반적으로 1-2주 안에 회신드립니다.",
+      "error": {
+        "category_required": "참여 부문을 선택해주세요.",
+        "required_fields": "필수 항목을 모두 입력해주세요.",
+        "work_required": "작품 파일 또는 외부 URL 중 하나를 입력해주세요.",
+        "no_path_available": "이 캠페인은 현재 응모를 받지 않아요.",
+        "input_invalid": "입력값에 문제가 있어요.",
+        "campaign_not_found": "캠페인을 찾을 수 없어요.",
+        "campaign_not_open": "이 캠페인은 응모 기간이 아니에요.",
+        "campaign_closed": "응모 기간이 마감되었어요.",
+        "r2_upload_not_allowed": "이 캠페인은 파일 업로드를 받지 않아요.",
+        "external_url_not_allowed": "이 캠페인은 외부 URL 응모를 받지 않아요.",
+        "category_invalid": "선택한 부문이 유효하지 않아요.",
+        "invite_failed": "계정을 만들지 못했어요. 잠시 후 다시 시도해주세요.",
+        "workspace_create_failed": "워크스페이스를 만들지 못했어요.",
+        "workspace_member_failed": "멤버 등록에 실패했어요.",
+        "submission_insert_failed": "응모를 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
+        "presign_failed": "업로드 준비에 실패했어요.",
+        "content_type_not_allowed": "이미지 또는 영상 파일만 업로드할 수 있어요.",
+        "filename_invalid": "파일 이름에 사용할 수 없는 문자가 있어요.",
+        "upload_failed": "업로드에 실패했어요. 다시 시도해주세요.",
+        "submit_failed": "응모를 처리하지 못했어요. 잠시 후 다시 시도해주세요."
+      }
     }
   }
 }

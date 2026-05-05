@@ -35,7 +35,13 @@ import { ChevronsUpDown, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { setActiveWorkspaceAction } from "@/lib/workspace/actions";
 
-type WorkspaceKind = "brand" | "artist" | "yagi_admin";
+// Phase 7 Wave C.1 — kept in sync with src/lib/workspace/active.ts.
+type WorkspaceKind =
+  | "brand"
+  | "agency"
+  | "artist"
+  | "creator"
+  | "yagi_admin";
 
 export type WorkspaceItem = {
   id: string;

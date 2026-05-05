@@ -173,11 +173,15 @@
   },
   "nav": {
     "groups": {
-      "work": "Workspace",
+      "work": "Work",
       "communication": "Communication",
       "billing": "Billing",
-      "system": "System"
+      "system": "System",
+      "operations": "Operations"
     },
+    "new_project_cta": "Start a project",
+    "campaign_request": "Request a campaign",
+    "my_submissions": "My submissions",
     "dashboard": "Dashboard",
     "projects": "Projects",
     "recommended_artist": "Recommended artists",
@@ -2355,6 +2359,68 @@
       "sponsorship_yagi_assist": "Leave to the YAGI team"
     }
   },
+  "my_submissions": {
+    "title": "My submissions",
+    "intro": "Submissions you've sent from this workspace and their review outcomes.",
+    "workspace_label": "Workspace",
+    "campaign_unknown": "Unknown campaign",
+    "empty_body": "No submissions yet. Browse the open campaigns to find one that fits.",
+    "empty_browse_cta": "Browse campaigns",
+    "status": {
+      "submitted": "Awaiting review",
+      "approved_for_distribution": "Approved",
+      "declined": "Not selected",
+      "revision_requested": "Revision requested",
+      "distributed": "Distributed",
+      "withdrawn": "Withdrawn"
+    },
+    "detail": {
+      "description_label": "Work description",
+      "decision_label": "Review decision",
+      "decision": {
+        "approved": "Approved (ready to distribute)",
+        "declined": "Not selected",
+        "revision_requested": "Revision requested"
+      }
+    },
+    "distribution": {
+      "title": "Distribution channels",
+      "intro_pre_distribution": "Add the URLs of the channels where you've posted your work. Adding a URL automatically marks the submission as distributed.",
+      "intro_post_distribution": "Log views, likes, and comments per channel to track performance.",
+      "channel_label": "Channel",
+      "url_label": "Posted URL",
+      "url_placeholder": "https://www.tiktok.com/@me/video/...",
+      "add_cta": "Add",
+      "add_another_cta": "Add another channel",
+      "cancel_cta": "Cancel",
+      "metric_views": "Views",
+      "metric_likes": "Likes",
+      "metric_comments": "Comments",
+      "edit_metric_cta": "Log metrics",
+      "save_metric_cta": "Save",
+      "toast_added": "Channel added.",
+      "toast_metric_saved": "Metrics saved.",
+      "channel": {
+        "tiktok": "TikTok",
+        "instagram": "Instagram",
+        "youtube": "YouTube",
+        "youtube_shorts": "YouTube Shorts",
+        "x": "X",
+        "other": "Other"
+      },
+      "error": {
+        "url_required": "Please enter the posted URL.",
+        "input_invalid": "Some inputs need attention.",
+        "unauthorized": "Please sign in.",
+        "submission_not_found": "Submission not found.",
+        "wrong_status": "This action isn't available in the current status.",
+        "insert_failed": "Could not save the channel.",
+        "update_failed": "Could not save the metrics.",
+        "metric_save_failed": "Failed to save metrics.",
+        "add_failed": "Failed to add. Please try again shortly."
+      }
+    }
+  },
   "public_campaigns": {
     "hero_eyebrow": "AI VISUAL STUDIO",
     "hero_title_line1": "AI VISUAL STUDIO",
@@ -2389,6 +2455,67 @@
       "submission_closed": "Submissions closed",
       "distributing": "Showcasing",
       "archived": "Archived"
+    },
+    "submit": {
+      "page_title": "Apply",
+      "page_intro": "Tell us about your work and submit. First-time applicants get an account auto-created and a sign-in link sent to the email below.",
+      "back_to_campaign": "← Back to campaign",
+      "closed_title": "Submissions are closed",
+      "closed_body": "This campaign isn't currently accepting submissions. Check the other open campaigns.",
+      "no_categories_title": "Campaign coming soon",
+      "no_categories_body": "Categories haven't been set up yet. Please check back shortly.",
+      "category_label": "Category",
+      "category_placeholder": "Select a category",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "name_label": "Display name",
+      "name_placeholder": "Shown publicly",
+      "phone_label": "Contact phone",
+      "phone_placeholder": "010-1234-5678",
+      "team_label": "Team name (optional)",
+      "team_placeholder": "If you're submitting as a team",
+      "work_title_label": "Work title",
+      "work_title_placeholder": "e.g., [Song] AI MV — landscape v1",
+      "work_description_label": "Work description (optional)",
+      "work_description_placeholder": "Concept, tools used, and anything you want the reviewer to focus on.",
+      "work_content_label": "Work content",
+      "file_label": "Upload file",
+      "file_remove": "Remove",
+      "uploading": "Uploading",
+      "or_separator": "or",
+      "external_url_label": "External URL",
+      "external_url_placeholder": "https://...",
+      "external_url_helper": "Paste a link to your work hosted elsewhere (YouTube, Vimeo, Drive, etc.).",
+      "submit_cta": "Send submission",
+      "submitting": "Sending...",
+      "submit_legal": "Submitting indicates agreement with the YAGI campaign terms.",
+      "toast_submitted": "Submission received!",
+      "success_eyebrow": "Submitted",
+      "success_title": "Got it!",
+      "success_body": "We sent a sign-in link to {email}. Open the link to track your \"{campaign}\" submission and review outcome.",
+      "success_next_steps": "We'll email you the result once review is complete — usually within 1-2 weeks.",
+      "error": {
+        "category_required": "Please select a category.",
+        "required_fields": "Please fill in all required fields.",
+        "work_required": "Please attach a file or paste an external URL.",
+        "no_path_available": "This campaign isn't accepting submissions right now.",
+        "input_invalid": "Some inputs need attention.",
+        "campaign_not_found": "Campaign not found.",
+        "campaign_not_open": "This campaign is not currently open.",
+        "campaign_closed": "Submissions are closed.",
+        "r2_upload_not_allowed": "This campaign isn't accepting file uploads.",
+        "external_url_not_allowed": "This campaign isn't accepting external URLs.",
+        "category_invalid": "Selected category is invalid.",
+        "invite_failed": "Could not create your account. Please try again shortly.",
+        "workspace_create_failed": "Could not create your workspace.",
+        "workspace_member_failed": "Could not register membership.",
+        "submission_insert_failed": "Could not save your submission. Please try again shortly.",
+        "presign_failed": "Could not prepare upload.",
+        "content_type_not_allowed": "Only image or video files can be uploaded.",
+        "filename_invalid": "Filename contains unsupported characters.",
+        "upload_failed": "Upload failed. Please try again.",
+        "submit_failed": "Could not process your submission. Please try again shortly."
+      }
     }
   }
 }
