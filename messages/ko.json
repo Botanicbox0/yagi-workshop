@@ -2165,5 +2165,39 @@
     "group_brand": "브랜드",
     "group_artist": "아티스트",
     "add_new": "+ 새 워크스페이스 만들기"
+  },
+  "admin_artists": {
+    "title": "소속 아티스트",
+    "invite_cta": "+ 새 Artist 영입",
+    "table_heading": "아티스트 명단",
+    "table_empty": "아직 영입된 아티스트가 없습니다.",
+    "column_name": "이름",
+    "column_email": "email",
+    "column_instagram": "Instagram",
+    "column_joined_at": "가입일",
+    "column_status": "상태",
+    "status_invite_pending": "⏳ invite 완료",
+    "status_onboarding": "⏳ onboarding",
+    "status_active": "✅ 활성",
+    "form_email": "이메일",
+    "form_display_name": "아티스트 이름",
+    "form_display_name_ph": "예: 김예진",
+    "form_short_bio": "소개",
+    "form_short_bio_ph": "짧은 자기소개 (선택)",
+    "form_submit": "초대 보내기",
+    "optional": "선택",
+    "invite_success": "초대 이메일을 발송했습니다.",
+    "invite_error_validation": "입력값을 확인해 주세요.",
+    "invite_error_unauthenticated": "로그인이 필요합니다.",
+    "invite_error_forbidden": "권한이 없습니다.",
+    "invite_error_invite_failed": "초대 이메일 발송에 실패했습니다.",
+    "invite_error_db": "데이터 처리 중 오류가 발생했습니다."
+  },
+  "onboarding_artist": {
+    "greeting": "만나서 반가워요, {name}님",
+    "subtitle": "계정 설정 마지막 단계입니다.",
+    "email_label": "이메일",
+    "instagram_label": "Instagram 계정",
+    "submit_cta": "시작하기 →"
   }
 }

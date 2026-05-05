@@ -2100,5 +2100,39 @@
     "group_brand": "Brand",
     "group_artist": "Artist",
     "add_new": "+ New workspace"
+  },
+  "admin_artists": {
+    "title": "Roster",
+    "invite_cta": "+ Invite new Artist",
+    "table_heading": "Artist list",
+    "table_empty": "No artists invited yet.",
+    "column_name": "Name",
+    "column_email": "Email",
+    "column_instagram": "Instagram",
+    "column_joined_at": "Joined",
+    "column_status": "Status",
+    "status_invite_pending": "⏳ Invited",
+    "status_onboarding": "⏳ Onboarding",
+    "status_active": "✅ Active",
+    "form_email": "Email",
+    "form_display_name": "Artist name",
+    "form_display_name_ph": "e.g. Jane Kim",
+    "form_short_bio": "Short bio",
+    "form_short_bio_ph": "A short introduction (optional)",
+    "form_submit": "Send invite",
+    "optional": "optional",
+    "invite_success": "Invite email sent.",
+    "invite_error_validation": "Please check your input.",
+    "invite_error_unauthenticated": "Please sign in.",
+    "invite_error_forbidden": "You don't have permission.",
+    "invite_error_invite_failed": "Failed to send invite email.",
+    "invite_error_db": "A database error occurred."
+  },
+  "onboarding_artist": {
+    "greeting": "Welcome, {name}",
+    "subtitle": "Final step to set up your account.",
+    "email_label": "Email",
+    "instagram_label": "Instagram handle",
+    "submit_cta": "Get started →"
   }
 }

@@ -12,6 +12,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserScopes } from "@/lib/app/scopes";
 import { UserScopesProvider } from "@/lib/app/use-user-scopes";
 import { SupportWidget } from "@/components/support/support-widget";
+import { checkArtistOnboardingGate } from "@/lib/auth/artist-onboarding-gate";
 
 export default async function AppLayout({
   children,
@@ -65,6 +66,18 @@ export default async function AppLayout({
     resolveActiveWorkspace(ctx.userId),
     listOwnWorkspaces(ctx.userId),
   ]);
+
+  // Phase 6 Wave A.3 — Artist onboarding gate.
+  // If the active workspace is kind='artist' and instagram_handle IS NULL,
+  // redirect to the 1-step onboarding page before the Artist reaches /app/*.
+  const onboardingRedirect = await checkArtistOnboardingGate(
+    activeWorkspace,
+    locale
+  );
+  if (onboardingRedirect) {
+    redirect({ href: "/onboarding/artist", locale });
+    return null;
+  }
 
   return (
     <UserScopesProvider value={scopes}>
