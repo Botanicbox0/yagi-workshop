@@ -210,3 +210,51 @@ Owner / Status / Registered).
 - **Status**: deferred.
 - **Registered**: 2026-05-05 (Phase 6 Wave A K-05 LOOP-2 F1
   hardening — surfaced during cascade decision).
+
+## FU-Phase6-12-unused-logo-assets
+
+- **Trigger**: After HF3.1, three logo files in `public/brand/` have 0
+  usages: `yagi-wordmark.png`, `yagi-logo-combined.png`,
+  `yagi-mark-white.png`. (`yagi-mark.png` is still used by
+  `support-widget.tsx` — keep.)
+- **Risk**: LOW. ~300KB unused assets; no security or functional
+  impact.
+- **Action**: Phase 7+ brand kit audit — confirm 0 indirect references
+  (CMS / external linking) then delete the three files.
+- **Owner**: builder (Phase 7 brand audit).
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 HF3.4 audit).
+
+## FU-Phase6-13-home-marketing-components-cleanup
+
+- **Trigger**: After HF3.3 replaced `src/app/[locale]/page.tsx` with a
+  redirect-only stub, 7 marketing components in `src/components/home/`
+  (`hero-block`, `services-triad`, `approach-block`, `selected-work`,
+  `journal-preview`, `contact-block`, `commission-cta-block`) have 0
+  usages. `title-emphasis` is used internally by these components —
+  also becomes 0-usage if the others are deleted. `site-footer` is
+  still used by journal/work/challenges public surfaces — KEEP.
+  `src/components/marketing/work-section` also has 0 usages
+  post-HF3.3.
+- **Risk**: LOW. ~unknown KB of dead component code; no functional
+  impact.
+- **Action**: Phase 7 cleanup — delete the 7 home marketing components
+  + work-section + title-emphasis (after confirming no indirect refs
+  via i18n keys or storybook). Keep site-footer.
+- **Owner**: builder (Phase 7 cleanup).
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 HF3.3 audit).
+
+## FU-Phase6-14-real-landing-design
+
+- **Trigger**: Pre-launch (0-user) state means no public marketing
+  surface needed. Real launch will require a freshly-designed landing
+  page (Hero / value props / pricing / commission CTA) — current
+  `src/components/home/*` is Phase 4.x reference only.
+- **Risk**: N/A (product roadmap item, not a defect).
+- **Action**: Real launch sprint — design + ship a new landing page
+  reusing yagi-design-system v1.0 tokens. Do not resurrect Phase 4.x
+  components; design fresh.
+- **Owner**: yagi (product) + builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 HF3 SPEC §"Out-of-scope").

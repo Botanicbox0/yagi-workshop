@@ -1,36 +1,32 @@
-import { HeroBlock } from "@/components/home/hero-block";
-import { ServicesTriad } from "@/components/home/services-triad";
-import { ApproachBlock } from "@/components/home/approach-block";
-import { SelectedWork } from "@/components/home/selected-work";
-import { JournalPreview } from "@/components/home/journal-preview";
-import { ContactBlock } from "@/components/home/contact-block";
-import { CommissionCtaBlock } from "@/components/home/commission-cta-block";
-import { SiteFooter } from "@/components/home/site-footer";
-import { WorkSection } from "@/components/marketing/work-section";
+// Phase 6 HF3.3 — Landing surface deleted; route is redirect-only.
+//
+// Pre-launch (0-user) state: no need for the marketing landing page that
+// Phase 4.x had assembled (HeroBlock + ServicesTriad + etc.). The
+// post-Phase-6 product surface is the auth flow + workspace shell.
+//
+// Behavior:
+//   - Unauthenticated → /[locale]/signin
+//   - Authenticated   → /[locale]/app/projects
+//
+// Locale-aware redirect via next-intl @/i18n/routing helper preserves
+// the prefix the user landed on.
 
-// Re-validate landing at most every 5min so we don't hammer Supabase Storage
-// for signed cover URLs on every request.
-export const revalidate = 300;
+import { redirect } from "@/i18n/routing";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
 export default async function HomePage({ params }: Props) {
-  const { locale: rawLocale } = await params;
-  const locale: "ko" | "en" = rawLocale === "en" ? "en" : "ko";
-
-  return (
-    <main className="min-h-screen bg-background text-foreground">
-      <HeroBlock />
-      <ServicesTriad />
-      <ApproachBlock />
-      <SelectedWork locale={locale} />
-      <WorkSection locale={locale} />
-      <CommissionCtaBlock locale={locale} />
-      <JournalPreview locale={locale} />
-      <ContactBlock />
-      <SiteFooter locale={locale} pathname="/" />
-    </main>
-  );
+  const { locale } = await params;
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    redirect({ href: "/app/projects", locale });
+  } else {
+    redirect({ href: "/signin", locale });
+  }
 }
