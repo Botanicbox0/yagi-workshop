@@ -189,6 +189,333 @@ export type Database = {
           },
         ]
       }
+      campaign_categories: {
+        Row: {
+          campaign_id: string
+          description: string | null
+          display_order: number
+          format_spec: Json | null
+          id: string
+          name: string
+        }
+        Insert: {
+          campaign_id: string
+          description?: string | null
+          display_order?: number
+          format_spec?: Json | null
+          id?: string
+          name: string
+        }
+        Update: {
+          campaign_id?: string
+          description?: string | null
+          display_order?: number
+          format_spec?: Json | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_categories_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_distributions: {
+        Row: {
+          added_by: string | null
+          channel: string
+          comment_count: number | null
+          created_at: string
+          id: string
+          like_count: number | null
+          metric_log_notes: string | null
+          metric_logged_at: string | null
+          notes: string | null
+          posted_at: string
+          submission_id: string
+          updated_at: string
+          url: string
+          view_count: number | null
+        }
+        Insert: {
+          added_by?: string | null
+          channel: string
+          comment_count?: number | null
+          created_at?: string
+          id?: string
+          like_count?: number | null
+          metric_log_notes?: string | null
+          metric_logged_at?: string | null
+          notes?: string | null
+          posted_at?: string
+          submission_id: string
+          updated_at?: string
+          url: string
+          view_count?: number | null
+        }
+        Update: {
+          added_by?: string | null
+          channel?: string
+          comment_count?: number | null
+          created_at?: string
+          id?: string
+          like_count?: number | null
+          metric_log_notes?: string | null
+          metric_logged_at?: string | null
+          notes?: string | null
+          posted_at?: string
+          submission_id?: string
+          updated_at?: string
+          url?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_distributions_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_distributions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_review_decisions: {
+        Row: {
+          comment: string | null
+          decided_at: string
+          decision: string
+          id: string
+          reviewer_user_id: string
+          submission_id: string
+        }
+        Insert: {
+          comment?: string | null
+          decided_at?: string
+          decision: string
+          id?: string
+          reviewer_user_id: string
+          submission_id: string
+        }
+        Update: {
+          comment?: string | null
+          decided_at?: string
+          decision?: string
+          id?: string
+          reviewer_user_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_review_decisions_reviewer_user_id_fkey"
+            columns: ["reviewer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_review_decisions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_submissions: {
+        Row: {
+          applicant_email: string
+          applicant_name: string
+          applicant_phone: string | null
+          applicant_workspace_id: string | null
+          approved_at: string | null
+          campaign_id: string
+          category_id: string
+          content_r2_key: string | null
+          created_at: string
+          declined_at: string | null
+          description: string | null
+          distributed_at: string | null
+          duration_seconds: number | null
+          external_url: string | null
+          id: string
+          status: string
+          submitted_at: string
+          team_name: string | null
+          thumbnail_r2_key: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_email: string
+          applicant_name: string
+          applicant_phone?: string | null
+          applicant_workspace_id?: string | null
+          approved_at?: string | null
+          campaign_id: string
+          category_id: string
+          content_r2_key?: string | null
+          created_at?: string
+          declined_at?: string | null
+          description?: string | null
+          distributed_at?: string | null
+          duration_seconds?: number | null
+          external_url?: string | null
+          id?: string
+          status?: string
+          submitted_at?: string
+          team_name?: string | null
+          thumbnail_r2_key?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_email?: string
+          applicant_name?: string
+          applicant_phone?: string | null
+          applicant_workspace_id?: string | null
+          approved_at?: string | null
+          campaign_id?: string
+          category_id?: string
+          content_r2_key?: string | null
+          created_at?: string
+          declined_at?: string | null
+          description?: string | null
+          distributed_at?: string | null
+          duration_seconds?: number | null
+          external_url?: string | null
+          id?: string
+          status?: string
+          submitted_at?: string
+          team_name?: string | null
+          thumbnail_r2_key?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_submissions_applicant_workspace_id_fkey"
+            columns: ["applicant_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_submissions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          allow_external_url: boolean
+          allow_r2_upload: boolean
+          brief: string | null
+          compensation_metadata: Json | null
+          compensation_model: string | null
+          created_at: string
+          created_by: string
+          decision_metadata: Json | null
+          description: string | null
+          distribution_starts_at: string | null
+          external_sponsor_name: string | null
+          has_external_sponsor: boolean
+          id: string
+          reference_assets: Json | null
+          request_metadata: Json | null
+          slug: string
+          sponsor_workspace_id: string | null
+          status: string
+          submission_close_at: string | null
+          submission_open_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_external_url?: boolean
+          allow_r2_upload?: boolean
+          brief?: string | null
+          compensation_metadata?: Json | null
+          compensation_model?: string | null
+          created_at?: string
+          created_by: string
+          decision_metadata?: Json | null
+          description?: string | null
+          distribution_starts_at?: string | null
+          external_sponsor_name?: string | null
+          has_external_sponsor?: boolean
+          id?: string
+          reference_assets?: Json | null
+          request_metadata?: Json | null
+          slug: string
+          sponsor_workspace_id?: string | null
+          status?: string
+          submission_close_at?: string | null
+          submission_open_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_external_url?: boolean
+          allow_r2_upload?: boolean
+          brief?: string | null
+          compensation_metadata?: Json | null
+          compensation_model?: string | null
+          created_at?: string
+          created_by?: string
+          decision_metadata?: Json | null
+          description?: string | null
+          distribution_starts_at?: string | null
+          external_sponsor_name?: string | null
+          has_external_sponsor?: boolean
+          id?: string
+          reference_assets?: Json | null
+          request_metadata?: Json | null
+          slug?: string
+          sponsor_workspace_id?: string | null
+          status?: string
+          submission_close_at?: string | null
+          submission_open_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_sponsor_workspace_id_fkey"
+            columns: ["sponsor_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_judgments: {
         Row: {
           admin_id: string
