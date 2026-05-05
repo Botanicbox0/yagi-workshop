@@ -880,7 +880,9 @@
           "title": "Step 1 으로 돌아가 주세요",
           "description": "프로젝트가 아직 생성되지 않았어요. Step 1 의 [다음 →] 버튼을 눌러 시작해주세요.",
           "back": "← Step 2 로 돌아가기"
-        }
+        },
+        "external_brand_toggle": "외부 광고주가 있는 작업입니다",
+        "external_brand_helper": "(계약서 / brief 자료가 있다면 첨부 부탁드려요)"
       }
     },
     "status": {
@@ -1872,7 +1874,10 @@
         "branding": "브랜딩",
         "illustration": "일러스트",
         "other": "기타"
-      }
+      },
+      "field_external_brand_label": "외부 광고주 여부",
+      "external_brand_yes": "예",
+      "external_brand_no": "아니요"
     },
     "progress_tab": {
       "section": "상태 변경 이력",

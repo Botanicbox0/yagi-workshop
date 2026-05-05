@@ -1910,6 +1910,7 @@ export type Database = {
           deleted_at: string | null
           deliverable_types: string[]
           estimated_budget_range: string | null
+          has_external_brand_party: boolean
           has_plan: string | null
           id: string
           intake_mode: string
@@ -1946,6 +1947,7 @@ export type Database = {
           deleted_at?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
+          has_external_brand_party?: boolean
           has_plan?: string | null
           id?: string
           intake_mode?: string
@@ -1982,6 +1984,7 @@ export type Database = {
           deleted_at?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
+          has_external_brand_party?: boolean
           has_plan?: string | null
           id?: string
           intake_mode?: string

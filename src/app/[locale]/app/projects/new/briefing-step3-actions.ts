@@ -103,7 +103,7 @@ async function assertProjectMutationAuth(projectId: string): Promise<
 
 const commitInput = z.object({
   projectId: z.string().uuid(),
-  // All 5 fields optional. undefined = "don't change", null = "clear".
+  // All fields optional. undefined = "don't change", null = "clear".
   budget_band: z
     .enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"])
     .optional()
@@ -112,6 +112,8 @@ const commitInput = z.object({
   meeting_preferred_at: z.string().datetime().nullable().optional(),
   interested_in_twin: z.boolean().optional(),
   additional_notes: z.string().trim().max(2000).optional().nullable(),
+  // Phase 6 Wave B.2 — external brand party flag
+  has_external_brand_party: z.boolean().optional().default(false),
 });
 
 export type UpdateProjectCommitResult =
@@ -146,6 +148,7 @@ export async function updateProjectCommitAction(
     "meeting_preferred_at",
     "interested_in_twin",
     "additional_notes",
+    "has_external_brand_party",
   ] as const;
   for (const f of fields) {
     const v = parsed.data[f];

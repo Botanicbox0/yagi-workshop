@@ -65,6 +65,8 @@ type ProjectDetail = {
   additional_notes: string | null;
   interested_in_twin: boolean | null;
   submitted_at: string | null;
+  // Phase 6 Wave B.2
+  has_external_brand_party: boolean;
 };
 
 function parseTab(value: string | undefined): TabKey {
@@ -129,6 +131,7 @@ export default async function ProjectDetailPage({
       visual_ratio, visual_ratio_custom,
       channels, target_audience, additional_notes,
       interested_in_twin, submitted_at,
+      has_external_brand_party,
       brand:brands(id, name),
       workspace:workspaces(id, name)
     `
@@ -190,6 +193,10 @@ export default async function ProjectDetailPage({
         : (projectRaw.interested_in_twin as boolean),
     submitted_at:
       (projectRaw.submitted_at as string | undefined | null) ?? null,
+    // Phase 6 Wave B.2 — boolean NOT NULL DEFAULT false; coerce undefined
+    // (pre-migration or types-regen pending) to false for backwards compat.
+    has_external_brand_party:
+      (projectRaw.has_external_brand_party as boolean | undefined) ?? false,
   };
 
   // Fetch creator display name for the brief tab Stage 3 metadata.
@@ -512,6 +519,7 @@ export default async function ProjectDetailPage({
             target_delivery_at={project.target_delivery_at}
             meeting_preferred_at={project.meeting_preferred_at}
             interested_in_twin={project.interested_in_twin}
+            has_external_brand_party={project.has_external_brand_party}
             submitted_at={project.submitted_at}
             creator_display_name={creatorDisplayName}
             labels={{
@@ -532,6 +540,10 @@ export default async function ProjectDetailPage({
               field_target_delivery_at: tDetail("brief_tab.field_target_delivery_at"),
               field_meeting_preferred_at: tDetail("brief_tab.field_meeting_preferred_at"),
               field_interested_in_twin: tDetail("brief_tab.field_interested_in_twin"),
+              // Phase 6 Wave B.2
+              field_external_brand_label: tDetail("brief_tab.field_external_brand_label"),
+              external_brand_yes: tDetail("brief_tab.external_brand_yes"),
+              external_brand_no: tDetail("brief_tab.external_brand_no"),
               field_submitted_at: tDetail("brief_tab.field_submitted_at"),
               field_creator: tDetail("brief_tab.field_creator"),
               empty_dash: tDetail("brief_tab.empty_dash"),

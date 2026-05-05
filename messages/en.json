@@ -880,7 +880,9 @@
           "title": "Please go back to Step 1",
           "description": "The project hasn't been created yet. Press [Next →] on Step 1 to begin.",
           "back": "← Back to Step 2"
-        }
+        },
+        "external_brand_toggle": "This includes a third-party Brand",
+        "external_brand_helper": "(Attach the contract or brief if available)"
       }
     },
     "status": {
@@ -1807,7 +1809,10 @@
         "branding": "Branding",
         "illustration": "Illustration",
         "other": "Other"
-      }
+      },
+      "field_external_brand_label": "External brand party",
+      "external_brand_yes": "Yes",
+      "external_brand_no": "No"
     },
     "progress_tab": {
       "section": "Status history",

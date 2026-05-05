@@ -77,6 +77,7 @@ type CommitFormData = {
   meeting_preferred_at: string;
   interested_in_twin: boolean;
   additional_notes: string;
+  has_external_brand_party: boolean;
 };
 
 type AutosaveState = "idle" | "saving" | "saved" | "error" | "stale";
@@ -106,6 +107,7 @@ type ProjectRow = {
   meeting_preferred_at: string | null;
   interested_in_twin: boolean | null;
   additional_notes: string | null;
+  has_external_brand_party: boolean | null;
 };
 
 const EMPTY_COMMIT: CommitFormData = {
@@ -114,6 +116,7 @@ const EMPTY_COMMIT: CommitFormData = {
   meeting_preferred_at: "",
   interested_in_twin: false,
   additional_notes: "",
+  has_external_brand_party: false,
 };
 
 function formatSavedAt(iso?: string): string {
@@ -165,7 +168,7 @@ export function BriefingCanvasStep3({
         sb
           .from("projects")
           .select(
-            "title, deliverable_types, brief, mood_keywords, visual_ratio, channels, target_audience, budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin, additional_notes",
+            "title, deliverable_types, brief, mood_keywords, visual_ratio, channels, target_audience, budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin, additional_notes, has_external_brand_party",
           )
           .eq("id", projectId)
           .maybeSingle(),
@@ -205,6 +208,7 @@ export function BriefingCanvasStep3({
           : "",
         interested_in_twin: proj?.interested_in_twin ?? false,
         additional_notes: proj?.additional_notes ?? "",
+        has_external_brand_party: proj?.has_external_brand_party ?? false,
       };
       setForm(seed);
       lastCommittedRef.current = JSON.stringify(seed);
@@ -241,6 +245,7 @@ export function BriefingCanvasStep3({
             : null,
         interested_in_twin: snapshot.interested_in_twin,
         additional_notes: snapshot.additional_notes || null,
+        has_external_brand_party: snapshot.has_external_brand_party,
       });
       if (res.ok) {
         lastCommittedRef.current = JSON.stringify(snapshot);
@@ -574,6 +579,38 @@ export function BriefingCanvasStep3({
                 </div>
               </div>
             </div>
+          {/* External brand party toggle — Phase 6 Wave B.2 */}
+          <div className="border-t border-border/30 pt-6">
+            <div
+              className={cn(
+                "rounded-2xl p-4 flex items-start gap-3",
+                form.has_external_brand_party
+                  ? "bg-amber-50 border border-amber-200"
+                  : "border border-border/40",
+              )}
+            >
+              <input
+                type="checkbox"
+                id="external-brand-toggle"
+                checked={form.has_external_brand_party}
+                onChange={(e) =>
+                  set("has_external_brand_party", e.target.checked)
+                }
+                className="mt-1"
+              />
+              <div className="flex flex-col gap-1 min-w-0">
+                <Label
+                  htmlFor="external-brand-toggle"
+                  className="text-sm font-semibold cursor-pointer keep-all"
+                >
+                  {t("briefing.step3.external_brand_toggle")}
+                </Label>
+                <p className="text-xs text-muted-foreground keep-all leading-relaxed">
+                  {t("briefing.step3.external_brand_helper")}
+                </p>
+              </div>
+            </div>
+          </div>
           </section>
 
           {/* Final notes */}

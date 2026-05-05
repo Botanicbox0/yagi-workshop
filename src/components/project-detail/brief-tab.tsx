@@ -54,6 +54,8 @@ export type BriefTabProps = {
   target_delivery_at: string | null;
   meeting_preferred_at: string | null;
   interested_in_twin: boolean | null;
+  // Phase 6 Wave B.2
+  has_external_brand_party: boolean;
 
   // Stage 3 (submit meta)
   submitted_at: string | null;
@@ -85,6 +87,10 @@ export type BriefTabLabels = {
   field_target_delivery_at: string;
   field_meeting_preferred_at: string;
   field_interested_in_twin: string;
+  // Phase 6 Wave B.2 — external brand party (read-only, Stage 2)
+  field_external_brand_label: string;
+  external_brand_yes: string;
+  external_brand_no: string;
   // Stage 3 field labels
   field_submitted_at: string;
   field_creator: string;
@@ -234,6 +240,7 @@ export function BriefTab({
   target_delivery_at,
   meeting_preferred_at,
   interested_in_twin,
+  has_external_brand_party,
   submitted_at,
   creator_display_name,
   labels,
@@ -376,6 +383,20 @@ export function BriefTab({
             }
           >
             {resolvedInterestedInTwin}
+          </span>
+        </FieldRow>
+        {/* Phase 6 Wave B.2 — 외부 광고주 여부 */}
+        <FieldRow label={labels.field_external_brand_label}>
+          <span
+            className={
+              has_external_brand_party
+                ? "font-medium text-foreground"
+                : "text-muted-foreground"
+            }
+          >
+            {has_external_brand_party
+              ? labels.external_brand_yes
+              : labels.external_brand_no}
           </span>
         </FieldRow>
       </SectionCard>

@@ -109,6 +109,28 @@ Owner / Status / Registered).
 - **Status**: deferred.
 - **Registered**: 2026-05-05 (Phase 6 Wave A K-06 finding 10, LOW).
 
+## FU-6-B2-K05-F4-projects-update-rls-client-branch
+
+- **Trigger**: Phase 3.0 migration (20260427164421) added a client
+  creator branch to `projects_update` policy (client: `auth.uid() =
+  created_by AND status = 'draft' AND deleted_at IS NULL`). This branch
+  was subsequently overwritten by Phase 2.8.2 soft-delete migration
+  (20260428000000) and hardening (20260428030000). The effective policy
+  has only `ws_admin` and `yagi_admin` branches.
+- **Risk**: LOW in practice. All project creators are `ws_admin` of
+  their own workspace (bootstrap_workspace grants workspace_admin on
+  creation). The practical client autosave path is unaffected because
+  creators are ws_admins. Risk surfaces only if a ws_member (not admin)
+  creates a project — currently blocked by projects_insert RLS anyway.
+- **Action**: Re-add client creator branch in next projects RLS
+  migration to make the intent explicit and future-proof for
+  Member-created projects. Pattern: `(auth.uid() = created_by AND
+  status = 'draft' AND deleted_at IS NULL)`.
+- **Owner**: builder (Phase 7 candidate, pre-Member-role expansion).
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 Wave B.2 K-05 LOOP-1 finding 4,
+  MED-B).
+
 ## FU-6-A-orphan-artist-workspace-gc
 
 - **Trigger**: After auth user delete (now ON DELETE CASCADE on
