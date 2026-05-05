@@ -881,7 +881,7 @@
           "description": "The project hasn't been created yet. Press [Next →] on Step 1 to begin.",
           "back": "← Back to Step 2"
         },
-        "external_brand_toggle": "This includes a third-party Brand",
+        "external_brand_toggle": "This work involves an external advertiser",
         "external_brand_helper": "(Attach the contract or brief if available)"
       }
     },

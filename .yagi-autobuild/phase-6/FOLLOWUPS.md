@@ -131,6 +131,68 @@ Owner / Status / Registered).
 - **Registered**: 2026-05-05 (Phase 6 Wave B.2 K-05 LOOP-1 finding 4,
   MED-B).
 
+## FU-6-B-K06-F3-brief-tab-external-brand-emphasis
+
+- **Trigger**: Read-only "외부 광고주 여부" row in project detail brief
+  tab Stage 2 uses `font-medium text-foreground` for "예" — visually
+  weaker than the adjacent `field_interested_in_twin` row which applies
+  sage `text-[#71D083] font-medium` for the active state. yagi_admin
+  scanning Stage 2 may not catch operational signal at first glance.
+- **Risk**: LOW. Cosmetic emphasis; no functional impact. yagi_admin
+  audience.
+- **Action**: Align with twin row recipe — `text-[#71D083] font-semibold`
+  when `has_external_brand_party = true`. Or use `font-semibold
+  text-foreground` + thin sage left-border on active rows.
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 Wave B K06_B finding 3, MED).
+
+## FU-6-B-K06-F4-shadcn-checkbox-migration
+
+- **Trigger**: Step 3 toggle uses native `<input type="checkbox">` per
+  twin-toggle precedent. Native checkbox renders with platform chrome
+  (Windows blue / macOS blue) breaking the dark-friendly token system.
+  Spec called for shadcn `<Checkbox>` (already in repo at
+  `src/components/ui/checkbox.tsx`).
+- **Risk**: LOW. Visual inconsistency only; no security/data issue.
+- **Action**: Migrate BOTH checkboxes (twin + external-brand) to shadcn
+  `<Checkbox>` in a single sweep so the form is internally consistent
+  and platform-token compliant.
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 Wave B K06_B finding 4, MED).
+
+## FU-6-B-K06-F5-ko-helper-brief-loanword
+
+- **Trigger**: KO helper string `"(계약서 / brief 자료가 있다면 첨부 부탁
+  드려요)"` embeds English "brief" mid-sentence. Hard Rule #4 forbids
+  EN tracking on KO text; "brief" here is loanword usage but flips KO
+  typographic register.
+- **Risk**: LOW. Cosmetic register break; no functional issue.
+- **Action**: Spec amendment first (PRODUCT-MASTER §M update) — replace
+  "brief 자료" with "기획안" or "브리프 자료" (Hangul transliteration).
+  Then update i18n value.
+- **Owner**: yagi (spec-amendment) + builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 Wave B K06_B finding 5, LOW).
+
+## FU-6-B-twin-toggle-emerald-to-sage
+
+- **Trigger**: Pre-existing twin toggle at briefing-canvas-step-3.tsx
+  ~line 537 uses `bg-emerald-50 border-emerald-200` — same Hard Rule #1
+  violation pattern Wave A K-06 F2 fixed (amber → sage) and Wave B
+  K-06 F1 fixed (amber → sage). Surfaced during K-06 LOOP-2 audit but
+  pre-existing (Phase 5 territory), so flagged here for follow-up
+  rather than expanded Wave B scope.
+- **Risk**: LOW. Cosmetic Hard Rule violation; no functional impact.
+- **Action**: Replace `bg-emerald-50 border-emerald-200` → `bg-[#71D083]/10
+  border-[#71D083]/50` (matching the post-Wave-B external-brand toggle
+  recipe). Keep adjacent siblings visually consistent.
+- **Owner**: builder.
+- **Status**: deferred.
+- **Registered**: 2026-05-05 (Phase 6 Wave B K06_B audit — incidental
+  finding outside Wave B scope, MED).
+
 ## FU-6-A-orphan-artist-workspace-gc
 
 - **Trigger**: After auth user delete (now ON DELETE CASCADE on
