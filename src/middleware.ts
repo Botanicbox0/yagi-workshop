@@ -61,6 +61,9 @@ export const config = {
     // Phase 4.x Wave C.5c sub_01 — `auth/confirm` added (PKCE
     // intermediate verify endpoint; same locale-free shape as
     // auth/callback).
-    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|.*\\..*).*)",
+    // Phase 7 Wave A.4 — `campaigns` added (locale-free public landing
+    // at /campaigns and /campaigns/[slug]; parallel to showcase +
+    // challenges).
+    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|campaigns|.*\\..*).*)",
   ],
 };
