@@ -2095,12 +2095,6 @@
       "banner_for_client": "Admin has locked this board. Editing disabled."
     }
   },
-  "workspace_switcher": {
-    "current_label": "Current workspace",
-    "group_brand": "Brand",
-    "group_artist": "Artist",
-    "add_new": "+ New workspace"
-  },
   "admin_artists": {
     "title": "Roster",
     "invite_cta": "+ Invite new Artist",

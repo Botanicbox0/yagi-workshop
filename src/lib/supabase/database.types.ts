@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           instagram_handle: string | null
+          owner_user_id: string
           short_bio: string | null
           twin_r2_prefix: string | null
           twin_status: string
@@ -36,6 +37,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           instagram_handle?: string | null
+          owner_user_id: string
           short_bio?: string | null
           twin_r2_prefix?: string | null
           twin_status?: string
@@ -50,6 +52,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           instagram_handle?: string | null
+          owner_user_id?: string
           short_bio?: string | null
           twin_r2_prefix?: string | null
           twin_status?: string

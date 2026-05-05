@@ -45,12 +45,19 @@ export async function checkArtistOnboardingGate(
 
   if (error) {
     console.error("[artistOnboardingGate] artist_profile fetch error:", error);
-    // On error, don't block the user — let them through
-    return null;
+    // K-05 hardening (Wave A LOOP-1): on fetch error redirect to onboarding
+    // rather than silently letting the user through. The onboarding page is
+    // the safe-by-default landing surface for an Artist workspace whose
+    // profile state cannot be confirmed.
+    return `/${locale}/onboarding/artist`;
   }
 
-  // instagram_handle IS NULL → onboarding not completed
-  if (profile && profile.instagram_handle === null) {
+  // K-05 hardening: missing profile row OR instagram_handle IS NULL both
+  // indicate onboarding is not complete. Previously only the latter
+  // redirected, so a partial-state invite (workspace+member created but
+  // artist_profile insert failed) would let the Artist into /app/* without
+  // ever completing onboarding.
+  if (!profile || profile.instagram_handle === null) {
     return `/${locale}/onboarding/artist`;
   }
 

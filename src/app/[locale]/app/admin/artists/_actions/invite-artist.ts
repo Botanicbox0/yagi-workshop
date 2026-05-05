@@ -128,13 +128,46 @@ export async function inviteArtistAction(
     .select("id")
     .single();
 
+  // K-05 hardening (Wave A LOOP-1): partial-state cleanup. Each insert
+  // failure below MUST roll back upstream side effects (auth user + any
+  // workspace row already created). Otherwise an admin retry would either
+  // duplicate the invite or leave orphan rows that the next invite cycle
+  // cannot reconcile.
+  //
+  // Cleanup chain:
+  //   - workspace_members + artist_profile cascade-delete via FK ON DELETE
+  //     CASCADE when the workspace row is deleted (artist_profile.workspace_id
+  //     and workspace_members.workspace_id both cascade).
+  //   - auth user is deleted via auth.admin.deleteUser().
+  //
+  // Cleanup is best-effort: if cleanup itself fails we log loudly so yagi
+  // can reconcile manually, but we always return the original error to the
+  // caller so the UI surfaces the real failure cause.
+  async function cleanupAuthUser() {
+    const { error: delErr } = await sbAdmin.auth.admin.deleteUser(invitedUserId);
+    if (delErr) {
+      console.error(
+        "[inviteArtistAction] cleanup: auth.admin.deleteUser failed — manual reconcile needed",
+        { invitedUserId, email, delErr }
+      );
+    }
+  }
+  async function cleanupWorkspace(wsId: string) {
+    const { error: delErr } = await sbAdmin
+      .from("workspaces")
+      .delete()
+      .eq("id", wsId);
+    if (delErr) {
+      console.error(
+        "[inviteArtistAction] cleanup: workspaces delete failed — manual reconcile needed",
+        { workspaceId: wsId, delErr }
+      );
+    }
+  }
+
   if (wsErr || !wsData) {
     console.error("[inviteArtistAction] workspace insert error:", wsErr);
-    // Best-effort: user was already invited; log orphan for manual cleanup
-    console.error(
-      "[inviteArtistAction] ORPHAN: auth user created but workspace insert failed",
-      { invitedUserId, email }
-    );
+    await cleanupAuthUser();
     return {
       ok: false,
       error: "db",
@@ -155,16 +188,16 @@ export async function inviteArtistAction(
 
   if (memberErr) {
     console.error("[inviteArtistAction] workspace_members insert error:", memberErr);
-    console.error(
-      "[inviteArtistAction] ORPHAN: workspace created but member insert failed",
-      { workspaceId, invitedUserId, email }
-    );
+    await cleanupWorkspace(workspaceId);
+    await cleanupAuthUser();
     return { ok: false, error: "db", message: memberErr.message };
   }
 
-  // 9. INSERT artist_profile (instagram_handle = NULL per A.1 schema design)
+  // 9. INSERT artist_profile (instagram_handle = NULL per A.1 schema design;
+  //    owner_user_id = invitedUserId per K-05 F1 owner-scoped RLS hardening).
   const { error: profileErr } = await sbAdmin.from("artist_profile").insert({
     workspace_id: workspaceId,
+    owner_user_id: invitedUserId,
     display_name: displayName,
     short_bio: shortBio ?? null,
     instagram_handle: null,
@@ -176,10 +209,10 @@ export async function inviteArtistAction(
 
   if (profileErr) {
     console.error("[inviteArtistAction] artist_profile insert error:", profileErr);
-    console.error(
-      "[inviteArtistAction] ORPHAN: workspace+member created but artist_profile insert failed",
-      { workspaceId, invitedUserId, email }
-    );
+    // Cascade: deleting the workspace removes workspace_members + (if it had been
+    // inserted) artist_profile via ON DELETE CASCADE FKs.
+    await cleanupWorkspace(workspaceId);
+    await cleanupAuthUser();
     return { ok: false, error: "db", message: profileErr.message };
   }
 

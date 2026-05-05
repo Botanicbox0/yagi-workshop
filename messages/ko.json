@@ -2160,24 +2160,18 @@
       "banner_for_client": "관리자가 보드를 잠갔습니다. 편집할 수 없습니다."
     }
   },
-  "workspace_switcher": {
-    "current_label": "현재 워크스페이스",
-    "group_brand": "브랜드",
-    "group_artist": "아티스트",
-    "add_new": "+ 새 워크스페이스 만들기"
-  },
   "admin_artists": {
     "title": "소속 아티스트",
-    "invite_cta": "+ 새 Artist 영입",
+    "invite_cta": "+ 새 아티스트 영입",
     "table_heading": "아티스트 명단",
     "table_empty": "아직 영입된 아티스트가 없습니다.",
     "column_name": "이름",
-    "column_email": "email",
+    "column_email": "이메일",
     "column_instagram": "Instagram",
     "column_joined_at": "가입일",
     "column_status": "상태",
-    "status_invite_pending": "⏳ invite 완료",
-    "status_onboarding": "⏳ onboarding",
+    "status_invite_pending": "⏳ 초대 발송",
+    "status_onboarding": "⏳ 온보딩 중",
     "status_active": "✅ 활성",
     "form_email": "이메일",
     "form_display_name": "아티스트 이름",

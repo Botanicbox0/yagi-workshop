@@ -1,0 +1,13 @@
+## VERDICT: NEEDS-ATTENTION
+
+[FINDING 1] HIGH-B: `supabase/migrations/20260505000000_phase_6_artist_profile.sql:77` — `artist_profile` SELECT/UPDATE is scoped to “any workspace member,” not the invited artist owner. If an Artist workspace ever has a second member, that user can read/update the profile display fields and complete onboarding. Recommended fix: add an owner identity to `artist_profile` such as `owner_user_id`, populate it from `invitedUserId`, and make SELECT/UPDATE/onboarding resolution require `owner_user_id = auth.uid()` unless `is_yagi_admin`.
+
+[FINDING 2] HIGH-B: `src/lib/auth/artist-onboarding-gate.ts:53` — missing `artist_profile` rows pass the `/app/*` onboarding gate because only `profile && instagram_handle === null` redirects. If invite provisioning fails after workspace/member creation, the Artist can enter app surfaces without completing onboarding. Recommended fix: treat `!profile || profile.instagram_handle === null` as blocked, or redirect to onboarding where the missing profile is repaired or shown as a clean blocking error.
+
+[FINDING 3] MED-A: `src/app/[locale]/app/admin/artists/_actions/invite-artist.ts:131` — partial-state cleanup is logging-only. After invite success, workspace/member/profile insert failures leave orphan auth users or workspaces despite the spec asking for best-effort cleanup. Recommended fix: on failure, best-effort delete the auth user and/or created workspace; deleting workspace should cascade `workspace_members`/`artist_profile`.
+
+[FINDING 4] MED-A: `src/app/[locale]/onboarding/artist/_actions/complete-onboarding.ts:30` — `"@"` passes `.min(1)` before transform and stores an empty string, which makes the gate consider onboarding complete. Recommended fix: normalize first, then validate non-empty with an Instagram-safe regex and length check.
+
+RLS audit: `instagram_handle` and `updated_at` are granted at migration lines 132-133, so `completeArtistOnboardingAction`’s user-scoped update is column-grant permitted. Invite provisioning uses `createSupabaseService()` after the yagi_admin check, writes deterministic `kind: "artist"`, uses `inviteData.user.id`, and writes the returned workspace id. KO new namespaces had no listed internal-term leakage; EN “Roster” is allowed. Targeted ESLint on scoped TS/TSX files passed.
+
+Summary: core yagi_admin invite gating is sound, but owner-vs-member RLS and missing-profile gate handling need fixes before ff-merge.

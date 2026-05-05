@@ -1,0 +1,7 @@
+## VERDICT: NEEDS-ATTENTION
+
+[FINDING 1] MED-A: `supabase/migrations/20260505123000_phase_6_artist_profile_owner_hardening.sql:44` — `owner_user_id` is declared with `ON DELETE SET NULL`, then made `NOT NULL` at line 56. Deleting the referenced auth user will fail instead of producing the documented NULL owner state. Recommended fix: align the FK action with intent, preferably `ON DELETE CASCADE` if the profile should disappear with the Artist auth user, or `ON DELETE RESTRICT/NO ACTION` with explicit admin reconciliation ordering.
+
+[FINDING 2] MED-A: `src/app/[locale]/onboarding/artist/_actions/complete-onboarding.ts:37` — the new schema fixes `"@"` but still bypasses the repo’s stricter Instagram validator. It accepts handles like `.yagi`, `yagi.`, and `ya..gi`, while `src/lib/handles/instagram.ts:6` rejects leading/trailing/consecutive dots and canonicalizes lowercase. Recommended fix: reuse `validateInstagramHandle()` or mirror `INSTAGRAM_HANDLE_REGEX`, then store the canonical value.
+
+One-line summary: Owner-scoped RLS, invited-user wiring, cleanup ordering, and the missing-profile gate look sound, but the FK delete action and Instagram validation still need inline fixes before ff-merge.

@@ -26,15 +26,16 @@
 
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { validateInstagramHandle } from "@/lib/handles/instagram";
 
+// K-05 LOOP-2 hardening: validate via the shared validateInstagramHandle()
+// rather than a local regex. The shared validator enforces the full Instagram
+// rule set (1-30, letters/digits/period/underscore, no consecutive dots, no
+// leading/trailing dot) AND returns a canonical (lowercased) form, matching
+// the rest of the codebase (Phase 2.5 G2). LOOP-1 fixed the empty-after-strip
+// case; LOOP-2 closes the gap on dot-edge handles like ".yagi" or "ya..gi".
 const completeOnboardingInput = z.object({
-  instagramHandle: z
-    .string()
-    .trim()
-    .min(1)
-    .max(30)
-    // Strip leading @ if present — store without @
-    .transform((v) => v.replace(/^@/, "")),
+  instagramHandle: z.string().min(1).max(64),
 });
 
 export type CompleteArtistOnboardingResult =
@@ -53,12 +54,20 @@ export type CompleteArtistOnboardingResult =
 export async function completeArtistOnboardingAction(
   input: unknown
 ): Promise<CompleteArtistOnboardingResult> {
-  // 1. Validate input
+  // 1. Validate input — first the surface shape via zod, then the
+  //    Instagram-handle rule set via the shared validator (Phase 2.5 G2).
+  //    The validator strips leading @, rejects empty/too-long/invalid-chars/
+  //    consecutive-dots/leading-or-trailing-dot, and returns a canonical
+  //    (lowercased) form for storage.
   const parsed = completeOnboardingInput.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: "validation", message: parsed.error.message };
   }
-  const { instagramHandle } = parsed.data;
+  const handleResult = validateInstagramHandle(parsed.data.instagramHandle);
+  if (!handleResult.valid) {
+    return { ok: false, error: "validation", message: handleResult.error ?? "invalid" };
+  }
+  const instagramHandle = handleResult.canonical;
 
   // 2. Authenticate caller
   const supabase = await createSupabaseServer();

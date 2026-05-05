@@ -1,9 +1,13 @@
 // Phase 6 Wave A.3 — /admin/artists
 //
 // Shows the full 소속 아티스트 list with status column:
-//   ⏳ invite 완료  — magic-link sent but email_confirmed_at IS NULL
-//   ⏳ onboarding   — email confirmed but instagram_handle IS NULL
-//   ✅ 활성          — email confirmed + instagram_handle set
+//   ⏳ 초대 발송  — magic-link sent but email_confirmed_at IS NULL
+//   ⏳ 온보딩 중  — email confirmed but instagram_handle IS NULL
+//   ✅ 활성       — email confirmed + instagram_handle set
+//
+// Status column tonality: stays inside the yagi-design-system v1.0
+// sage-only accent rule. invite_pending = muted-foreground (gray);
+// onboarding = foreground/70 (dim); active = sage. No amber/blue/etc.
 //
 // Page-level auth gate: notFound() for any non-yagi_admin caller.
 // The parent admin/layout.tsx already redirects non-admins, but we
@@ -210,7 +214,7 @@ export default async function AdminArtistsPage({ params }: Props) {
                           </span>
                         )}
                         {sk === "onboarding" && (
-                          <span className="text-amber-600 dark:text-amber-400">
+                          <span className="text-foreground/70">
                             {t("status_onboarding")}
                           </span>
                         )}
