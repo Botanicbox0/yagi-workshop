@@ -173,13 +173,17 @@
   },
   "nav": {
     "groups": {
-      "work": "Workspace",
+      "work": "Work",
       "communication": "Communication",
       "billing": "Billing",
-      "system": "System"
+      "system": "System",
+      "operations": "Operations"
     },
+    "new_project_cta": "Start a project",
     "dashboard": "Dashboard",
     "projects": "Projects",
+    "campaign_request": "Request a campaign",
+    "my_submissions": "My submissions",
     "recommended_artist": "Recommended artists",
     "showcases": "Showcases",
     "storyboards": "Storyboards",

@@ -173,13 +173,17 @@
   },
   "nav": {
     "groups": {
-      "work": "워크스페이스",
+      "work": "작업",
       "communication": "소통",
-      "billing": "결제",
-      "system": "시스템"
+      "billing": "정산",
+      "system": "시스템",
+      "operations": "운영"
     },
+    "new_project_cta": "새 프로젝트 시작",
     "dashboard": "대시보드",
     "projects": "프로젝트",
+    "campaign_request": "캠페인 요청",
+    "my_submissions": "내 응모작",
     "recommended_artist": "추천 Artist",
     "showcases": "쇼케이스",
     "storyboards": "스토리보드",
@@ -192,7 +196,7 @@
     "notifications": "알림",
     "preprod": "사전제작",
     "invoices": "받은 송장",
-    "billing_group": "결제",
+    "billing_group": "정산",
     "challenges": "챌린지",
     "challenges_all": "전체",
     "challenges_new": "새 챌린지",

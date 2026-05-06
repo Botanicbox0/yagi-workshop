@@ -10,11 +10,12 @@ import {
   Settings,
   ShieldCheck,
   MessageSquare,
-  Trophy,
   Briefcase,
   LayoutDashboard,
   Sparkles,
-  Mailbox,
+  Plus,
+  FolderOpen,
+  Megaphone,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,15 @@ import {
 import { SidebarGroupLabel } from "./sidebar-group-label";
 import type { ProfileRole, WorkspaceRole } from "@/lib/app/context";
 
+// Wave C v2 — kept in sync with WorkspaceItem.kind in workspace-switcher.tsx
+// and WorkspaceKind in lib/workspace/active.ts.
+type WorkspaceKindForNav =
+  | "brand"
+  | "agency"
+  | "artist"
+  | "creator"
+  | "yagi_admin";
+
 type NavItem = {
   key: string;
   href?: string;
@@ -37,63 +47,76 @@ type NavItem = {
    *  via OR — passing either gate makes the item visible. If both are unset, item
    *  is visible to everyone. */
   roles?: WorkspaceRole[];
-  /** Visible if user's `profile.role` matches one of these. See ADR-009 for why
-   *  profile-role and workspace-role are split. */
+  /** Visible if user's `profile.role` matches one of these. */
   profileRoles?: ProfileRole[];
+  /** Wave C v2 — gate by the active workspace's `kind`. When set, the entry
+   *  is visible only if the user's currently active workspace's kind is in
+   *  this list. Combined AND with role gates when both present. */
+  kinds?: WorkspaceKindForNav[];
   children?: NavItem[];
 };
 
 type NavGroup = {
-  key: "work" | "communication" | "billing" | "system";
+  key: "work" | "communication" | "billing" | "system" | "operations";
   items: NavItem[];
 };
 
+// Wave C v2 IA refactor (per SPEC §C.0 / PRODUCT-MASTER §C.0.5):
+//   - work group filtered by activeWorkspaceKind:
+//     - brand/artist/yagi_admin → dashboard + projects + campaign_request +
+//       recommended_artist (disabled placeholder, brand only)
+//     - creator → my_submissions only
+//   - communication: meetings (brand/artist/yagi_admin), team (yagi-internal injected)
+//   - billing: invoices (workspace_admin) + admin_invoices (yagi_admin)
+//   - system: settings (everyone)
+//   - operations (NEW): admin (yagi_admin only — single entry, sub-tools via
+//     /app/admin dashboard 7-card grid)
+//
+// Removed from prior IAs (now hidden in sidebar; reach via admin dashboard):
+//   - challenges parent + 3 children
+//   - campaigns parent + 3 children
+//   - admin_commissions
+//   - admin_trash
+//   - admin_support
 const GROUPS: NavGroup[] = [
   {
     key: "work",
     items: [
       {
-        // Phase 4.x task_05: Brand workspace dashboard. First WORK item
-        // per KICKOFF section task_05 spec; sits above 프로젝트.
         key: "dashboard",
         href: "/app/dashboard",
         icon: LayoutDashboard,
+        kinds: ["brand", "artist", "yagi_admin"],
       },
       {
-        // Phase 2.7.2: projects hub restored as the canonical commission
-        // surface (Option C — funnel split). `/commission` stays as the
-        // public-facing landing form for anonymous intake; once a user is
-        // logged in, `/app/projects` is the hub (full 4-step wizard,
-        // references, review). Visible to every authenticated user;
-        // admin/internal members rely on this entry to QA the client
-        // flow without leaving to the public site.
         key: "projects",
         href: "/app/projects",
         icon: Briefcase,
+        kinds: ["brand", "artist", "yagi_admin"],
       },
       {
-        // Phase 4.x task_05 + Q-103: 추천 Artist disabled placeholder
-        // for Phase 7+. Renders as a disabled link with 'Coming soon'
-        // tooltip. Q-103 option A: 라이선스 entry is HIDDEN (Phase 6+),
-        // intentionally not added here.
+        // Wave C v2 — sponsor-eligible workspaces request a campaign here
+        // (Wave B entry, kept as a regular nav item inside work group; the
+        // top-of-sidebar CTA is reserved for [+ 새 프로젝트 시작] per §C.0.5).
+        key: "campaign_request",
+        href: "/app/campaigns/request",
+        icon: Megaphone,
+        kinds: ["brand", "artist"],
+      },
+      {
+        // Wave C creator dashboard — only entry visible to creator workspaces.
+        key: "my_submissions",
+        href: "/app/my-submissions",
+        icon: FolderOpen,
+        kinds: ["creator"],
+      },
+      {
+        // Phase 4.x + Wave C v2 IA matrix — disabled placeholder, brand only.
         key: "recommended_artist",
         icon: Sparkles,
         disabled: true,
+        kinds: ["brand"],
       },
-      {
-        // Phase 2.5 admin challenge console — yagi_admin only.
-        key: "challenges",
-        icon: Trophy,
-        roles: ["yagi_admin"],
-        children: [
-          { key: "challenges_all", href: "/app/admin/challenges" },
-          { key: "challenges_new", href: "/app/admin/challenges/new" },
-          { key: "challenges_open", href: "/app/admin/challenges?state=open" },
-        ],
-      },
-      // Phase 2.7.1: preprod / showcases / storyboards / brands removed
-      // from the active sidebar. Routes still work for direct navigation;
-      // phasing out from primary IA per visibility pass.
     ],
   },
   {
@@ -103,15 +126,9 @@ const GROUPS: NavGroup[] = [
         key: "meetings",
         href: "/app/meetings",
         icon: CalendarDays,
-        roles: ["workspace_admin", "workspace_member"],
+        kinds: ["brand", "artist", "yagi_admin"],
       },
-      // Phase 2.8.5 — `notifications` removed from sidebar. Yagi:
-      // duplicates the top-right bell + the route surfaced an error.
-      // The /app/notifications page itself stays (the bell links to
-      // it); only the sidebar entry is gone. The `nav.notifications`
-      // i18n key is preserved in messages/* — the bell's tooltip and
-      // the page header still read it.
-      // `team` is injected at render time when the user is a yagi-internal member.
+      // `team` is runtime-injected for yagi-internal members.
     ],
   },
   {
@@ -134,26 +151,20 @@ const GROUPS: NavGroup[] = [
   {
     key: "system",
     items: [
+      // Wave C v2: only settings remains. admin_commissions / admin_trash /
+      // admin_support reachable via admin dashboard 7-card grid.
       { key: "settings", href: "/app/settings", icon: Settings },
-      { key: "admin", href: "/app/admin", icon: ShieldCheck, roles: ["yagi_admin"] },
+    ],
+  },
+  {
+    // Wave C v2 NEW group — yagi_admin only. Single entry; sub-tools via
+    // the admin dashboard's 7-card grid.
+    key: "operations",
+    items: [
       {
-        // G3 lands /app/admin/commissions queue + [id] response form.
-        key: "admin_commissions",
-        href: "/app/admin/commissions",
-        icon: Mailbox,
-        roles: ["yagi_admin"],
-      },
-      {
-        // Phase 2.8.2 G_B2_A — yagi_admin trash console for soft-deleted
-        // projects. 3-day undelete window + permanent delete action.
-        key: "admin_trash",
-        href: "/app/admin/trash",
-        roles: ["yagi_admin"],
-      },
-      {
-        // Phase 2.8.6 — yagi_admin support chat reply surface.
-        key: "admin_support",
-        href: "/app/admin/support",
+        key: "admin",
+        href: "/app/admin",
+        icon: ShieldCheck,
         roles: ["yagi_admin"],
       },
     ],
@@ -167,9 +178,7 @@ function isRoleVisible(
 ): boolean {
   const wsGated = item.roles && item.roles.length > 0;
   const profileGated = item.profileRoles && item.profileRoles.length > 0;
-  // Ungated → visible.
   if (!wsGated && !profileGated) return true;
-  // Either gate match makes the item visible (OR semantics).
   const wsMatch = wsGated ? item.roles!.some((r) => roles.includes(r)) : false;
   const profileMatch =
     profileGated && profileRole !== null
@@ -178,21 +187,31 @@ function isRoleVisible(
   return wsMatch || profileMatch;
 }
 
+function isKindVisible(
+  item: NavItem,
+  activeKind: WorkspaceKindForNav | null | undefined,
+): boolean {
+  if (!item.kinds || item.kinds.length === 0) return true;
+  if (!activeKind) return false;
+  return item.kinds.includes(activeKind);
+}
+
 /**
- * Filter an item by role.
- * - Leaf: returns self if visible, else null.
- * - Parent (has children): filter children recursively. If 0 → null. If 1 → collapse
- *   into the single child so the parent wrapper disappears (IMPLEMENTATION §1 rule).
+ * Filter an item by role + kind.
+ * Leaf returns self if visible. Parent recursively filters children; if 0 →
+ * null; if 1 → collapse into the single child (per IMPLEMENTATION §1).
  */
 function filterItem(
   item: NavItem,
   roles: WorkspaceRole[],
   profileRole: ProfileRole | null,
+  activeKind: WorkspaceKindForNav | null | undefined,
 ): NavItem | null {
   if (!isRoleVisible(item, roles, profileRole)) return null;
+  if (!isKindVisible(item, activeKind)) return null;
   if (!item.children) return item;
   const kept = item.children
-    .map((c) => filterItem(c, roles, profileRole))
+    .map((c) => filterItem(c, roles, profileRole, activeKind))
     .filter((c): c is NavItem => c !== null);
   if (kept.length === 0) return null;
   if (kept.length === 1) return kept[0];
@@ -220,7 +239,6 @@ function computeActiveKey(
 ): string | null {
   let bestKey: string | null = null;
   let bestLen = -1;
-  // Phase 1: exact query-bound matches take precedence on their pathname.
   for (const l of leaves) {
     const [base, query] = l.href.split("?");
     if (!query) continue;
@@ -235,7 +253,6 @@ function computeActiveKey(
     }
     if (allMatch) return l.key;
   }
-  // Phase 2: longest-prefix-wins among non-query leaves.
   for (const l of leaves) {
     const [base, query] = l.href.split("?");
     if (query) continue;
@@ -252,16 +269,21 @@ export function SidebarNav({
   roles,
   profileRole,
   isYagiInternalMember,
+  activeWorkspaceKind,
 }: {
   roles: WorkspaceRole[];
   profileRole: ProfileRole | null;
   isYagiInternalMember: boolean;
+  /** Wave C v2 — the active workspace's `kind`. Used to gate work-group
+   *  entries (dashboard / projects / campaign_request / my_submissions /
+   *  recommended_artist / meetings) plus the standalone [+ 새 프로젝트 시작]
+   *  CTA at the top. */
+  activeWorkspaceKind?: WorkspaceKindForNav | null;
 }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Runtime-injected `team` item (yagi-internal member only).
   const runtimeGroups: NavGroup[] = useMemo(() => {
     if (!isYagiInternalMember) return GROUPS;
     return GROUPS.map((g) => {
@@ -279,7 +301,7 @@ export function SidebarNav({
   const visibleGroups = runtimeGroups
     .map((g) => {
       const items = g.items
-        .map((it) => filterItem(it, roles, profileRole))
+        .map((it) => filterItem(it, roles, profileRole, activeWorkspaceKind))
         .filter((it): it is NavItem => it !== null);
       return { ...g, items };
     })
@@ -291,9 +313,35 @@ export function SidebarNav({
   );
   const activeKey = computeActiveKey(allLeaves, pathname, searchParams);
 
+  // Wave C v2 [+ 새 프로젝트 시작] standalone primary CTA at top of sidebar.
+  // Per SPEC §C.0.5, this is the 북극성 1순위 entry — sage fill resting state
+  // (MED-5 fix: was muted card border which blended into the nav).
+  const showNewProjectCta =
+    activeWorkspaceKind === "brand" || activeWorkspaceKind === "artist";
+  const newProjectActive =
+    pathname === "/app/projects/new" || pathname.startsWith("/app/projects/new/");
+
   return (
     <TooltipProvider delayDuration={300}>
       <nav className="flex flex-col px-2 pb-3" aria-label="Operations">
+        {showNewProjectCta && (
+          <div className="px-1 pt-2 pb-3">
+            <Link
+              href="/app/projects/new"
+              aria-current={newProjectActive ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-full text-[13px] font-medium border transition-colors duration-flora ease-flora",
+                newProjectActive
+                  ? "bg-foreground text-background border-foreground"
+                  // MED-5: sage fill resting state asserts CTA hierarchy on sidebar
+                  : "bg-sage text-sage-ink border-transparent hover:bg-sage/90",
+              )}
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("new_project_cta")}</span>
+            </Link>
+          </div>
+        )}
         {visibleGroups.map((group) => {
           const showLabel = group.items.length >= 2;
           return (
@@ -350,9 +398,6 @@ function ParentRow({
     (c) => c.key === activeKey,
   );
   const [open, setOpen] = useState(hasActiveChild);
-  // Keep open synced with route changes: when a child becomes active, expand.
-  // (Initial render + on active change both handled by lifting the initial to useState
-  //  + a cheap derived-state pattern below.)
   const effectiveOpen = open || hasActiveChild;
 
   const Icon = item.icon;
@@ -405,8 +450,6 @@ function NavLink({
   indent: 0 | 1;
 }) {
   const Icon = item.icon;
-  // Phase 2.7.1 P12-3: bumped resting contrast (muted → 85) and active
-  // weight (font-semibold) so the active item reads as anchor, not label.
   const base = cn(
     "flex items-center gap-2.5 py-2 rounded-md text-[13px] transition-colors",
     indent === 0 ? "px-3" : "pl-9 pr-3",
