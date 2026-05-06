@@ -65,6 +65,19 @@ const LABELS_KO: StatusLabelMap = {
     ready:      { label: "공개됨", description: "갤러리에 공개되었어요" },
     rejected:   { label: "확인 필요", description: "관리자가 검토 중이에요. 곧 안내드릴게요." },
   },
+
+  // Wave C v2 campaign_submissions — creator's view of own work. Labels
+  // are also defined under `my_submissions.status.*` in messages/ko.json
+  // for use with next-intl `useTranslations`; this registry mirrors them
+  // for code paths that consume the centralized label helper directly.
+  campaign_submission: {
+    submitted:                 { label: "검토 대기" },
+    approved_for_distribution: { label: "유포 승인", description: "유포 채널을 등록해주세요" },
+    declined:                  { label: "비채택" },
+    revision_requested:        { label: "수정 요청", description: "검수 메모를 확인 후 다시 제출해주세요" },
+    distributed:               { label: "유포 완료" },
+    withdrawn:                 { label: "철회" },
+  },
 };
 
 /**

@@ -19,7 +19,8 @@ export type StatusKind =
   | "meeting"
   | "challenge"
   | "showcase"
-  | "submission";  // Phase 2.5 G3 §F.2 — creator's view of own challenge_submissions
+  | "submission"             // Phase 2.5 G3 §F.2 — creator's view of own challenge_submissions
+  | "campaign_submission";   // Wave C v2 — creator's view of own campaign_submissions
 
 export type StatusTone =
   | "neutral"   // grey / muted — idle/archived
@@ -27,16 +28,23 @@ export type StatusTone =
   | "warning"   // amber — needs action / stale
   | "info"      // blue — in progress / intermediate
   | "emphasis"  // solid foreground — live/active
-  | "danger";   // red — void / failed / cancelled
+  | "danger"    // red — void / failed / cancelled
+  | "sage_full" // Wave C v2 MED-7 — full sage, action-needed state
+  | "sage_soft";// Wave C v2 MED-7 — soft sage, terminal-success state
 
 // Tone → semantic-token className mapping. One row, one concept.
 const TONE_CLASS: Record<StatusTone, string> = {
-  neutral:  "border-transparent bg-muted text-muted-foreground",
-  success:  "border-transparent bg-success text-success-foreground",
-  warning:  "border-transparent bg-warning text-warning-foreground",
-  info:     "border-transparent bg-info text-info-foreground",
-  emphasis: "border-transparent bg-foreground text-background",
-  danger:   "border-transparent bg-destructive/15 text-destructive",
+  neutral:   "border-transparent bg-muted text-muted-foreground",
+  success:   "border-transparent bg-success text-success-foreground",
+  warning:   "border-transparent bg-warning text-warning-foreground",
+  info:      "border-transparent bg-info text-info-foreground",
+  emphasis:  "border-transparent bg-foreground text-background",
+  danger:    "border-transparent bg-destructive/15 text-destructive",
+  // Wave C v2 MED-7: sage tokens for campaign_submission narrative arc.
+  // Loud sage = "your action is needed" (approved_for_distribution).
+  // Soft sage = "this is at rest, completed" (distributed).
+  sage_full: "border-transparent bg-sage text-sage-ink",
+  sage_soft: "border-transparent bg-sage-soft text-sage-ink",
 };
 
 // Kind × status → tone mapping. Owns all the per-domain semantic choices
@@ -83,6 +91,23 @@ const KIND_TONE: Record<StatusKind, Record<string, StatusTone>> = {
     processing: "warning",    // 확인 중 — media processing / admin review
     ready:      "emphasis",   // 공개됨 — visible in gallery
     rejected:   "neutral",    // 확인 필요 — soft framing per G3 DP §F.2
+  },
+  // Wave C v2 campaign_submissions — creator's view of own work. Narrative
+  // arc:
+  //   submitted → approved_for_distribution (CTA — applicant must act)
+  //               or declined / revision_requested
+  //   approved_for_distribution → distributed (terminal success)
+  //
+  // MED-7 fix (K-06 LOOP-1 #6): semantic weight escalates TOWARD the CTA
+  // state, not away from it. Full sage on approved_for_distribution
+  // (signals action), soft sage on distributed (signals completion).
+  campaign_submission: {
+    submitted:                  "neutral",
+    approved_for_distribution:  "sage_full",
+    declined:                   "neutral",
+    revision_requested:         "warning",
+    distributed:                "sage_soft",
+    withdrawn:                  "neutral",
   },
 };
 
