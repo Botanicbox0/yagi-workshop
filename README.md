@@ -36,6 +36,16 @@ See `.env.local.example` for required environment variables. Phase-specific setu
 
 Append-only decision log: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
+### Infrastructure config (manual setup)
+
+Some infrastructure rules live in dashboards (no IaC pipeline yet):
+
+- [`docs/r2-lifecycle.md`](./docs/r2-lifecycle.md) — Cloudflare R2 bucket
+  lifecycle rules. **Wave C v2 requires `tmp/` 24h expire on
+  `yagi-workshop-submissions`** (yagi setup task per SPEC §4 MED-3).
+- [`docs/google-oauth-setup.md`](./docs/google-oauth-setup.md) — Google OAuth
+  client credentials.
+
 ## Build methodology
 
 This project is built with a Builder-Orchestrator-Executor (B-O-E) multi-agent Claude Code setup running in autopilot phases. Phase specs and handoff docs live in `.yagi-autobuild/`:
