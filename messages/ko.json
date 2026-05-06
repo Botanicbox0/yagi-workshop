@@ -2226,7 +2226,8 @@
         "declined": "비채택",
         "revision_requested": "수정 요청"
       },
-      "preview_empty": "작품 미리보기를 불러올 수 없어요."
+      "preview_empty": "작품 미리보기를 불러올 수 없어요.",
+      "preview_open": "새 탭에서 열기"
     },
     "distribution": {
       "title": "유포 채널 관리",

@@ -2161,7 +2161,8 @@
         "declined": "Not selected",
         "revision_requested": "Revision requested"
       },
-      "preview_empty": "Work preview unavailable."
+      "preview_empty": "Work preview unavailable.",
+      "preview_open": "Open in new tab"
     },
     "distribution": {
       "title": "Distribution channels",
