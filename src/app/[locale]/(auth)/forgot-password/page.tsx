@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2 text-center">
-        <h1 className="font-display text-3xl tracking-tight">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight">
           {t("reset_password_title")}
         </h1>
         <p className="text-sm text-muted-foreground">{t("reset_password_sub")}</p>

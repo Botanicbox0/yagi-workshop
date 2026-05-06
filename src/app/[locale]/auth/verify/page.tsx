@@ -50,7 +50,7 @@ export default function AuthVerifyPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-3 text-center">
-        <h1 className="font-display text-3xl tracking-tight keep-all">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight keep-all">
           {t("check_your_email_title")}
         </h1>
         <p className="text-base ink-secondary leading-body keep-all">

@@ -79,7 +79,7 @@ export default function OnboardingWorkspacePage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight keep-all">{t("workspace_title")}</h1>
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight keep-all">{t("workspace_title")}</h1>
         <p className="text-sm text-muted-foreground keep-all">{t("workspace_sub")}</p>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

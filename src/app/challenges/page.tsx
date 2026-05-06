@@ -20,7 +20,7 @@ export default async function ChallengesListPage() {
   if (allEmpty) {
     return (
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-16">
-        <h1 className="font-display italic text-3xl md:text-4xl mb-12 word-break-keep-all">
+        <h1 className="font-semibold tracking-display-ko italic text-3xl md:text-4xl mb-12 word-break-keep-all">
           {t("headline")}
         </h1>
         <p className="text-muted-foreground text-sm">{t("empty_all")}</p>
@@ -33,7 +33,7 @@ export default async function ChallengesListPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 space-y-12">
       {/* Headline */}
-      <h1 className="font-display italic text-3xl md:text-4xl word-break-keep-all">
+      <h1 className="font-semibold tracking-display-ko italic text-3xl md:text-4xl word-break-keep-all">
         {t("headline")}
       </h1>
 

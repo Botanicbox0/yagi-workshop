@@ -75,7 +75,7 @@ export default async function AdminTrashPage({ params }: Props) {
   return (
     <div className="max-w-5xl mx-auto px-6 md:px-8 py-12">
       <header className="space-y-2 mb-8">
-        <h1 className="font-display text-3xl tracking-tight">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight">
           {t("title")}
         </h1>
         <p className="text-sm text-muted-foreground keep-all">{t("sub")}</p>

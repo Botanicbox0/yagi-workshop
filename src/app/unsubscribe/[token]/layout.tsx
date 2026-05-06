@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { Toaster } from "sonner";
-import { fraunces, inter } from "../../fonts";
+import { inter } from "../../fonts";
 import "../../globals.css";
 import { resolveUnsubscribeLocale } from "./resolve-locale";
 
@@ -35,7 +35,7 @@ export default async function UnsubscribeLayout({
   return (
     <html
       lang={locale}
-      className={`${fraunces.variable} ${inter.variable}`}
+      className={inter.variable}
     >
       <head>
         <link

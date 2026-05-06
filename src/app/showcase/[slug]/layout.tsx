@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { Toaster } from "sonner";
-import { fraunces, inter } from "../../fonts";
+import { inter } from "../../fonts";
 import "../../globals.css";
 import { resolveShowcaseLocale } from "./resolve-locale";
 
@@ -32,7 +32,7 @@ export default async function ShowcaseLayout({
   return (
     <html
       lang={locale}
-      className={`${fraunces.variable} ${inter.variable}`}
+      className={inter.variable}
     >
       <head>
         <link

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fraunces, inter } from "../../fonts";
+import { inter } from "../../fonts";
 import "../../globals.css";
 
 /**
@@ -10,7 +10,7 @@ import "../../globals.css";
  */
 export default function ChallengeNotFound() {
   return (
-    <html lang="ko" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="ko" className={inter.variable}>
       <head>
         <link
           rel="stylesheet"
@@ -20,7 +20,7 @@ export default function ChallengeNotFound() {
       <body className="bg-background text-foreground antialiased">
         <main className="min-h-dvh flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-md space-y-6 text-center">
-            <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold keep-all">
+            <h1 className="font-semibold tracking-display-ko text-3xl keep-all">
               챌린지를 찾을 수 없습니다
             </h1>
             <p className="text-sm text-muted-foreground keep-all">

@@ -6,7 +6,7 @@
  * Shows when no shapes placed; fades out when first shape is added.
  * Styling: text-muted-foreground/40 text-sm font-normal pointer-events-none
  * per KICKOFF.md Q-D spec.
- * L-010: font-suit (NOT font-display)
+ * L-010: font-suit (NOT a heading display family — Wave C v2 retired Fraunces)
  * L-011: achromatic colors only
  */
 

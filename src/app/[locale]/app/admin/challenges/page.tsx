@@ -68,7 +68,7 @@ export default async function AdminChallengesListPage({
   return (
     <div className="max-w-6xl space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold">챌린지 관리</h1>
+        <h1 className="font-semibold tracking-display-ko text-2xl font-semibold">챌린지 관리</h1>
         <Button size="pill" asChild>
           <Link href="/app/admin/challenges/new">새 챌린지</Link>
         </Button>

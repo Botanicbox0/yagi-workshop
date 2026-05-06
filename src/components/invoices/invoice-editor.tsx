@@ -910,7 +910,7 @@ export function InvoiceEditor({
         {/* Left column — line items */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg tracking-tight">
+            <h2 className="font-semibold tracking-display-ko text-lg tracking-tight">
               {t("line_items_title")}
             </h2>
             {editable && (

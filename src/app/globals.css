@@ -188,16 +188,11 @@
     overflow-wrap: break-word;
   }
 
-  .font-display {
-    font-family: var(--font-fraunces), "Pretendard Variable", ui-serif, Georgia, serif;
-    font-optical-sizing: auto;
-    font-variation-settings: "opsz" 144;
-  }
-
-  .font-display em {
-    font-style: italic;
-    font-variation-settings: "opsz" 144, "SOFT" 100;
-  }
+  /* Wave C v2 HIGH-6: legacy `.font-display` rule (Fraunces resolve)
+     deleted. The `font-display` Tailwind class still exists (token kept
+     with Pretendard fallback in tailwind.config.ts) so deferred Cat B
+     editorial surfaces resolve to Pretendard until a separate visual
+     identity wave addresses them. */
 
   .label-caps {
     text-transform: uppercase;

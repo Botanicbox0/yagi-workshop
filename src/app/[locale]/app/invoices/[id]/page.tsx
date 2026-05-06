@@ -241,7 +241,7 @@ export default async function InvoiceDetailPage({ params }: Props) {
 
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
-            <h1 className="font-display text-3xl tracking-tight">
+            <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight">
               
                 {invoiceRow.invoice_number ?? t("status_draft")}
               

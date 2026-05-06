@@ -134,7 +134,7 @@ export default function AuthExpiredPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-3 text-center">
-        <h1 className="font-display text-3xl tracking-tight keep-all">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight keep-all">
           {t("expired_headline")}
         </h1>
         <p className="text-sm text-muted-foreground keep-all">

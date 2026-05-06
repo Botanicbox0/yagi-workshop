@@ -38,7 +38,7 @@ export default async function CommissionListPage({ params }: Props) {
     return (
       <div className="max-w-3xl mx-auto px-6 md:px-8 py-16 md:py-24">
         <div className="text-center space-y-6 border border-dashed border-border rounded-xl py-16 px-6">
-          <h1 className="font-display text-2xl tracking-tight">
+          <h1 className="font-semibold tracking-display-ko text-2xl tracking-tight">
             {t("list_empty_title")}
           </h1>
           <p className="text-sm text-muted-foreground keep-all">
@@ -55,7 +55,7 @@ export default async function CommissionListPage({ params }: Props) {
   return (
     <div className="max-w-4xl mx-auto px-6 md:px-8 py-12">
       <div className="flex items-baseline justify-between mb-10">
-        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05]">
+        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl tracking-tight leading-[1.05]">
           {t("list_title")}
         </h1>
         <Button asChild>
@@ -72,7 +72,7 @@ export default async function CommissionListPage({ params }: Props) {
             <div className="min-w-0">
               <Link
                 href={`/${locale}/app/commission/${intake.id}`}
-                className="font-display text-lg tracking-tight hover:underline underline-offset-4"
+                className="font-semibold tracking-display-ko text-lg tracking-tight hover:underline underline-offset-4"
               >
                 {intake.title}
               </Link>

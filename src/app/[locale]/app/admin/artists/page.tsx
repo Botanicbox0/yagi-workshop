@@ -145,7 +145,7 @@ export default async function AdminArtistsPage({ params }: Props) {
     <div className="px-10 py-12 max-w-5xl space-y-10">
       {/* Header */}
       <div>
-        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1 keep-all">
+        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1 keep-all">
           {t("title")}
         </h1>
       </div>

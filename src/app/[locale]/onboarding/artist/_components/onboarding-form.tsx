@@ -64,7 +64,7 @@ export function OnboardingForm({ locale, email, displayName }: OnboardingFormPro
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight keep-all">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight keep-all">
           {t("greeting", { name: displayName })}
         </h1>
         <p className="text-sm text-muted-foreground keep-all">{t("subtitle")}</p>

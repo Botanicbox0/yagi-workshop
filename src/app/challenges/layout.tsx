@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { Toaster } from "sonner";
-import { fraunces, inter } from "../fonts";
+import { inter } from "../fonts";
 import "../globals.css";
 import { PublicChrome } from "@/components/challenges/public-chrome";
 
@@ -21,7 +21,7 @@ export default async function ChallengesLayout({
   ).default;
 
   return (
-    <html lang="ko" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="ko" className={inter.variable}>
       <head>
         <link
           rel="stylesheet"

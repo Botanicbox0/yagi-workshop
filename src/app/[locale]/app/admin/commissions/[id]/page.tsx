@@ -67,7 +67,7 @@ export default async function AdminCommissionDetailPage({ params }: Props) {
           </Link>
           <CommissionIntakeStatePill state={intake.state} locale={locale} />
         </div>
-        <h1 className="font-display text-3xl md:text-4xl tracking-tight keep-all">
+        <h1 className="font-semibold tracking-display-ko text-3xl md:text-4xl tracking-tight keep-all">
           {intake.title}
         </h1>
         {/* Phase 2.8.1 G_B1-H — Workshop 생성 (admin convert) primary CTA.
@@ -224,7 +224,7 @@ export default async function AdminCommissionDetailPage({ params }: Props) {
       )}
 
       <section className="space-y-3 pt-4 border-t border-border">
-        <h2 className="font-display text-xl tracking-tight">
+        <h2 className="font-semibold tracking-display-ko text-xl tracking-tight">
           {t("response_section_title")}
         </h2>
         {intake.state === "submitted" ? (

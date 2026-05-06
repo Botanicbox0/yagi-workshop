@@ -54,7 +54,7 @@ export function SidebarScopeSwitcher({
 
   if (!active) {
     return (
-      <p className="font-display text-base tracking-tight text-muted-foreground">
+      <p className="font-semibold tracking-display-ko text-base tracking-tight text-muted-foreground">
         —
       </p>
     );
@@ -157,7 +157,7 @@ function MultiScopeSwitcher({
         }}
       >
         <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
-          <span className="font-display text-base tracking-tight flex items-center gap-2 min-w-0">
+          <span className="font-semibold tracking-display-ko text-base tracking-tight flex items-center gap-2 min-w-0">
             <ScopeIcon kind={active.kind} className="text-muted-foreground" />
             <span className="truncate">{scopeLabel(active)}</span>
           </span>

@@ -300,7 +300,7 @@ export default async function AdminInvoicesPage({ params }: Props) {
     <div className="px-10 py-12 max-w-5xl">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="font-display text-3xl tracking-tight mb-1">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight mb-1">
           {t("title")}
         </h1>
       </div>
@@ -325,7 +325,7 @@ export default async function AdminInvoicesPage({ params }: Props) {
             >
               {t("kpi_mock_label")}
             </p>
-            <p className="font-display text-3xl tracking-tight tabular-nums">
+            <p className="font-semibold tracking-display-ko text-3xl tracking-tight tabular-nums">
               {mockCount}
             </p>
             <p
@@ -351,7 +351,7 @@ export default async function AdminInvoicesPage({ params }: Props) {
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
               {t("kpi_mtd_label")}
             </p>
-            <p className="font-display text-3xl tracking-tight tabular-nums">
+            <p className="font-semibold tracking-display-ko text-3xl tracking-tight tabular-nums">
               {currencyFmt.format(mtdTotal)}
             </p>
           </div>
@@ -361,7 +361,7 @@ export default async function AdminInvoicesPage({ params }: Props) {
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
               {t("kpi_ytd_label")}
             </p>
-            <p className="font-display text-3xl tracking-tight tabular-nums">
+            <p className="font-semibold tracking-display-ko text-3xl tracking-tight tabular-nums">
               {currencyFmt.format(ytdTotal)}
             </p>
           </div>
@@ -383,7 +383,7 @@ export default async function AdminInvoicesPage({ params }: Props) {
             >
               {t("kpi_overdue_label")}
             </p>
-            <p className="font-display text-3xl tracking-tight tabular-nums">
+            <p className="font-semibold tracking-display-ko text-3xl tracking-tight tabular-nums">
               {overdueCount}
             </p>
             <p

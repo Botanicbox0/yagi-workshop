@@ -68,7 +68,7 @@ export default async function AdminCommissionsPage({
   return (
     <div className="max-w-5xl mx-auto px-6 md:px-8 py-12">
       <header className="space-y-2 mb-8">
-        <h1 className="font-display text-4xl md:text-5xl tracking-tight leading-[1.05]">
+        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl tracking-tight leading-[1.05]">
           {t("queue_title")}
         </h1>
         <p className="text-sm text-muted-foreground">{t("queue_sub")}</p>
@@ -112,7 +112,7 @@ export default async function AdminCommissionsPage({
               <div className="col-span-12 md:col-span-6 min-w-0">
                 <Link
                   href={`/${locale}/app/admin/commissions/${intake.id}`}
-                  className="font-display text-base tracking-tight hover:underline underline-offset-4"
+                  className="font-semibold tracking-display-ko text-base tracking-tight hover:underline underline-offset-4"
                 >
                   {intake.title}
                 </Link>

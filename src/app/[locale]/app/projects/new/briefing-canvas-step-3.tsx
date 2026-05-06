@@ -371,7 +371,7 @@ export function BriefingCanvasStep3({
           <p className="text-xs font-semibold tracking-[0.18em] text-foreground/40 mb-3">
             {t("briefing.step3.header.eyebrow")}
           </p>
-          <h1 className="font-display text-3xl tracking-tight mb-3 keep-all">
+          <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight mb-3 keep-all">
             {t("briefing.step3.header.title")}
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed keep-all max-w-2xl">

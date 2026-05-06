@@ -12,7 +12,13 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			sans: ["Pretendard Variable", "var(--font-inter)", "ui-sans-serif", "system-ui"],
-  			display: ["var(--font-fraunces)", "Pretendard Variable", "ui-serif", "Georgia"],
+  			// Wave C v2 HIGH-6: Fraunces removed from build path. `display`
+  			// token kept with Pretendard fallback so the deferred Cat B
+  			// editorial surfaces (~25 hits in marketing/landing/journal/work)
+  			// continue to resolve to a sans display family until a separate
+  			// editorial-visual-identity wave addresses them per yagi-design-
+  			// system v1.0 (Redaction 10/50 italic for EN, Pretendard 600 KO).
+  			display: ["Pretendard Variable", "ui-sans-serif", "system-ui"],
   			suit: ["var(--font-suit)", "Pretendard Variable", "ui-sans-serif", "system-ui"],
   			// Phase 4.x Wave C.5b sub_00 — yagi-design-system v1.0 font tokens.
   			// `body`/`display-ds`/`accent-ds` resolve via CSS vars so [lang="en"]

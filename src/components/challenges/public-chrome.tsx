@@ -22,7 +22,7 @@ export async function PublicChrome({
                 priority
               />
             </Link>
-            <span className="font-display italic text-sm">챌린지</span>
+            <span className="font-semibold tracking-display-ko italic text-sm">챌린지</span>
           </div>
           <HeaderCtaResolver />
         </div>

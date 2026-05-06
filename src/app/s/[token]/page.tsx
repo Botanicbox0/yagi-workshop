@@ -340,7 +340,7 @@ export default async function SharePage({ params }: Props) {
         <main className="flex-1 min-w-0 space-y-16">
           {/* Welcome banner */}
           <section className="space-y-1">
-            <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold text-foreground">
+            <h1 className="font-semibold tracking-display-ko text-3xl text-foreground">
               {t("welcome_title")}
             </h1>
             <p className="text-muted-foreground">{t("welcome_sub")}</p>

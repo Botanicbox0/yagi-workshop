@@ -160,7 +160,7 @@ export default async function InvoicesPage({ params, searchParams }: Props) {
     <div className="px-10 py-12 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-3xl tracking-tight">
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight">
           {t("list_title")}
         </h1>
         {isYagiAdmin && (
@@ -225,7 +225,7 @@ export default async function InvoicesPage({ params, searchParams }: Props) {
       {/* Empty state */}
       {invoices.length === 0 && (
         <div className="mt-16 flex flex-col items-center justify-center text-center py-24 border border-dashed border-border rounded-lg">
-          <p className="font-display text-xl tracking-tight mb-2 keep-all">
+          <p className="font-semibold tracking-display-ko text-xl tracking-tight mb-2 keep-all">
             {t("list_empty")}
           </p>
           {isYagiAdmin && (

@@ -101,7 +101,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
             style={{ background: slugGradient(challenge.slug) }}
           >
             <div className="flex h-full items-center justify-center">
-              <span className="font-display italic text-2xl text-foreground/70 px-6 text-center">
+              <span className="font-semibold tracking-display-ko italic text-2xl text-foreground/70 px-6 text-center">
                 {challenge.title}
               </span>
             </div>
@@ -125,7 +125,7 @@ export default async function ChallengeDetailPage({ params }: Props) {
             </span>
           )}
         </div>
-        <h1 className="font-display italic text-3xl md:text-4xl leading-tight">
+        <h1 className="font-semibold tracking-display-ko italic text-3xl md:text-4xl leading-tight">
           {challenge.title}
         </h1>
       </section>

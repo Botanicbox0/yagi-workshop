@@ -64,7 +64,7 @@ export default function OnboardingBrandPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight keep-all">{t("brand_title")}</h1>
+        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight keep-all">{t("brand_title")}</h1>
         <p className="text-sm text-muted-foreground keep-all">{t("brand_sub")}</p>
       </div>
       {/* Phase 5 Wave A sub_3c Option A: brand logo placeholder — sage subtle empty state */}

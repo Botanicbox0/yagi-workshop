@@ -48,7 +48,7 @@ export default async function SubmitPage({ params }: Props) {
               {label}
             </span>
           </div>
-          <h1 className="font-display italic text-2xl">
+          <h1 className="font-semibold tracking-display-ko italic text-2xl">
             이 챌린지는 지금 작품을 받을 수 없어요
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -95,7 +95,7 @@ export default async function SubmitPage({ params }: Props) {
     return (
       <PublicChrome>
         <div className="max-w-2xl mx-auto px-6 md:px-8 py-16 space-y-6">
-          <h1 className="font-display italic text-2xl">
+          <h1 className="font-semibold tracking-display-ko italic text-2xl">
             프로필을 먼저 완성해주세요
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -114,7 +114,7 @@ export default async function SubmitPage({ params }: Props) {
     return (
       <PublicChrome>
         <div className="max-w-2xl mx-auto px-6 md:px-8 py-16 space-y-6">
-          <h1 className="font-display italic text-2xl">
+          <h1 className="font-semibold tracking-display-ko italic text-2xl">
             이미 작품 올렸어요
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -141,7 +141,7 @@ export default async function SubmitPage({ params }: Props) {
               {label}
             </span>
           </div>
-          <h1 className="font-display italic text-2xl md:text-3xl leading-tight">
+          <h1 className="font-semibold tracking-display-ko italic text-2xl md:text-3xl leading-tight">
             {challenge.title}
           </h1>
           <p className="text-sm text-muted-foreground">

@@ -206,9 +206,9 @@ function renderMarkdown(md: string): React.ReactNode {
       const content = inline(heading[2]!);
       const className =
         level === 1
-          ? "font-[family-name:var(--font-fraunces)] text-2xl italic font-semibold keep-all mt-8"
+          ? "font-semibold tracking-display-ko text-2xl keep-all mt-8"
           : level === 2
-            ? "font-[family-name:var(--font-fraunces)] text-xl italic font-semibold keep-all mt-6"
+            ? "font-semibold tracking-display-ko text-xl keep-all mt-6"
             : "text-base font-semibold keep-all mt-4";
       const Tag = (`h${level}`) as "h1" | "h2" | "h3";
       return (
@@ -369,11 +369,11 @@ export default async function ShowcasePage({ params }: Props) {
               : `For ${showcase.client_name_public}`}
           </p>
         ) : null}
-        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl md:text-5xl italic font-semibold leading-[1.05] keep-all">
+        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl leading-[1.05] keep-all">
           {showcase.title}
         </h1>
         {showcase.subtitle ? (
-          <p className="font-[family-name:var(--font-fraunces)] text-xl md:text-2xl italic font-light text-neutral-600 leading-snug keep-all">
+          <p className="font-light tracking-display-ko text-xl md:text-2xl text-neutral-600 leading-snug keep-all">
             {showcase.subtitle}
           </p>
         ) : null}

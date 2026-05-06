@@ -178,7 +178,7 @@ export default async function MeetingDetailPage({ params }: Props) {
               )}
             </Badge>
           </div>
-          <h1 className="font-display text-3xl tracking-tight keep-all">
+          <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight keep-all">
             {meeting.title}
           </h1>
         </div>

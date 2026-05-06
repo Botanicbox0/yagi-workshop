@@ -47,7 +47,7 @@ export function ShowcasePasswordPrompt({ showcaseId, slug }: Props) {
     <main className="min-h-dvh flex items-center justify-center px-6 py-12 bg-white text-black">
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-2">
-          <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold keep-all">
+          <h1 className="font-semibold tracking-display-ko text-3xl keep-all">
             {t("viewer_password_prompt_title")}
           </h1>
           <p className="text-sm text-neutral-600 keep-all">

@@ -72,7 +72,7 @@ export default async function GalleryPage({ params }: Props) {
     <div className="max-w-5xl mx-auto px-6 md:px-8 py-12 space-y-10">
       {/* Page header */}
       <header className="space-y-1">
-        <h1 className="font-display text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
+        <h1 className="font-semibold tracking-display-ko text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
           {challenge.title}
         </h1>
         <p className="text-sm text-muted-foreground">작품 보기</p>

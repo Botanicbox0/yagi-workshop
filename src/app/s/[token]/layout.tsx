@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
-import { fraunces, inter } from "../../fonts";
+import { inter } from "../../fonts";
 import "../../globals.css";
 
 export const metadata: Metadata = {
@@ -37,7 +37,7 @@ export default async function ShareLayout({
   return (
     <html
       lang={locale}
-      className={`${fraunces.variable} ${inter.variable}`}
+      className={inter.variable}
     >
       <head>
         <link

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { routing } from "@/i18n/routing";
-import { fraunces, inter } from "../fonts";
+import { inter } from "../fonts";
 import { PublicChromeHeader } from "@/components/app/public-chrome-header";
 import "../globals.css";
 
@@ -30,7 +30,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={inter.variable}>
       <head>
         <link
           rel="stylesheet"

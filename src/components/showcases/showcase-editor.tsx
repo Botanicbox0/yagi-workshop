@@ -656,7 +656,7 @@ export function ShowcaseEditor({
             <ChevronLeft className="w-5 h-5" />
           </NavLink>
           <div className="min-w-0">
-            <h1 className="font-display text-xl tracking-tight truncate keep-all">
+            <h1 className="font-semibold tracking-display-ko text-xl tracking-tight truncate keep-all">
               {showcase.title || t("editor_field_title")}
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
@@ -1166,7 +1166,7 @@ function Section({
 }) {
   return (
     <section>
-      <h2 className="font-display text-lg tracking-tight mb-4 keep-all">
+      <h2 className="font-semibold tracking-display-ko text-lg tracking-tight mb-4 keep-all">
         {title}
       </h2>
       {children}

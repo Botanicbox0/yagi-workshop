@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { fraunces, inter } from "../../fonts";
+import { inter } from "../../fonts";
 import "../../globals.css";
 import { resolveShowcaseLocale } from "./resolve-locale";
 
@@ -26,7 +26,7 @@ export default async function ShowcaseNotFound() {
   return (
     <html
       lang={locale}
-      className={`${fraunces.variable} ${inter.variable}`}
+      className={inter.variable}
     >
       <head>
         <link
@@ -37,7 +37,7 @@ export default async function ShowcaseNotFound() {
       <body className="bg-white text-black antialiased">
         <main className="min-h-dvh flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-md space-y-6 text-center">
-            <h1 className="font-[family-name:var(--font-fraunces)] text-3xl italic font-semibold keep-all">
+            <h1 className="font-semibold tracking-display-ko text-3xl keep-all">
               {t("viewer_not_found_title")}
             </h1>
             <p className="text-sm text-neutral-600 keep-all">
