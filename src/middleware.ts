@@ -46,7 +46,7 @@ export default async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip: Next.js internals, Vercel internals, API, auth callback, locale-free
-    // public surfaces (showcase, challenges), static files.
+    // public surfaces (showcase, challenges, campaigns), static files.
     //
     // Phase 2.1 G6 #5/#6 — added `showcase` and `challenges` to the negative
     // lookahead so the locale-free public routes at src/app/showcase/[slug]/
@@ -61,6 +61,15 @@ export const config = {
     // Phase 4.x Wave C.5c sub_01 — `auth/confirm` added (PKCE
     // intermediate verify endpoint; same locale-free shape as
     // auth/callback).
-    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|.*\\..*).*)",
+    // Wave C v2 HIGH-7 hotfix (yagi 2026-05-09) — `campaigns` added.
+    // Discovered in production smoke: /campaigns/[slug]/submit (locale-free
+    // public submit form per Phase 7 SPEC) was being redirected to
+    // /ko/campaigns/[slug]/submit by next-intl, falling back to 404 since
+    // /[locale]/campaigns/* routes are not defined. Same shape as the
+    // showcase/challenges fix above. Lesson: K-05 (data/server actions)
+    // + K-06 (design) reviews don't catch routing/middleware regressions —
+    // future SPECs need an explicit routing smoke item, OR add K-04
+    // routing review when introducing new locale-free public routes.
+    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|campaigns|.*\\..*).*)",
   ],
 };
