@@ -14,6 +14,30 @@ deferred to Phase 8).
 
 ## `yagi-workshop-submissions` — `tmp/` 24-hour expire
 
+> ⚠️ **DEFERRED to Phase 8 (per FU-R1, yagi decision 2026-05-09).** Setup is
+> documented for completeness, but the Cloudflare Dashboard rule is **NOT
+> applied** and **MUST NOT be applied** in the current code shape.
+>
+> **Why deferred:** the current Wave C v2 code stores permanently-referenced
+> submission media (including approved + distributed) under `tmp/campaigns/<id>/<nonce>/<file>`
+> directly — there is no post-approval `published/*` migration in
+> `approveSubmissionAction` yet. Applying the 24h lifecycle rule today would
+> delete production submission media after 24 hours regardless of approval
+> status → data loss.
+>
+> **Phase 8 plan:** ship `published/*` CopyObject + DeleteObject in
+> `approveSubmissionAction` (admin path) FIRST; updates `content_r2_key` to
+> the new prefix; then enable the `tmp/*` 24h rule documented below.
+>
+> **Trigger to revisit:** Phase 8 entry, OR submission volume reaches 100
+> entries (whichever comes first; tracked as **FU-R1** in
+> `.yagi-autobuild/phase-7/_wave_c_v2_spec.md` §5).
+>
+> **Acceptable interim:** scale-aware (per memory #19) — 1-person creator
+> workspace stage, R2 storage abuse cost is negligible. The HIGH-2 upload
+> token + per-IP presign rate-limit (10/h) cap the abuse vector at the
+> entry point.
+
 **Rationale (per SPEC §4 MED-3):**
 
 `presignSubmissionUpload` issues a 1-hour presigned PUT URL for keys under

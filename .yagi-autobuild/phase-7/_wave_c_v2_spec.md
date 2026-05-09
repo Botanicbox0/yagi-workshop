@@ -449,6 +449,7 @@ export function statusPillClass(status: SubmissionStatus): string {
 | FU-W4 | K-06 #13 | informational PASS | N/A |
 | FU-W5 | K-06 #14 | "Submission" EN noun §M extension | 야기 §M 결정 시 |
 | **FU-EI1** | **STEP 1 audit Cat B + Cat C** | **Editorial Visual Identity Wave: marketing/landing/journal/work editorial surface (~25 hits, currently Pretendard fallback) + OG cards + email templates (~8 hits, runtime CDN Fraunces). v1.0 alignment = Redaction 10/50 italic for EN with locale-aware `[lang="en"]` swap, Pretendard 600 KO, OG/email font decision per yagi.** | **yagi visual review 또는 Phase 8** |
+| **FU-R1** | **MED-3 partial / Phase 8 (yagi 2026-05-09)** | **R2 `published/*` migration (CopyObject + DeleteObject in `approveSubmissionAction`) + `tmp/*` lifecycle rule (24h expire). Current code stores submission `content_r2_key` under `tmp/campaigns/<id>/<nonce>/<file>` directly with no post-approval move; applying lifecycle rule alone would delete approved/distributed media after 24h (production data loss). Defer until both sides land together. Acceptable interim per scale-aware (memory #19): 1-person creator workspace stage; HIGH-2 token + per-IP presign rate-limit cap entry abuse.** | **Phase 8 entry 또는 응모량 100건 도달 시점 — 둘 중 빠른 쪽** |
 
 ---
 
