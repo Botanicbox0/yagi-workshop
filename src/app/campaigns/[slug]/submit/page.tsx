@@ -13,12 +13,21 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import {
   getCampaignBySlug,
   getCampaignCategories,
 } from "@/lib/campaigns/queries";
 import { SubmitApplicationForm } from "./submit-form";
+
+// Wave C v2 K-06 LOOP-1 FINDING 1 fix: locale-free route /campaigns/[slug]/submit
+// has no [locale] segment, so the success-view sign-in fallback link must
+// resolve locale from the request header to avoid stranding EN-primary visitors
+// on a /ko/signin page.
+function detectLocale(acceptLanguage: string): "ko" | "en" {
+  return acceptLanguage.toLowerCase().startsWith("ko") ? "ko" : "en";
+}
 
 export const dynamic = "force-dynamic";
 
@@ -136,6 +145,7 @@ export default async function CampaignSubmitPage({ params }: Props) {
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
         allowR2Upload={campaign.allow_r2_upload}
         allowExternalUrl={campaign.allow_external_url}
+        locale={detectLocale((await headers()).get("accept-language") ?? "")}
       />
     </div>
   );

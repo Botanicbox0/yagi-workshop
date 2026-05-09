@@ -343,7 +343,13 @@ export function SidebarNav({
           </div>
         )}
         {visibleGroups.map((group) => {
-          const showLabel = group.items.length >= 2;
+          // Wave C v2 K-06 LOOP-1 FINDING 2 fix: the new `operations` group
+          // has a single yagi_admin entry (`admin`) by design — without the
+          // exception below, showLabel >= 2 would suppress the "운영" label
+          // and the ShieldCheck link would appear orphaned at the bottom of
+          // the sidebar. Treat operations as always-labeled even at 1 entry.
+          const showLabel =
+            group.key === "operations" || group.items.length >= 2;
           return (
             <div
               key={group.key}

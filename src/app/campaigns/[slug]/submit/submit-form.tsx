@@ -92,12 +92,17 @@ export function SubmitApplicationForm({
   categories,
   allowR2Upload,
   allowExternalUrl,
+  locale,
 }: {
   campaignSlug: string;
   campaignTitle: string;
   categories: CategoryOption[];
   allowR2Upload: boolean;
   allowExternalUrl: boolean;
+  /** Wave C v2 K-06 LOOP-1 FINDING 1 fix: locale resolved server-side from
+   *  Accept-Language since the submit route is locale-free. Used for the
+   *  MED-4 sign-in fallback link path. */
+  locale: "ko" | "en";
 }) {
   const t = useTranslations("public_campaigns.submit");
   const [isPending, startTransition] = useTransition();
@@ -320,7 +325,7 @@ export function SubmitApplicationForm({
               {t("success_email_failed", { email: submitted.email })}
             </p>
             <Link
-              href={`/ko/signin?email=${encodeURIComponent(submitted.email)}&next=/ko/app/my-submissions`}
+              href={`/${locale}/signin?email=${encodeURIComponent(submitted.email)}&next=/${locale}/app/my-submissions`}
               className="inline-flex items-center gap-1 text-sm accent-sage hover:underline underline-offset-2"
             >
               {t("success_login_fallback_cta")}
