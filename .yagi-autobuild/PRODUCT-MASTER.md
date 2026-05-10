@@ -281,3 +281,201 @@ Phase 9 (Challenge) = optional. Phase 7 (Distributed Campaign) ship 후 *시장 
 ---
 
 *v1.6 amendment 끝. Phase 7 SPEC v3 source-of-truth 확정. v2 (Challenge MVP) deprecated.*
+
+---
+---
+
+# v1.8 Amendment (2026-05-09, post-Wave-C-v2-ship, NORTH STAR re-lock)
+
+> append-only. v1.7 손실 (PRODUCT-MASTER 복구 사고) 으로 NORTH STAR 표현이
+> 메모리/handoff 에 분산. 본 amendment 로 정본에 lock.
+> 추가로 v1.6 §W 의 "B2B SaaS for K-pop content marketing" 표현이
+> 회사/Product 정체성과 정합 안 됨을 인지 — 정정.
+> 야기 chat 2026-05-09: "mass distribution 인가 우리 지향점이?" + "우리 SaaS 는 아니잖아"
+> → 두 challenge 모두 root 에서 정확. 본 amendment 로 정본 정렬.
+
+## §Z — NORTH STAR + 회사/Product 정체성 lock
+
+### 회사 (㈜야기워크숍)
+
+**"We extend who you are. Your identity, beyond limits."**
+
+**AI Native Entertainment Studio.**
+
+3 axes 모두 **Studio business** (SaaS 아님):
+
+| Axis | 정체 | Identity Extension 대상 |
+|---|---|---|
+| YAGI Workshop (이 product) | AI Music Visual Studio | 뮤지션의 음악 IP |
+| Digital Human IP Studio | AI Twin / 보이스클로닝 / 브랜딩 Studio | 개인의 identity |
+| Original IP | Animation / IP Studio (KART ZERO, AI 아이돌) | 야기 자체 identity 창조 |
+
+공통 root = **identity extension**. 3 axes 모두 같은 root 에서 분기.
+
+### Product (YAGI Workshop)
+
+**"AI Visuals for Musicians."**
+
+**Tech-enabled AI Music Visual Studio + Distributed Campaign Platform.**
+
+- **Core business**: AI Visual production studio (curation + production + relationship management)
+- **Tech layer**: 자체 platform (sponsor 캠페인 발주, creator 응모, 검수, distribution tracking)
+- **본질**: studio business with proprietary ops platform
+- **결과 effect (NOT NORTH STAR)**: B2B recurring revenue, multi-channel exposure, mass distribution
+
+핵심 패턴:
+
+```
+한 곡 → N명 creator 의 N가지 다양한 해석 → N개 채널 자연 amplify
+        (curated diversity)              (creator-driven)
+```
+
+**Multiplication by diversity**, NOT mass quantity.
+
+### 부정확한 표현 (사용 금지)
+
+| ❌ 잘못된 표현 | 이유 | ✅ 정확한 표현 |
+|---|---|---|
+| "B2B SaaS" | multi-tenant self-serve software 정의와 안 맞음 (creator pool manual 영입, yagi 인력 적극 개입) | Tech-enabled production studio |
+| "Mass distribution platform" | push 광고 느낌, creator-driven 본질 누락 | Distributed Campaign (creator-driven multi-perspective) |
+| "AI 영상 마켓플레이스" | curation 이 본질이지 marketplace 아님 (수요-공급 자동매칭 X) | Curated AI creator network + production studio |
+| "K-pop 캠페인 SaaS" | SaaS 분류 자체 부정확 | AI Native 음악 영상 스튜디오 |
+
+### Means (실행 모델, NORTH STAR 아님)
+
+- **Distributed Campaign 모델** = 한 곡 → N가지 해석 → N개 채널
+- **Curated creator pool** = manual 영입 + 점진적 funnel
+- **Multi-channel amplification** = creator algorithm 노출 (UGC pattern)
+- **Self-serve interfaces** = sponsor 발주 / creator 응모 (yagi ops 효율화 layer)
+
+### 정확한 표현 권장 (외부 communication 시)
+
+**영문 (한 줄)**:
+- "AI Native Music Visual Studio."
+- "AI Visuals for Musicians, made by curated creators."
+- "A workshop for AI-native music visuals." (회사 명칭 'Workshop' root 일치)
+
+**한국어 (한 줄)**:
+- "AI Native 음악 영상 스튜디오"
+- "K-pop 뮤지션을 위한 AI Visual 스튜디오"
+
+**사업 분류**:
+- Tech-enabled production studio
+- AI Native creative agency + proprietary platform
+- Studio + Platform hybrid
+
+**Marketing hooks**:
+- *"한 곡, N가지 해석, N개 채널."*
+- *"AI 시대 뮤지션의 visual extension."*
+- *"From one song, many perspectives, many channels."*
+
+## §AA — ICP + GTM (v1.7 손실 분 복원)
+
+### 1차 ICP (Phase 7-8 ship 시점)
+
+- **가수**: 인디 ~ 미들 K-pop 아티스트
+  - SM/HYBE/JYP 외 mid-tier 레이블 소속 또는 인디
+  - 본인 IP/곡 활용한 marketing budget 보유
+- **레이블/매니지먼트**: 위 size 의 마케팅 담당자
+- **진입 sequence**:
+  1. 야기 acquaintance network 우선 (Phase 7 ship 후 1-2주 안 첫 client)
+  2. Cold outreach (Phase 8+)
+  3. Inbound (Phase 10 Inbound Track ship 후)
+
+### 2차 ICP (Phase 10+ Inbound Track)
+
+- **Brand 마케팅** — 뮤지션 IP 활용 캠페인 발주
+- 음반사/엔터테인먼트 소속 마케팅 팀
+
+### 3차 ICP (Phase 8+ Roster funnel)
+
+- 우수 creator → Roster 영입 → 본인 곡 sponsor (Artist workspace)
+- Bidirectional: Creator 가 sponsor 로 graduation
+
+### Pricing model (잠정 — 별도 chat / amendment 에서 deep dive 필요)
+
+Phase 7 ship 시점:
+- 첫 client = 야기 network 기반, custom pricing 협의 단계
+- 가격 모델 미정 (캠페인당 fee 가능성 높음)
+
+Phase 8+ (확장 시점):
+- 캠페인당 fee + creator pool access fee subscription 가능성
+- 또는 monthly retainer (production studio 일반 모델)
+- Compensation flow (sponsor → yagi → creator) 의 yagi share 포함
+
+명시적 pricing 결정 = 별도 amendment 또는 별도 GTM 문서에서 lock.
+
+### Creator pool curation criteria (Phase 8 Creator Hub 에서 deep dive)
+
+Phase 7 ship 시점:
+- Manual 영입 (야기 acquaintance network)
+- Application form 없음 (invite-only)
+
+Phase 8+ (확장 시점):
+- Application form (포트폴리오, 채널 follower, AI tool 활용도)
+- Tier system (verified / standard / new)
+- Trial campaign 단계
+- 명시적 criteria = 별도 amendment.
+
+## §AB — PRODUCT-MASTER 복구 사고 정정
+
+본 amendment 가 NORTH STAR + 회사/Product 정체성 정본. 다른 source (메모리, handoff, yagi-context skill, 외부 보고서) 와 충돌 시 **본 amendment 가 우선**.
+
+복구 사고 실태 정정:
+
+- **v1.0~v1.5 본문 전체** = 영구 손실
+- **v1.7 amendment** = 영구 손실
+- **v1.6 amendment** = 보존됨 (현재 PRODUCT-MASTER.md 의 유일한 남은 source)
+
+이전 메모리 표현 ("v1.5 본문만 손실") 부정확. 메모리 정정 필요.
+
+## §AC — 외부 communication 표현 정정 (즉시 적용)
+
+### 청창사 보고서 / 투자자 deck / 첫 client pitch 표현
+
+**이전 (수정 대상)**:
+> "K-pop·뮤지션 대상 AI 영상 콘텐츠 분산 캠페인 SaaS 플랫폼 'YAGI Workshop'"
+
+**정확한 표현 — 3가지 길이 옵션**:
+
+**Option 1 (1줄, 30자)**:
+> AI Native 음악 영상 스튜디오 'YAGI Workshop'
+
+**Option 2 (2-3줄, 80자)** — 청창사 보고서 권장:
+> 뮤지션을 위한 AI 영상 production studio + 분산 캠페인 platform 'YAGI Workshop'.
+> 큐레이션된 AI 크리에이터 네트워크가 한 곡을 다양한 해석으로 제작 후 각자의 채널에 amplify.
+
+**Option 3 (자세히, 4-5줄)** — 투자자 deck 권장:
+> K-pop 뮤지션이 본인 음악과 정체성을 다양한 AI 크리에이터의 다양한 해석으로 확장하고
+> 각 채널에서 자연스럽게 amplify 되는 AI Native 음악 영상 스튜디오 'YAGI Workshop'.
+> 자체 platform 으로 sponsor 캠페인 발주, creator 응모/검수, distribution tracking 까지
+> end-to-end 관리. Phase 7 (Distributed Campaign) Production 배포 완료
+> (https://studio.yagiworkshop.xyz). Phase 8+ Creator Hub + Inbound Track 으로 확장 예정.
+
+### 회사 소개 표현
+
+**이전 (수정 대상)**:
+> "AI Native Entertainment Studio. Digital Human IP Studio + AI 아이돌 + KART ZERO 어린이 애니메이션 IP."
+
+**정확한 표현 (NORTH STAR + 3 axes 정렬)**:
+> ㈜야기워크숍 — AI Native Entertainment Studio.
+> "We extend who you are. Your identity, beyond limits."
+> Identity extension 을 root 로 3 axes 운영:
+> ① YAGI Workshop (AI Music Visual Studio, 뮤지션 IP)
+> ② Digital Human IP Studio (AI Twin, 개인 identity)
+> ③ Original IP (KART ZERO, AI 아이돌, 자체 IP 창조).
+
+## Quote (v1.8)
+
+> "mass distribution 인가 우리 지향점이? 다시 한 번 대화를 보면서 생각해봐."
+> — chat 2026-05-09. v1.6 §W 의 "mass content marketing" + 후속 표현이
+> means/effect 와 ends 혼동시킴 인지. v1.8 §Z 정정 trigger.
+
+> "우리 saas 는 아니잖아."
+> — chat 2026-05-09. v1.6 §W "B2B SaaS for K-pop content marketing" 표현이
+> Studio 정체성과 정합 안 됨 인지. v1.8 §Z 정정 trigger.
+
+---
+
+*v1.8 amendment 끝. NORTH STAR + 회사/Product 정체성 + ICP/GTM source-of-truth lock.*
+*다음 amendment 후보: §AD pricing model lock, §AE creator curation criteria, §AF 회사 vision deck (3 axes 정렬 narrative).*
