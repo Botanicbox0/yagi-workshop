@@ -479,3 +479,204 @@ Phase 8+ (확장 시점):
 
 *v1.8 amendment 끝. NORTH STAR + 회사/Product 정체성 + ICP/GTM source-of-truth lock.*
 *다음 amendment 후보: §AD pricing model lock, §AE creator curation criteria, §AF 회사 vision deck (3 axes 정렬 narrative).*
+
+---
+---
+
+# v1.9 Amendment (2026-05-11, Wave C v2 ship retrospective — Locale-Free Route Checklist lock)
+
+> append-only. Wave C v2 ship 진행 중 3개 hotfix (HIGH-7/8/9) 가 모두
+> **"신규 locale-free public route 도입 패턴"** 의 일부로 드러남을
+> 인지. v1.8 footer 의 §AD pricing model lock 안내는 넓은 의미의 next-amendment
+> 제안이었으나, 해당 후보는 별도 amendment (v1.10+) 로 소괄. 이번 §AD는
+> 실제 retrospective의 긴급도가 더 높은 구조 lock 용도.
+>
+> Trigger: Wave C v2 production smoke (chat 2026-05-11) 에서 세 번 연속 404 / 500 / 500
+> 발생. 매번 다른 증상 표출, 하나의 근원적 원인.
+
+## §AD — Locale-Free Public Route Checklist (PRE-SHIP)
+
+### Trigger — Wave C v2 3 hotfix 패턴
+
+| Hotfix | 증상 | 누락된 것 |
+|---|---|---|
+| **HIGH-7** | `/campaigns/[slug]/submit` → 404 | middleware matcher 의 negative lookahead 에 `campaigns` 누락 |
+| **HIGH-8** | `/campaigns/[slug]/submit` → 500 (server) | `getTranslations("namespace")` 호출 이 next-intl provider context 밖 |
+| **HIGH-9** | `/campaigns/[slug]/submit` → 500 (render) | `src/app/campaigns/layout.tsx` 자체가 없음 |
+
+세 hotfix 모두 **"신규 locale-free public route 도입 시 필요한 3가지 구성요소"** 의
+일부. 신규 route 만들 때 다음 4가지를 **반드시 동시에** 처리.
+
+### Checklist (4 items)
+
+#### 1️⃣ Middleware matcher 업데이트 (HIGH-7 예방)
+
+`src/middleware.ts` 의 matcher 의 negative lookahead 에 신규 route segment 추가:
+
+```typescript
+// Before 예시:
+"/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|.*\\..*).*)"
+
+// After (신규 <NEW_ROUTE> 추가 후):
+"/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|<NEW_ROUTE>|.*\\..*).*)"
+```
+
+이유: next-intl middleware 가 기본적으로 모든 `/path/*` 를 `/<locale>/path/*` 로
+redirect. locale-free 의도의 route 는 명시적 exclude 필요.
+
+Reference 패턴: `showcase`, `challenges` 는 이미 exclude 되어 있음.
+
+#### 2️⃣ 자체 `layout.tsx` 생성 (HIGH-9 예방)
+
+`src/app/<NEW_ROUTE>/layout.tsx` 생성. **Root layout 은 `return children;` 만** 하므로
+`<html>`, `<body>`, font, `NextIntlClientProvider`, `Toaster` 모두 자체 layout 에서 처리.
+
+```typescript
+// src/app/<NEW_ROUTE>/layout.tsx
+import { NextIntlClientProvider } from "next-intl";
+import { Toaster } from "sonner";
+import { headers } from "next/headers";
+import { inter } from "../fonts";
+import "../globals.css";
+
+function detectLocale(acceptLanguage: string): "ko" | "en" {
+  return acceptLanguage.toLowerCase().startsWith("ko") ? "ko" : "en";
+}
+
+export default async function <Route>Layout({ children }: { children: React.ReactNode }) {
+  const headerList = await headers();
+  const locale = detectLocale(headerList.get("accept-language") ?? "");
+  const messages = (
+    (await import(`../../../messages/${locale}.json`)) as {
+      default: Record<string, unknown>;
+    }
+  ).default;
+
+  return (
+    <html lang={locale} className={inter.variable}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+        />
+      </head>
+      <body className="bg-background text-foreground antialiased">
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+          <Toaster position="top-center" />
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+Reference 패턴:
+- `src/app/challenges/layout.tsx` (ko 고정 예시)
+- `src/app/showcase/[slug]/layout.tsx` (단일 page 용 layout)
+- `src/app/campaigns/layout.tsx` (HIGH-9 이후 추가됨, KO/EN dynamic resolve)
+
+#### 3️⃣ `getTranslations({ locale, namespace })` 명시 호출 (HIGH-8 예방)
+
+Layout 이 NextIntlClientProvider 로 wrap 하더라도, server component 에서
+`getTranslations` 을 호출할 때 다음 패턴 사용:
+
+```typescript
+// page.tsx (server component)
+import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
+
+function detectLocale(acceptLanguage: string): "ko" | "en" {
+  return acceptLanguage.toLowerCase().startsWith("ko") ? "ko" : "en";
+}
+
+export default async function Page() {
+  const headerList = await headers();
+  const locale = detectLocale(headerList.get("accept-language") ?? "");
+  
+  // ⚠️ locale-free route 에서는 이 형태 필수
+  const t = await getTranslations({
+    locale,
+    namespace: "my_namespace",
+  });
+  
+  // ...
+}
+```
+
+Without layout (시나리오 A): layout 이 아직 없어도 page 자체에서
+`getTranslations({locale, namespace})` 명시 호출 시 작동 (provider 없어도 OK)
+But still throws if client component 가 `useTranslations` 호출.
+
+With layout (시나리오 B, **권장**): layout 이 NextIntlClientProvider wrap 시
+일반 `getTranslations("namespace")` 도 작동. 단 `getTranslations({locale, namespace})` 도
+valid 이고 더 명시적.
+
+권장: **시나리오 B + page 도 `{locale, namespace}` 명시**. layout 추가 깜빡을
+하더라도 page 자체는 안전.
+
+#### 4️⃣ PRE-SHIP smoke verify
+
+Production deploy 직전 (ff-merge 후, smoke matrix 시작 전):
+
+```bash
+# Production fresh build READY 이후:
+curl -I https://studio.yagiworkshop.xyz/<NEW_ROUTE>/<test-id>
+# Expected: HTTP/2 200 (or 302 for redirect to specific path)
+# Bad: 404 (middleware 문제), 500 (layout / i18n / render 문제)
+
+# 또는 incognito browser 에서 직접 access 후 DevTools Network tab 확인:
+# - Status code 200
+# - Response body 가 valid HTML (`<html>`, `<body>`, `<head>` 존재)
+# - Console error 0
+```
+
+실패 시 Vercel runtime log:
+```
+# Vercel:get_runtime_logs deploymentId=<dpl_id> level=error
+```
+→ server side throw stack trace 에서 root cause 파악.
+
+### Review scope gap 목출 (Wave C v2 retrospective)
+
+K-05 Codex (data/server action 검증) + K-06 Opus subagent (design 검증) 두 review
+모두 세 hotfix 를 **catch 못함**. 이유:
+
+| Review | Scope | Locale-free route gap |
+|---|---|---|
+| K-05 (Codex) | Data/server action/security | 코드 자체는 valid (import/call 정적 OK) — runtime 에서만 발현 |
+| K-06 (Opus) | Design/typography/visual | UI render 자체 못 도달해서 visual review 잠함 |
+| **누락** | **Routing/middleware/layout 회귀** | 다음 SPEC 부터 K-04 (routing review) 추가 결정 |
+
+신규 public route 도입 포함하는 wave 에서는 **K-04 (routing review)** 신규 추가:
+- middleware.ts matcher 변경 영향 verify
+- 신규 page.tsx 의 layout 계층 verify
+- locale group 안/밖 결정 verify
+- `curl -I` PRE-SHIP smoke 1줄 추가
+
+또는 K-04 도입이 과하다면 최소한 **kickoff SPEC 에 "Locale-Free Public Route Checklist"
+명시 + PRE-SHIP smoke 에 `curl -I` 1줄 추가** 가 필수.
+
+### Reference
+
+- 자세한 retrospective: `.yagi-autobuild/phase-7/lessons.md` (Wave C v2 ship 완료 후 commit)
+- HIGH-7 commit: `8cf4814`
+- HIGH-8 commit: `e8e85f4`
+- HIGH-9 commit: (Wave C v2 ship 시점 추가)
+
+## Quote (v1.9)
+
+> "https://studio.yagiworkshop.xyz/campaigns/test-smoke-001/submit 이 또한 404"
+> — chat 2026-05-11. HIGH-7 trigger.
+
+> "Application error: a client-side exception has occurred while loading studio.yagiworkshop.xyz"
+> — chat 2026-05-11. HIGH-8 trigger.
+
+> "https://studio.yagiworkshop.xyz/campaigns/test-smoke-001/submit 로드 X
+> dev tool error : 1185-f1c453c0901621f9.js:1 Uncaught Error"
+> — chat 2026-05-11. HIGH-9 trigger.
+
+---
+
+*v1.9 amendment 끝. Locale-Free Public Route Checklist source-of-truth lock.*
+*다음 amendment 후보: pricing model, creator curation criteria, 회사 vision deck (3 axes narrative), K-04 routing review 프로토콜.*
