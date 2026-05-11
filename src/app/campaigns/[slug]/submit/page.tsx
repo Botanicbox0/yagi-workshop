@@ -77,7 +77,16 @@ function ClosedCard({
 
 export default async function CampaignSubmitPage({ params }: Props) {
   const { slug } = await params;
-  const t = await getTranslations("public_campaigns.submit");
+
+  // HIGH-8: locale-free route 는 next-intl provider context 밖이므로
+  // getTranslations 호출 시 locale 을 명시 전달해야 한다. Accept-Language
+  // 헤더 기반으로 먼저 resolve 후 t() 및 form prop 양쪽에 reuse.
+  const headerList = await headers();
+  const locale = detectLocale(headerList.get("accept-language") ?? "");
+  const t = await getTranslations({
+    locale,
+    namespace: "public_campaigns.submit",
+  });
 
   const campaign = await getCampaignBySlug(slug);
   if (!campaign) notFound();
@@ -145,7 +154,7 @@ export default async function CampaignSubmitPage({ params }: Props) {
         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
         allowR2Upload={campaign.allow_r2_upload}
         allowExternalUrl={campaign.allow_external_url}
-        locale={detectLocale((await headers()).get("accept-language") ?? "")}
+        locale={locale}
       />
     </div>
   );
