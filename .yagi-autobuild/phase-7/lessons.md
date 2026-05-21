@@ -69,7 +69,31 @@ FU candidate (Wave D 또는 별도): signup onboarding에 creator selector 추�
 
 Defer: Phase 8 published/* migration ship 후 lifecycle enable.
 
-## L8 — Server action error → client UI silent (2026-05-21 prod smoke 발견)
+## L8 — Server action error → client UI silent (2026-05-21 prod smoke 발견) [AMENDED 2026-05-22: false positive]
+
+**2026-05-22 amendment — false positive 확정.** git blame 으로 6개 layer 모두
+smoke 시점 (2026-05-21T17:29:26Z) **이전** commit 임 확인:
+
+| Layer | Commit | Timestamp (UTC) | Δ vs smoke |
+|---|---|---|---|
+| `submit-form.tsx` ERROR_KEYS / toastError / result.ok branch (line 42–71, 216–226, 278–291) | `1185bb8d` | 2026-05-06T11:28:01Z | −15 days |
+| `campaigns/layout.tsx` `<Toaster position="top-center" />` (line 41) | `7c31554e` | 2026-05-11T15:12:26Z | −10 days |
+| `messages/ko.json` `error.*` keys (line 2315–2350) | `1185bb8d` | 2026-05-06T11:28:01Z | −15 days |
+| `messages/en.json` `error.*` keys (line 2250–2285) | `1185bb8d` | 2026-05-06T11:28:01Z | −15 days |
+
+→ Toast pipeline (코드 + i18n + Toaster mount) 가 이미 완비된 상태로 smoke 진입.
+실제 root cause = **smoke observer (Claude Code Playwright session) 가 Sonner
+4초 top-center toast 를 놓침** — network response-body 만 응시. "응답이 없는"
+UX 는 코드 issue 아닌 observation gap.
+
+**Lesson update:** Server action diagnosis 시 client toast mount 확인 우선.
+toast 표시 가능성이 있으면 click 직후 page screenshot 1초 capture, 또는
+Playwright `browser_evaluate` 로 toast container DOM 확인 필요. memory
+[[server-action-diagnose-via-network]] step 0 에 명시 추가.
+
+**원본 finding 본문 (preserve for context):**
+
+증상: campaigns/[slug]/submit/_actions/submit-application-action.ts 의 `submitApplicationAction` 이 `{ ok: false, error: "campaign_closed" }` 또는 `{ ok: false, error: "workspace_create_failed" }` 등 정상 반환했는데 client (submit-form.tsx) 에서 toast / inline error 표시 안 됨. 사용자는 button 눌렀는데 페이지 그대로 — "응답이 없는" UX.
 
 증상: campaigns/[slug]/submit/_actions/submit-application-action.ts 의 `submitApplicationAction` 이 `{ ok: false, error: "campaign_closed" }` 또는 `{ ok: false, error: "workspace_create_failed" }` 등 정상 반환했는데 client (submit-form.tsx) 에서 toast / inline error 표시 안 됨. 사용자는 button 눌렀는데 페이지 그대로 — "응답이 없는" UX.
 
@@ -120,6 +144,13 @@ Fix candidate:
 - 야기 Google Workspace 콘솔에서 yagiworkshop.xyz 의 catch-all 설정 → yagi@yagiworkshop.xyz 로 forward, OR test email 전용 alias (smoke@) 생성
 - Resend dashboard 에서 outbound delivery log 확인하여 bounce/reject 여부 명확화
 - Wave C v2 SPEC MED-4 의 `magic_link_sent` 플래그가 campaign_submissions schema 에 실제로 들어가지 않았음 (column list 확인) — SPEC implementation drift 의심, follow-up grep 필요
+  - **AMENDED 2026-05-22 (2nd pass)**: drift 도 아니고 SPEC wording 문제도
+    아님. Re-read 결과 `_wave_c_v2_spec.md` MED-4 section (line 307–338) 은
+    JSX result branch (`{magic_link_sent ? ... : ...}`) 만 명시, "column"
+    표현 없음. `magic_link_sent` 단어가 SPEC 에 등장하는 모든 위치 = JSX
+    variable + acceptance criteria. **Implementation = SPEC = per-request
+    return flag. drift 없음, FU-S1 불필요.** Lesson 관찰자가 변수명만
+    보고 "column 인가?" 잘못 가정했던 것. SPEC / 코드 변경 작업 없음.
 
 ## Cross-cut FU-discovered today (Wave D 또는 Phase 8 candidate)
 
