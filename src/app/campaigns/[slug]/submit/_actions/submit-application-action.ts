@@ -225,7 +225,7 @@ async function createCreatorWorkspace(
   const sbAny = sbAdmin as any;
   const { data: ws, error: wsErr } = await sbAny
     .from("workspaces")
-    .insert({ kind: "creator", name, slug, plan: "free", brand_guide: {} })
+    .insert({ kind: "creator", name, slug, brand_guide: {} })
     .select("id")
     .single();
 
