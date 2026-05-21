@@ -680,3 +680,259 @@ K-05 Codex (data/server action 검증) + K-06 Opus subagent (design 검증) 두 
 
 *v1.9 amendment 끝. Locale-Free Public Route Checklist source-of-truth lock.*
 *다음 amendment 후보: pricing model, creator curation criteria, 회사 vision deck (3 axes narrative), K-04 routing review 프로토콜.*
+
+---
+---
+
+# v1.10 Amendment (2026-05-12, Full Product Vision lock — 4 actor + 3 mechanism)
+
+> append-only. 이전 amendment 들은 NORTH STAR (v1.8 §Z) + technical retrospective (v1.9 §AD)
+> 에 국한. 그러나 **product 전체 vision (4 actor + 3 mechanism + identity
+> extension matrix)** 은 PM 정본에 명시 lock 안 됨.
+>
+> 야기 chat 2026-05-12 (Web Claude 와 함께): big picture 텍스트 정리 결과
+> 완벽하게 정합 verify. v1.10 으로 PM 정본 정렬.
+>
+> Trigger: 야기 "현재 PM 이 나의 비전과 완벽하게 일치하지 않은 것 같은데 수정이 필요하지 않을까".
+
+## §AE — 4 Actor + Workspace Kind 정렬
+
+### Actor 4종
+
+본 platform은 4가지 actor의 만남입니다. 각자 고유한 identity 확장 목적과 surface를
+가집니다.
+
+| Actor | Workspace kind (schema) | 정체성 | 핵심 capability |
+|---|---|---|---|
+| **BRAND** (소비재 브랜드) | `brand` | 광고주, 제품/서비스 판매자 | 광고 의뢰 + 기획안 수신 + project room + (옵션) Digital Twin 의 brand-side adoption |
+| **CELEBRITY** (셀러브리티) | `artist` (v1.10 기준) | 개인 IP, identity owner | Identity 등록 + Twin 활용 commission + 외부 brand 요청 수락/거절 |
+| **CREATOR** (AI 크리에이터) | `creator` | AI 영상 제작 skill 보유자 | 매스 AI 캠페인 응모 + 선별 프로젝트 참여 |
+| **YAGI INTERNAL** (야기워크숍 내부) | `yagi_admin` | Studio operator + production team | 큐레이션 + 제작 + 모든 ops orchestrate + 외부 협업자 invite |
+
+### Workspace kind schema 정합 verify
+
+- 현재 schema: `workspaces.kind` constraint = `('brand', 'agency', 'artist', 'creator', 'yagi_admin')`
+- v1.10 기준에서 "Celebrity" actor = schema의 `artist` kind와 **동일**
+  - Rationale: `artist` kind는 초기에 K-pop 아티스트 프레임으로 만들어졌으나, identity
+    owner 개념으로 넓혀서 celebrity (배우/모델/인플루언서/KOL 등) 포석
+  - Phase 8+ Digital Twin ship 시 UI naming은 "Celebrity" 또는 "연예인"으로 재정렬 고려
+- `agency` kind = Phase 11+ deferred (광고대행사/매니지먼트 소속 용 placeholder, 아직 UI 없음)
+- `yagi_admin` kind = 단일 YAGI Internal workspace (`320c1564-b0e7-481a-871c-be8d9bb605a8`)
+
+### 외부 협업자 처리 (open question 답안)
+
+야기 vision에서 "우리가 프로젝트에 초대한 인원"은 **YAGI Internal workspace의 member** 또는
+**project-scoped guest** 으로 처리 예정. 별도 workspace kind 아님.
+
+- Project 단위 invite 권한: `workspace_members` table에 'guest' role 추가 고려 (Phase 8+)
+- Project room 내 활동 scope는 해당 project로 제한
+- 외부 PM/PD/디자이너/VFX 외주자 등 다양한 role 수용 가능
+
+## §AF — 3 Mechanism (Identity Extension)
+
+본 platform은 identity extension을 **3가지 mechanism**으로 구현합니다. 각 mechanism은
+다른 cardinality + 다른 actor 조합.
+
+### ① Digital Twin (1:1 identity replication)
+
+**Cardinality**: 1 celebrity → 1 twin asset → N brand 가 license/adopt
+
+**Actor flow**:
+```
+[CELEBRITY] 본인 identity 등록 (face, voice, motion, style)
+  ↓
+[YAGI INTERNAL] twin asset 제작 + model artifact storage
+  ↓
+[BRAND] 특정 캠페인에서 twin 사용 요청 (opt-in)
+  ↓
+[CELEBRITY] 사용 승인/거절 (per-use approval, default opt-out)
+  ↓
+[YAGI INTERNAL + (옵션) 외부 협업자] twin 활용 제작
+  ↓
+[BRAND] 결과물 수령
+```
+
+**Status**: ❌ 미 ship (Phase 8+, 현재 가장 큰 gap)
+
+**해소 필요 결정 (open questions)**:
+- Twin asset 소유권 모델 (celebrity 고정 소유 vs license 구조)
+- Per-use approval vs blanket license
+- Twin asset storage (R2 + model artifact) + access control
+- Twin training (야기 internal이 처리 vs creator outsource 가능성)
+- Revenue share (brand → yagi → celebrity)
+
+### ② Distributed Campaign (1:N creator interpretation)
+
+**Cardinality**: 1 sponsor (brand or celebrity) → 1 brief → N creator 응모 → N 작품 → N 채널
+
+**Actor flow**: (Phase 7 Wave C v2에서 shipped)
+```
+[BRAND 또는 CELEBRITY 또는 YAGI INTERNAL] 캠페인 발주
+  ↓
+[YAGI INTERNAL] 캠페인 큐레이션 (brief + 보상 + 기간)
+  ↓
+[CREATOR 다수] 응모 (익명 + auto-onboard, Wave C v2 spec)
+  ↓
+[YAGI INTERNAL] 검수 (approved_for_distribution)
+  ↓
+[CREATOR 다수] 각자 채널에 distribute + 보상 수령
+  ↓
+[SPONSOR] 다양한 해석 + multi-channel exposure 수령
+```
+
+**Status**: ✅ Wave C v2 ship 완료 (2026-05-11)
+
+**핵심 value**: *"한 곡, N가지 해석, N개 채널"* — multiplication by diversity, NOT mass quantity.
+
+### ③ Curated Project (1:few invite-only)
+
+**Cardinality**: 1 brand/celebrity → 1 brief → yagi internal 이 1-3 creator 선별 invite → 단일 갈래 production
+
+**Actor flow**:
+```
+[BRAND 또는 CELEBRITY] 고가치 commission 의뢰
+  ↓
+[YAGI INTERNAL] 기획안 작성 + 적합 creator 1-3명 선별
+  ↓
+[CREATOR (선별됨)] invite 수락/거절
+  ↓
+[YAGI INTERNAL + 선별 CREATOR + (옵션) 외부 협업자] Project room 제작
+  ↓
+[BRAND/CELEBRITY] 결과물 수령
+```
+
+**Status**: ❌ 미 ship (Phase 8+)
+
+**Distributed Campaign과 차이**:
+- Distributed = anonymous mass funnel, low-mid budget, creator algorithm 노출이 incentive
+- Curated = invite-only, high budget, deliverable 자체가 보상
+
+### Mechanism 간 관계
+
+**3 mechanism 은 동일 actor가 다른 surface에서 만나는 구조**:
+
+- Brand 의 3-path: Twin opt-in OR Campaign 발주 OR Curated 의뢰
+- Celebrity 의 3-path: Twin 등록 OR Campaign 발주 OR 자체 콘텐츠 commission
+- Creator 의 2-path: Campaign 응모 OR Curated invite 수락
+
+## §AG — Identity Extension Matrix
+
+누구의 identity를 누가 확장하는가:
+
+| Identity 주체 | 확장 방식 | 활용 actor | Mechanism |
+|---|---|---|---|
+| **Celebrity** | Digital Twin → 광고 콘텐츠 | Brand commission | ① Twin |
+| **Celebrity** | Twin 으로 본인 새 콘텐츠 | Self commission | ① Twin + ③ Curated |
+| **Brand** | Celebrity twin 빌려서 브랜드 강화 | Brand-driven | ① Twin |
+| **Brand/Celebrity 음악/IP** | Creator 다수의 해석 → 다채널 노출 | Sponsor-driven | ② Campaign |
+| **Brand/Celebrity** | 고가치 제작 (우수 creator 선별) | Sponsor-driven | ③ Curated |
+| **Creator 본인** | 본인 채널에서 작품 노출 + 보상 | Creator-driven | ② Campaign 부수 |
+| **Yagi Internal** | Studio 창조 IP (KART ZERO, AI 아이돌) | Internal-driven | 별도 axis (본 platform 외) |
+
+**모두 identity extension의 다른 measure**. SaaS가 아닌 **studio + curation + identity
+infrastructure** 본질.
+
+## §AH — Product Surface Map (7 영역)
+
+Workspace kind 별 surface mapping:
+
+| 영역 | Brand | Celebrity | Creator | Yagi Internal | 현재 상태 |
+|---|---|---|---|---|---|
+| 1. Workspace 생성/온보딩 | ✅ | ✅ | ✅ (Wave C v2 자동) | ✅ | shipped (Phase 1-2) |
+| 2. Project 관리 (의뢰 + 기획안 + Brief) | ✅ | ✅ | ❌ | ✅ | shipped (Phase 2.7-2.8) |
+| 3. Commission (광고 발주) | ✅ | ✅ | ❌ | ✅ | shipped (Phase 2.7) |
+| 4. **Digital Twin** (identity 등록 + adoption) | △ 사용만 | ✅ 등록+승인 | ❌ | ✅ | ❌ **미 ship** (Phase 8+) |
+| 5. **Distributed Campaign** | ✅ | ✅ | ✅ 응모 | ✅ 검수 | ✅ shipped (Phase 7 Wave C v2) |
+| 6. **Curated Project** (선별 invite-only) | ❌ | ❌ | ✅ 참여 | ✅ invite | ❌ **미 ship** (Phase 8+) |
+| 7. Creator Hub (Roster + tier) | ❌ | ❌ | ✅ | ✅ | ❌ **미 ship** (Phase 8+) |
+
+## §AI — Phase 8+ Gap Analysis + Priority (잠정)
+
+### Wave C v2 (Phase 7 Distributed Campaign) ship 후 남은 gap
+
+**Critical gap (vision 과 현 구현 사이의 가장 큰 차이)**:
+1. ❌ Digital Twin mechanism 전체 (Celebrity workspace의 핵심)
+2. ❌ Celebrity workspace UI (identity registry)
+3. ❌ Brand workspace의 twin opt-in UI
+4. ❌ Twin asset storage + access control + permission flow
+5. ❌ Curated Project (selected invite path)
+6. ❌ Brand ↔ Celebrity twin adoption matching
+7. ❌ 외부 협업자 invite system (project-scoped guest role)
+
+### Phase 8+ 잠정 priority (야기 결정 필요)
+
+제안:
+
+```
+Option A — Twin-first (high impact, high complexity):
+  Phase 8 = Digital Twin core (registry + adoption + per-use approval)
+  Phase 9 = Curated Project + Project room 확장
+  Phase 10 = Creator Hub
+
+Option B — Surface-first (low risk, incremental):
+  Phase 8 = Curated Project + Creator Hub
+  Phase 9 = Digital Twin core
+  Phase 10 = Twin + Curated 통합
+
+Option C — Demand-driven:
+  첫 celebrity client 영입 → 그 필요 따라 twin or curated 우선
+  첫 brand client 영입 → commission flow refinement 우선
+```
+
+phase priority 결정 = 별도 amendment (야기 + Web Claude phase planning chat) 에서 lock.
+
+## §AJ — Vision Cohesion Check (야기 verify 2026-05-12)
+
+야기 chat 2026-05-12: "완벽하게 정합해". §AE–AI 모두 야기 vision 과 정합 verify 완료.
+
+### 끝난 텍스트 (외부 소개)
+
+**Short (1줄)**:
+> AI Native Identity Extension Studio.
+
+**Medium (3줄)**:
+> Brand, Celebrity, Creator 의 identity 를 AI 로 확장하는 studio + platform.
+> Digital Twin (1:1), Distributed Campaign (1:N), Curated Project (1:few) 3가지 mechanism.
+> Yagi Internal 이 orchestrate.
+
+**Long (full)**:
+> ㈜야기워크숍 은 AI Native Entertainment Studio — "We extend who you are. Your identity, beyond limits."
+> 본 platform 은 회사의 첫 번째 axis YAGI Workshop 으로, identity extension 의 marketplace + production layer 를 제공.
+>
+> 4 actor 가 만남:
+> - Brand (소비재 브랜드) — 광고 의뢰 + 기획안 + project room + celebrity twin opt-in
+> - Celebrity (셀러브리티) — 본인 identity 등록 + twin 활용 commission + 외부 brand 요청 수락
+> - Creator (AI 크리에이터) — 매스 AI 캠페인 응모 + 선별 프로젝트 참여
+> - Yagi Internal — 큐레이션 + 제작 + 모든 ops orchestrate
+>
+> 3가지 identity extension mechanism:
+> - Digital Twin (1:1 replication) — Celebrity ↔ Brand
+> - Distributed Campaign (1:N interpretation) — Brand/Celebrity → Creator 다수
+> - Curated Project (1:few invite) — Yagi 가 선별
+>
+> Phase 7 Wave C v2 = Distributed Campaign mechanism ship 완료.
+> Phase 8+ = Digital Twin + Curated Project + Creator Hub 확장.
+
+### Open questions (다음 amendment 용, 야기 결정 대기)
+
+1. Phase 8+ priority (Option A/B/C 중 선택)
+2. Digital Twin 소유권 모델 (celebrity 고정 vs license 구조)
+3. Twin per-use approval vs blanket license
+4. Twin training operator (yagi internal vs creator outsource)
+5. Revenue share 구조 (brand → yagi → celebrity, brand → yagi → creator)
+6. UI naming — "Celebrity" vs "Artist" vs "연예인"
+7. 외부 협업자 role schema (`workspace_members.role = 'guest'`)
+
+## Quote (v1.10)
+
+> "내가 구현하고자 하는 건 (워딩은 좀 다를 수 있음):
+> * 소비재 브랜드 > 원활하게 광고 의뢰를 할 수 있고, 기획안을 받아볼 수 있으며 우리 인원 및 우리가 프로젝트에 초대한 인원과 소통할 수 있다. 더불어 digital twin을 활용해서 진행할지도 선택할 수 있다.
+> * 셀러브리티 > 자신의 아이덱티티를 등록하고 digital twin을 활용한 광고 제작 요청, 광고 제작 수락할 수 있다.
+> * 크리에이터 - 매스 ai 캠페인에 참여할 수 있고 선별된 프로젝트에 참여할 수 있다.
+> * 야기워크숍 내부 어드민 및 멤버"
+> — 야기 chat 2026-05-12. 이것이 v1.10 의 trigger.
+
+---
+
+*v1.10 amendment 끝. Full product vision (4 actor + 3 mechanism + identity extension matrix) source-of-truth lock.*
+*다음 amendment 후보: Phase 8 lock (Twin vs Curated priority), Digital Twin spec, pricing model, K-04 routing review 프로토콜.*
