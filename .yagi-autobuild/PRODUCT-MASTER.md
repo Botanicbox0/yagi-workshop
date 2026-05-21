@@ -936,3 +936,86 @@ phase priority 결정 = 별도 amendment (야기 + Web Claude phase planning cha
 
 *v1.10 amendment 끝. Full product vision (4 actor + 3 mechanism + identity extension matrix) source-of-truth lock.*
 *다음 amendment 후보: Phase 8 lock (Twin vs Curated priority), Digital Twin spec, pricing model, K-04 routing review 프로토콜.*
+
+
+---
+
+## v1.11 amendment (2026-05-22)
+
+**Lock**: Phase 8+ priority Option B (compressed) + §AJ partial resolutions
+**Trigger**: §AJ Q#1 lock + Phase 8 spec entry prerequisite (Q#7 schema migration)
+**Rule**: append-only. v1.5/v1.7 사고 학습 적용 — 본문 overwrite 금지.
+
+### §AJ Q#1~Q#7 status update
+
+- **Q#1** (Phase 8+ priority): **RESOLVED** → §AK 참조
+- **Q#2** (Twin asset 소유권 — celebrity 고정 vs license 구조): **DEFERRED** → Phase 8 mid Twin discovery 시 lock
+- **Q#3** (Twin per-use approval vs blanket license): **DEFERRED** → Q#2와 동시 Phase 8 mid lock
+- **Q#4** (Twin training operator): **DEFAULT LOCKED** → yagi internal default. Creator outsource는 Phase 10+ scale-up 시 재검토.
+- **Q#5** (Revenue share 구조): **DEFERRED** → Phase 9 첫 Celebrity client 계약 시 lock
+- **Q#6** (UI naming — Artist vs Celebrity vs 연예인): **RESOLVED (Builder, 2026-05-22)** → Wave D 시점 "Artist / 아티스트" 유지. Phase 9 Twin ship 시 "Celebrity / 연예인" rename 재검토 (v1.12+ amendment 후보).
+- **Q#7** (External collaborator role schema): **LOCKED** → `workspace_members.role = 'guest'` 도입, project-scoped permission (workspace-wide 권한 없음). Phase 8 Wave A spec entry 전 schema migration 필수.
+
+### §AK Phase 8+ Roadmap (Option B compressed) — LOCKED
+
+**원칙**: v1.8 §Z NORTH STAR "AI Visuals for Musicians" + v1.10 §AE Identity Extension Studio 정합. v1.10 §AI Option B verbatim + compression amendment.
+
+**Phase 8 — Surface Ship**
+- Curated Project (musician 작품 큐레이션 surface)
+- Creator Hub (artist-facing entry point)
+- Wave C v2 Campaign 인프라 **재사용** (re-use, not rebuild)
+- Prerequisite: §AJ Q#7 `guest` role schema migration 선행
+- Phase 8 mid부터 Phase 9 Twin discovery 병행 시작 (영업 cycle 활성화)
+
+**Phase 9 — Twin Core (compressed timeline)**
+- Digital Human IP Studio axis activation point
+- 첫 Celebrity twin enterprise 영업 cycle (Q4 영업 capacity 활용)
+- IG idol channel = Twin first living reference (Q2 leverage)
+
+**Phase 10 — Integration**
+- Twin × Campaign × Curated 통합 navigation
+- IG channel을 Twin showcase로 공식 reframe
+- "Identity Extension Studio" 외부 표현 본격 deploy
+
+**Decision basis (Q1~Q5 답변 vector, 2026-05-22)**:
+
+| Q | 답변 | Direction |
+|---|---|---|
+| Q1 paying lead (4-8주) | B 강함 | Surface cash |
+| Q2 IG channel role | A 강함 | Twin proof |
+| Q3 Twin 도입 시점 | sequential but 빠르게 | B + compression |
+| Q4 영업 capacity | 완전 가능 | A enabler |
+| Q5 6개월 regret-min | Twin moat 못 깔면 후회 | A thesis compass |
+
+Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Strict B 위험 (Q5 regret-min 충족 못 함, Twin 6개월 too late). **Compression = 유일 정합 path.**
+
+**3 axes / 3 mechanism 정렬**:
+- Axis 1 YAGI Workshop = Phase 8 + Phase 10 cover
+- Axis 2 Digital Human IP Studio = Phase 9 activation point
+- Axis 3 Original IP = 본 platform 외, 영향 없음
+- ② Distributed Campaign (Wave C v2 ship됨) = Phase 8 진입 leverage
+- ③ Curated Project = Phase 8 Surface 핵심
+- ① Digital Twin = Phase 9 compressed
+
+### §AL Phase 8/9 KPI (잠정 lock)
+
+**Phase 8 잠정**:
+- Wave C v2 인프라 활용 신규 Campaign 수 (sponsor-driven)
+- 첫 paying Brand/Creator lead 전환 1건 (4-8주 내)
+- Curated Project 첫 invite-only 계약 1건
+
+**Phase 8 mid Twin discovery 잠정**:
+- 첫 Celebrity outreach 5건
+- 첫 Celebrity twin asset registration 1건 (paid 또는 무료 시범)
+
+**Phase 9 잠정**:
+- 첫 Celebrity twin enterprise 계약 close
+- IG idol channel을 Twin first living reference로 공식 reframe
+- Brand workspace twin opt-in UI ship + 첫 brand-celebrity twin adoption 매칭
+
+**정밀화 trigger**: paying lead 구체 정보 + 영업 활동 실측치 확보 후 v1.12 amendment에서 finalize.
+
+---
+
+*v1.11 amendment 끝. Phase 8+ Option B (compressed) lock + §AJ partial resolutions.*
+*다음 amendment 후보 (v1.12+): Q#6 Phase 9 rename, Q#2/Q#3 Phase 8 mid Twin discovery 반영, §AL KPI 정밀화, Q#5 Phase 9 첫 Celebrity 계약.*
