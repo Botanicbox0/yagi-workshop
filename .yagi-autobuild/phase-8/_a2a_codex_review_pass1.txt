@@ -1,0 +1,29 @@
+﻿Verdict: CLEAN
+
+Findings: None.
+
+No HIGH or MEDIUM findings found in the reviewed local A.2.a migration/actions. I reviewed the local drifted migration `20260522080120...` because the applied `20260522080234...` file is not present locally; assuming MCP-applied SQL is equivalent.
+
+**Focus Area Dispositions**
+F1 Guest WRITE escalation: PASS. New WRITE policies are only `thread_msgs_guest_insert` and `deliverables_guest_insert`, both `FOR INSERT`, both gated by `is_project_guest(...)`, not `is_ws_member(...)`: [migration](<C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260522080120_phase_8_a2a_invite_guest_curated_write.sql:138>). A.1 hardening still excludes `guest` from `is_ws_member`: [hardening](<C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260521193550_phase_8_a1_is_ws_member_role_filter.sql:17>).
+
+F2 Token validation: PASS. Existing token uniqueness and 14-day default are present in baseline; RPC locks by token with `FOR UPDATE`, rejects accepted/expired/wrong-email tokens, and returns only `workspace_id` + `project_id`: [RPC](<C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260522080120_phase_8_a2a_invite_guest_curated_write.sql:84>).
+
+F3 RPC atomicity/idempotency: PASS. Single PL/pgSQL function body; exceptions roll back the body. `workspace_members` and `project_guests` use `ON CONFLICT DO NOTHING`, then accepted_at is set on first successful acceptance: [RPC inserts](<C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260522080120_phase_8_a2a_invite_guest_curated_write.sql:105>). Replay after success is intentionally rejected before mutation via `accepted_at IS NOT NULL`.
+
+F4 Curated project boundary: PASS. Server action requires signed-in user, then yagi_admin or workspace `admin`; `member` does not pass the app-layer gate before service-role insert: [create action](<C:/Users/yout4/yagi-studio/yagi-workshop/src/app/[locale]/app/projects/_actions/create-curated-project.ts:50>).
+
+F5 CHECK bypass scenarios: PASS. Constraint enforces guest requires non-null `project_id`, admin/member require null `project_id`, and applies to UPDATE as a normal CHECK. `project_id` FK uses `ON DELETE CASCADE`: [constraint](<C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260522080120_phase_8_a2a_invite_guest_curated_write.sql:25>).
+
+F6 Cross-workspace grant surface: PASS for A.2.a. Invite action verifies `project.workspace_id === workspaceId` before inserting the invitation: [send action](<C:/Users/yout4/yagi-studio/yagi-workshop/src/app/[locale]/app/projects/[id]/_actions/send-guest-invitation.ts:83>). RPC consumes the workspace/project already bound on the locked invitation row, with no caller-supplied workspace/project mutation path.
+
+**Additional Items**
+Email failure path: acceptable. Invitation persists and invite URL is returned/logged fallback: [send action](<C:/Users/yout4/yagi-studio/yagi-workshop/src/app/[locale]/app/projects/[id]/_actions/send-guest-invitation.ts:126>).
+
+`projects_wizard_draft_uniq`: expected UX issue only, not A.2.a security.
+
+Existing admin/member accepting a guest invite: no privilege issue; existing role is preserved, grant row may be stale but functionally harmless.
+
+`joined_at` preservation for pre-existing workspace member: acceptable.
+
+Review only; no files modified.
