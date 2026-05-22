@@ -1,0 +1,21 @@
+﻿Verdict: HIGH
+
+1. HIGH-A `guest` rows are still treated as full workspace members by `is_ws_member`, so Q#7 can widen existing member RLS far beyond A.1’s project-scoped guest branch. Evidence: `is_ws_member` only checks `user_id` + `workspace_id`, with no role exclusion, at `supabase/migrations/20260422120000_phase_2_0_baseline.sql:169`; Q#7 adds `guest` to `workspace_members.role` at `supabase/migrations/20260521184035_phase_8_q7_guest_role_and_project_guests.sql:14`; existing policies such as `proj_threads_rw`, `deliverables_rw`, and `thread_msgs_rw` use `is_ws_member` for read/write at baseline lines `3729`, `4075`, and `4407`. Recommended fix: before treating `workspace_members.role='guest'` as active in the owning workspace, either change `is_ws_member` to exclude guests or introduce/use a stricter helper for legacy member policies, then add explicit guest-only project-scoped policies where intended.
+
+2. MEDIUM-C `project_guests` does not enforce that the granted `workspace_member_id` belongs to the same workspace as the target project. Evidence: schema has independent FKs only at `supabase/migrations/20260521184035_phase_8_q7_guest_role_and_project_guests.sql:24`; helper checks `pg.project_id`, `wm.user_id`, and `wm.role='guest'` but not `wm.workspace_id = projects.workspace_id` at lines `50-56`; INSERT policy validates admin rights against the target project workspace only at `supabase/migrations/20260521192144_phase_8_a1_guest_rls.sql:63`. Recommended fix: if same-workspace grants are the invariant, add a schema-level or RLS-level same-workspace check and mirror it inside `is_project_guest`; if cross-workspace grants are intentional, document that and update the expected disposition for F4/F7.
+
+Focus area dispositions:
+- F1: PASS. All A.1 `is_project_guest` calls pass `project_id` first and `auth.uid()` second.
+- F2: PASS for the new `projects_guest_select` branch; no deleted-row widening from A.1.
+- F3: PASS for restrictive SELECT inheritance; caveat covered by HIGH finding because old write policies may already include guests via `is_ws_member`.
+- F4: PASS only for project-owner workspace admin derivation; cross-workspace invariant is not enforced.
+- F5: PASS. Guest self-select only exposes grant rows tied to the caller’s own `workspace_members.id`.
+- F6: PASS. `TO public` on `preprod_boards_guest_select` does not anon-leak because `auth.uid()` is NULL and helper returns false.
+- F7: PASS for preventing workspace A admin from granting project B; separate same-workspace grant invariant is missing as noted.
+- F8: PASS. A.1 adds no guest DELETE path to `workspace_members` or `projects`.
+
+Additional:
+- A1: PASS. No UPDATE policy on `project_guests`; default deny is effective.
+- A2: SKIPPED per FU-8.
+- A3: PASS. `DROP POLICY IF EXISTS` + `CREATE POLICY` is idempotent for these 10 policies.
+- A4: PASS. No policy-name collisions found for the 10 new names.

@@ -1,0 +1,17 @@
+﻿Verdict: CLEAN
+
+Findings:
+1. CLEAN-G6 - No actionable pass-2 findings. Evidence: [20260521195000_phase_8_a1_is_ws_member_role_filter.sql](</C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260521195000_phase_8_a1_is_ws_member_role_filter.sql:17>) recreates `public.is_ws_member` as `STABLE SECURITY DEFINER`, keeps `SET search_path TO 'public'`, and adds `role IN ('admin', 'member')`; Q#7’s CHECK only permits `admin/member/guest` in [20260521184035_phase_8_q7_guest_role_and_project_guests.sql](</C:/Users/yout4/yagi-studio/yagi-workshop/supabase/migrations/20260521184035_phase_8_q7_guest_role_and_project_guests.sql:15>). Fix: none.
+
+Focus area dispositions:
+- F1: PASS. `guest` no longer passes `is_ws_member`; current enum has no other leaking role. Future roles require explicit inclusion.
+- F2: PASS. Legacy `is_ws_member` paths are narrowed only for guests; admin/member semantics remain intact.
+- F3: PASS. Guest read policies use `is_project_guest`, not `is_ws_member`, across projects, threads, messages, deliverables, preprod boards, and briefing documents.
+- F4: PASS. Guest INSERT via `proj_threads_rw`, `thread_msgs_rw` / `thread_messages_insert`, and `deliverables_rw` is now denied because their `is_ws_member` branch fails and A.1 adds no guest INSERT policies.
+- F5: PASS. Latest `projects_insert` uses `is_ws_member OR is_yagi_admin`; admin/member still pass, guest now fails.
+- F6: PASS. `CREATE OR REPLACE FUNCTION` is idempotent here and preserves existing function privileges; no `GRANT/REVOKE/ALTER FUNCTION is_ws_member` drift was found.
+- F7: PASS. Tightening is only subtractive for `guest`; I found no newly permitted path.
+
+Additional dispositions:
+- A1: PASS. The new function comment accurately describes admin/member-only behavior and routes guests to `is_project_guest`.
+- A2: PASS. No other public helper like `is_ws_writer` / `is_ws_authoring` exists. Existing relevant helpers are `is_ws_admin`, `is_yagi_admin`, `is_yagi_internal_ws`, and `is_project_guest`.
