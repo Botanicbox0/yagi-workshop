@@ -1,0 +1,20 @@
+[Unit]
+Description=Claude Code background executor (claude-bg tmux session, --dangerously-skip-permissions)
+Documentation=https://github.com/anthropics/claude-code
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+Environment=PATH=/home/yagi/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=TERM=xterm-256color
+WorkingDirectory=/mnt/d/AI/projects/yagi-workshop
+# tmux new-session -d forks the server (Type=forking tracks it). The launcher
+# respawns the REPL on exit, so the session stays alive across crashes.
+ExecStart=/usr/bin/tmux -L claude-bg new-session -d -s claude-bg /mnt/d/AI/scripts/router/claude_bg_launch.sh
+ExecStop=/usr/bin/tmux -L claude-bg kill-server
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
