@@ -90,3 +90,6 @@ supabase/.branches/
 # Optimized outputs land directly in public/brand/ and ship to the bundle;
 # sources stay on disk for re-export but are never committed.
 public/brand/sources/
+
+# RTX Pro 6000 server agent context (not for main desktop dev — see CLAUDE.md)
+AGENTS.md
