@@ -1,0 +1,48 @@
+# Codex CLI default — 품질 우선 + 토큰 효율
+# 2026-05-28 야기 정책 (TASK 25): 속도 OK, 토큰 효율, 품질 유지
+# 검증: codex doctor + codex exec (gpt-5.5), codex-cli 0.134.0
+# 프로필은 V2 별도 파일: quick.config.toml / deep.config.toml (codex --profile quick|deep)
+
+model = "gpt-5.5"
+model_reasoning_effort = "high"        # 품질 (high reasoning)
+model_verbosity = "low"                # 토큰 절약 (출력 길이만 줄임 — 품질 무관)
+model_reasoning_summary = "none"       # reasoning summary 비표시 (토큰 절약)
+plan_mode_reasoning_effort = "xhigh"   # plan mode는 최대 추론
+
+sandbox_mode = "workspace-write"
+approval_policy = "on-failure"
+personality = "pragmatic"
+
+[projects."/tmp/codex-test"]
+trust_level = "trusted"
+
+[projects."/mnt/d/AI/projects/yagi-workshop"]
+trust_level = "trusted"
+
+[projects."/mnt/c/Users/User"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 1
+
+# --- MCP servers (TASK 30A) ----------------------------------------------------
+# Defined in base config because V2 profile files (<name>.config.toml) do NOT
+# layer nested tables like [mcp_servers.*] — only top-level scalars. This Codex
+# install is yagi-workshop-dedicated, so global MCP scope is acceptable.
+# Verification tools, not unrestricted autonomy (see yagi-studio-system.md).
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/mnt/d/AI/projects/yagi-workshop"]
+
+# Supabase: read-only by default. SUPABASE_ACCESS_TOKEN inherited from the
+# launching environment (Hermes router) — never embedded here (committed-safe).
+[mcp_servers.supabase]
+command = "npx"
+args = ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"]
+
+[mcp_servers.higgsfield]
+url = "https://mcp.higgsfield.ai/mcp"

@@ -91,5 +91,6 @@ supabase/.branches/
 # sources stay on disk for re-export but are never committed.
 public/brand/sources/
 
-# RTX Pro 6000 server agent context (not for main desktop dev — see CLAUDE.md)
-AGENTS.md
+# Hierarchical AGENTS.md (TASK 30A) are now committed canonical Codex context
+# (top + src + .yagi-autobuild + supabase). Previously the top-level AGENTS.md
+# was gitignored as RTX-server-local; that separation is superseded by 30A.

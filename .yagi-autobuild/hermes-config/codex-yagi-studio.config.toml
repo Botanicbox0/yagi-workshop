@@ -1,0 +1,18 @@
+# Codex profile: yagi-studio — yagi-workshop primary SWE executor (TASK 30A)
+# Invoke: codex --profile yagi-studio ...
+# Layered on top of ~/.codex/config.toml (V2 profile = $CODEX_HOME/<name>.config.toml).
+# Committed-safe: NO secrets here. Supabase MCP inherits SUPABASE_ACCESS_TOKEN from the
+# launching environment (Hermes router config.yaml); not embedded in this file.
+
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+model_verbosity = "low"
+model_reasoning_summary = "concise"
+experimental_instructions_file = "/home/yagi/.codex/yagi-studio-system.md"
+
+sandbox_mode = "workspace-write"
+approval_policy = "on-failure"
+
+# MCP servers (playwright / filesystem / supabase --read-only / higgsfield) live in
+# base ~/.codex/config.toml: V2 profile files do NOT layer [mcp_servers.*] tables,
+# only top-level scalars. They are therefore shared across profiles by design.
