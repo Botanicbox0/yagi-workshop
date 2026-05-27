@@ -1,0 +1,21 @@
+[Unit]
+Description=Hermes Slack Gateway (bidirectional — Slack ↔ Hermes agent)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Foreground runner (recommended for WSL per `hermes gateway run` help).
+# Reads SLACK_BOT_TOKEN + SLACK_APP_TOKEN (Socket Mode) from ~/.hermes/.env.
+# Clear any stale gateway.pid/lock first — a dead-PID lock made `gateway run`
+# refuse to start and triggered a 14x systemd restart loop (TASK 27 fix).
+ExecStartPre=/bin/bash -c 'hermes gateway stop 2>/dev/null; sleep 2; true'
+ExecStart=/home/yagi/.local/bin/hermes gateway run
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=120
+# gateway drain_timeout=180s → allow >=210s on stop so systemd doesn't SIGKILL mid-drain
+TimeoutStopSec=210
+
+[Install]
+WantedBy=default.target
