@@ -11,7 +11,20 @@ Source of truth: `.md` files under `.yagi-autobuild/design-system/`. Generated `
 
 ## [Unreleased]
 
-### Changed — v1.1 color system (2026-05-27)
+### Changed — v1.2 Dark Brand UI (2026-05-28) — supersedes v1.1
+
+- **Dark is now the main canvas and the default.** `globals.css` `:root` **and** `.dark` carry the v1.2 dark palette; `.light` becomes a tidied opt-in secondary palette. `layout.tsx` `next-themes` flipped to `defaultTheme="dark"` (system preference disabled).
+- **3-tier color system (60-30-10), repointed:**
+  - **Neutral (60%)** — near-black canvas `#0A0A0A`, surface `#161616`, light ink `#F0F0F0`, muted ink `#888888`, hairline border `#2A2A2A`. Pure-black `#000000` void / light main canvas forbidden.
+  - **Red `#ED1E1E` primary (~10%)** — CTAs, primary actions, active states, brand mark; on-fill text `#FFFFFF`; on-dark text variant `#FF453A`; hover `#FF3B30`.
+  - **Gold `#FAD204` secondary (~5–15%)** — small highlights/tags; on-fill text `#0A0A0A`; hover `#FFDE2E`.
+- **Token rename**: `--ds-vermillion*` → `--ds-red*`; Tailwind family `vermillion` → `brand` (`bg-brand` / `text-brand-on` / `bg-brand-soft` / `text-brand-ink` / `accent-brand`). New raw tokens `--ds-surface` (`#161616`), `--ds-border` (`#2A2A2A`). Gold family keeps its name; values repointed `#F3D174`→`#FAD204`.
+- **Typography**: Display = **Editorial New** (EN) with Pretendard fallback (font face not yet in repo — config-only stack). Body = Pretendard Variable (KO) / Geist (EN/tech). Tailwind `display` family + `--ds-font-display-en` updated.
+- **Docs**: PRINCIPLES.md §3 / §4.2 / §8 rewritten to dark v1.2. ARCHITECTURE.md §18.4 added (supersedes §18.2/§18.3 color + theme). `CLAUDE.md` rule #10 updated. `yagi-design-system` SKILL.md §2/§9 synced. Decision: PRODUCT-MASTER §AO (commit d1d4fd1).
+- **Migration scope**: token-based components swept (`vermillion`→`brand`, 8 files incl. `status-pill.ts` tone keys). **v1.1 hardcoded literals** (`#9A361F`/`#FBEAE6`, cool-neutral `text-black`/`bg-white`) sweep deferred to a separate dispatch pending visual smoke test.
+- **Preserved**: Tailwind semantic state colors (`amber-500`/`red-500`/`green-500`, success/warning/info/destructive) — not brand colors. Note: semantic destructive red and brand Red coexist by design.
+
+### Changed — v1.1 color system (2026-05-27) — superseded by v1.2
 
 - **3-tier color system (60-30-10)** replaces the v1.0 sage sole-accent rule:
   - **Neutral (60%)** — warm-ivory canvas `#FAF7F2`, pure-white surfaces, warm near-black ink `#1F1A15`, warm border `#E8E0D4`. Pure-white bg / pure-black body text forbidden.

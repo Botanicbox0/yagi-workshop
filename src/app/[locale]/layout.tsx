@@ -38,13 +38,11 @@ export default async function LocaleLayout({
         />
       </head>
       <body>
-        {/* Phase 4.x Wave C.5b sub_00 ROLLBACK (2026-05-01) — yagi visual
-            review verdict: dark editorial reads as too heavy. Restored
-            to defaultTheme="light" + enableSystem (Phase 2.7.1 P12).
-            v1.0 design tokens (sage accent, ink hierarchy, radius,
-            Pretendard) live on at light-bg-adapted values in
-            globals.css; only the dark canvas itself is reversed. */}
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        {/* Design System v1.2 (2026-05-28, PRODUCT-MASTER §AO) — Dark Brand
+            UI is now the main canvas. defaultTheme="dark", system preference
+            disabled so the brand dark palette is the consistent default.
+            `.light` remains an opt-in secondary palette in globals.css. */}
+        <ThemeProvider attribute="class" defaultTheme="dark">
           <NextIntlClientProvider messages={messages}>
             <PublicChromeHeader />
             {children}

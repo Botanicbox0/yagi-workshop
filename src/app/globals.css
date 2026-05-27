@@ -2,117 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Phase 4.x Wave C.5b sub_00 ROLLBACK (2026-05-01) — yagi visual review
-   verdict: dark editorial reads as too heavy. Phase 2.7.1 P12 light
-   canvas restored as :root. Token vocabulary (accent, ink hierarchy,
-   surface tints, border ramp, motion, radius, Pretendard) stays — but
-   values shift to light-bg-friendly forms so the post-sub_00 pages that
-   already consumed `.bg-card-deep` / `.border-subtle` / `.ink-*` /
-   `.accent-vermillion` / `.bg-vermillion` still render legibly on white.
+/* ============================================================================
+   YAGI Design System v1.2 — Dark Brand UI (2026-05-28)
+   PRODUCT-MASTER §AO lock-in. Supersedes §AM v1.1 (warm-ivory + Vermillion).
 
-   v1.1 (2026-05-27): accent migrated from sage #71D083 (retired) to
-   Vermillion #9A361F primary + Gold #F3D174 secondary, on a warm Neutral
-   tier (60-30-10). See PRODUCT-MASTER §AM + ARCHITECTURE §18.3.
+   Dark is now the MAIN canvas and the default :root. next-themes
+   defaultTheme="dark" (layout.tsx). `.light` is a tidied secondary palette,
+   opt-in only.
 
-   Source of truth for the v1.0 token *names* + intent:
-   ~/.claude/skills/yagi-design-system/references/{tokens.json,
-   globals.css, DESIGN-flora.md}. The values below are the LIGHT-MODE
-   adaptation of those tokens; the dark variants are kept under .dark
-   for opt-in surfaces and a possible future flip. */
+   3-tier, 60-30-10:
+   - Neutral (60% dominant): bg #0A0A0A, surface #161616, ink #F0F0F0,
+     ink-muted #888888, border #2A2A2A.
+   - Brand primary — Red #ED1E1E (~10%): CTAs, primary actions, brand mark,
+     active state. On-fill text #FFFFFF; on-dark text variant #FF453A.
+   - Brand secondary — Gold #FAD204 (~5–15% support): highlights, tags,
+     accents. On-fill text #0A0A0A.
+   Tailwind semantic state colors (success/warning/info/destructive) are
+   preserved — they are NOT brand colors.
+
+   Display: Editorial New (EN). Body: Pretendard Variable (KO) / Geist (EN/tech).
+   Source of truth: PRODUCT-MASTER §AO + ARCHITECTURE §18.3 +
+   .yagi-autobuild/design-system/PRINCIPLES.md.
+   ========================================================================== */
 
 @layer base {
   :root {
-    /* v1.1 (2026-05-27): warm Neutral tier — warm-ivory page canvas (#FAF7F2),
-       pure-white elevated surfaces, warm near-black ink (#1F1A15). Replaces the
-       achromatic P12 ramp. 60-30-10: neutrals are the 60% dominant. Pure white
-       page bg / pure black body text are forbidden. See PRODUCT-MASTER §AM. */
-    --background: 38 44% 96%;
-    --foreground: 30 19% 10%;
+    /* v1.2 dark — the main canvas. Neutral tier is the 60% dominant:
+       near-black bg #0A0A0A, surface #161616, ink #F0F0F0. */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 94%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 30 19% 10%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 94%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 19% 10%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 94%;
 
-    --primary: 30 19% 10%;
-    --primary-foreground: 0 0% 100%;
+    /* shadcn primary = strong neutral (inverted-CTA treatment). Brand Red
+       lives in the `brand` family, applied explicitly to CTAs. */
+    --primary: 0 0% 94%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 38 33% 96%;
-    --secondary-foreground: 30 19% 10%;
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 94%;
 
-    --muted: 38 33% 96%;
-    --muted-foreground: 33 11% 33%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 53%;
 
-    --accent: 38 33% 94%;
-    --accent-foreground: 30 19% 10%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 94%;
 
-    --destructive: 0 72% 48%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
 
     /* Phase 2.5 launchpad X1 CRITICAL #7 — semantic status tokens.
-       Used by `src/lib/ui/status-pill.ts` to centralize status badges. */
-    --success: 142 60% 92%;
-    --success-foreground: 142 72% 24%;
-    --warning: 38 92% 92%;
-    --warning-foreground: 25 95% 30%;
-    --info: 214 100% 94%;
-    --info-foreground: 214 80% 30%;
+       Used by `src/lib/ui/status-pill.ts`. Dark-tuned. */
+    --success: 142 30% 18%;
+    --success-foreground: 142 72% 72%;
+    --warning: 25 40% 18%;
+    --warning-foreground: 38 92% 72%;
+    --info: 214 40% 18%;
+    --info-foreground: 214 100% 82%;
 
-    /* v1.1: warm hairline border (#E8E0D4) to fit the warm-ivory surface. */
-    --border: 36 30% 87%;
-    --input: 36 30% 87%;
-    --ring: 30 19% 10%;
+    /* v1.2 hairline border #2A2A2A on the dark canvas. */
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 94%;
 
     --radius: 0.5rem;
 
-    /* yagi v1.0 raw tokens (LIGHT-adapted per sub_00 ROLLBACK).
-       The token names match the v1.0 spec; the values are tuned for an
-       off-white canvas. Utility classes under @layer utilities below
-       reference these vars and adapt automatically when .dark is
-       opted-in for an inverse section. */
-    --ds-bg-base:       #FAF7F2;
-    --ds-bg-raised:     rgba(255, 255, 255, 0.96);
-    --ds-bg-card:       rgba(31, 26, 21, 0.04);
-    --ds-bg-card-deep:  rgba(31, 26, 21, 0.025);
-    --ds-bg-scrim:      rgba(255, 255, 255, 0.35);
+    /* yagi raw tokens — v1.2 dark. Utility classes under @layer utilities
+       reference these vars; `.light` overrides them for the opt-in light mode. */
+    --ds-bg-base:       #0A0A0A;
+    --ds-surface:       #161616;
+    --ds-bg-raised:     rgba(22, 22, 22, 0.9);
+    --ds-bg-card:       rgba(240, 240, 240, 0.06);
+    --ds-bg-card-deep:  rgba(240, 240, 240, 0.03);
+    --ds-bg-scrim:      rgba(0, 0, 0, 0.6);
 
-    --ds-ink-primary:   #1F1A15;
-    --ds-ink-secondary: #5C544A;
-    --ds-ink-tertiary:  #8C8275;
-    --ds-ink-disabled:  rgba(31, 26, 21, 0.33);
-    --ds-ink-muted:     rgba(31, 26, 21, 0.35);
+    --ds-ink-primary:   #F0F0F0;
+    --ds-ink-secondary: #B0B0B0;
+    --ds-ink-tertiary:  #888888;
+    --ds-ink-disabled:  rgba(240, 240, 240, 0.33);
+    --ds-ink-muted:     #888888;
 
-    --ds-border-subtle: rgba(31, 26, 21, 0.08);
-    --ds-border-soft:   rgba(31, 26, 21, 0.04);
+    --ds-border:        #2A2A2A;
+    --ds-border-subtle: rgba(240, 240, 240, 0.12);
+    --ds-border-soft:   rgba(240, 240, 240, 0.06);
 
-    /* v1.1 Neutral tier aliases (60% dominant — warm ivory canvas + warm ink). */
-    --ds-neutral-bg:        #FAF7F2;
-    --ds-neutral-surface:   #FFFFFF;
-    --ds-neutral-ink:       #1F1A15;
-    --ds-neutral-ink-muted: #5C544A;
-    --ds-neutral-border:    #E8E0D4;
+    /* Neutral tier aliases (60% dominant — dark canvas + light ink). */
+    --ds-neutral-bg:        #0A0A0A;
+    --ds-neutral-surface:   #161616;
+    --ds-neutral-ink:       #F0F0F0;
+    --ds-neutral-ink-muted: #888888;
+    --ds-neutral-border:    #2A2A2A;
 
-    /* v1.1 (2026-05-27): Vermillion primary + Gold secondary; sage #71D083 retired.
-       Vermillion #9A361F is dark — it reads as its own ink on white (7.19:1). On
-       the saturated fill, text flips to a warm off-white --ds-vermillion-on-fill
-       (#FBEAE6 → 6.17:1). Gold #F3D174 is light — text-on-white uses the darker
-       --ds-gold-ink (#6B5618 → 7.07:1); on the gold fill, espresso --ds-gold-on-fill
-       (#3D2E0E → 8.89:1). All WCAG AA verified. */
-    --ds-vermillion:         #9A361F;
-    --ds-vermillion-hover:   #B8412A;
-    --ds-vermillion-soft:    rgba(154, 54, 31, 0.18);
-    --ds-vermillion-ink:     #9A361F;
-    --ds-vermillion-on-fill: #FBEAE6;
-    --ds-gold:               #F3D174;
-    --ds-gold-hover:         #E8C158;
-    --ds-gold-soft:          rgba(243, 209, 116, 0.18);
-    --ds-gold-ink:           #6B5618;
-    --ds-gold-on-fill:       #3D2E0E;
+    /* Brand primary — Red #ED1E1E (~10%). On the saturated fill, text is
+       white (--ds-red-on-fill). As text on the dark canvas, the brighter
+       --ds-red-ink #FF453A reads at ~5.8:1 (AA). Gold #FAD204 reads ~13:1
+       as text on dark; on the gold fill, text is near-black. */
+    --ds-red:         #ED1E1E;
+    --ds-red-hover:   #FF3B30;
+    --ds-red-soft:    rgba(237, 30, 30, 0.16);
+    --ds-red-ink:     #FF453A;
+    --ds-red-on-fill: #FFFFFF;
+    --ds-gold:        #FAD204;
+    --ds-gold-hover:  #FFDE2E;
+    --ds-gold-soft:   rgba(250, 210, 4, 0.16);
+    --ds-gold-ink:    #FAD204;
+    --ds-gold-on-fill:#0A0A0A;
 
     --ds-font-sans-ko:    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --ds-font-sans-en:    'Geist Variable', Geist, system-ui, sans-serif;
-    --ds-font-display-en: 'Redaction 10', 'Redaction 50', Georgia, serif;
+    --ds-font-display-en: 'Editorial New', Georgia, 'Times New Roman', serif;
     --ds-font-accent-ko:  'Mona12', 'Pretendard Variable', monospace;
     --ds-font-mono:       'Geist Mono', 'Fragment Mono', ui-monospace, SFMono-Regular, monospace;
 
@@ -128,30 +130,29 @@
     --ds-duration-default: 400ms;
   }
 
+  /* .dark mirrors :root — v1.2 dark is the canonical palette whether or not
+     next-themes has applied the class yet (no FOUC on the default theme). */
   .dark {
-    /* Phase 2.7.1 dark mapping (restored). Opt-in via the next-themes
-       theme switcher or a `.dark` className on a section wrapper for
-       inverse sections (image-led hero, footer, etc.). */
-    --background: 30 18% 9%;
-    --foreground: 38 44% 96%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 94%;
 
-    --card: 30 14% 15%;
-    --card-foreground: 38 44% 96%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 94%;
 
-    --popover: 30 14% 15%;
-    --popover-foreground: 38 44% 96%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 94%;
 
-    --primary: 38 44% 96%;
-    --primary-foreground: 30 18% 9%;
+    --primary: 0 0% 94%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 30 13% 18%;
-    --secondary-foreground: 38 44% 96%;
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 94%;
 
-    --muted: 30 13% 18%;
-    --muted-foreground: 34 16% 67%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 53%;
 
-    --accent: 30 13% 18%;
-    --accent-foreground: 38 44% 96%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 94%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
@@ -163,39 +164,79 @@
     --info: 214 40% 18%;
     --info-foreground: 214 100% 82%;
 
-    --border: 30 12% 22%;
-    --input: 30 12% 22%;
-    --ring: 38 44% 96%;
-
-    /* v1.0 raw tokens — dark variants for opt-in dark surfaces. */
-    --ds-bg-base:       #1A1612;
-    --ds-bg-raised:     rgba(42, 37, 32, 0.9);
-    --ds-bg-card:       rgba(250, 247, 242, 0.10);
-    --ds-bg-card-deep:  rgba(250, 247, 242, 0.05);
-    --ds-bg-scrim:      rgba(0, 0, 0, 0.35);
-
-    --ds-ink-primary:   #FAF7F2;
-    --ds-ink-secondary: #B8AC9C;
-    --ds-ink-tertiary:  #847B6E;
-    --ds-ink-disabled:  rgba(250, 247, 242, 0.33);
-    --ds-ink-muted:     rgba(250, 247, 242, 0.35);
-
-    --ds-border-subtle: rgba(250, 247, 242, 0.11);
-    --ds-border-soft:   rgba(250, 247, 242, 0.06);
-
-    /* v1.1 Neutral tier aliases — dark. */
-    --ds-neutral-bg:        #1A1612;
-    --ds-neutral-surface:   #2A2520;
-    --ds-neutral-ink:       #FAF7F2;
-    --ds-neutral-ink-muted: #B8AC9C;
-
-    --ds-vermillion-soft: rgba(154, 54, 31, 0.12);
-    --ds-vermillion-ink:  #E8A99B;
-    --ds-gold-soft:       rgba(243, 209, 116, 0.12);
-    --ds-gold-ink:        #F3D174;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 94%;
   }
 
-  /* Locale-aware typography variables (kept across both modes). */
+  /* Opt-in light mode — tidied secondary palette (clean neutral, same brand
+     Red + Gold). Not the main canvas. next-themes adds `.light` when toggled. */
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 92%;
+    --success-foreground: 142 72% 24%;
+    --warning: 38 92% 92%;
+    --warning-foreground: 25 95% 30%;
+    --info: 214 100% 94%;
+    --info-foreground: 214 80% 30%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
+
+    --ds-bg-base:       #FAFAFA;
+    --ds-surface:       #FFFFFF;
+    --ds-bg-raised:     rgba(255, 255, 255, 0.96);
+    --ds-bg-card:       rgba(10, 10, 10, 0.04);
+    --ds-bg-card-deep:  rgba(10, 10, 10, 0.025);
+    --ds-bg-scrim:      rgba(255, 255, 255, 0.35);
+
+    --ds-ink-primary:   #0A0A0A;
+    --ds-ink-secondary: #404040;
+    --ds-ink-tertiary:  #6E6E6E;
+    --ds-ink-disabled:  rgba(10, 10, 10, 0.33);
+    --ds-ink-muted:     #6E6E6E;
+
+    --ds-border:        #E5E5E5;
+    --ds-border-subtle: rgba(10, 10, 10, 0.08);
+    --ds-border-soft:   rgba(10, 10, 10, 0.04);
+
+    --ds-neutral-bg:        #FAFAFA;
+    --ds-neutral-surface:   #FFFFFF;
+    --ds-neutral-ink:       #0A0A0A;
+    --ds-neutral-ink-muted: #6E6E6E;
+    --ds-neutral-border:    #E5E5E5;
+
+    /* Brand on light: Red text darkens to #C81818 (~5.8:1 on white); fill
+       stays #ED1E1E with white on-fill. Gold text uses #6B5618 for AA. */
+    --ds-red-ink:      #C81818;
+    --ds-gold-ink:     #6B5618;
+  }
+
+  /* Locale-aware typography variables (kept across all modes). */
   [lang="en"] {
     --ds-font-body:    var(--ds-font-sans-en);
     --ds-font-display: var(--ds-font-display-en);
@@ -219,10 +260,9 @@
   }
 
   /* Wave C v2 HIGH-6: legacy `.font-display` rule (Fraunces resolve)
-     deleted. The `font-display` Tailwind class still exists (token kept
-     with Pretendard fallback in tailwind.config.ts) so deferred Cat B
-     editorial surfaces resolve to Pretendard until a separate visual
-     identity wave addresses them. */
+     deleted. v1.2 display = Editorial New (EN) via the `display` token
+     stack in tailwind.config.ts, falling back to Pretendard for KO and
+     when the Editorial New face is not loaded. */
 
   .label-caps {
     text-transform: uppercase;
@@ -233,10 +273,10 @@
 }
 
 @layer utilities {
-  /* yagi v1.0 surfaces — values resolve via --ds-* CSS vars so they
-     adapt automatically when a section opts into .dark for inverse
-     surfaces. */
+  /* yagi surfaces — values resolve via --ds-* CSS vars so they adapt to
+     the active mode (dark :root / .dark, or opt-in .light). */
   .bg-base       { background-color: var(--ds-bg-base); }
+  .bg-surface    { background-color: var(--ds-surface); }
   .bg-raised     { background-color: var(--ds-bg-raised); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   .bg-card-deep  { background-color: var(--ds-bg-card-deep); }
   .bg-scrim      { background-color: var(--ds-bg-scrim); }
@@ -252,18 +292,18 @@
   .border-subtle { border-color: var(--ds-border-subtle); }
   .border-soft   { border-color: var(--ds-border-soft); }
 
-  /* Vermillion (primary) + Gold (secondary) accents — v1.1, supersedes the
-     retired sage accent. Text-on-white routes through the *-ink token for AA
-     contrast; fill use sets a contrasting on-fill text (*-on). */
-  .accent-vermillion   { color: var(--ds-vermillion-ink); }
-  .bg-vermillion       { background-color: var(--ds-vermillion); color: var(--ds-vermillion-on-fill); }
-  .bg-vermillion-soft  { background-color: var(--ds-vermillion-soft); color: var(--ds-vermillion-ink); }
-  .ring-vermillion     { --tw-ring-color: var(--ds-vermillion); }
+  /* Brand Red (primary) + Gold (secondary) accents — v1.2.
+     Text-on-canvas routes through the *-ink token for AA contrast; fill use
+     sets a contrasting on-fill text. */
+  .accent-brand    { color: var(--ds-red-ink); }
+  .bg-brand        { background-color: var(--ds-red); color: var(--ds-red-on-fill); }
+  .bg-brand-soft   { background-color: var(--ds-red-soft); color: var(--ds-red-ink); }
+  .ring-brand      { --tw-ring-color: var(--ds-red); }
 
-  .accent-gold         { color: var(--ds-gold-ink); }
-  .bg-gold             { background-color: var(--ds-gold); color: var(--ds-gold-on-fill); }
-  .bg-gold-soft        { background-color: var(--ds-gold-soft); color: var(--ds-gold-ink); }
-  .ring-gold           { --tw-ring-color: var(--ds-gold); }
+  .accent-gold     { color: var(--ds-gold-ink); }
+  .bg-gold         { background-color: var(--ds-gold); color: var(--ds-gold-on-fill); }
+  .bg-gold-soft    { background-color: var(--ds-gold-soft); color: var(--ds-gold-ink); }
+  .ring-gold       { --tw-ring-color: var(--ds-gold); }
 
   /* Typography helpers */
   .font-mono-ko    { font-family: var(--ds-font-accent-ko); }

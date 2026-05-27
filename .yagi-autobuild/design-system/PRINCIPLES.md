@@ -48,16 +48,16 @@ A reusable rule is always worth more than a one-off beautiful moment. Before inv
 
 ## 3. Aesthetic direction
 
-**One direction, chosen:** *editorial minimal with modern grotesk typography on a light canvas.*
+**One direction, chosen:** *editorial premium dark — high-end AI tool, on a near-black canvas (v1.2).* References for tone: Higgsfield / Runway / ElevenLabs (high-end AI tools), editorial luxury film posters, 한국 단청.
 
-References: Linear (light mode) for density and state clarity. Webflow.com for editorial hierarchy and typographic scale. Height.app for keyboard-driven pace. Read.cv for typographic restraint on a white surface. Stripe dashboard for data-heavy editorial layouts.
+References: Linear for density and state clarity. Webflow.com for editorial hierarchy and typographic scale. Height.app for keyboard-driven pace. Read.cv for typographic restraint. Stripe dashboard for data-heavy editorial layouts.
 
 **What this looks like, concretely:**
-- Background: pure white `#FFFFFF` for primary surfaces, `#FAFAFA`–`#F5F5F5` for recessed panels. Never pure gray backgrounds with white cards — invert that.
-- Text: near-black `#0A0A0A` for body, `#1A1A1A` for headings, graded neutral for metadata.
-- Accent: brand color is **strategic, not decorative** (60-30-10, v1.1). Warm neutrals carry the **60% dominant** canvas — warm-ivory background (`#FAF7F2`), warm near-black ink (`#1F1A15`). **Vermillion `#9A361F` is the strategic 10%** — CTAs, primary actions, active nav state, brand marker — across both landing and product (`/app/*`) surfaces. **Gold `#F3D174` is small-area support** (highlights, tags, ratings, section accents). On a Vermillion fill, text is warm off-white (`#FBEAE6`). Pure-white backgrounds and pure-black body text are forbidden.
-- Primary action: solid black on white. Or white on solid black. No gradient buttons, ever.
-- Borders: `#EAEAEA` hairlines. Never double borders. Never shadows to simulate elevation.
+- Background: near-black `#0A0A0A` for primary surfaces, `#161616` for recessed panels / cards. Never a pure-black `#000000` void; never a light page background on the main canvas.
+- Text: `#F0F0F0` for body, brighter for headings, `#888888` for muted metadata.
+- Accent: brand color is **strategic, not decorative** (60-30-10, v1.2). Dark neutrals carry the **60% dominant** canvas — near-black background (`#0A0A0A`), light ink (`#F0F0F0`). **Red `#ED1E1E` is the strategic 10%** — CTAs, primary actions, active nav state, brand marker — across both landing and product (`/app/*`) surfaces. **Gold `#FAD204` is small-area support** (highlights, tags, ratings, section accents). On a Red fill, text is white (`#FFFFFF`); as text on the dark canvas, Red brightens to `#FF453A` for AA contrast. On a Gold fill, text is near-black (`#0A0A0A`).
+- Primary action: brand Red `#ED1E1E` fill, or an inverted light pill (`bg-foreground` light on dark). No gradient buttons, ever.
+- Borders: `#2A2A2A` hairlines. Never double borders. Subtle glow/gradient permitted for depth, but never hard shadows to simulate elevation.
 - Radius: 6px for inputs/buttons, 8px for cards/panels, 0 for table rows. Consistent, not playful.
 - Shadow: none by default. One permitted elevation (`0 1px 2px rgba(0,0,0,0.04)`) for floating surfaces (popover, dropdown, toast). Nothing else.
 
@@ -81,7 +81,7 @@ Pretendard Variable for body and UI. SUIT Variable for editorial headlines via t
 
 ### 4.2 Neutral-dominant (60-30-10)
 
-Warm neutrals (ivory canvas `#FAF7F2`, warm near-black ink `#1F1A15`) carry ~60% of every surface, including working tools. Visual hierarchy comes first from contrast, weight, and scale — never from decorative hue. Brand color is the strategic remainder: **Vermillion `#9A361F` for CTAs / primary actions / active states (the ~10%)** and **Gold `#F3D174` for small highlights (support, ~5–15%)**, on both landing and product (`/app/*`) surfaces. Color marks action or state, never decoration. *(v1.1, 2026-05-27 — supersedes the earlier "achromatic /app, accent landing-only" rule.)*
+Dark neutrals (near-black canvas `#0A0A0A`, surface `#161616`, light ink `#F0F0F0`) carry ~60% of every surface, including working tools. Visual hierarchy comes first from contrast, weight, and scale — never from decorative hue. Brand color is the strategic remainder: **Red `#ED1E1E` for CTAs / primary actions / active states (the ~10%)** and **Gold `#FAD204` for small highlights (support, ~5–15%)**, on both landing and product (`/app/*`) surfaces. Color marks action or state, never decoration. *(v1.2, 2026-05-28 — Dark Brand UI; supersedes v1.1 warm-ivory + Vermillion. See PRODUCT-MASTER §AO.)*
 
 ### 4.3 Hairline borders, soft shadows
 
@@ -184,22 +184,22 @@ Full scale: `TYPOGRAPHY_SPEC.md`.
 
 ## 8. Color as meaning
 
-Color is a semantic channel, not a decorative one. v1.1 uses a **3-tier system governed by the 60-30-10 rule**: neutrals dominate, brand colors punctuate.
+Color is a semantic channel, not a decorative one. v1.2 uses a **3-tier system governed by the 60-30-10 rule**: dark neutrals dominate, brand colors punctuate.
 
 Allowed roles:
-- **Neutral tier (60% — dominant)**: warm-ivory canvas (`#FAF7F2`), pure-white elevated surfaces, warm near-black ink (`#1F1A15`), warm hairline borders (`#E8E0D4`). **Never a pure-white page background; never pure-black body text.** This is the majority of what you use.
-- **Brand primary — Vermillion `#9A361F` (~10%, strategic)**: CTAs, primary actions, brand marker, active nav state. On the saturated fill, text is warm off-white (`#FBEAE6`). The most strategic tenth of the surface.
-- **Brand secondary — Gold `#F3D174` (~5–15%, support)**: highlights, tags, ratings, small icons, section accents. Small areas only — never a large fill.
-- **Semantic**: success (green), warning (amber), error (red), info (blue). Used for *state*, never decoration — and distinct from the Vermillion/Gold brand accents.
+- **Neutral tier (60% — dominant)**: near-black canvas (`#0A0A0A`), `#161616` elevated surfaces, light ink (`#F0F0F0`), muted ink (`#888888`), `#2A2A2A` hairline borders. **Never a pure-black `#000000` void; never a light page background on the main canvas.** This is the majority of what you use.
+- **Brand primary — Red `#ED1E1E` (~10%, strategic)**: CTAs, primary actions, brand marker, active nav state. On the saturated fill, text is white (`#FFFFFF`); as text on the dark canvas, Red brightens to `#FF453A`. The most strategic tenth of the surface.
+- **Brand secondary — Gold `#FAD204` (~5–15%, support)**: highlights, tags, ratings, small icons, section accents. On a Gold fill, text is near-black (`#0A0A0A`). Small areas only — never a large fill.
+- **Semantic**: success (green), warning (amber), error/destructive (red), info (blue). Used for *state*, never decoration — and distinct from the Red/Gold brand accents. (Note: semantic destructive red and brand Red coexist — destructive is a state utility, brand Red is action/identity.)
 - **Data viz palette**: only introduced when a chart exists. Reach for `DATA_VIZ_PALETTE.md` spec (not yet written, add when first chart ships).
 
 Forbidden:
-- No accent gradients.
-- No tinted backgrounds for entire pages (warm-ivory canvas only).
+- No accent gradients on text or buttons (subtle ambient glow/gradient on dark surfaces is permitted for depth — §3).
+- No tinted backgrounds for entire pages (near-black canvas only).
 - No colored text for emphasis — use weight or caps+tracking.
-- Brand colors (Vermillion + Gold combined) stay within ~30% of any surface; warm neutrals carry the rest.
+- Brand colors (Red + Gold combined) stay within ~30% of any surface; dark neutrals carry the rest.
 
-Contrast: WCAG AA minimum (4.5:1 body, 3:1 large text). Near-black on white is the default and it solves this for free.
+Contrast: WCAG AA minimum (4.5:1 body, 3:1 large text). Light ink (`#F0F0F0`) on the near-black canvas is the default and clears this comfortably. The on-dark Red text variant `#FF453A` is AA (~5.8:1); brand Red `#ED1E1E` used as a large fill takes white on-fill text.
 
 
 ---

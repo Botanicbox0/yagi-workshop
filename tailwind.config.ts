@@ -12,13 +12,10 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			sans: ["Pretendard Variable", "var(--font-inter)", "ui-sans-serif", "system-ui"],
-  			// Wave C v2 HIGH-6: Fraunces removed from build path. `display`
-  			// token kept with Pretendard fallback so the deferred Cat B
-  			// editorial surfaces (~25 hits in marketing/landing/journal/work)
-  			// continue to resolve to a sans display family until a separate
-  			// editorial-visual-identity wave addresses them per yagi-design-
-  			// system v1.0 (Redaction 10/50 italic for EN, Pretendard 600 KO).
-  			display: ["Pretendard Variable", "ui-sans-serif", "system-ui"],
+  			// v1.2 (§AO): display = Editorial New (EN), Pretendard fallback
+  			// for KO and when the Editorial New face is not yet loaded (font
+  			// file not in repo — config-only stack per TASK 24-follow).
+  			display: ["Editorial New", "Pretendard Variable", "ui-sans-serif", "system-ui"],
   			suit: ["var(--font-suit)", "Pretendard Variable", "ui-sans-serif", "system-ui"],
   			// Phase 4.x Wave C.5b sub_00 — yagi-design-system v1.0 font tokens.
   			// `body`/`display-ds`/`accent-ds` resolve via CSS vars so [lang="en"]
@@ -106,15 +103,16 @@ const config: Config = {
   			// inverse section that opts into .dark gets the dark variants
   			// of the same names.
   			//
-  			// Tailwind utilities: bg-vermillion / text-vermillion-on / bg-vermillion-soft /
+  			// Tailwind utilities: bg-brand / text-brand-on / bg-brand-soft /
   			// text-ink-primary / bg-surface-card-deep / border-edge-subtle.
-  			// v1.1 — Vermillion primary + Gold secondary (sage #71D083 retired 2026-05-27).
-  			vermillion: {
-  				DEFAULT: 'var(--ds-vermillion)',
-  				hover:   'var(--ds-vermillion-hover)',
-  				soft:    'var(--ds-vermillion-soft)',
-  				ink:     'var(--ds-vermillion-ink)',
-  				on:      'var(--ds-vermillion-on-fill)',
+  			// v1.2 (§AO) — brand Red #ED1E1E primary + Gold #FAD204 secondary on
+  			// a dark Neutral 60% tier (supersedes v1.1 Vermillion/warm-ivory).
+  			brand: {
+  				DEFAULT: 'var(--ds-red)',
+  				hover:   'var(--ds-red-hover)',
+  				soft:    'var(--ds-red-soft)',
+  				ink:     'var(--ds-red-ink)',
+  				on:      'var(--ds-red-on-fill)',
   			},
   			gold: {
   				DEFAULT: 'var(--ds-gold)',
@@ -123,9 +121,9 @@ const config: Config = {
   				ink:     'var(--ds-gold-ink)',
   				on:      'var(--ds-gold-on-fill)',
   			},
-  			// v1.1 Neutral tier (60% dominant). Warm-ivory canvas + warm ink.
+  			// v1.2 Neutral tier (60% dominant). Dark canvas (#0A0A0A) + light ink.
   			// The shadcn background/foreground/border/muted tokens already carry
-  			// these warm values; this family exposes the named --ds-neutral-* aliases.
+  			// these dark values; this family exposes the named --ds-neutral-* aliases.
   			neutral: {
   				bg:          'var(--ds-neutral-bg)',
   				surface:     'var(--ds-neutral-surface)',

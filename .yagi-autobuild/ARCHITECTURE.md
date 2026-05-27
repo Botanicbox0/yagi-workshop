@@ -540,19 +540,19 @@ Token namespaces in this repo:
 | Layer | Namespace | Purpose |
 |---|---|---|
 | shadcn HSL channel | `--background`, `--foreground`, `--accent`, ... | shadcn-component compat |
-| v1.x raw | `--ds-bg-base`, `--ds-ink-primary`, `--ds-neutral-*`, `--ds-vermillion`, `--ds-gold`, ... | rgba-aware utilities |
+| v1.x raw | `--ds-bg-base`, `--ds-surface`, `--ds-ink-primary`, `--ds-neutral-*`, `--ds-red`, `--ds-gold`, `--ds-border`, ... | rgba-aware utilities |
 
-Tailwind config extends with non-overlapping families: `vermillion`, `gold`, `neutral`, `ink`,
+Tailwind config extends with non-overlapping families: `brand`, `gold`, `neutral`, `ink`,
 `surface`, `edge`, `inverse`, type scale 11..80, motion (400ms /
 cubic-bezier(0.45, 0, 0, 1) defaults), radius scale (pill / card /
 button), maxWidth (narrow / content / cinema).
 
 **Hard rules** (yagi-design-system v1.0 SKILL.md §"Hard Rules"):
 
-1. Brand accent = Vermillion `#9A361F` primary + Gold `#F3D174` secondary on
-   a warm Neutral 60% tier (v1.1, supersedes the sage sole-accent rule).
-2. No shadows by default. Border + backdrop blur for elevation.
-3. No legacy `#C8FF8C` lime or `#71D083` sage — both retired; use Vermillion/Gold.
+1. Brand accent = Red `#ED1E1E` primary + Gold `#FAD204` secondary on
+   a dark Neutral 60% tier (v1.2, §AO — supersedes v1.1 Vermillion/warm-ivory).
+2. No shadows by default. Border + backdrop blur (+ subtle glow) for elevation.
+3. No legacy `#C8FF8C` lime, `#71D083` sage, or v1.1 Vermillion `#9A361F` — all retired; use Red/Gold.
 4. No EN tracking on KO text. KO body `0`, KO display `-0.01em`.
 5. No lh 1.0 on KO display. Minimum 1.15 to avoid jamo clipping.
 6. No Mona12 / Redaction Italic for body (accent-only, max 2 words).
@@ -588,3 +588,31 @@ of "too heavy on light pages, roll back." The amendment:
 
 The deletion list and persona-A model under §18.1 are unaffected —
 those decisions stand.
+
+### 18.4 Design system v1.2 — Dark Brand UI (2026-05-28, supersedes §18.2/§18.3 color + theme)
+
+PRODUCT-MASTER §AO locks v1.2: the platform is a dark, editorial-premium
+brand UI (Higgsfield/Runway/ElevenLabs tone). This supersedes the §18.3
+sub_00 rollback decision (light `:root` + `defaultTheme="light"`) and the
+v1.1 warm-ivory + Vermillion color system.
+
+- **Theme**: dark is the main canvas and the default. `globals.css` `:root`
+  **and** `.dark` carry the v1.2 dark palette; `next-themes`
+  `defaultTheme="dark"` with system preference disabled (`layout.tsx`).
+  `.light` is now a tidied, opt-in secondary palette (not the default).
+- **Color (3-tier, 60-30-10)**: Neutral 60% — bg `#0A0A0A`, surface `#161616`,
+  ink `#F0F0F0`, ink-muted `#888888`, border `#2A2A2A`. Brand primary — Red
+  `#ED1E1E` (~10%; on-fill text `#FFFFFF`, on-dark text variant `#FF453A`,
+  hover `#FF3B30`). Brand secondary — Gold `#FAD204` (~5–15%; on-fill text
+  `#0A0A0A`). Semantic state colors (success/warning/info/destructive)
+  preserved — not brand colors.
+- **Token rename**: `--ds-vermillion*` → `--ds-red*`; Tailwind family
+  `vermillion` → `brand` (`bg-brand` / `text-brand-on` / `bg-brand-soft` /
+  `text-brand-ink` / `accent-brand`). New raw tokens `--ds-surface` `#161616`,
+  `--ds-border` `#2A2A2A`. Gold family keeps its name; values repointed.
+- **Typography**: Display = Editorial New (EN), Pretendard fallback (font face
+  not yet in repo — config-only stack). Body = Pretendard (KO) / Geist (EN/tech).
+- **Migration scope (TASK 24-follow)**: token-based components swept
+  (`vermillion`→`brand`). v1.1 hardcoded literals (`#9A361F`/`#FBEAE6`, plus
+  cool-neutral `text-black`/`bg-white`) sweep is a separate dispatch pending
+  visual smoke test.

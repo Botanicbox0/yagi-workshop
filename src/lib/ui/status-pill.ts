@@ -29,8 +29,8 @@ export type StatusTone =
   | "info"      // blue — in progress / intermediate
   | "emphasis"  // solid foreground — live/active
   | "danger"    // red — void / failed / cancelled
-  | "vermillion_full" // Wave C v2 MED-7 — full vermillion, action-needed state
-  | "vermillion_soft";// Wave C v2 MED-7 — soft vermillion, terminal-success state
+  | "brand_full" // Wave C v2 MED-7 — full brand, action-needed state
+  | "brand_soft";// Wave C v2 MED-7 — soft brand, terminal-success state
 
 // Tone → semantic-token className mapping. One row, one concept.
 const TONE_CLASS: Record<StatusTone, string> = {
@@ -40,11 +40,11 @@ const TONE_CLASS: Record<StatusTone, string> = {
   info:      "border-transparent bg-info text-info-foreground",
   emphasis:  "border-transparent bg-foreground text-background",
   danger:    "border-transparent bg-destructive/15 text-destructive",
-  // Wave C v2 MED-7: vermillion tokens for campaign_submission narrative arc.
-  // Loud vermillion = "your action is needed" (approved_for_distribution).
-  // Soft vermillion = "this is at rest, completed" (distributed).
-  vermillion_full: "border-transparent bg-vermillion text-vermillion-on",
-  vermillion_soft: "border-transparent bg-vermillion-soft text-vermillion-ink",
+  // Wave C v2 MED-7: brand tokens for campaign_submission narrative arc.
+  // Loud brand = "your action is needed" (approved_for_distribution).
+  // Soft brand = "this is at rest, completed" (distributed).
+  brand_full: "border-transparent bg-brand text-brand-on",
+  brand_soft: "border-transparent bg-brand-soft text-brand-ink",
 };
 
 // Kind × status → tone mapping. Owns all the per-domain semantic choices
@@ -99,14 +99,14 @@ const KIND_TONE: Record<StatusKind, Record<string, StatusTone>> = {
   //   approved_for_distribution → distributed (terminal success)
   //
   // MED-7 fix (K-06 LOOP-1 #6): semantic weight escalates TOWARD the CTA
-  // state, not away from it. Full vermillion on approved_for_distribution
-  // (signals action), soft vermillion on distributed (signals completion).
+  // state, not away from it. Full brand on approved_for_distribution
+  // (signals action), soft brand on distributed (signals completion).
   campaign_submission: {
     submitted:                  "neutral",
-    approved_for_distribution:  "vermillion_full",
+    approved_for_distribution:  "brand_full",
     declined:                   "neutral",
     revision_requested:         "warning",
-    distributed:                "vermillion_soft",
+    distributed:                "brand_soft",
     withdrawn:                  "neutral",
   },
 };

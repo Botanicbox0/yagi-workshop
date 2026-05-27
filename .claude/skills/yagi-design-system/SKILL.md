@@ -39,8 +39,8 @@ Every Builder change to a UI surface must be defensible against these 9
 patterns. They emerged from Phase 2.9 hotfix-2 (isomeet.com calibration)
 and are now the canonical aesthetic discipline:
 
-1. **Two-font system** — Pretendard for body/UI, SUIT for editorial headlines, Fraunces for landing-only display. Never mix.
-2. **Neutral-dominant, brand-punctuated (60-30-10)** — warm neutrals (ivory canvas, warm near-black ink) carry ~60% of every surface, incl. `/app/*`. Vermillion `#9A361F` is the strategic ~10% (CTAs, primary actions, active states); Gold `#F3D174` is small-area support (highlights, tags). Color marks action/state, never decoration.
+1. **Two-font system** — Pretendard for body/UI, SUIT for editorial headlines, Editorial New for landing/display (v1.2, replaces Fraunces). Never mix.
+2. **Neutral-dominant, brand-punctuated (60-30-10)** — dark neutrals (near-black canvas `#0A0A0A`, surface `#161616`, light ink `#F0F0F0`) carry ~60% of every surface, incl. `/app/*`. Red `#ED1E1E` is the strategic ~10% (CTAs, primary actions, active states; Tailwind `bg-brand`); Gold `#FAD204` is small-area support (highlights, tags). Color marks action/state, never decoration. *(v1.2 Dark Brand UI — supersedes v1.1 Vermillion/warm-ivory. PRODUCT-MASTER §AO.)*
 3. **Hairline borders + soft layered shadows** — `border-border/40` or `shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]`. Never a hard 1px black-ish border.
 4. **Editorial labels (eyebrow pattern)** — `text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground` replaces section headlines. The page has one `<h1>`; everything else demotes.
 5. **Asymmetric visual weight** — decision zone (informational, heavier) + emotional zone (photographic, lighter) on hubs. 50/50 splits read as SaaS, not editorial.
@@ -71,12 +71,12 @@ If a Builder produces any of these, reject and revise:
 |---|---|---|
 | Pretendard Variable | All body / UI text — both ko and en | (default `font-sans`) |
 | SUIT Variable | Editorial headlines on hubs (Frame 6), section titles where editorial weight is needed | `font-suit` |
-| Fraunces | Landing/marketing display only — italic emphasis | `font-display` (LANDING ROUTES ONLY) |
+| Editorial New *(v1.2)* | Landing/marketing display — editorial italic emphasis. Replaces Fraunces. Font face not yet in repo; `font-display` stack falls back to Pretendard until loaded | `font-display` (DISPLAY/LANDING) |
 
 **Decision rule for headline type:**
 - Inside `/app/*` editorial hub (Frame 6) → SUIT.
 - Inside `/app/*` non-editorial surface → Pretendard bold (no SUIT).
-- Inside `/` landing → Fraunces italic for emphasis; SUIT for display headers; Pretendard for body.
+- Inside `/` landing → Editorial New italic for emphasis; SUIT for display headers; Pretendard for body. *(v1.2: Editorial New supersedes Fraunces as the display face — §AO.)*
 
 ### 4.2 Hero h1 canonical class
 
@@ -202,7 +202,7 @@ Before reporting any UI work as complete, verify:
 - [ ] Cards use soft layered shadow OR `border-border/40` — never default `border border-border`.
 - [ ] CTA pills use inverted treatment (`bg-foreground text-background` + ArrowUpRight) where applicable.
 - [ ] Korean copy uses `keep-all`; multi-line headlines use `whitespace-pre-line`.
-- [ ] 60-30-10 respected — warm neutrals dominant (~60%); Vermillion only on CTAs/primary actions/active states (~10%); Gold for small highlights (support); no decorative color; no pure-white bg / pure-black body text.
+- [ ] 60-30-10 respected — dark neutrals dominant (~60%); Red `#ED1E1E` (`bg-brand`) only on CTAs/primary actions/active states (~10%); Gold `#FAD204` for small highlights (support); no decorative color; no pure-black `#000000` void / light main canvas.
 - [ ] If layout-changing transition is present: spring config matches `spring-natural` exactly, hover-gated, reduced-motion path verified.
 - [ ] Framer Motion components are `"use client"`.
 - [ ] Photography-only in editorial contexts — no illustrations or icon-art.
@@ -216,7 +216,7 @@ If any of these fail, fix before reporting done.
 
 In addition to the 5 in ANTI_PATTERNS.md §10, also reject:
 
-- **Mixing SUIT and Fraunces on the same screen** — pick one editorial type per surface.
+- **Mixing SUIT and Editorial New on the same screen** — pick one editorial type per surface.
 - **Bento grid feature panels in product UI** — that's marketing language; product is editorial-restrained.
 - **Status-driven page-chrome color** — status lives in the badge, not the page background.
 - **Decorative motion on landings** — Phase 2.9+ decision: motion serves communication, never decoration.
