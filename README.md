@@ -84,3 +84,7 @@ Dual-model review (Claude Opus Builder + OpenAI Codex `gpt-5.4` adversarial) run
 ## License
 
 Proprietary. © YAGI Workshop Co., Ltd.
+
+<!-- Hermes router test 2026-05-28 -->
+
+<!-- Hermes router trial-1.5 timestamp=2026-05-28T15:00 -->
