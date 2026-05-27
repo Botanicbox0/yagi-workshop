@@ -1,0 +1,19 @@
+[Unit]
+Description=LEANN Daemon (Qwen3-Embedding-8B preload — keep model warm, registered)
+After=network-online.target
+
+[Service]
+# leann daemon start spawns a DETACHED embedding server + registers it in the
+# leann daemon registry (so `leann search` discovers & reuses it on port 5557,
+# avoiding a ~100s model reload). It returns after spawning → oneshot+RemainAfterExit.
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/yagi
+Environment=TORCHDYNAMO_DISABLE=1
+Environment=LD_LIBRARY_PATH=/mnt/d/AI/leann-indexes/workspace/.venv/lib
+ExecStart=/mnt/d/AI/leann-indexes/workspace/.venv/bin/leann daemon start claude-chat-history --no-warmup --daemon-ttl 0
+ExecStop=/mnt/d/AI/leann-indexes/workspace/.venv/bin/leann daemon stop
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
