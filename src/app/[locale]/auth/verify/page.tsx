@@ -85,7 +85,7 @@ export default function AuthVerifyPage() {
         {presetEmail && (
           <Button
             type="button"
-            className="w-full bg-sage hover:brightness-105"
+            className="w-full bg-vermillion hover:brightness-105"
             size="lg"
             onClick={onResend}
             disabled={resending}
@@ -100,7 +100,7 @@ export default function AuthVerifyPage() {
 
       <p className="text-center text-sm ink-tertiary">
         {t("no_account")}{" "}
-        <Link href="/signup" className="ink-primary hover:accent-sage transition-colors">
+        <Link href="/signup" className="ink-primary hover:accent-vermillion transition-colors">
           {c("signup")}
         </Link>
       </p>

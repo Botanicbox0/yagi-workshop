@@ -540,18 +540,19 @@ Token namespaces in this repo:
 | Layer | Namespace | Purpose |
 |---|---|---|
 | shadcn HSL channel | `--background`, `--foreground`, `--accent`, ... | shadcn-component compat |
-| v1.0 raw | `--ds-bg-base`, `--ds-ink-primary`, `--ds-sage`, ... | rgba-aware utilities |
+| v1.x raw | `--ds-bg-base`, `--ds-ink-primary`, `--ds-neutral-*`, `--ds-vermillion`, `--ds-gold`, ... | rgba-aware utilities |
 
-Tailwind config extends with non-overlapping families: `sage`, `ink`,
+Tailwind config extends with non-overlapping families: `vermillion`, `gold`, `neutral`, `ink`,
 `surface`, `edge`, `inverse`, type scale 11..80, motion (400ms /
 cubic-bezier(0.45, 0, 0, 1) defaults), radius scale (pill / card /
 button), maxWidth (narrow / content / cinema).
 
 **Hard rules** (yagi-design-system v1.0 SKILL.md §"Hard Rules"):
 
-1. No additional accent colors. Sage `#71D083` is sole.
+1. Brand accent = Vermillion `#9A361F` primary + Gold `#F3D174` secondary on
+   a warm Neutral 60% tier (v1.1, supersedes the sage sole-accent rule).
 2. No shadows by default. Border + backdrop blur for elevation.
-3. No legacy `#C8FF8C` lime — fully retired; replace with sage.
+3. No legacy `#C8FF8C` lime or `#71D083` sage — both retired; use Vermillion/Gold.
 4. No EN tracking on KO text. KO body `0`, KO display `-0.01em`.
 5. No lh 1.0 on KO display. Minimum 1.15 to avoid jamo clipping.
 6. No Mona12 / Redaction Italic for body (accent-only, max 2 words).
@@ -570,17 +571,20 @@ of "too heavy on light pages, roll back." The amendment:
 - `:root` returned to Phase 2.7.1 P12 light tokens (off-white
   background, near-black ink). `next-themes` `defaultTheme="light"`
   + `enableSystem` restored.
-- v1.0 vocabulary **kept**: sage sole accent, ink hierarchy,
-  surface ramp, border ramp, type scale, motion, radius,
-  Pretendard fonts. Values are now light-bg-adapted (the `--ds-*`
-  namespace in globals.css carries the light variants under
-  `:root`, the dark variants under `.dark` for opt-in inverse
-  sections).
-- New token `--ds-sage-ink: #2D7A3F` introduced for text-on-light
-  sage — saturated `#71D083` only reaches ~1.6:1 contrast on white
-  (fails WCAG AA). `.accent-sage` and `.bg-sage-soft` (text uses)
-  route to the darker variant; `.bg-sage` (fill use) keeps the
-  saturated value.
+- **v1.1 color system (2026-05-27, supersedes the sage sole-accent rule):**
+  **Vermillion `#9A361F` primary (10% accent) + Gold `#F3D174` secondary
+  (5–15% support)** on a warm **Neutral tier (60% dominant)** — warm-ivory
+  canvas `#FAF7F2`, warm near-black ink `#1F1A15`, warm border `#E8E0D4`.
+  Sage `#71D083` retired. 60-30-10 rule. Ink hierarchy, surface ramp,
+  border ramp, type scale, motion, radius, Pretendard fonts kept. Values
+  are light-bg-adapted (the `--ds-*` namespace in globals.css carries the
+  light variants under `:root`, the dark variants under `.dark` for opt-in
+  inverse sections).
+- Vermillion is dark, so it reads as its own ink on white (7.19:1); on the
+  saturated fill text flips to warm off-white `--ds-vermillion-on-fill`
+  `#FBEAE6` (6.17:1). Gold is light: text-on-white uses `--ds-gold-ink`
+  `#6B5618` (7.07:1); on the gold fill, espresso `--ds-gold-on-fill`
+  `#3D2E0E` (8.89:1). All WCAG AA verified. See PRODUCT-MASTER §AM.
 
 The deletion list and persona-A model under §18.1 are unaffected —
 those decisions stand.

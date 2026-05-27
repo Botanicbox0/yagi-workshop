@@ -106,12 +106,32 @@ const config: Config = {
   			// inverse section that opts into .dark gets the dark variants
   			// of the same names.
   			//
-  			// Tailwind utilities: bg-sage / text-sage / bg-sage-soft /
+  			// Tailwind utilities: bg-vermillion / text-vermillion-on / bg-vermillion-soft /
   			// text-ink-primary / bg-surface-card-deep / border-edge-subtle.
-  			sage: {
-  				DEFAULT: 'var(--ds-sage)',
-  				soft:    'var(--ds-sage-soft)',
-  				ink:     'var(--ds-sage-ink)',
+  			// v1.1 — Vermillion primary + Gold secondary (sage #71D083 retired 2026-05-27).
+  			vermillion: {
+  				DEFAULT: 'var(--ds-vermillion)',
+  				hover:   'var(--ds-vermillion-hover)',
+  				soft:    'var(--ds-vermillion-soft)',
+  				ink:     'var(--ds-vermillion-ink)',
+  				on:      'var(--ds-vermillion-on-fill)',
+  			},
+  			gold: {
+  				DEFAULT: 'var(--ds-gold)',
+  				hover:   'var(--ds-gold-hover)',
+  				soft:    'var(--ds-gold-soft)',
+  				ink:     'var(--ds-gold-ink)',
+  				on:      'var(--ds-gold-on-fill)',
+  			},
+  			// v1.1 Neutral tier (60% dominant). Warm-ivory canvas + warm ink.
+  			// The shadcn background/foreground/border/muted tokens already carry
+  			// these warm values; this family exposes the named --ds-neutral-* aliases.
+  			neutral: {
+  				bg:          'var(--ds-neutral-bg)',
+  				surface:     'var(--ds-neutral-surface)',
+  				ink:         'var(--ds-neutral-ink)',
+  				'ink-muted': 'var(--ds-neutral-ink-muted)',
+  				border:      'var(--ds-neutral-border)',
   			},
   			ink: {
   				primary:   'var(--ds-ink-primary)',

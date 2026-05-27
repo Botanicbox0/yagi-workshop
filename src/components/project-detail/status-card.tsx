@@ -265,7 +265,7 @@ export function StatusCard({
           <Button
             type="button"
             onClick={handleViewBrief}
-            className="rounded-full bg-[#71D083] text-black hover:bg-[#71D083]/90 hover:brightness-105 transition-all duration-[400ms] px-6 py-2.5 text-sm font-medium border-0 shadow-none"
+            className="rounded-full bg-[#9A361F] text-[#FBEAE6] hover:bg-[#9A361F]/90 hover:brightness-105 transition-all duration-[400ms] px-6 py-2.5 text-sm font-medium border-0 shadow-none"
           >
             {t("cta.view_full_brief")}
           </Button>

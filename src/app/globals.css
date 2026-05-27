@@ -4,11 +4,15 @@
 
 /* Phase 4.x Wave C.5b sub_00 ROLLBACK (2026-05-01) — yagi visual review
    verdict: dark editorial reads as too heavy. Phase 2.7.1 P12 light
-   canvas restored as :root. v1.0 token vocabulary (sage accent, ink
-   hierarchy, surface tints, border ramp, motion, radius, Pretendard)
-   stays — but values shift to light-bg-friendly forms so the post-sub_00
-   pages that already consumed `.bg-card-deep` / `.border-subtle` /
-   `.ink-*` / `.accent-sage` / `.bg-sage` still render legibly on white.
+   canvas restored as :root. Token vocabulary (accent, ink hierarchy,
+   surface tints, border ramp, motion, radius, Pretendard) stays — but
+   values shift to light-bg-friendly forms so the post-sub_00 pages that
+   already consumed `.bg-card-deep` / `.border-subtle` / `.ink-*` /
+   `.accent-vermillion` / `.bg-vermillion` still render legibly on white.
+
+   v1.1 (2026-05-27): accent migrated from sage #71D083 (retired) to
+   Vermillion #9A361F primary + Gold #F3D174 secondary, on a warm Neutral
+   tier (60-30-10). See PRODUCT-MASTER §AM + ARCHITECTURE §18.3.
 
    Source of truth for the v1.0 token *names* + intent:
    ~/.claude/skills/yagi-design-system/references/{tokens.json,
@@ -18,29 +22,30 @@
 
 @layer base {
   :root {
-    /* Phase 2.7.1 P12: off-white background per Webflow light-mode tone.
-       Cards/popover stay pure white so they pop against the off-white
-       page surface. */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 4%;
+    /* v1.1 (2026-05-27): warm Neutral tier — warm-ivory page canvas (#FAF7F2),
+       pure-white elevated surfaces, warm near-black ink (#1F1A15). Replaces the
+       achromatic P12 ramp. 60-30-10: neutrals are the 60% dominant. Pure white
+       page bg / pure black body text are forbidden. See PRODUCT-MASTER §AM. */
+    --background: 38 44% 96%;
+    --foreground: 30 19% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --card-foreground: 30 19% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
+    --popover-foreground: 30 19% 10%;
 
-    --primary: 0 0% 4%;
+    --primary: 30 19% 10%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 97%;
-    --secondary-foreground: 0 0% 4%;
+    --secondary: 38 33% 96%;
+    --secondary-foreground: 30 19% 10%;
 
-    --muted: 0 0% 97%;
-    --muted-foreground: 0 0% 42%;
+    --muted: 38 33% 96%;
+    --muted-foreground: 33 11% 33%;
 
-    --accent: 0 0% 95%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 38 33% 94%;
+    --accent-foreground: 30 19% 10%;
 
     --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
@@ -54,10 +59,10 @@
     --info: 214 100% 94%;
     --info-foreground: 214 80% 30%;
 
-    /* Phase 2.7.1 P12: softer border to fit the off-white surface. */
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 4%;
+    /* v1.1: warm hairline border (#E8E0D4) to fit the warm-ivory surface. */
+    --border: 36 30% 87%;
+    --input: 36 30% 87%;
+    --ring: 30 19% 10%;
 
     --radius: 0.5rem;
 
@@ -66,27 +71,44 @@
        off-white canvas. Utility classes under @layer utilities below
        reference these vars and adapt automatically when .dark is
        opted-in for an inverse section. */
-    --ds-bg-base:       #FAFAFA;
+    --ds-bg-base:       #FAF7F2;
     --ds-bg-raised:     rgba(255, 255, 255, 0.96);
-    --ds-bg-card:       rgba(0, 0, 0, 0.04);
-    --ds-bg-card-deep:  rgba(0, 0, 0, 0.025);
+    --ds-bg-card:       rgba(31, 26, 21, 0.04);
+    --ds-bg-card-deep:  rgba(31, 26, 21, 0.025);
     --ds-bg-scrim:      rgba(255, 255, 255, 0.35);
 
-    --ds-ink-primary:   #0A0A0A;
-    --ds-ink-secondary: #5C5C5C;
-    --ds-ink-tertiary:  #8C8C8C;
-    --ds-ink-disabled:  rgba(10, 10, 10, 0.33);
-    --ds-ink-muted:     rgba(10, 10, 10, 0.35);
+    --ds-ink-primary:   #1F1A15;
+    --ds-ink-secondary: #5C544A;
+    --ds-ink-tertiary:  #8C8275;
+    --ds-ink-disabled:  rgba(31, 26, 21, 0.33);
+    --ds-ink-muted:     rgba(31, 26, 21, 0.35);
 
-    --ds-border-subtle: rgba(0, 0, 0, 0.08);
-    --ds-border-soft:   rgba(0, 0, 0, 0.04);
+    --ds-border-subtle: rgba(31, 26, 21, 0.08);
+    --ds-border-soft:   rgba(31, 26, 21, 0.04);
 
-    /* Sage stays #71D083 as a fill (sole accent rule). For text-on-light
-       use --ds-sage-ink (darker) — sage #71D083 against pure white only
-       reaches ~1.6:1 contrast which fails WCAG AA. */
-    --ds-sage:          #71D083;
-    --ds-sage-soft:     rgba(113, 208, 131, 0.18);
-    --ds-sage-ink:      #2D7A3F;
+    /* v1.1 Neutral tier aliases (60% dominant — warm ivory canvas + warm ink). */
+    --ds-neutral-bg:        #FAF7F2;
+    --ds-neutral-surface:   #FFFFFF;
+    --ds-neutral-ink:       #1F1A15;
+    --ds-neutral-ink-muted: #5C544A;
+    --ds-neutral-border:    #E8E0D4;
+
+    /* v1.1 (2026-05-27): Vermillion primary + Gold secondary; sage #71D083 retired.
+       Vermillion #9A361F is dark — it reads as its own ink on white (7.19:1). On
+       the saturated fill, text flips to a warm off-white --ds-vermillion-on-fill
+       (#FBEAE6 → 6.17:1). Gold #F3D174 is light — text-on-white uses the darker
+       --ds-gold-ink (#6B5618 → 7.07:1); on the gold fill, espresso --ds-gold-on-fill
+       (#3D2E0E → 8.89:1). All WCAG AA verified. */
+    --ds-vermillion:         #9A361F;
+    --ds-vermillion-hover:   #B8412A;
+    --ds-vermillion-soft:    rgba(154, 54, 31, 0.18);
+    --ds-vermillion-ink:     #9A361F;
+    --ds-vermillion-on-fill: #FBEAE6;
+    --ds-gold:               #F3D174;
+    --ds-gold-hover:         #E8C158;
+    --ds-gold-soft:          rgba(243, 209, 116, 0.18);
+    --ds-gold-ink:           #6B5618;
+    --ds-gold-on-fill:       #3D2E0E;
 
     --ds-font-sans-ko:    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --ds-font-sans-en:    'Geist Variable', Geist, system-ui, sans-serif;
@@ -110,26 +132,26 @@
     /* Phase 2.7.1 dark mapping (restored). Opt-in via the next-themes
        theme switcher or a `.dark` className on a section wrapper for
        inverse sections (image-led hero, footer, etc.). */
-    --background: 0 0% 5%;
-    --foreground: 0 0% 98%;
+    --background: 30 18% 9%;
+    --foreground: 38 44% 96%;
 
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 98%;
+    --card: 30 14% 15%;
+    --card-foreground: 38 44% 96%;
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 30 14% 15%;
+    --popover-foreground: 38 44% 96%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 5%;
+    --primary: 38 44% 96%;
+    --primary-foreground: 30 18% 9%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 30 13% 18%;
+    --secondary-foreground: 38 44% 96%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 30 13% 18%;
+    --muted-foreground: 34 16% 67%;
 
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 30 13% 18%;
+    --accent-foreground: 38 44% 96%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
@@ -141,28 +163,36 @@
     --info: 214 40% 18%;
     --info-foreground: 214 100% 82%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 0 0% 98%;
+    --border: 30 12% 22%;
+    --input: 30 12% 22%;
+    --ring: 38 44% 96%;
 
     /* v1.0 raw tokens — dark variants for opt-in dark surfaces. */
-    --ds-bg-base:       #000000;
-    --ds-bg-raised:     rgba(25, 25, 25, 0.9);
-    --ds-bg-card:       rgba(255, 255, 255, 0.10);
-    --ds-bg-card-deep:  rgba(255, 255, 255, 0.05);
+    --ds-bg-base:       #1A1612;
+    --ds-bg-raised:     rgba(42, 37, 32, 0.9);
+    --ds-bg-card:       rgba(250, 247, 242, 0.10);
+    --ds-bg-card-deep:  rgba(250, 247, 242, 0.05);
     --ds-bg-scrim:      rgba(0, 0, 0, 0.35);
 
-    --ds-ink-primary:   #EEEEEE;
-    --ds-ink-secondary: #B4B4B4;
-    --ds-ink-tertiary:  #7B7B7B;
-    --ds-ink-disabled:  rgba(238, 238, 238, 0.33);
-    --ds-ink-muted:     rgba(238, 238, 238, 0.35);
+    --ds-ink-primary:   #FAF7F2;
+    --ds-ink-secondary: #B8AC9C;
+    --ds-ink-tertiary:  #847B6E;
+    --ds-ink-disabled:  rgba(250, 247, 242, 0.33);
+    --ds-ink-muted:     rgba(250, 247, 242, 0.35);
 
-    --ds-border-subtle: rgba(255, 255, 255, 0.11);
-    --ds-border-soft:   rgba(255, 255, 255, 0.06);
+    --ds-border-subtle: rgba(250, 247, 242, 0.11);
+    --ds-border-soft:   rgba(250, 247, 242, 0.06);
 
-    --ds-sage-soft:     rgba(113, 208, 131, 0.12);
-    --ds-sage-ink:      #71D083;
+    /* v1.1 Neutral tier aliases — dark. */
+    --ds-neutral-bg:        #1A1612;
+    --ds-neutral-surface:   #2A2520;
+    --ds-neutral-ink:       #FAF7F2;
+    --ds-neutral-ink-muted: #B8AC9C;
+
+    --ds-vermillion-soft: rgba(154, 54, 31, 0.12);
+    --ds-vermillion-ink:  #E8A99B;
+    --ds-gold-soft:       rgba(243, 209, 116, 0.12);
+    --ds-gold-ink:        #F3D174;
   }
 
   /* Locale-aware typography variables (kept across both modes). */
@@ -222,12 +252,18 @@
   .border-subtle { border-color: var(--ds-border-subtle); }
   .border-soft   { border-color: var(--ds-border-soft); }
 
-  /* Sage accent — text usage routes through --ds-sage-ink for AA contrast
-     on light bg; bg/fill usage uses the saturated --ds-sage. */
-  .accent-sage   { color: var(--ds-sage-ink); }
-  .bg-sage       { background-color: var(--ds-sage); color: #000; }
-  .bg-sage-soft  { background-color: var(--ds-sage-soft); color: var(--ds-sage-ink); }
-  .ring-sage     { --tw-ring-color: var(--ds-sage); }
+  /* Vermillion (primary) + Gold (secondary) accents — v1.1, supersedes the
+     retired sage accent. Text-on-white routes through the *-ink token for AA
+     contrast; fill use sets a contrasting on-fill text (*-on). */
+  .accent-vermillion   { color: var(--ds-vermillion-ink); }
+  .bg-vermillion       { background-color: var(--ds-vermillion); color: var(--ds-vermillion-on-fill); }
+  .bg-vermillion-soft  { background-color: var(--ds-vermillion-soft); color: var(--ds-vermillion-ink); }
+  .ring-vermillion     { --tw-ring-color: var(--ds-vermillion); }
+
+  .accent-gold         { color: var(--ds-gold-ink); }
+  .bg-gold             { background-color: var(--ds-gold); color: var(--ds-gold-on-fill); }
+  .bg-gold-soft        { background-color: var(--ds-gold-soft); color: var(--ds-gold-ink); }
+  .ring-gold           { --tw-ring-color: var(--ds-gold); }
 
   /* Typography helpers */
   .font-mono-ko    { font-family: var(--ds-font-accent-ko); }

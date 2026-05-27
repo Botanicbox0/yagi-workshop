@@ -5,7 +5,7 @@
 // Baked-in fixes:
 //   MED-6 — Empty-state CTA escalation. When status='approved_for_distribution'
 //           AND distributions.length === 0, the [+ Add channel] button gets
-//           sage fill (was muted outline, signal lost vs the call-to-action
+//           vermillion fill (was muted outline, signal lost vs the call-to-action
 //           moment).
 //   MED-9 — Metric edit affordance promoted to ghost button + Pencil icon
 //           (was bare anchor swallowed by row text).
@@ -84,7 +84,7 @@ export function DistributionPanel({
   const [channel, setChannel] = useState<Channel>("tiktok");
   const [url, setUrl] = useState("");
 
-  // MED-6: empty state at action moment → CTA escalates to sage fill.
+  // MED-6: empty state at action moment → CTA escalates to vermillion fill.
   const isPrimaryEmpty =
     status === "approved_for_distribution" && distributions.length === 0;
 
@@ -191,7 +191,7 @@ export function DistributionPanel({
               type="submit"
               size="pill"
               disabled={isPending}
-              className="bg-sage text-sage-ink hover:bg-sage/90 border-transparent"
+              className="bg-vermillion text-vermillion-on hover:bg-vermillion/90 border-transparent"
             >
               {isPending ? "..." : t("add_cta")}
             </Button>
@@ -199,7 +199,7 @@ export function DistributionPanel({
         </form>
       ) : (
         <div>
-          {/* MED-6: sage fill in empty-action state, outline otherwise */}
+          {/* MED-6: vermillion fill in empty-action state, outline otherwise */}
           <Button
             type="button"
             variant={isPrimaryEmpty ? "default" : "outline"}
@@ -208,7 +208,7 @@ export function DistributionPanel({
             className={cn(
               "rounded-pill",
               isPrimaryEmpty &&
-                "bg-sage text-sage-ink border-transparent hover:bg-sage/90",
+                "bg-vermillion text-vermillion-on border-transparent hover:bg-vermillion/90",
             )}
           >
             + {t("add_another_cta")}

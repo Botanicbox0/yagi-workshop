@@ -31,7 +31,7 @@ Domain: studio.yagiworkshop.xyz. Deployment: Vercel.
 7. Route structure: `/[locale]/app/*` for authenticated client pages (NOT route group `(app)`).
 8. Roles: use `user_roles` table. Helpers: `is_yagi_admin`, `is_ws_member`, `is_ws_admin`.
 9. RLS: write policies assuming malicious users. Test each policy with anon query.
-10. Styling: Phase 1.0.6 design tokens. White bg, black text, pill CTAs, Fraunces italic for emphasis. Keep-all for Korean. NEVER use warm tones (no cognac, no bone).
+10. Styling: design-system **v1.1** (3-tier, 60-30-10). Warm Neutral tier is the 60% dominant: warm-ivory bg (`#FAF7F2`), warm near-black ink (`#1F1A15`), warm hairline borders (`#E8E0D4`) — **NEVER pure-white page bg or pure-black body text**. **Vermillion `#9A361F`** = brand primary (~10%: CTAs, primary actions, active states; on-fill text `#FBEAE6`). **Gold `#F3D174`** = brand secondary (~5–15% support: small highlights, tags). Sage `#71D083` retired. Pill CTAs, keep-all for Korean. Tailwind semantic state colors (`amber-500`/`red-500`/`green-500` etc.) are preserved — they are NOT brand colors. Source of truth: `.yagi-autobuild/design-system/` + PRODUCT-MASTER §AM + ARCHITECTURE §18.3.
 
 ## Database write protocol (non-negotiable)
 

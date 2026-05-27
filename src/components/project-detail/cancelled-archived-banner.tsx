@@ -3,14 +3,14 @@
 // Per SPEC §"Cancelled / Archived banner":
 //   - variant "cancelled": text + inline [새 의뢰 시작] link → /{locale}/app/projects/new
 //   - variant "archived": text only, no link
-//   - Sage subtle accent: 1px sage left-edge bar (border-l-2 style).
+//   - Vermillion subtle accent: 1px vermillion left-edge bar (border-l-2 style).
 //   - Zero shadow. Does NOT block tab clicks (no fixed positioning).
 //   - Renders above L1 breadcrumb, below the page wrapper padding.
 //   - All tabs remain navigable for read-only inspection.
 //
 // Design compliance (yagi-design-system v1.0):
-//   - Sage #71D083 at ~30% opacity via border-l-[3px] solid sage
-//   - bg-sage-soft (rgba(113,208,131,0.18) light) for subtle tint
+//   - Vermillion #9A361F at ~35% opacity via border-l-[3px] solid vermillion
+//   - bg-vermillion-soft (rgba(154,54,31,0.18) light) for subtle tint
 //   - No shadow. rounded-xl (softer than card-24 since it's a notice strip)
 //   - text-sm, muted foreground, keep-all for Korean
 
@@ -32,10 +32,10 @@ export function CancelledArchivedBanner({ variant, locale, labels }: Props) {
       role="status"
       aria-live="polite"
       className="mb-6 flex items-start gap-0 overflow-hidden rounded-xl border border-border/40"
-      style={{ borderLeft: "3px solid rgba(113,208,131,0.35)" }}
+      style={{ borderLeft: "3px solid rgba(154,54,31,0.35)" }}
     >
-      {/* Sage soft tint panel */}
-      <div className="w-full px-5 py-3.5 bg-sage-soft">
+      {/* Vermillion soft tint panel */}
+      <div className="w-full px-5 py-3.5 bg-vermillion-soft">
         {variant === "cancelled" ? (
           <p className="text-sm text-muted-foreground keep-all">
             {labels.cancelled}{" "}

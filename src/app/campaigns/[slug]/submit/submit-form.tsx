@@ -306,7 +306,7 @@ export function SubmitApplicationForm({
     return (
       <div className="rounded-card border border-edge-subtle bg-card p-6 md:p-10 space-y-6">
         <div className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.18em] accent-sage">
+          <p className="text-xs uppercase tracking-[0.18em] accent-vermillion">
             {t("success_eyebrow")}
           </p>
           {/* HIGH-4: Pretendard 600 unified */}
@@ -326,7 +326,7 @@ export function SubmitApplicationForm({
             </p>
             <Link
               href={`/${locale}/signin?email=${encodeURIComponent(submitted.email)}&next=/${locale}/app/my-submissions`}
-              className="inline-flex items-center gap-1 text-sm accent-sage hover:underline underline-offset-2"
+              className="inline-flex items-center gap-1 text-sm accent-vermillion hover:underline underline-offset-2"
             >
               {t("success_login_fallback_cta")}
               <ArrowRight className="w-3 h-3" />
@@ -553,7 +553,7 @@ export function SubmitApplicationForm({
             type="submit"
             size="pill"
             disabled={isPending || !turnstileToken}
-            className="bg-sage text-sage-ink hover:bg-sage/90 border-transparent"
+            className="bg-vermillion text-vermillion-on hover:bg-vermillion/90 border-transparent"
           >
             {isPending ? t("submitting") : t("submit_cta")}
           </Button>

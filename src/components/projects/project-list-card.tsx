@@ -33,7 +33,7 @@ function statusPillClass(status: string): string {
   // else collapses to neutral so the page reads as a calm grid where
   // the single highlighted card is the one waiting on YAGI.
   if (status === "in_review") {
-    return "bg-[#71D083]/[0.12] text-[#71D083]";
+    return "bg-[#9A361F]/[0.12] text-[#9A361F]";
   }
   if (
     status === "in_progress" ||

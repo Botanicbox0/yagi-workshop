@@ -104,7 +104,7 @@ export default function OnboardingWorkspacePage() {
             <span className="text-foreground">{slugValue}</span>
           </p>
           {showKoreanWarning && (
-            <p className="text-xs accent-sage keep-all">
+            <p className="text-xs accent-vermillion keep-all">
               {t("workspace_slug_korean_warning")}
             </p>
           )}

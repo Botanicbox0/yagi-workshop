@@ -314,7 +314,7 @@ export function SidebarNav({
   const activeKey = computeActiveKey(allLeaves, pathname, searchParams);
 
   // Wave C v2 [+ 새 프로젝트 시작] standalone primary CTA at top of sidebar.
-  // Per SPEC §C.0.5, this is the 북극성 1순위 entry — sage fill resting state
+  // Per SPEC §C.0.5, this is the 북극성 1순위 entry — vermillion fill resting state
   // (MED-5 fix: was muted card border which blended into the nav).
   const showNewProjectCta =
     activeWorkspaceKind === "brand" || activeWorkspaceKind === "artist";
@@ -333,8 +333,8 @@ export function SidebarNav({
                 "flex items-center gap-2 px-3 py-2 rounded-full text-[13px] font-medium border transition-colors duration-flora ease-flora",
                 newProjectActive
                   ? "bg-foreground text-background border-foreground"
-                  // MED-5: sage fill resting state asserts CTA hierarchy on sidebar
-                  : "bg-sage text-sage-ink border-transparent hover:bg-sage/90",
+                  // MED-5: vermillion fill resting state asserts CTA hierarchy on sidebar
+                  : "bg-vermillion text-vermillion-on border-transparent hover:bg-vermillion/90",
               )}
             >
               <Plus className="w-3.5 h-3.5" aria-hidden="true" />

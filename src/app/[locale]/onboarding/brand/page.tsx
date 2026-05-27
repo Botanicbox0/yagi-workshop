@@ -68,8 +68,8 @@ export default function OnboardingBrandPage() {
         <p className="text-sm text-muted-foreground keep-all">{t("brand_sub")}</p>
       </div>
       {/* Phase 5 Wave A sub_3c Option A: brand logo placeholder — sage subtle empty state */}
-      <div className="rounded-2xl border border-dashed border-[#71D083]/40 bg-[#71D083]/5 px-5 py-4">
-        <p className="text-sm text-[#71D083] keep-all">{b("helper.placeholder")}</p>
+      <div className="rounded-2xl border border-dashed border-[#9A361F]/40 bg-[#9A361F]/5 px-5 py-4">
+        <p className="text-sm text-[#9A361F] keep-all">{b("helper.placeholder")}</p>
       </div>
       {!showForm ? (
         <div className="flex flex-col gap-3">

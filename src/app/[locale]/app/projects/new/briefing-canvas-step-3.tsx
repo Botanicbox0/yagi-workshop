@@ -587,7 +587,7 @@ export function BriefingCanvasStep3({
               className={cn(
                 "rounded-2xl p-4 flex items-start gap-3",
                 form.has_external_brand_party
-                  ? "bg-[#71D083]/10 border border-[#71D083]/50"
+                  ? "bg-[#9A361F]/10 border border-[#9A361F]/50"
                   : "border border-border/40",
               )}
             >

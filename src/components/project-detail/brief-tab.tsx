@@ -296,7 +296,7 @@ export function BriefTab({
     <div className="flex flex-col gap-6">
       {/* Draft banner + CTA (D5 gate) */}
       {isDraft && (
-        <div className="rounded-2xl border border-[#71D083]/40 bg-[#71D083]/8 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="rounded-2xl border border-[#9A361F]/40 bg-[#9A361F]/8 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-foreground keep-all leading-relaxed">
             {labels.banner_draft}
           </p>
@@ -376,7 +376,7 @@ export function BriefTab({
           <span
             className={
               interested_in_twin === true
-                ? "text-[#71D083] font-medium"
+                ? "text-[#9A361F] font-medium"
                 : interested_in_twin === false
                   ? "text-muted-foreground"
                   : "text-muted-foreground/60"

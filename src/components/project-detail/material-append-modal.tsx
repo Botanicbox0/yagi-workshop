@@ -274,7 +274,7 @@ export function MaterialAppendModal({
               void handleSubmit();
             }}
             disabled={!submitAllowed || pending}
-            className="bg-[#71D083] text-black hover:bg-[#71D083]/90 focus-visible:ring-[#71D083]/40"
+            className="bg-[#9A361F] text-[#FBEAE6] hover:bg-[#9A361F]/90 focus-visible:ring-[#9A361F]/40"
           >
             {pending ? (
               <Loader2 className="w-4 h-4 animate-spin" />

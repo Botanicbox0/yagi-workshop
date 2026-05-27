@@ -40,7 +40,7 @@ patterns. They emerged from Phase 2.9 hotfix-2 (isomeet.com calibration)
 and are now the canonical aesthetic discipline:
 
 1. **Two-font system** — Pretendard for body/UI, SUIT for editorial headlines, Fraunces for landing-only display. Never mix.
-2. **Achromatic only on product surfaces** — zero accent color in `/app/*`. Amber accent is scoped to landing/marketing surfaces.
+2. **Neutral-dominant, brand-punctuated (60-30-10)** — warm neutrals (ivory canvas, warm near-black ink) carry ~60% of every surface, incl. `/app/*`. Vermillion `#9A361F` is the strategic ~10% (CTAs, primary actions, active states); Gold `#F3D174` is small-area support (highlights, tags). Color marks action/state, never decoration.
 3. **Hairline borders + soft layered shadows** — `border-border/40` or `shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]`. Never a hard 1px black-ish border.
 4. **Editorial labels (eyebrow pattern)** — `text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground` replaces section headlines. The page has one `<h1>`; everything else demotes.
 5. **Asymmetric visual weight** — decision zone (informational, heavier) + emotional zone (photographic, lighter) on hubs. 50/50 splits read as SaaS, not editorial.
@@ -202,7 +202,7 @@ Before reporting any UI work as complete, verify:
 - [ ] Cards use soft layered shadow OR `border-border/40` — never default `border border-border`.
 - [ ] CTA pills use inverted treatment (`bg-foreground text-background` + ArrowUpRight) where applicable.
 - [ ] Korean copy uses `keep-all`; multi-line headlines use `whitespace-pre-line`.
-- [ ] Achromatic on product surfaces — no amber accent inside `/app/*`.
+- [ ] 60-30-10 respected — warm neutrals dominant (~60%); Vermillion only on CTAs/primary actions/active states (~10%); Gold for small highlights (support); no decorative color; no pure-white bg / pure-black body text.
 - [ ] If layout-changing transition is present: spring config matches `spring-natural` exactly, hover-gated, reduced-motion path verified.
 - [ ] Framer Motion components are `"use client"`.
 - [ ] Photography-only in editorial contexts — no illustrations or icon-art.

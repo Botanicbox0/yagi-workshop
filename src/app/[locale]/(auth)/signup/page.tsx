@@ -167,7 +167,7 @@ export default function SignUpPage() {
         <div className="space-y-3">
           <Button
             type="button"
-            className="w-full bg-sage hover:brightness-105"
+            className="w-full bg-vermillion hover:brightness-105"
             size="lg"
             onClick={onResend}
             disabled={resending}
@@ -187,7 +187,7 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm ink-tertiary">
           {t("have_account")}{" "}
-          <Link href="/signin" className="ink-primary hover:accent-sage transition-colors">
+          <Link href="/signin" className="ink-primary hover:accent-vermillion transition-colors">
             {c("signin")}
           </Link>
         </p>

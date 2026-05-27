@@ -55,7 +55,7 @@ References: Linear (light mode) for density and state clarity. Webflow.com for e
 **What this looks like, concretely:**
 - Background: pure white `#FFFFFF` for primary surfaces, `#FAFAFA`–`#F5F5F5` for recessed panels. Never pure gray backgrounds with white cards — invert that.
 - Text: near-black `#0A0A0A` for body, `#1A1A1A` for headings, graded neutral for metadata.
-- Accent: a single restrained warm neutral (`#C8A96E` amber) reserved for **marketing / landing surfaces only** — brand marker, public-page active state, OG asset chrome. **Working tools (`/app/*` surfaces) are achromatic** — black, white, gray only. The amber accent is forbidden inside the product portal per §4.2 (achromatic). Earlier drafts of this doc applied amber to product active state; that pattern is now scoped to landing surfaces.
+- Accent: brand color is **strategic, not decorative** (60-30-10, v1.1). Warm neutrals carry the **60% dominant** canvas — warm-ivory background (`#FAF7F2`), warm near-black ink (`#1F1A15`). **Vermillion `#9A361F` is the strategic 10%** — CTAs, primary actions, active nav state, brand marker — across both landing and product (`/app/*`) surfaces. **Gold `#F3D174` is small-area support** (highlights, tags, ratings, section accents). On a Vermillion fill, text is warm off-white (`#FBEAE6`). Pure-white backgrounds and pure-black body text are forbidden.
 - Primary action: solid black on white. Or white on solid black. No gradient buttons, ever.
 - Borders: `#EAEAEA` hairlines. Never double borders. Never shadows to simulate elevation.
 - Radius: 6px for inputs/buttons, 8px for cards/panels, 0 for table rows. Consistent, not playful.
@@ -79,9 +79,9 @@ These nine patterns codify the visual signature established in Phase 2.9 and the
 
 Pretendard Variable for body and UI. SUIT Variable for editorial headlines via the `font-suit` Tailwind utility. The legacy `font-display` (Fraunces) remains available for landing/marketing surfaces only — never use Fraunces for in-product headlines. Detailed scale and tokens live in `TYPOGRAPHY_SPEC.md §3.1` (font families) and `§5` (semantic roles).
 
-### 4.2 Achromatic only
+### 4.2 Neutral-dominant (60-30-10)
 
-Black, white, and gray. Zero accent color in working tools. Visual hierarchy comes from contrast, weight, and scale — never from hue. The amber accent (§3) is reserved for marketing/landing surfaces and may not appear in product surfaces (`/app/*`).
+Warm neutrals (ivory canvas `#FAF7F2`, warm near-black ink `#1F1A15`) carry ~60% of every surface, including working tools. Visual hierarchy comes first from contrast, weight, and scale — never from decorative hue. Brand color is the strategic remainder: **Vermillion `#9A361F` for CTAs / primary actions / active states (the ~10%)** and **Gold `#F3D174` for small highlights (support, ~5–15%)**, on both landing and product (`/app/*`) surfaces. Color marks action or state, never decoration. *(v1.1, 2026-05-27 — supersedes the earlier "achromatic /app, accent landing-only" rule.)*
 
 ### 4.3 Hairline borders, soft shadows
 
@@ -184,18 +184,20 @@ Full scale: `TYPOGRAPHY_SPEC.md`.
 
 ## 8. Color as meaning
 
-Color is a semantic channel, not a decorative one.
+Color is a semantic channel, not a decorative one. v1.1 uses a **3-tier system governed by the 60-30-10 rule**: neutrals dominate, brand colors punctuate.
 
 Allowed roles:
-- **Neutral scale** (0–100): background, surface, border, text. This is 85% of what you use.
-- **Semantic**: success (green), warning (amber), error (red), info (blue). Used for *state*, never for decoration.
-- **Accent** (single warm neutral, amber `#C8A96E`): YAGI brand marker. Used for active nav state, brand logo, and one-off emphasis moments. **Never for primary buttons** — those are always solid black.
+- **Neutral tier (60% — dominant)**: warm-ivory canvas (`#FAF7F2`), pure-white elevated surfaces, warm near-black ink (`#1F1A15`), warm hairline borders (`#E8E0D4`). **Never a pure-white page background; never pure-black body text.** This is the majority of what you use.
+- **Brand primary — Vermillion `#9A361F` (~10%, strategic)**: CTAs, primary actions, brand marker, active nav state. On the saturated fill, text is warm off-white (`#FBEAE6`). The most strategic tenth of the surface.
+- **Brand secondary — Gold `#F3D174` (~5–15%, support)**: highlights, tags, ratings, small icons, section accents. Small areas only — never a large fill.
+- **Semantic**: success (green), warning (amber), error (red), info (blue). Used for *state*, never decoration — and distinct from the Vermillion/Gold brand accents.
 - **Data viz palette**: only introduced when a chart exists. Reach for `DATA_VIZ_PALETTE.md` spec (not yet written, add when first chart ships).
 
 Forbidden:
 - No accent gradients.
-- No tinted backgrounds for entire pages.
+- No tinted backgrounds for entire pages (warm-ivory canvas only).
 - No colored text for emphasis — use weight or caps+tracking.
+- Brand colors (Vermillion + Gold combined) stay within ~30% of any surface; warm neutrals carry the rest.
 
 Contrast: WCAG AA minimum (4.5:1 body, 3:1 large text). Near-black on white is the default and it solves this for free.
 

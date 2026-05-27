@@ -1019,3 +1019,22 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 
 *v1.11 amendment 끝. Phase 8+ Option B (compressed) lock + §AJ partial resolutions.*
 *다음 amendment 후보 (v1.12+): Q#6 Phase 9 rename, Q#2/Q#3 Phase 8 mid Twin discovery 반영, §AL KPI 정밀화, Q#5 Phase 9 첫 Celebrity 계약.*
+
+---
+
+## §AM — Design System v1.1 Color System (2026-05-27)
+
+*(Recorded as §AM — the next free letter: §AA–§AL are all taken, incl. `###` subsections (§AG = "Identity Extension Matrix", §AK = "Phase 8+ Roadmap"). This is the design-system color decision; it supersedes the v1.0 sage sole-accent rule in ARCHITECTURE §18.3, not any product section.)*
+
+- **3-tier color system**, governed by the **60-30-10 rule**:
+  - **Neutral (60%, dominant)** — warm-ivory bg `#FAF7F2`, pure-white elevated surfaces `#FFFFFF`, warm near-black ink `#1F1A15`, warm muted ink `#5C544A`, warm border `#E8E0D4`. Pure-white page bg and pure-black body text forbidden.
+  - **Brand primary — Vermillion `#9A361F` (~10%, strategic)** — CTAs, primary actions, active nav, brand marker. On-fill text warm off-white `#FBEAE6`; hover `#B8412A`.
+  - **Brand secondary — Gold `#F3D174` (~5-15%, support)** — highlights, tags, ratings, small icons, section accents. On-fill text espresso `#3D2E0E`; text-on-neutral `#6B5618`; hover `#E8C158`. Small areas only, never a large fill.
+- **Retired**: amber `#C8A96E` (prose-only remnant), sage `#71D083` (live v1.0 token + ~18 hex-literal usages across app).
+- **Scope**: `src/app/globals.css` (light + dark tokens), `tailwind.config.ts` (neutral / vermillion / gold families), design-system `PRINCIPLES.md` (§3, §4.2, §8) + `ARCHITECTURE.md §18.3` (superseded) + skill `SKILL.md`, `CLAUDE.md` rule #10, auth magic-link email template, ~14 app component files (sage hex -> Vermillion; on-fill text -> cream).
+- **WCAG AA verified** (all >= 4.5:1): cream `#FBEAE6` on Vermillion 6.17:1; Vermillion `#9A361F` on white 7.19:1; espresso `#3D2E0E` on Gold 8.89:1; Gold-ink `#6B5618` on white 7.07:1.
+- **Dark mode** (opt-in): warm-dark neutrals (`#1A1612` bg / `#2A2520` surface / `#FAF7F2` ink); Vermillion text -> `#E8A99B`; Gold -> `#F3D174`.
+- **Preserved**: Tailwind semantic state colors (`amber-500` / `red-500` / `green-500` / success / warning / info) — these are state utilities, not brand colors.
+- Aesthetic intent: K-pop 엔터테인먼트 + 한국 단청 (진사 + 황토) + editorial luxury (Sunrise Terracotta / Cherry Noir reference).
+
+---

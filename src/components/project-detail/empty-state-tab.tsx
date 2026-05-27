@@ -5,7 +5,7 @@
 // Design compliance (yagi-design-system v1.0):
 //   - White bg, zero shadow
 //   - rounded-3xl (24px) border border-border/40
-//   - Sage icon: #71D083 at low opacity (muted foreground — not a fill)
+//   - Sage icon: #9A361F at low opacity (muted foreground — not a fill)
 //   - No warm tones, no extra accent colors
 //   - keep-all on Korean text
 

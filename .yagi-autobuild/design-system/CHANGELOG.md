@@ -11,6 +11,17 @@ Source of truth: `.md` files under `.yagi-autobuild/design-system/`. Generated `
 
 ## [Unreleased]
 
+### Changed — v1.1 color system (2026-05-27)
+
+- **3-tier color system (60-30-10)** replaces the v1.0 sage sole-accent rule:
+  - **Neutral (60%)** — warm-ivory canvas `#FAF7F2`, pure-white surfaces, warm near-black ink `#1F1A15`, warm border `#E8E0D4`. Pure-white bg / pure-black body text forbidden.
+  - **Vermillion `#9A361F` primary (~10%)** — CTAs, primary actions, active states; on-fill text `#FBEAE6`; hover `#B8412A`.
+  - **Gold `#F3D174` secondary (~5–15%)** — small highlights/tags; on-fill text `#3D2E0E`; text-on-neutral `#6B5618`; hover `#E8C158`.
+- **Retired**: amber `#C8A96E` (prose remnant), sage `#71D083` (live token + hex literals).
+- **PRINCIPLES.md** §3 / §4.2 (was "Achromatic only" → "Neutral-dominant (60-30-10)") / §8 rewritten. **ARCHITECTURE.md §18.3** superseded. Decision recorded in PRODUCT-MASTER §AM.
+- App layer: `globals.css` (light + dark tokens repointed warm + `--ds-neutral-*`/`--ds-vermillion-*`/`--ds-gold-*`), `tailwind.config.ts` (neutral/vermillion/gold families), ~14 components, auth email template, `CLAUDE.md` rule #10. All on-fill contrasts WCAG AA verified.
+- **Preserved**: Tailwind semantic state colors (`amber-500`/`red-500`/`green-500`, success/warning/info) — not brand colors.
+
 ---
 
 ## [0.2.0] — 2026-04-28
