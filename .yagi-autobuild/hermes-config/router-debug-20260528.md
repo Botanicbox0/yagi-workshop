@@ -45,3 +45,39 @@ ExecStartPre=/bin/bash -c 'hermes gateway stop 2>/dev/null; sleep 2; true'
 2. Trial 2 (MED):
    `@Hermes Notifier yagi-workshop의 src/app/globals.css에 .text-router-mark { color:#ED1E1E; font-weight:700; } 추가해줘`
    → MED 판정 → confirm 요청 → YES → claude-bg dispatch → commit+push + learned-skill 생성 + 강화 형식 응답.
+
+---
+
+# TASK 28 — v1.2 design system 인지 (append)
+
+## Trial 2 결과 분석
+Trial 2 (05:55)에서 router가 `#ED1E1E`를 **brand color 위반으로 정확히 catch + 거부**.
+자율 거부 능력 자체는 정상(good). 문제는 **v1.1(§AM, 폐기됨) 기준**으로 판단 — v1.2(§AO,
+commit d1d4fd1+cbdb3ce) 미인지 = context staleness.
+
+## 근본 원인
+1. LEANN `yagi-workshop-docs` index가 2026-05-27 20:45 sync (v1.2 commit 04:40/05:20보다 8h 이전).
+2. Hermes `MEMORY.md` design 섹션이 v1.1 canonical.
+3. yagi-router `SOUL.md`에 v1.2 명시 없음.
+
+## 조치
+- **MEMORY.md**: v1.1 섹션 "SUPERSEDED" 표기 + v1.2(§AO) canonical 섹션 + §AN-§AS amendment 추가.
+- **yagi-router SOUL.md**: "Design System Context (v1.2 active)" 블록 추가 (hex + dark theme + v1.1 reroute 안내).
+- **LEANN index 재빌드**: 100,471 chunks. 직접 grep 검증 — #ED1E1E ×27, #FAD204 ×22, "Dark Brand" ×15, §AO ×19 색인 확인.
+
+## ⚠️ 사고 + 복구 (정직 기록)
+1차로 incremental sync(`leann build` no --force) 시도 → leann이 변경 2파일만 잡고 "full rebuild
+fallback"하며 **기존 인덱스를 54,061→37 chunk로 파괴**. 즉시 발견 → `leann remove --force` →
+**처음부터 full rebuild(--force)**로 복구. 교훈: 이 leann 버전에서 HNSW index 갱신은 incremental
+신뢰 불가 → 항상 `remove + 전체 rebuild`.
+
+## 알려진 한계 (follow-up)
+재빌드가 `--include-hidden`로 **node_modules .md 1,754개(~47% chunk)를 같이 색인**함
+(repo `/node_modules` gitignore를 leann build가 무시). v1.2 검색에는 지장 없으나 인덱스가
+49MB→93MB로 비대 + 노이즈. **clean rebuild(node_modules 제외) follow-up 필요** — leann build에
+exclude 플래그 없으므로 빌드 중 node_modules 임시 격리 방식 권장. 야기 AFK 시 실행.
+
+## 재검증
+- index 健全: 100,471 chunks, documents.index 27MB, pruning 정상.
+- leann-daemon + hermes-slack-gateway restart 후 active.
+- Hermes 측 인지는 야기 Slack Trial 2 재시도로 최종 확인 (아래 가이드).

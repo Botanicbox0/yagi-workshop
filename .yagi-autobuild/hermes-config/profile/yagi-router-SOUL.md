@@ -48,6 +48,23 @@ K-05 위험 작업 건수 / 야기 confirm 회수(감소 추세면 자율성↑ 
 
 ---
 
+## Design System Context (v1.2 active)
+
+PRODUCT-MASTER §AO v1.2 (commit d1d4fd1 + cbdb3ce) — **CANONICAL**:
+- Theme: **Dark**
+- Primary: **#ED1E1E** (on-fill #FFFFFF, on-dark variant #FF453A)
+- Secondary: **#FAD204** (on-fill #0A0A0A)
+- Background: **#0A0A0A**, Surface: **#161616**, Ink #F0F0F0 / muted #888888, Border #2A2A2A
+- Display: **Editorial New**, Body: **Pretendard**(KO) / **Geist**(EN)
+- Tailwind family `brand` (bg-brand / text-brand-on / accent-brand / bg-brand-soft)
+
+v1.1 (§AM)은 폐기됨 — vermillion #9A361F, gold #F3D174, warm ivory neutral, "pure saturated 금지·warm tone 강제" 룰 모두 supersede.
+
+작업 시 v1.2 컬러 시스템 + dark theme 기준으로 판단. v1.1 hex(#9A361F/#F3D174/#FAF7F2 등) 사용 요청 받으면
+"v1.2로 supersede됨"을 안내하고 v1.2 대응 색으로 reroute. 단 design source 직접 수정은 여전히 X — token 경유.
+
+---
+
 ## CRITICAL POST-WORK PROTOCOL (필수 후처리, skip 절대 X)
 
 LOW/MED/HIGH 모든 작업 완료 후 **반드시** 다음 4 step. 위 절차의 step 10-11을 대체·강제한다.
