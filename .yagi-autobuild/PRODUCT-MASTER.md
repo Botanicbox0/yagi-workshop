@@ -1038,3 +1038,225 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 - Aesthetic intent: K-pop 엔터테인먼트 + 한국 단청 (진사 + 황토) + editorial luxury (Sunrise Terracotta / Cherry Noir reference).
 
 ---
+
+
+---
+
+## §AN BRAND-Only Vertical Pivot (2026-05-28)
+
+### Actor model 재정의 (§AE supersede)
+- **BRAND** = 유일 self-signup customer persona (vertical, 모든 surface가 BRAND 관점)
+- **CELEBRITY** = 야기 internal asset (manual 등록, self-signup X, public 노출 X)
+  - `workspaces.kind='artist'` DB 보존 (asset record)
+  - BRAND ↔ celebrity 협업 = yagi-internal admin이 `project_guests` 연결
+- **CREATOR** = Distributed Campaign 채널 (Phase 7 유지, 별 funnel)
+- **YAGI INTERNAL** = admin
+
+### BRAND User Journey (실측 KAIPER + SLOGK 사례 기반)
+
+1. **Onboarding**
+   - Brand 가입 → workspace 생성
+   - 회사 정보 + 세무 정보 입력 (사업자등록증 + 통장사본 + 세금계산서 수신 정보)
+   - Brand Asset Library 셋업 (logo + product 사진 + brand guideline)
+
+2. **Project Brief 작성** (notion 대체)
+   - Type A: 일반 외주 (Curated Project, Wave A.2.a backend, digital twin 활용 가능)
+   - Type B: Mass AI Campaign (Phase 7 distributed campaign infra 재활용)
+   - Type C: Lookbook (§AQ Americano integration 후, 패션 vertical)
+   - 형식: 1순위/2순위/3순위 분류 + 분량 (썸네일 N장, 비율 9:16/1:1/16:9/21:9, 픽셀 크기) + 레퍼런스 + 1차/2차/3차 일정
+
+3. **단가 + 견적** (자동 + 수동)
+   - 분량 + 작업 종류 기반 자동 견적
+   - 누적 거래량 기반 장기 협업 할인 자동 적용 (-20% 등)
+   - 야기 internal admin 최종 confirm
+   - 큰 건 (영상 제작 등) 선결제 옵션
+
+4. **세금계산서 + 인보이스** (자동 발행)
+   - 국세청 e-tax API 또는 popbill/bgmgr 연동
+   - 견적 confirm 즉시 발행
+   - Billing section 통합 관리 + 다운로드
+
+5. **Pre-production (Character Sheet 단계)**
+   - 모델/의상/배경 후보 시안 (야기/다나가 제시, 4가지 다른 감도 동시)
+   - Brand 선택 → character sheet 확정 (3-view diagram + close-up)
+   - 이후 production cycle은 confirmed character sheet 기반 (일관성 유지)
+
+6. **Production cycles** (V1 → V2 → V3 → ... 버전 관리)
+   - 각 버전 in-app asset gallery
+   - 피드백 thread (slack 대체, slack/email mirror 알림 발송)
+   - 일정 변경 시 자동 알림
+
+7. **Deliverables**
+   - 다중 비율 자동 export (16:9 + 9:16 + 1:1 + 21:9)
+   - 4K 업스케일 옵션
+   - 음원 풀버전 + 라이센스 정보
+   - 이미지/영상/에셋 zip 일괄 다운로드
+   - 마케팅 자유 활용 권리 명시
+
+8. **Customer Lifetime View** (yagi internal admin)
+   - Brand별 누적 거래량 + LTV
+   - 단가 정책 + 적용 할인율
+   - 미수금 + 정산 status
+   - 다음 contact 예정일
+
+---
+
+## §AO Design System v1.2 — Dark Brand UI (supersedes §AM)
+
+### 색 시스템
+- Theme: **Dark**
+- Primary: **#ED1E1E** (vermilion red, brand mark + CTA)
+- Secondary: **#FAD204** (warm gold, highlights + tags + accent, 5-10%)
+- Background: **#0A0A0A** (확정)
+- Ink primary: **#F0F0F0** (확정)
+- Surface: **#161616** (제안, 야기 confirm 후 lock)
+- Ink muted: **#888888** (제안)
+- Border: **#2A2A2A** (제안)
+
+### Typography
+- Display: **Editorial New** (확정)
+- Body Korean: Pretendard Variable
+- Body English/Tech: Geist (sans + mono)
+- 극단적 대비 (Display 3-4x scale jump from body)
+
+### 60-30-10
+- 60% Dark neutral (bg + surface + ink)
+- 30% Surfaces + subtle gradient/glow
+- 10% #ED1E1E + #FAD204 (합쳐서, CTA + brand mark + key callout)
+
+### Tone
+- High-end AI tool (Higgsfield/Runway/ElevenLabs 톤)
+- Editorial premium (Editorial New italic + dark moody)
+- 한국 단청 + 럭셔리 영화 포스터
+
+### v1.1 (§AM) 폐기
+- warm ivory neutral, Vermillion #9A361F, Gold #F3D174 모두 supersede
+- 커밋 75cdd05 (v1.1 적용 코드)는 §AO 적용 시 마이그레이션 대상
+
+---
+
+## §AP IA Refactor — Horizontal Nav (supersedes §AH)
+
+### Sidebar dashboard → Top-bar horizontal nav (Higgsfield 패턴 참고)
+
+카테고리 (잠정):
+- **Explore** — 디지털 트윈 roster + 야기 자산 탐색
+- **Projects** — 외주 의뢰 + 진행 관리 (Wave A.2.a backend 활용)
+- **Campaigns** — Mass AI Campaign (Phase 7 재활용)
+- **Lookbook Studio** — §AQ Americano integration 후
+- **Marketing Studio** — 영상 ad pipeline
+- **Assets** — 받은 deliverable 관리 + 다운로드
+- **Billing** — 견적 + 인보이스 + 세금계산서 + 누적 거래
+
+우측: Credit balance + Search (Ctrl+K) + Workspace switcher + Profile
+
+---
+
+## §AQ Americano Integration — Fashion Brand SaaS (다나, 2026-05-28)
+
+### Americano
+- 다나 작업 — 모델 지정 + 룩북 자동화 SaaS
+- 곧 GitHub release
+- 패션 vertical에 직접 fit
+
+### 통합 plan
+1. GitHub release 후 yagi-workshop platform에 module로 흡수
+2. BRAND surface의 "Lookbook Studio" section 등재
+3. 공유 auth + billing + workspace + asset library
+4. 다나 main maintainer, 야기 PM
+5. Phase 9 또는 별 Wave (Americano release 시점 후 결정)
+
+---
+
+## §AR Marketing Visual Pipeline — 야기 Internal Tool (2026-05-28)
+
+### Scope 명시
+- **목적**: yagi-workshop platform의 marketing / landing / feature illustration 생성 (Higgsfield Supercomputer / AI Canvas / Marketing Studio 페이지 톤)
+- **야기/다나 internal tool only** — Brand가 platform에서 직접 generate 기능 X (Phase 10+ defer)
+- Brand deliverable 제작 시에도 동일 도구/룰 활용
+
+### 이미지 콘텐츠 룰 (필수)
+- **이미지 자체에 텍스트 X** — generate된 visual은 pure imagery only
+- 텍스트/라벨/CTA/제목/설명 = platform UI overlay (HTML/CSS) 담당
+- 이유: 다국어 + 리브랜딩 + 유지보수 모두 안전, 깔끔한 분리
+- **특정 brand 노출 X** — KAIPER/SLOGK 등 specific brand 이름/로고 platform marketing illustration에 X. Generic, brand-agnostic visual만
+
+### 도구 선택 — Higgsfield 플랫폼의 Nano Banana Pro only
+- Resolution: 2K (cost/quality 최적, 4K 업스케일은 별 단계)
+- 14 reference image 지원
+- Thinking mode 활성 (복잡 추론, 다중 오브제 정확도 ↑)
+- Up to 5-person consistency (캐릭터 시트 활용)
+- Korean text rendering 정확 (다만 platform marketing illustration은 텍스트 X 룰)
+
+### Reference image source 4 tier 전략
+
+Tier 1 — Brand Asset Library (Brand 자체 자산 logo/product/brand guideline) — 비중 50-70% — 라이센스 Brand 자체 — Brand deliverable 작업 시
+Tier 2 — 야기 Internal Library (다나 이전 작업 일반화 reference, character sheet, mood board) — 비중 15-25% — 라이센스 야기 보유
+Tier 3 — AI-Generated Mood Board (Nano Banana로 brief 받아서 mood option 생성 → 선택 후 reference로) — 비중 10-20% — 라이센스 AI 생성 (SynthID)
+Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 영감용으로만 활용, semantic label 부여 후 Higgsfield에 reference image로 attach) — 비중 10-15% — 라이센스 영감 활용 (직접 publish X), Brand 외부 업로드 시 자기 책임
+
+### Nano Banana Pro 프롬프트 룰 (Google 공식 기반)
+
+**5-pillar 구조**
+1. Subject — 누가/무엇이 있는가? 구체적으로
+2. Composition — 카메라 앵글/거리/프레이밍 (예: 35mm 미디엄 샷, 매크로 클로즈업, 부감)
+3. Action — 피사체가 무엇을 하는가
+4. Location — 배경/분위기/시간대
+5. Style — 사진 종류/컬러 그레이딩/무드 (예: editorial fashion, cinematic teal-orange, "no text in image" 명시)
+
+**Reference image 사용 — semantic naming 필수**
+- 잘못된 방식: "image 1", "image 2" — 모델이 그 이미지를 그대로 출력하는 버그 유발
+- 올바른 방식: 각 reference에 명사 라벨 부여 후 prompt에서 그 label로 referencing
+
+예시 prompt 구조 (Brand deliverable, KAIPER 사례 기반):
+"Generate a hero image for the product hero shot, held by the model reference A, in a setting that captures the mood of the lifestyle mood board. Place the brand logo bottom-right with 12% width. Adopt the photography style of the previous campaign style. 35mm medium shot, eye-level, golden hour natural lighting. 2K resolution, thinking mode enabled. No text in image."
+
+예시 prompt 구조 (platform marketing illustration, Higgsfield Supercomputer 톤):
+"Generate a pure visual showing a creator workspace concept: a young person of ambiguous ethnicity holding a tablet, soft cinematic lighting, dark moody background with subtle red and gold highlights. Pure imagery only, no text or logos in the image. Adopt the editorial mood of the inspiration reference (Pinterest mood board). 35mm shot, depth of field, 2K resolution, thinking mode enabled."
+
+**Iteration 전략**
+- 첫 결과 OK면 follow-up edit ("배경 더 밝게", "그림자 부드럽게") — 재생성 X
+- 새 reference 추가 시 그 추가 image도 semantic label 부여
+- 최종본 confirm 시 그 이미지를 Brand Asset Library 또는 야기 Internal Library에 저장 → 향후 reference로 재활용
+
+### Workflow (현재 = 외부 Higgsfield UI 활용)
+- 야기/다나가 https://higgsfield.ai 외부 UI에서 generate
+- Pinterest에서 reference 복붙 가능 (영감 + semantic label 부여 후 Higgsfield에 attach)
+- 결과물 platform 정적 asset으로 업로드 (public/marketing/...)
+- platform 안에서 generate UI 빌트인 = over-engineering, Phase 10+ defer
+
+### MCP 통합 status (자동화 워크플로우용, optional)
+- Hermes: 이미 연결됨
+- Claude Code: claude mcp add --transport http --scope user higgsfield https://mcp.higgsfield.ai/mcp
+- 사용처: 자동화된 mood board batch 생성, character sheet 일괄 등
+
+---
+
+## §AS Operations Automation — Notion + Slack 통합 대체 (2026-05-28)
+
+### Brief
+- in-app form (notion 주문서 대체)
+- 1순위/2순위/3순위 분류, 분량, 비율, 픽셀 크기, 레퍼런스 첨부, 일정 spec
+
+### Communication
+- in-app thread (slack 대체)
+- @ mention 시 Slack/email mirror 알림 (Brand가 외부에서 즉시 응답 가능)
+- 첨부 파일 인라인 표시
+
+### Asset Versioning
+- V1 / V2 / V3 / ... 자동 버저닝 (다나 사례: V1→V5까지 일반적)
+- 피드백 round 추적
+- 최종본 confirm 시 lock
+
+### Schedule
+- 1차/2차/3차 납품 일정 visible (Gantt 또는 list)
+- 일정 변경 시 자동 알림 (Brand + 야기 internal)
+- "ASAP" 표시 또는 specific 날짜 지정
+
+### Billing
+- 견적서 자동 발행
+- 세금계산서 자동 발행 (e-tax 연동)
+- 누적 거래량 + LTV view
+- 장기 협업 할인 자동 적용
+- 미수금 status 추적
+
