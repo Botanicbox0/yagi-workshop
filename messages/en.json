@@ -181,7 +181,17 @@
     },
     "new_project_cta": "Start a project",
     "dashboard": "Dashboard",
+    "explore": "Explore",
     "projects": "Projects",
+    "campaigns": "Campaigns",
+    "lookbook_studio": "Lookbook Studio",
+    "marketing_studio": "Marketing Studio",
+    "assets": "Assets",
+    "billing": "Billing",
+    "credit_balance": "0 credits",
+    "search": "Search",
+    "search_shortcut": "Ctrl K",
+    "open_menu": "Open menu",
     "campaign_request": "Request a campaign",
     "my_submissions": "My submissions",
     "recommended_artist": "Recommended artists",
@@ -204,6 +214,38 @@
     "admin_commissions": "Commission queue",
     "admin_trash": "Trash",
     "admin_support": "Support chat"
+  },
+  "app_placeholders": {
+    "explore": {
+      "eyebrow": "Explore",
+      "title": "Explore references and starting points",
+      "description": "A discovery surface connecting brand campaigns, music videos, and lookbook modules. This opens the entry point for the §AP horizontal nav transition."
+    },
+    "campaigns": {
+      "eyebrow": "Campaigns",
+      "title": "Campaign operations",
+      "description": "A home for distributed campaign requests, progress, and creator-channel operations. Detailed workflows will connect in the Campaigns phase."
+    },
+    "lookbook": {
+      "eyebrow": "Lookbook Studio",
+      "title": "Lookbook Studio",
+      "description": "The future home for the Americano lookbook module. Fashion lookbook production flows will connect after Phase 9."
+    },
+    "marketing": {
+      "eyebrow": "Marketing Studio",
+      "title": "Marketing Studio",
+      "description": "The entry point for the internal marketing visual pipeline. Nano Banana Pro based workflows will connect progressively as operations tooling."
+    },
+    "assets": {
+      "eyebrow": "Assets",
+      "title": "Asset Library",
+      "description": "An optional library for images, video, references, and brand assets that can be uploaded during project work."
+    },
+    "billing": {
+      "eyebrow": "Billing",
+      "title": "Billing",
+      "description": "The surface for payment, tax invoice, and billing flows. Tax details are collected at payment or invoice issuance."
+    }
   },
   "commission": {
     "list_title": "My commissions",

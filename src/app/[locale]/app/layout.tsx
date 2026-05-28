@@ -1,13 +1,10 @@
 import { redirect } from "@/i18n/routing";
 import { fetchAppContext } from "@/lib/app/context";
-import { Sidebar, MobileSidebarSheet } from "@/components/app/sidebar";
+import { TopNav } from "@/components/app/top-nav";
 import {
   resolveActiveWorkspace,
   listOwnWorkspaces,
 } from "@/lib/workspace/active";
-import { NotificationBell } from "@/components/app/notification-bell";
-import { PageHelpLink } from "@/components/app/page-help-link";
-import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserScopes } from "@/lib/app/scopes";
 import { UserScopesProvider } from "@/lib/app/use-user-scopes";
@@ -81,33 +78,19 @@ export default async function AppLayout({
 
   return (
     <UserScopesProvider value={scopes}>
-      <div className="min-h-dvh flex">
-        <Sidebar
+      <div className="min-h-dvh bg-background text-foreground">
+        <TopNav
           context={ctx}
           activeWorkspace={activeWorkspace}
           workspaces={allWorkspaces}
+          initialUnreadCount={initialUnreadCount ?? 0}
+          locale={bellLocale}
         />
-        <div className="flex-1 min-w-0 flex flex-col">
-          <header className="flex items-center justify-between gap-2 h-12 px-4 border-b border-border">
-            <MobileSidebarSheet
-              context={ctx}
-              activeWorkspace={activeWorkspace}
-              workspaces={allWorkspaces}
-            />
-            <div className="flex-1" />
-            <PageHelpLink />
-            <LanguageSwitcher />
-            <NotificationBell
-              initialUnreadCount={initialUnreadCount ?? 0}
-              locale={bellLocale}
-            />
-          </header>
-          <main className="flex-1 min-w-0">
-            <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8 w-full">
-              {children}
-            </div>
-          </main>
-        </div>
+        <main className="min-w-0">
+          <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8 w-full">
+            {children}
+          </div>
+        </main>
         {/* Phase 2.8.6 — workspace-scoped support chat. Hidden when
             the user has no workspace (mid-onboarding edge case).
             Wave C.5d sub_03e_3: workspaceId now reflects the cookie-

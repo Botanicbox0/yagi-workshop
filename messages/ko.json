@@ -181,7 +181,17 @@
     },
     "new_project_cta": "새 프로젝트 시작",
     "dashboard": "대시보드",
+    "explore": "Explore",
     "projects": "프로젝트",
+    "campaigns": "캠페인",
+    "lookbook_studio": "Lookbook Studio",
+    "marketing_studio": "Marketing Studio",
+    "assets": "Assets",
+    "billing": "Billing",
+    "credit_balance": "0 credits",
+    "search": "검색",
+    "search_shortcut": "Ctrl K",
+    "open_menu": "메뉴 열기",
     "campaign_request": "캠페인 요청",
     "my_submissions": "내 응모작",
     "recommended_artist": "추천 Artist",
@@ -204,6 +214,38 @@
     "admin_commissions": "의뢰 관리",
     "admin_trash": "휴지통",
     "admin_support": "지원 채팅"
+  },
+  "app_placeholders": {
+    "explore": {
+      "eyebrow": "Explore",
+      "title": "레퍼런스와 기획 출발점을 탐색하세요",
+      "description": "브랜드 캠페인, 뮤직비디오, 룩북 모듈을 연결하는 탐색 화면입니다. §AP horizontal nav 전환을 위해 먼저 진입면을 열어둡니다."
+    },
+    "campaigns": {
+      "eyebrow": "Campaigns",
+      "title": "캠페인 운영 화면",
+      "description": "분산 캠페인 요청, 진행 현황, 크리에이터 채널 운영을 묶는 화면입니다. 상세 워크플로우는 Campaigns phase에서 연결됩니다."
+    },
+    "lookbook": {
+      "eyebrow": "Lookbook Studio",
+      "title": "Lookbook Studio",
+      "description": "Americano 룩북 모듈이 흡수될 자리입니다. 패션 룩북 제작 흐름은 Phase 9 이후 연결됩니다."
+    },
+    "marketing": {
+      "eyebrow": "Marketing Studio",
+      "title": "Marketing Studio",
+      "description": "내부 마케팅 비주얼 파이프라인 진입점입니다. Nano Banana Pro 기반 작업 흐름은 운영 도구로 단계적으로 연결됩니다."
+    },
+    "assets": {
+      "eyebrow": "Assets",
+      "title": "Asset Library",
+      "description": "프로젝트 진행 중 필요한 이미지, 영상, 레퍼런스, 브랜드 자산을 모으는 선택형 라이브러리입니다."
+    },
+    "billing": {
+      "eyebrow": "Billing",
+      "title": "Billing",
+      "description": "결제, 세금계산서, 송장 흐름을 다루는 화면입니다. 세무정보는 결제·발행 시점에 수집합니다."
+    }
   },
   "commission": {
     "list_title": "내 의뢰",

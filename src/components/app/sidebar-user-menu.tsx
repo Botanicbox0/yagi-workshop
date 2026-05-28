@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/app/signout-action";
+import { cn } from "@/lib/utils";
 import type { ProfileRole, WorkspaceRole } from "@/lib/app/context";
 
 type Profile = {
@@ -63,10 +64,16 @@ export function SidebarUserMenu({
   profile,
   workspaceRoles,
   isYagiInternalMember,
+  contentSide = "top",
+  compact = false,
+  className,
 }: {
   profile: Profile;
   workspaceRoles: WorkspaceRole[];
   isYagiInternalMember: boolean;
+  contentSide?: "top" | "right" | "bottom" | "left";
+  compact?: boolean;
+  className?: string;
 }) {
   const c = useTranslations("common");
   const visibleName = resolveVisibleName(profile);
@@ -82,21 +89,29 @@ export function SidebarUserMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="w-full flex items-center gap-2.5 p-2 rounded-md hover:bg-accent transition-colors">
+      <DropdownMenuTrigger
+        className={cn(
+          "w-full flex items-center gap-2.5 p-2 rounded-md hover:bg-accent transition-colors",
+          compact && "w-auto justify-center p-1.5",
+          className,
+        )}
+      >
         <Avatar className="w-7 h-7">
           {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt="" />}
           <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
         </Avatar>
-        <div className="flex-1 text-left min-w-0">
-          <p className="text-[13px] truncate">{visibleName}</p>
-          {roleLabel && (
-            <p className="text-[11px] text-muted-foreground truncate">
-              {roleLabel}
-            </p>
-          )}
-        </div>
+        {!compact && (
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-[13px] truncate">{visibleName}</p>
+            {roleLabel && (
+              <p className="text-[11px] text-muted-foreground truncate">
+                {roleLabel}
+              </p>
+            )}
+          </div>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="top" className="min-w-[180px]">
+      <DropdownMenuContent align="end" side={contentSide} className="min-w-[180px]">
         <DropdownMenuItem disabled className="text-xs">
           {visibleName}
         </DropdownMenuItem>
