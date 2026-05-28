@@ -94,6 +94,34 @@ test.describe("authenticated app shell smoke", () => {
   }
 
   for (const viewport of viewports) {
+    test(`Billing surface renders on ${viewport.name}`, async ({ page }) => {
+      const consoleErrors: string[] = [];
+      page.on("console", (msg) => {
+        if (msg.type() === "error") consoleErrors.push(msg.text());
+      });
+      page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+      await page.setViewportSize({
+        width: viewport.width,
+        height: viewport.height,
+      });
+
+      await page.goto("/ko/app/billing", { waitUntil: "domcontentloaded" });
+      await expect(page).toHaveURL(/\/ko\/app\/billing/);
+      await expect(
+        page.getByRole("heading", { name: "정산과 세금계산서", level: 1 }),
+      ).toBeVisible();
+      await expect(page.getByRole("link", { name: "받은 송장" })).toBeVisible();
+      expect(consoleErrors).toEqual([]);
+
+      await page.screenshot({
+        path: `test-results/app-billing-${viewport.name}.png`,
+        fullPage: true,
+      });
+    });
+  }
+
+  for (const viewport of viewports) {
     test(`Campaign request surfaces render on ${viewport.name}`, async ({ page }) => {
       const consoleErrors: string[] = [];
       page.on("console", (msg) => {

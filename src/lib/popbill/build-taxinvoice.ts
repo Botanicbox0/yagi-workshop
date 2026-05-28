@@ -94,7 +94,7 @@ export function buildTaxinvoice(args: BuildArgs): BuildResult {
   // invoice.id + invoice.created_at (stable per row).
   const mgtKey =
     args.invoice.popbill_mgt_key ??
-    `INV-${args.invoice.id.slice(0, 8)}-${Buffer.from(args.invoice.created_at).toString("base64url").slice(0, 12)}`;
+    `INV-${args.invoice.id.slice(0, 8)}-${Buffer.from(args.invoice.created_at).toString("base64url").slice(0, 11)}`;
 
   const taxinvoice: Taxinvoice = {
     writeDate,

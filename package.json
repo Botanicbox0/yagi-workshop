@@ -67,6 +67,7 @@
     "next-intl": "^4.9.1",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "^5.6.205",
+    "popbill": "^1.64.0",
     "react": "19.1.0",
     "react-day-picker": "^9.14.0",
     "react-dom": "19.1.0",

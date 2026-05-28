@@ -656,13 +656,17 @@ function ActionFooter({ invoice, buyerRegistrationMissing }: ActionFooterProps) 
           "missing_fields" in result && result.missing_fields
             ? result.missing_fields.join(", ")
             : undefined;
-        // Phase 2.1 G4 — i18n-render known error codes; fall back to
-        // the raw code string for unknown ones so ops can still diagnose.
+        // i18n-render known Popbill guard codes; fall back to the raw code
+        // string for unknown ones so ops can still diagnose.
         let description: string;
         if (missing) {
           description = `${t("missing_fields_title")}: ${missing}`;
-        } else if (result.error === "popbill_not_implemented") {
-          description = t("error_popbill_not_implemented");
+        } else if (result.error === "POPBILL_CONFIG_MISSING") {
+          description = t("error_popbill_config_missing");
+        } else if (result.error === "POPBILL_LIVE_ISSUE_DISABLED") {
+          description = t("error_popbill_live_guard");
+        } else if (result.error.startsWith("POPBILL")) {
+          description = t("error_popbill_api", { code: result.error });
         } else {
           description = result.error;
         }

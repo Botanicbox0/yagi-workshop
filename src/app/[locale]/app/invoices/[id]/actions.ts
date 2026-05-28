@@ -95,25 +95,18 @@ export async function issueInvoice(
     };
   }
 
-  // Issue via popbill (mock or real)
+  // Issue via Popbill. The adapter keeps secrets server-only and blocks
+  // production issue unless the explicit live guard is enabled.
   const popbillResult = await issueTaxInvoice({
     invoice_id: invoice.id,
     taxinvoice: buildResult.taxinvoice,
   });
   if (!popbillResult.ok) {
-    // Phase 2.1 G4 — differentiate "deferred to Phase 2.2" from generic
-    // 팝빌 API failures. NOT_IMPLEMENTED carries a `details` payload
-    // identifying the phase the real impl lands in and the intended
-    // operation; log it structurally and surface a dedicated error code
-    // the client can i18n-render into a bilingual toast body.
-    if (popbillResult.error_code === "NOT_IMPLEMENTED") {
-      console.error(
-        "[invoices] issueInvoice guarded — popbill path deferred",
-        popbillResult.details,
-      );
-      return { ok: false, error: "popbill_not_implemented" };
-    }
-    console.error("[invoices] issueInvoice popbill failed", popbillResult);
+    console.error("[invoices] issueInvoice popbill failed", {
+      code: popbillResult.error_code,
+      message: popbillResult.error_message,
+      mode: popbillResult.mode,
+    });
     return { ok: false, error: popbillResult.error_code };
   }
 

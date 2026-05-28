@@ -1,8 +1,21 @@
 import "server-only";
+import { createRequire } from "node:module";
 
 export type PopbillMode = "mock" | "test" | "production";
 
-const mode: PopbillMode = ((process.env.POPBILL_MODE ?? "test") as PopbillMode);
+const POPBILL_ENV_VARIABLES = [
+  "POPBILL_MODE",
+  "POPBILL_LINK_ID",
+  "POPBILL_SECRET_KEY",
+  "POPBILL_CORP_NUM",
+  "POPBILL_USER_ID",
+  "POPBILL_IP_RESTRICT_ON_OFF",
+  "POPBILL_USE_STATIC_IP",
+  "POPBILL_USE_LOCAL_TIME_YN",
+  "POPBILL_LIVE_ISSUE_ENABLED",
+] as const;
+
+const mode = resolvePopbillMode(process.env.POPBILL_MODE);
 
 // CRITICAL SAFETY GUARD — must be the very first thing the module does.
 // Refuses mock mode in production deploys (per Codex K-05 mock-mode focus #7).
@@ -94,6 +107,63 @@ export type IssueResult =
       details?: PopbillErrorDetails;
     };
 
+export type PopbillConfigStatus = {
+  mode: PopbillMode;
+  configured: boolean;
+  missing_variables: string[];
+  env_variable_names: typeof POPBILL_ENV_VARIABLES[number][];
+  live_issue_enabled: boolean;
+  ip_restrict_on_off: boolean;
+  use_static_ip: boolean;
+  use_local_time_yn: boolean;
+};
+
+type PopbillIssueResponse = {
+  code?: number | string;
+  message?: string;
+  ntsConfirmNum?: string;
+  [key: string]: unknown;
+};
+
+type PopbillError = {
+  code?: number | string;
+  message?: string;
+  [key: string]: unknown;
+};
+
+type PopbillCallback<T> = (result: T) => void;
+type PopbillErrorCallback = (error: PopbillError) => void;
+
+type PopbillTaxinvoiceService = {
+  registIssue: (
+    corpNum: string,
+    taxinvoice: Taxinvoice,
+    writeSpecification: boolean,
+    forceIssue: boolean,
+    memo: string,
+    emailSubject: string,
+    dealInvoiceMgtKey: string,
+    userId: string,
+    success: PopbillCallback<PopbillIssueResponse>,
+    error: PopbillErrorCallback,
+  ) => void;
+};
+
+type PopbillModule = {
+  config: (config: {
+    LinkID: string;
+    SecretKey: string;
+    IsTest: boolean;
+    IPRestrictOnOff: boolean;
+    UseStaticIP: boolean;
+    UseLocalTimeYN: boolean;
+    defaultErrorHandler: (error: PopbillError) => void;
+  }) => void;
+  TaxinvoiceService: () => PopbillTaxinvoiceService;
+};
+
+let taxinvoiceService: PopbillTaxinvoiceService | null = null;
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 export function getPopbillMode(): PopbillMode {
@@ -101,33 +171,82 @@ export function getPopbillMode(): PopbillMode {
 }
 
 export function isPopbillConfigured(): boolean {
-  if (mode === "mock") return true;
-  return Boolean(
-    process.env.POPBILL_LINK_ID &&
-    process.env.POPBILL_SECRET_KEY &&
-    process.env.POPBILL_CORP_NUM,
-  );
+  return getPopbillConfigStatus().configured;
+}
+
+export function getPopbillConfigStatus(): PopbillConfigStatus {
+  const required =
+    mode === "mock"
+      ? []
+      : ["POPBILL_LINK_ID", "POPBILL_SECRET_KEY", "POPBILL_CORP_NUM"];
+  const missing = required.filter((name) => !process.env[name]);
+
+  return {
+    mode,
+    configured: missing.length === 0,
+    missing_variables: missing,
+    env_variable_names: [...POPBILL_ENV_VARIABLES],
+    live_issue_enabled: process.env.POPBILL_LIVE_ISSUE_ENABLED === "true",
+    ip_restrict_on_off: parseBooleanEnv("POPBILL_IP_RESTRICT_ON_OFF", false),
+    use_static_ip: parseBooleanEnv("POPBILL_USE_STATIC_IP", false),
+    use_local_time_yn: parseBooleanEnv("POPBILL_USE_LOCAL_TIME_YN", true),
+  };
 }
 
 export async function issueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
   if (mode === "mock") return mockIssueTaxInvoice(args);
-  // Phase 2.1 G4 — real SDK paths are deferred to Phase 2.2. Return a
-  // structured NOT_IMPLEMENTED result rather than a bare error; callers
-  // differentiate on error_code === "NOT_IMPLEMENTED" + the `details`
-  // payload to give operators + UI a user-friendly, locale-renderable
-  // message and to avoid silent 500s when the invoice issue path is
-  // exercised in a non-mock deployment.
-  return {
-    ok: false,
-    error_code: "NOT_IMPLEMENTED",
-    error_message: `POPBILL_MODE=${mode} calls to issueTaxInvoice are deferred to Phase 2.2 (real SDK integration pending).`,
-    mode,
-    details: {
-      phase: "2.2",
+
+  const status = getPopbillConfigStatus();
+  if (!status.configured) {
+    return {
+      ok: false,
+      error_code: "POPBILL_CONFIG_MISSING",
+      error_message: "Popbill server environment variables are incomplete.",
       mode,
-      intent: "issueTaxInvoice",
-    },
-  };
+    };
+  }
+
+  if (mode === "production" && !status.live_issue_enabled) {
+    return {
+      ok: false,
+      error_code: "POPBILL_LIVE_ISSUE_DISABLED",
+      error_message: "Production Popbill issue is disabled by guard flag.",
+      mode,
+    };
+  }
+
+  try {
+    const result = await callPopbill<PopbillIssueResponse>((success, error) => {
+      getTaxinvoiceService().registIssue(
+        process.env.POPBILL_CORP_NUM!,
+        args.taxinvoice,
+        false,
+        false,
+        args.memo ?? "",
+        "",
+        "",
+        process.env.POPBILL_USER_ID ?? "",
+        success,
+        error,
+      );
+    });
+
+    return {
+      ok: true,
+      mode,
+      nts_approval_number: String(result.ntsConfirmNum ?? ""),
+      popbill_mgt_key: args.taxinvoice.invoicerMgtKey,
+      raw_response: normalizePopbillResponse(result),
+    };
+  } catch (error) {
+    const normalized = normalizePopbillError(error);
+    return {
+      ok: false,
+      error_code: normalized.code,
+      error_message: normalized.message,
+      mode,
+    };
+  }
 }
 
 // ─── Mock implementation ─────────────────────────────────────────────────────
@@ -157,5 +276,73 @@ async function mockIssueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
         lineCount: args.taxinvoice.detailList.length,
       },
     },
+  };
+}
+
+// ─── Real SDK adapter ────────────────────────────────────────────────────────
+
+function getTaxinvoiceService(): PopbillTaxinvoiceService {
+  if (taxinvoiceService) return taxinvoiceService;
+
+  const require = createRequire(import.meta.url);
+  const popbill = require("popbill") as PopbillModule;
+
+  popbill.config({
+    LinkID: process.env.POPBILL_LINK_ID!,
+    SecretKey: process.env.POPBILL_SECRET_KEY!,
+    IsTest: mode === "test",
+    IPRestrictOnOff: parseBooleanEnv("POPBILL_IP_RESTRICT_ON_OFF", false),
+    UseStaticIP: parseBooleanEnv("POPBILL_USE_STATIC_IP", false),
+    UseLocalTimeYN: parseBooleanEnv("POPBILL_USE_LOCAL_TIME_YN", true),
+    defaultErrorHandler: (error) => {
+      console.error("[popbill] SDK error", normalizePopbillError(error));
+    },
+  });
+
+  taxinvoiceService = popbill.TaxinvoiceService();
+  return taxinvoiceService;
+}
+
+function callPopbill<T>(
+  invoker: (success: PopbillCallback<T>, error: PopbillErrorCallback) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    invoker(resolve, reject);
+  });
+}
+
+function resolvePopbillMode(raw: string | undefined): PopbillMode {
+  if (raw === "mock" || raw === "test" || raw === "production") return raw;
+  return "test";
+}
+
+function parseBooleanEnv(name: string, defaultValue: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined) return defaultValue;
+  return raw === "true";
+}
+
+function normalizePopbillResponse(
+  response: PopbillIssueResponse,
+): Record<string, unknown> {
+  return {
+    code: response.code,
+    message: response.message,
+    ntsConfirmNum: response.ntsConfirmNum,
+  };
+}
+
+function normalizePopbillError(error: unknown): { code: string; message: string } {
+  if (typeof error === "object" && error !== null) {
+    const maybe = error as PopbillError;
+    return {
+      code: String(maybe.code ?? "POPBILL_ERROR"),
+      message: String(maybe.message ?? "Popbill API request failed."),
+    };
+  }
+
+  return {
+    code: "POPBILL_ERROR",
+    message: "Popbill API request failed.",
   };
 }
