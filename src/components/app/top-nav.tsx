@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import {
@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -178,17 +177,20 @@ function TopNavLink({
   item,
   label,
   active,
+  onClick,
   mobile = false,
 }: {
   item: TopNavItem;
   label: string;
   active: boolean;
+  onClick?: () => void;
   mobile?: boolean;
 }) {
   const Icon = item.icon;
   return (
     <Link
       href={item.href}
+      onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
         "inline-flex items-center gap-2 rounded-full text-sm font-medium transition-colors duration-flora ease-flora focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -266,9 +268,14 @@ function MobileMenu({
   pathname: string;
 }) {
   const t = useTranslations("nav");
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           type="button"
@@ -312,14 +319,14 @@ function MobileMenu({
 
         <nav className="mt-6 flex flex-col gap-1" aria-label="Primary">
           {TOP_NAV_ITEMS.map((item) => (
-            <SheetClose asChild key={item.key}>
-              <TopNavLink
-                item={item}
-                label={t(item.key)}
-                active={isActive(pathname, item.href)}
-                mobile
-              />
-            </SheetClose>
+            <TopNavLink
+              key={item.key}
+              item={item}
+              label={t(item.key)}
+              active={isActive(pathname, item.href)}
+              onClick={() => setOpen(false)}
+              mobile
+            />
           ))}
         </nav>
 

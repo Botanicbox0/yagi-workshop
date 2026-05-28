@@ -12,11 +12,36 @@
 // "dev" script). Override via E2E_BASE_URL when targeting staging.
 
 import { defineConfig, devices } from "@playwright/test";
+import { existsSync, readFileSync } from "node:fs";
+
+function loadLocalEnv(path = ".env.local") {
+  if (!existsSync(path)) return;
+  const lines = readFileSync(path, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!match || process.env[match[1]] !== undefined) continue;
+    let value = match[2];
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    process.env[match[1]] = value;
+  }
+}
+
+loadLocalEnv();
 
 const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3003";
+const e2eStorageState =
+  process.env.E2E_CLIENT_EMAIL && process.env.E2E_CLIENT_PASSWORD
+    ? ".auth/e2e-client.json"
+    : undefined;
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
@@ -28,6 +53,7 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     locale: "ko-KR",
+    storageState: e2eStorageState,
   },
   projects: [
     {

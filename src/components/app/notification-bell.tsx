@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bell } from "lucide-react";
 import {
@@ -23,6 +23,11 @@ type Props = {
 
 export function NotificationBell({ initialUnreadCount, locale }: Props) {
   const t = useTranslations("notifications");
+  const instanceId = useId();
+  const channelSuffix = useMemo(
+    () => instanceId.replace(/[^a-zA-Z0-9_-]/g, ""),
+    [instanceId],
+  );
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [events, setEvents] = useState<NotificationEvent[]>([]);
@@ -53,7 +58,7 @@ export function NotificationBell({ initialUnreadCount, locale }: Props) {
     const supabase = createSupabaseBrowser();
     const filter = `user_id=eq.${userId}`;
     const channel = supabase
-      .channel(`notif-bell-${userId}`)
+      .channel(`notif-bell-${userId}-${channelSuffix}`)
       .on(
         "postgres_changes",
         {
@@ -114,7 +119,7 @@ export function NotificationBell({ initialUnreadCount, locale }: Props) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [channelSuffix, userId]);
 
   // Lazy-load the event list the first time the panel opens.
   useEffect(() => {
