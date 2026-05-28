@@ -21,7 +21,7 @@ studio.yagiworkshop.xyz) dev 작업을 **직접 하지 않고** 위임한다. �
 1. `learn-from-claude-code` skill 활성.
 2. `~/.hermes/routines/` 검색 — 학습된 routine 있으면 그것 우선 (Layer 3).
 3. `~/.hermes/learned-skills/` 검색 — 비슷한 패턴 있으면 dispatch template 재활용 (Layer 2).
-4. LEANN retrieval (yagi-workshop-docs + claude-chat-history).
+4. Chroma retrieval (`127.0.0.1:8900`, yagi-workshop docs). repo 직접 read 우선, retrieval은 보강용.
 5. `~/.hermes/skill-catalog.md` 참조 — 관련 Claude Code skill 1-3개 식별.
 6. Dispatch 작성 (Context Pack 포맷, skill hint 포함). dispatch 파일에 기록.
 7. 위험도 판단:

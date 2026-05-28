@@ -1,5 +1,7 @@
 # TASK 30A — Codex Native Primary Migration
 
+> UPDATED 2026-05-28: Context Pack retrieval은 LEANN이 아니라 Chroma `127.0.0.1:8900` 기준이다. LEANN 관련 내용은 당시 이력으로만 보존.
+
 ## Migration date
 2026-05-28 (KST)
 

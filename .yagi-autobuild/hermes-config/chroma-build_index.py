@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """YAGI Chroma RAG — 핵심 문서 색인 (build-time 임베딩 저장).
-TASK 33 — replaces LEANN (recompute design unsuitable for CPU + 54K chunk).
+TASK 33 — Chroma build-time embedding index for yagi-workshop docs.
 """
 import os, glob, hashlib
 import chromadb

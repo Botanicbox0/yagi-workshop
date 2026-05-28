@@ -1,5 +1,7 @@
 # TASK 29 — LEANN CPU Mode for ComfyUI 공존
 
+> SUPERSEDED 2026-05-28: LEANN runtime/index/service는 폐기됨. 현재 retrieval은 Chroma `127.0.0.1:8900`이며 운영 기준은 `CODEX-NATIVE.md §7`.
+
 Date: 2026-05-28
 Owner: yagi (req) / Claude Code (impl)
 

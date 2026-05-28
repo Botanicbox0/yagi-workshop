@@ -1,5 +1,7 @@
 # TASK 33 — LEANN 폐기 + Chroma 최소 RAG
 
+> UPDATED 2026-05-28: 야기 확정으로 LEANN runtime/index/service/tool/log를 제거했고, Chroma `127.0.0.1:8900`이 현재 retrieval이다. `claude-chat-history` index만 보존.
+
 ## Migration date
 2026-05-28 (KST)
 
@@ -49,16 +51,16 @@ LEANN 대비 **3500배 가속**, 디스크 57배 작음.
 - claude-chat-history: 이번 범위 밖. LEANN 인덱스 보존(199 MB).
 
 ## 보존 (롤백 가능)
-- LEANN 인덱스 3개 모두 **보존** (yagi-workshop-docs 0.6B, 8B-backup, claude-chat-history). 총 379 MB.
-- `build_context_pack.sh.leann.bak`도 보존 (이전 LEANN 호출 버전).
-- systemd unit `leann-daemon.service`는 `disabled inactive`, 파일은 보존.
-- 야기 명시 승인 후 LEANN 인덱스/service 제거 가능.
+- yagi-workshop-docs 0.6B index, 8B backup, LEANN service/tool/log는 2026-05-28 야기 확정 후 제거 완료.
+- `build_context_pack.sh.leann.bak` 제거 완료. 현재 `build_context_pack.sh`는 Chroma `127.0.0.1:8900` 호출.
+- systemd unit `leann-daemon.service`와 drop-in mirror 제거 완료.
+- `claude-chat-history` index만 야기 명시 보존.
 
 ## 잔여
 - Chroma 색인 범위 확장 (현재 14개 → 필요 시 widening 또는 `.yagi-autobuild/phase-*` 추가).
 - "세금계산서" 같은 §AS-deep 쿼리 정확도 — chunk size 튜닝 또는 PRODUCT-MASTER chunk 경계 검토.
 - claude-chat-history Chroma 색인 (필요 시).
-- LEANN 영구 제거 (디스크 379 MB 회수).
+- 완료: LEANN 영구 제거. `claude-chat-history`만 보존.
 
 ## 교훈 (TASK 32 → 33 연쇄)
 - **저장 vs 재계산**: 검색 latency = 임베딩 저장형이 본질적으로 빠름. recompute 설계는 디스크가 비싼 환경에서만 의미.

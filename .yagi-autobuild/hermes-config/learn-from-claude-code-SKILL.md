@@ -39,7 +39,7 @@ Each executor runs on its OWN tmux socket named after the session:
    - Pattern: `Use the {skill_name} skill if applicable (path: {location}).`
    - claude-bg auto-activates matching skills.
 
-3. **Construct the Context Pack dispatch** (LEANN retrieval + skill hints +
+3. **Construct the Context Pack dispatch** (Chroma retrieval + skill hints +
    PRODUCT-MASTER refs). Write it to a dispatch file (see above).
 
 4. **Observe execution.** Capture the pane every ~30s. Note: which skills

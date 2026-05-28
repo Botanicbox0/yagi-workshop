@@ -90,8 +90,8 @@ Claude review gate는 아래에만 발동한다.
 
 - Chroma `127.0.0.1:8900` = 보강용 retrieval. repo 직접 read보다 우선하지 않는다.
 - 직접 확인 우선순위: source file -> canonical docs -> git history -> Chroma/RAG.
-- LEANN = 폐기 방향. 검색 latency와 안정성 문제로 Codex Native 루프에는 사용하지 않는다.
-- `claude-chat-history` LEANN index는 보존. 현재 범위 밖이며 삭제 후보로 올리지 않는다.
+- LEANN runtime/index/service/tool/log는 2026-05-28 폐기 완료. 검색 latency와 안정성 문제로 Codex Native 루프에는 사용하지 않는다.
+- `claude-chat-history` LEANN index는 보존. 운영 retrieval에는 사용하지 않는다.
 
 ## §8 스킬/MCP 이관 맵
 
@@ -105,7 +105,7 @@ Claude review gate는 아래에만 발동한다.
 | GitHub | Codex MCP `github` | token env var 이름만 기록. force push 금지. |
 | Hermes self-evolving / learned-skill | 동결 | `.yagi-autobuild/hermes-config/*`에 mirror 존재. 검증 전까지 learned-skill/routine 성장 금지. |
 | Chroma RAG | Codex 보강 retrieval | `/mnt/d/AI/chroma` 및 `chroma-search.service` 존재. repo direct read 우선. |
-| LEANN | 폐기 후보 | `yagi-workshop-docs` 계열만 삭제 후보. `claude-chat-history`는 보존. |
+| LEANN | 폐기 완료 | `yagi-workshop-docs` 계열/runtime/service/tool/log 제거 완료. `claude-chat-history`는 보존. |
 
 ## §9 잔재 삭제 후보
 
@@ -114,13 +114,13 @@ Claude review gate는 아래에만 발동한다.
 | 후보 | 존재 | 크기 | 수정일 | 참조/영향 | 분류 |
 |---|---:|---:|---|---|---|
 | `.leann` | 있음 | 0 | 2026-05-28 06:02 KST | repo 내부 직접 참조 없음. 빈 `indexes/`만 존재. | 안전삭제 |
-| `/home/yagi/.leann/indexes/yagi-workshop-docs` | 있음 | 63M | 2026-05-28 17:12 KST | `.yagi-autobuild/hermes-config/*` 과거 LEANN 문서·service mirror에서 참조. Chroma 전환 후 운영 루프 미사용. | 확인필요 |
-| `/home/yagi/.leann/indexes/yagi-workshop-docs.8b-backup-20260528-1706` | 있음 | 117M | 2026-05-28 07:02 KST | rollback 문서에서만 참조. 운영 루프 미사용. | 확인필요 |
-| `/home/yagi/.config/systemd/user/leann-daemon.service` | 있음 | 4.0K | 2026-05-27 14:41 KST | LEANN daemon unit. Chroma 전환 로그에 disabled/inactive 보존으로 기록. service edit/disable 금지. | 확인필요 |
-| `/home/yagi/.config/systemd/user/leann-daemon.service.d` | 있음 | 4.0K | 2026-05-28 18:27 KST | CPU mode, yagi-workshop-docs daemon override 잔재. service edit/disable 금지. | 확인필요 |
-| `/home/yagi/.local/share/uv/tools/leann-core` | 있음 | 5.4G | 2026-05-27 03:57 KST | LEANN CLI/tool install. 다른 workspace 사용 가능성 확인 전 삭제 금지. | 확인필요 |
-| `/home/yagi/.cache/claude-cli-nodejs/-mnt-d-AI-projects-yagi-workshop/mcp-logs-leann-server` | 있음 | 44K | 2026-05-28 08:03 KST | Claude MCP LEANN log cache. 운영 루프 참조 없음. | 안전삭제 |
-| `.yagi-autobuild/hermes-config/systemd/leann-daemon.service*` | 있음 | 20K | 2026-05-28 07:54 KST | repo mirror. rollback/audit 문맥. 실제 service 아님. | 확인필요 |
+| `/home/yagi/.leann/indexes/yagi-workshop-docs` | 삭제됨 | 63M 회수 | 2026-05-28 | Chroma 전환 후 제거 완료. | 완료 |
+| `/home/yagi/.leann/indexes/yagi-workshop-docs.8b-backup-20260528-1706` | 삭제됨 | 117M 회수 | 2026-05-28 | rollback backup 제거 완료. | 완료 |
+| `/home/yagi/.config/systemd/user/leann-daemon.service` | 삭제됨 | 4.0K 회수 | 2026-05-28 | `disable --now` 후 unit 제거 완료. | 완료 |
+| `/home/yagi/.config/systemd/user/leann-daemon.service.d` | 삭제됨 | 4.0K 회수 | 2026-05-28 | override 제거 완료. | 완료 |
+| `/home/yagi/.local/share/uv/tools/leann-core` | 삭제됨 | 5.4G 회수 | 2026-05-28 | CLI/tool install 제거 완료. | 완료 |
+| `/home/yagi/.cache/claude-cli-nodejs/*/mcp-logs-leann-server` | 삭제됨 | log cache 회수 | 2026-05-28 | Claude MCP LEANN log cache 전체 제거 완료. | 완료 |
+| `.yagi-autobuild/hermes-config/systemd/leann-daemon.service*` | 삭제됨 | 20K 회수 | 2026-05-28 | 죽은 service mirror 제거 완료. audit 로그는 보존. | 완료 |
 | `.yagi-autobuild/hermes-config/learn-from-claude-code-SKILL.md` | 있음 | 4.0K | 2026-05-28 05:24 KST | Hermes self-evolving meta-skill. §0.5에 따라 동결 대상. | 보존권장 |
 | `.yagi-autobuild/hermes-config` | 있음 | 176K | 2026-05-28 18:45 KST | `.yagi-autobuild/AGENTS.md`가 mirror로 명시. Hermes gateway/SOUL/MEMORY 보존 정책과 연결. | 보존권장 |
 | `/home/yagi/.config/systemd/user/chroma-search.service` | 있음 | 4.0K | 2026-05-28 18:41 KST | Chroma `:8900` retrieval daemon. §7 보강용으로 유지. | 보존권장 |

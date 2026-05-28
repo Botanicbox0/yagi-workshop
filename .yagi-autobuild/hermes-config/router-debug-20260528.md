@@ -1,5 +1,7 @@
 # Hermes Router — Debug & Hardening (TASK 27)
 
+> SUPERSEDED 2026-05-28: LEANN runtime/index/service는 폐기됨. 현재 retrieval은 Chroma `127.0.0.1:8900`이며 운영 기준은 `CODEX-NATIVE.md §7`.
+
 2026-05-28. Trial 1 + 1.5 진단 후 룰 강화 + gateway hardening.
 
 ## 진단 결과

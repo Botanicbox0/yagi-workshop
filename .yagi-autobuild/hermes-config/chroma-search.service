@@ -1,5 +1,5 @@
 [Unit]
-Description=YAGI Chroma Search Daemon (TASK 33 — replaces LEANN)
+Description=YAGI Chroma Search Daemon (TASK 33)
 After=default.target
 
 [Service]

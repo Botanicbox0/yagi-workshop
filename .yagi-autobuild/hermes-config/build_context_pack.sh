@@ -9,7 +9,7 @@ REPO="/mnt/d/AI/projects/yagi-workshop"
 
 LAST_COMMIT="$(cd "$REPO" && git log -1 --oneline 2>/dev/null)"
 
-# Chroma retrieval (TASK 33 — replaces LEANN). Daemon on 127.0.0.1:8900 keeps the
+# Chroma retrieval. Daemon on 127.0.0.1:8900 keeps the
 # 0.6B model resident; hot queries return in ~100-450 ms. urlencode via python3.
 # Falls back to a one-line note if the daemon is down (graceful degrade).
 Q_ENC="$(printf '%s' "$INTENT" | python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.read()))' 2>/dev/null)"
@@ -32,7 +32,7 @@ try:
 except Exception as e:
     print(f"(retrieval parse error: {e})")
 ' 2>/dev/null)"
-[ -z "$RAG" ] && RAG="(Chroma daemon unavailable — inspect .yagi-autobuild/PRODUCT-MASTER.md directly)"
+[ -z "$RAG" ] && RAG="(retrieval unavailable)"
 
 cat << CTXPACK
 [Task Context Pack — Hermes router]
@@ -49,7 +49,7 @@ PRODUCT-MASTER active 룰 (Chroma retrieval, port 8900):
 $RAG
 
 Implementation Constraints:
-- append-only where applicable (PRODUCT-MASTER.md supersede only)
+- PRODUCT-MASTER.md is a living document; edit the current truth directly and record major changes in Decision Log
 - no hardcoded literal (token-based only)
 - v1.2 design tokens only (#0A0A0A bg, #ED1E1E primary, #FAD204 secondary; v1.1 #9A361F/#F3D174 폐기)
 - direct file inspection required (RAG summary 의존 X)

@@ -46,10 +46,9 @@
 - 작업 후: lint, tsc, migration 직접 검증
 
 ## 서버 자산
-- **LEANN `claude-chat-history`**: `/home/yagi/.leann/indexes/claude-chat-history` (DiskANN, Qwen3-Embedding-8B, 8232 docs)
-- **LEANN `yagi-workshop-docs`**: `/home/yagi/.leann/indexes/yagi-workshop-docs` (HNSW, 389 docs / 54061 chunks). repo *.md 인덱스. **검색 시 `--recompute` 필수**(HNSW pruned)
-- 검색: `cd /home/yagi` 후 워크스페이스 leann + `TORCHDYNAMO_DISABLE=1` + `LD_LIBRARY_PATH=/mnt/d/AI/leann-indexes/workspace/.venv/lib`. cold start 쿼리당 100-200초 (8B 모델 로드 + ZMQ→direct fallback)
-- MCP `leann-server` → `/home/yagi/.local/bin/leann-chat-mcp` (둘 다 검색 가능)
+- **SUPERSEDED — LEANN 운영 기록**: `yagi-workshop-docs` LEANN 인덱스/daemon/MCP는 recompute 설계 + CPU 운용 미스매치로 2026-05-28 폐기. runtime/tool/systemd/log는 제거됨.
+- **보존 예외**: `/home/yagi/.leann/indexes/claude-chat-history` (199M)는 야기 명시 보존. 운영 retrieval에는 사용하지 않음.
+- **현재 retrieval**: Chroma daemon `http://127.0.0.1:8900/?q=<urlencoded>&k=3`. build-time embedding 저장형, repo docs 보강 검색용. repo 직접 read가 항상 우선.
 - **Slack 알림**: `bash /mnt/d/AI/scripts/notify/slack_send.sh "메시지"` → #hermes-notifier
 - **주간/월간 cron**: embedding-model-watch(월 09:00), hf-cache-cleanup-dryrun(매월1일 03:00) — gateway 실행 시 발동
 - **profiles**: default / comfyui / yagi-studio / research

@@ -1,5 +1,7 @@
 # TASK 32 — LEANN 0.6B 재인덱스 + 영구 daemon (SIGABRT 해결)
 
+> SUPERSEDED 2026-05-28: LEANN runtime/index/service는 폐기됨. 현재 retrieval은 Chroma `127.0.0.1:8900`이며 운영 기준은 `CODEX-NATIVE.md §7`.
+
 ## Migration date
 2026-05-28 (KST)
 
