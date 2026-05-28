@@ -1,11 +1,11 @@
 // Phase 5 Wave C C_5 — EmptyStateTab: replaces PlaceholderTab for the
 // 코멘트 and 결과물 tabs. Rendered as a styled coming-soon card with a
-// sage-muted Lucide icon, heading, and sub-text.
+// muted Lucide icon, heading, and sub-text.
 //
 // Design compliance (yagi-design-system v1.0):
 //   - White bg, zero shadow
 //   - rounded-3xl (24px) border border-border/40
-//   - Sage icon: #9A361F at low opacity (muted foreground — not a fill)
+//   - Muted icon at low opacity (not a fill)
 //   - No warm tones, no extra accent colors
 //   - keep-all on Korean text
 

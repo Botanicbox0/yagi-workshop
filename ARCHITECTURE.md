@@ -54,14 +54,16 @@ The entire product is derived from three axioms. When in doubt, return here.
 
 ### 1.4 Design tokens
 
-Phase 1.0.6 design system. **Locked.**
+Design system v1.2 Dark Brand UI. **Locked.**
 
-- Background: `#FFFFFF` (light) / `#0A0A0A` (dark, future)
-- Text: `#0A0A0A` / `#FAFAFA`
-- Accent lime: `#C8FF8C` — used sparingly, only for brand/active states
-- Type: Pretendard Variable (UI), Fraunces italic (editorial emphasis)
+- Background: `#0A0A0A`
+- Surface: `#161616`
+- Text: `#F0F0F0`
+- Primary: `#ED1E1E` — used for CTA, primary action, active state
+- Secondary: `#FAD204` — used for small highlights and tags
+- Type: Pretendard Variable (KO/body), Geist (EN/tech), Editorial New (display)
 - Korean: `word-break: keep-all` everywhere
-- **Banned:** warm tones (cognac, bone, beige), glassmorphism, blue gradients, spinner loaders
+- **Banned:** v1.1 warm-ivory/Vermillion/sage remnants, pure-black voids, light main canvas, glassmorphism, blue gradients, spinner loaders
 
 ### 1.5 External services
 

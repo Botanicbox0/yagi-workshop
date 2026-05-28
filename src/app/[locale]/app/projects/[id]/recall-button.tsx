@@ -111,11 +111,10 @@ export function RecallButton({ projectId, open: openProp, onOpenChange }: Recall
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("confirm.cancel")}</AlertDialogCancel>
-          {/* Sage accent on the destructive-ish confirm. yagi-design-system
-              v1.0: #9A361F is the only accent color. */}
+          {/* Brand accent on the destructive-ish confirm. */}
           <AlertDialogAction
             onClick={handleConfirm}
-            className="bg-[#9A361F] text-[#FBEAE6] hover:bg-[#9A361F]/90 focus-visible:ring-[#9A361F]/40"
+            className="bg-brand text-brand-on hover:bg-brand/90 focus-visible:ring-brand"
           >
             {t("confirm.action")}
           </AlertDialogAction>

@@ -3,14 +3,14 @@
 // Per SPEC §"Cancelled / Archived banner":
 //   - variant "cancelled": text + inline [새 의뢰 시작] link → /{locale}/app/projects/new
 //   - variant "archived": text only, no link
-//   - Vermillion subtle accent: 1px brand left-edge bar (border-l-2 style).
+//   - Brand subtle accent: 1px brand left-edge bar (border-l-2 style).
 //   - Zero shadow. Does NOT block tab clicks (no fixed positioning).
 //   - Renders above L1 breadcrumb, below the page wrapper padding.
 //   - All tabs remain navigable for read-only inspection.
 //
-// Design compliance (yagi-design-system v1.0):
-//   - Vermillion #9A361F at ~35% opacity via border-l-[3px] solid brand
-//   - bg-brand-soft (rgba(154,54,31,0.18) light) for subtle tint
+// Design compliance (yagi-design-system v1.2):
+//   - brand red via border-l-[3px] solid brand
+//   - bg-brand-soft for subtle tint
 //   - No shadow. rounded-xl (softer than card-24 since it's a notice strip)
 //   - text-sm, muted foreground, keep-all for Korean
 
@@ -31,10 +31,9 @@ export function CancelledArchivedBanner({ variant, locale, labels }: Props) {
     <div
       role="status"
       aria-live="polite"
-      className="mb-6 flex items-start gap-0 overflow-hidden rounded-xl border border-border/40"
-      style={{ borderLeft: "3px solid rgba(154,54,31,0.35)" }}
+      className="mb-6 flex items-start gap-0 overflow-hidden rounded-xl border border-border/40 border-l-[3px] border-l-brand"
     >
-      {/* Vermillion soft tint panel */}
+      {/* Brand soft tint panel */}
       <div className="w-full px-5 py-3.5 bg-brand-soft">
         {variant === "cancelled" ? (
           <p className="text-sm text-muted-foreground keep-all">

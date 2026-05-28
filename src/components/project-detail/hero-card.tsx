@@ -2,7 +2,7 @@
 // detail page. KICKOFF section task_04 spec:
 //   - Pretendard 30 / 600 / lh 1.18 / ls -0.01em for the project name
 //   - Pretendard 16 / 400 / lh 1.37 for the one-line description
-//   - Mona12 12 / 700 status pill on sage-soft bg, radius 999
+//   - Mona12 12 / 700 status pill on brand-soft bg, radius 999
 //   - cover image optional (dark placeholder when absent)
 //   - radius 24 + zero shadow + border-border/40
 //
@@ -39,15 +39,15 @@ function isSubmitJustNow(status: string): boolean {
 }
 
 function statusPillClasses(status: string): string {
-  // Single accent (sage) for the active in-flight states; achromatic
-  // for everything else. Design system v1.0 single-accent rule.
+  // Single brand accent for the active in-flight states; achromatic
+  // for everything else.
   if (
     status === "in_review" ||
     status === "submitted" ||
     status === "in_progress" ||
     status === "in_revision"
   ) {
-    return "bg-[#9A361F]/15 text-[#9A361F]";
+    return "bg-brand-soft text-brand";
   }
   if (status === "delivered" || status === "approved") {
     return "bg-foreground/10 text-foreground";

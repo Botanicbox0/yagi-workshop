@@ -13,17 +13,17 @@ Supabase Studio → Authentication → Email Templates:
 - **Magic Link** ← `magic_link.html` + subject `YAGI Studio · 로그인 링크`
 - **Reset Password** ← `recovery.html` + subject `YAGI Studio · 비밀번호 재설정 링크`
 
-## Design contract (locked, sub_06)
+## Design contract (v1.2 locked)
 
-- Background: `#000000` body. No light fallback — the templates assume
+- Background: `#0A0A0A` body. No light fallback — the templates assume
   dark-rendering email clients honor `meta name="color-scheme"`.
-- Brand eyebrow: `YAGI WORKSHOP` in sage `#71D083`, 12px 700,
+- Brand eyebrow: `YAGI WORKSHOP` in gold `#FAD204`, 12px 700,
   letter-spacing 0.18em.
 - Sub-eyebrow: `AI NATIVE ENTERTAINMENT STUDIO` in `#7B7B7B`.
 - H1: 30px Pretendard 600, line-height 1.2, letter-spacing -0.02em,
-  ink `#EEEEEE`.
+  ink `#F0F0F0`.
 - Subtitle: 16px ink-secondary `#B4B4B4`.
-- Primary CTA button: bg `#71D083`, fg `#000000`, padding 14px 32px,
+- Primary CTA button: bg `#ED1E1E`, fg `#FFFFFF`, padding 14px 32px,
   font 14px 600, radius 12px.
 - Footer: 11–12px ink-tertiary `#7B7B7B`, separated by a 1px
   `rgba(255,255,255,0.11)` rule.

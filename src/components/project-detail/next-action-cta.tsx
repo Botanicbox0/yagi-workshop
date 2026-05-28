@@ -89,7 +89,7 @@ export function NextActionCTA({
     return (
       <Link
         href={`/${locale}/app/projects/new?project=${projectId}`}
-        className="inline-flex items-center justify-center rounded-full bg-[#9A361F] text-[#FBEAE6] px-6 py-2.5 text-sm font-medium hover:brightness-105 transition-all duration-[400ms] keep-all"
+        className="inline-flex items-center justify-center rounded-full bg-brand text-brand-on px-6 py-2.5 text-sm font-medium hover:brightness-105 transition-all duration-[400ms] keep-all"
       >
         {labels.cta_draft}
       </Link>
@@ -131,7 +131,7 @@ export function NextActionCTA({
         <Button
           type="button"
           onClick={() => setShowDeliveredPlaceholder(true)}
-          className="rounded-full bg-[#9A361F] text-[#FBEAE6] px-6 py-2.5 text-sm font-medium hover:brightness-105 transition-all duration-[400ms]"
+          className="rounded-full bg-brand text-brand-on px-6 py-2.5 text-sm font-medium hover:brightness-105 transition-all duration-[400ms]"
         >
           {labels.cta_delivered}
         </Button>

@@ -579,15 +579,13 @@ export function BriefingCanvasStep3({
                 </div>
               </div>
             </div>
-          {/* External brand party toggle — Phase 6 Wave B.2.
-              Active state uses sage per yagi-design-system v1.0 Hard Rule #1
-              (sage-only accent). K-06 LOOP-2 F1 fix: swapped from amber. */}
+          {/* External brand party toggle — Phase 6 Wave B.2. */}
           <div className="border-t border-border/30 pt-6">
             <div
               className={cn(
                 "rounded-2xl p-4 flex items-start gap-3",
                 form.has_external_brand_party
-                  ? "bg-[#9A361F]/10 border border-[#9A361F]/50"
+                  ? "bg-brand-soft border border-brand/50"
                   : "border border-border/40",
               )}
             >

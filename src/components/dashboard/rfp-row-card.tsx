@@ -2,7 +2,7 @@
 //
 // Each row displays:
 //   - project name + one-line description (or fallback)
-//   - status pill (sage 71D083 single accent on in-flight states)
+//   - status pill (brand accent on in-flight states)
 //   - 의뢰 일자 (created_at) + 예산 + Twin intent
 //
 // The row is a Link to /app/projects/[id] (full detail page).
@@ -33,7 +33,7 @@ function statusPillClass(status: string): string {
     status === "in_progress" ||
     status === "in_revision"
   ) {
-    return "bg-[#9A361F]/15 text-[#9A361F]";
+    return "bg-brand-soft text-brand";
   }
   if (status === "delivered" || status === "approved") {
     return "bg-foreground/10 text-foreground";

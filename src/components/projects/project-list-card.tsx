@@ -10,10 +10,10 @@
 //   spacer 24px
 //   row 2 (bottom) : date (right, 12px, ink tertiary)
 //
-// Design v1.0 tokens:
+// Design v1.2 tokens:
 //   container: bg.card-deep + border.subtle + radius 24 + zero shadow
 //   hover    : bg.card (slightly elevated, opacity step)
-//   sage     : ONLY when status === "in_review" (pending YAGI response)
+//   brand    : ONLY when status === "in_review" (pending YAGI response)
 //              everything else stays achromatic per the v1.0 sage-discipline
 //              rule (the 5-stage timeline at /app/projects/[id] uses the
 //              same single-accent grammar).
@@ -29,11 +29,11 @@ type Props = {
 };
 
 function statusPillClass(status: string): string {
-  // Sole sage callout for the active "review pending" state. Everything
+  // Sole brand callout for the active "review pending" state. Everything
   // else collapses to neutral so the page reads as a calm grid where
   // the single highlighted card is the one waiting on YAGI.
   if (status === "in_review") {
-    return "bg-[#9A361F]/[0.12] text-[#9A361F]";
+    return "bg-brand-soft text-brand";
   }
   if (
     status === "in_progress" ||

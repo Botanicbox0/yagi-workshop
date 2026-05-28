@@ -8,19 +8,19 @@
 // contract. The visual-lift intent is preserved here.
 //
 // HF1_2 visual lift (per .yagi-autobuild/phase-5-wc-hf1/SPEC.md §HF1.2):
-// - current dot adds ring-2 ring-[#9A361F]/25 (subtle sage halo)
+// - current dot adds ring-2 ring-brand (subtle brand halo)
 // - current label weight = font-medium (was font-semibold — slightly
 //   lighter per spec "살짝 두껍게")
 // - upcoming label = text-foreground/55 (was muted-foreground/50 —
 //   slightly stronger per spec)
 // - 4-variant connector:
 //     completed↔completed → bg-foreground/60 (was foreground/20 — clearer)
-//     completed↔current   → sage gradient half-fill (top sage, bottom muted)
+//     completed↔current   → brand gradient half-fill (top brand, bottom muted)
 //     current↔upcoming    → bg-border/40 (was /30 — slightly stronger)
 //     upcoming↔upcoming   → bg-border/30 (unchanged)
 // - in_revision still inline badge on in_progress step
 // - cancelled/archived → CancelledArchivedBanner (out of timeline)
-// - sage accent ONLY (no new colors)
+// - brand accent ONLY (no extra colors)
 // - zero pulse, zero shadow (calm tone)
 //
 // 7 timeline steps:
@@ -31,8 +31,8 @@
 //   5. delivered    — 시안 도착 / Draft delivered
 //   6. approved     — 승인 완료 / Approved (terminal)
 //
-// Design tokens (yagi-design-system v1.0):
-// - sage #9A361F current step accent + ring + gradient connector
+// Design tokens (yagi-design-system v1.2):
+// - brand current step accent + ring + gradient connector
 // - border-border/40 + foreground/60 for subtle borders
 // - radius 999 (rounded-full) on dots
 // - zero shadow; Pretendard lh ~1.18 ls -0.01em
@@ -120,9 +120,9 @@ export function StatusTimeline({ status, labels }: Props) {
                 <div
                   className={[
                     "flex items-center justify-center rounded-full shrink-0 mt-[2px]",
-                    // Current: sage bg + halo ring (HF1_2 visual lift)
+                    // Current: brand bg + halo ring (HF1_2 visual lift)
                     isCurrent
-                      ? "w-5 h-5 bg-[#9A361F] text-[#FBEAE6] ring-2 ring-[#9A361F]/25"
+                      ? "w-5 h-5 bg-brand text-brand-on ring-2 ring-brand"
                       : // Completed: foreground bg, white checkmark
                       isCompleted
                       ? "w-5 h-5 bg-foreground/80 text-background"
@@ -134,7 +134,7 @@ export function StatusTimeline({ status, labels }: Props) {
                   aria-hidden="true"
                 >
                   {isCurrent && (
-                    <span className="block w-2 h-2 rounded-full bg-black/20" />
+                    <span className="block w-2 h-2 rounded-full bg-brand-on" />
                   )}
                   {isCompleted && <CheckIcon />}
                 </div>
@@ -155,10 +155,10 @@ export function StatusTimeline({ status, labels }: Props) {
                     );
                   }
                   if (nextIsCurrent) {
-                    // sage half-fill: top half sage, bottom half muted
+                    // brand half-fill: top half brand, bottom half muted
                     return (
                       <div
-                        className="flex-1 w-px my-1 bg-gradient-to-b from-[#9A361F] to-border/40"
+                        className="flex-1 w-px my-1 bg-gradient-to-b from-brand to-border/40"
                         aria-hidden="true"
                       />
                     );
@@ -195,7 +195,7 @@ export function StatusTimeline({ status, labels }: Props) {
                     className={[
                       "text-sm leading-[1.18] tracking-[-0.01em] keep-all",
                       isCurrent
-                        ? "font-medium text-[#9A361F]"
+                        ? "font-medium text-brand"
                         : isCompleted
                         ? "font-medium text-foreground/70"
                         : "font-normal text-foreground/55",
@@ -210,7 +210,7 @@ export function StatusTimeline({ status, labels }: Props) {
                       actual status is in_revision (current step) */}
                   {showRevisionBadge && (
                     <span
-                      className="inline-flex items-center rounded-full border border-[#9A361F]/30 bg-[#9A361F]/8 px-2 py-0.5 text-[11px] font-medium text-[#9A361F] tracking-[0.02em] keep-all"
+                      className="inline-flex items-center rounded-full border border-brand/30 bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand tracking-[0.02em] keep-all"
                       aria-label={`(${labels.in_revision})`}
                     >
                       {labels.in_revision}

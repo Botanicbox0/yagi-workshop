@@ -40,7 +40,7 @@ function statusPillClasses(status: string): string {
     status === "in_progress" ||
     status === "in_revision"
   ) {
-    return "bg-[#9A361F]/15 text-[#9A361F]";
+    return "bg-brand-soft text-brand";
   }
   if (status === "delivered" || status === "approved") {
     return "bg-foreground/10 text-foreground";

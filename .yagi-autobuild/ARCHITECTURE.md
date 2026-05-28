@@ -547,7 +547,7 @@ Tailwind config extends with non-overlapping families: `brand`, `gold`, `neutral
 cubic-bezier(0.45, 0, 0, 1) defaults), radius scale (pill / card /
 button), maxWidth (narrow / content / cinema).
 
-**Hard rules** (yagi-design-system v1.0 SKILL.md §"Hard Rules"):
+**Hard rules** (yagi-design-system v1.2 SKILL.md §"Hard Rules"):
 
 1. Brand accent = Red `#ED1E1E` primary + Gold `#FAD204` secondary on
    a dark Neutral 60% tier (v1.2, §AO — supersedes v1.1 Vermillion/warm-ivory).
@@ -612,7 +612,6 @@ v1.1 warm-ivory + Vermillion color system.
   `--ds-border` `#2A2A2A`. Gold family keeps its name; values repointed.
 - **Typography**: Display = Editorial New (EN), Pretendard fallback (font face
   not yet in repo — config-only stack). Body = Pretendard (KO) / Geist (EN/tech).
-- **Migration scope (TASK 24-follow)**: token-based components swept
-  (`vermillion`→`brand`). v1.1 hardcoded literals (`#9A361F`/`#FBEAE6`, plus
-  cool-neutral `text-black`/`bg-white`) sweep is a separate dispatch pending
-  visual smoke test.
+- **Migration scope (TASK 24-follow + v1.2 literal sweep)**: token-based
+  components swept (`vermillion`→`brand`) and runtime v1.1 hardcoded literals
+  replaced with v1.2 token utilities or standalone v1.2 email hex.

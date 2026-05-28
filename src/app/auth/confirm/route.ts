@@ -191,12 +191,12 @@ export async function GET(request: NextRequest) {
 <meta name="referrer" content="same-origin" />
 <title>${escapeHtml(copy.title)}</title>
 <style>
-  :root { color-scheme: light; }
-  body { margin: 0; min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: #FAFAFA; color: #0A0A0A; font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Pretendard, sans-serif; }
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: #0A0A0A; color: #F0F0F0; font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Pretendard, sans-serif; }
   main { width: 100%; max-width: 420px; padding: 32px 24px; text-align: center; }
   h1 { margin: 0 0 12px; font-size: 28px; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
-  p { margin: 0 0 28px; font-size: 14px; line-height: 1.5; color: #5C5C5C; }
-  button { width: 100%; padding: 14px 24px; border: 0; border-radius: 12px; background: #9A361F; color: #FBEAE6; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  p { margin: 0 0 28px; font-size: 14px; line-height: 1.5; color: #888888; }
+  button { width: 100%; padding: 14px 24px; border: 0; border-radius: 12px; background: #ED1E1E; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
   button:hover { filter: brightness(1.05); }
 </style>
 </head>

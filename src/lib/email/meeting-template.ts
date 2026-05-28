@@ -38,12 +38,12 @@ export type RenderedEmail = {
 
 const TOKENS = {
   bg: "#0A0A0A",
-  card: "#111111",
-  text: "#FAFAFA",
-  secondary: "#D0D0D0",
-  accent: "#C8FF8C",
-  divider: "#222222",
-  footer: "#666666",
+  card: "#161616",
+  text: "#F0F0F0",
+  secondary: "#B0B0B0",
+  accent: "#FAD204",
+  divider: "#2A2A2A",
+  footer: "#888888",
 } as const;
 
 const FONT_FAMILY =

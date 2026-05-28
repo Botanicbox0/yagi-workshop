@@ -219,7 +219,7 @@ export default async function AdminArtistsPage({ params }: Props) {
                           </span>
                         )}
                         {sk === "active" && (
-                          <span className="text-[#9A361F]">
+                          <span className="text-brand">
                             {t("status_active")}
                           </span>
                         )}
