@@ -1262,6 +1262,18 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 
 ---
 
+## Follow-Up — Phase 8 Guest External Launch Gates (2026-05-29)
+
+### FU-20260529-guest-deliverable-url-server-rls
+- **Trigger**: Phase 8 A.2.b guest room prod RLS verify + K-05 review.
+- **Risk**: guest deliverable submission currently accepts external URL payloads from the client path; server-side validation and RLS column constraints must become the source of truth before external guest use.
+- **Action**: Move deliverable URL submission to a server/RPC path, validate allowed URL shape server-side, and harden guest INSERT so guest-created rows cannot set review/status/version fields beyond submitted defaults.
+- **Owner**: Builder.
+- **Status**: registered only; no implementation in A.2.b prod apply pass.
+- **Required before**: 외부 guest 실투입 전.
+
+---
+
 ## Decision Log
 
 - 2026-05-28: append-only 폐기 → 살아있는 문서로 전환 (git 버전관리/백업, 본문 = 현재 진실).
@@ -1273,3 +1285,4 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 - 2026-05-28: §AR marketing visual pipeline 확정 — 야기/다나 internal tool, Nano Banana Pro 2K, 이미지 내 텍스트/특정 brand 노출 금지.
 - 2026-05-28: §AS operations automation 방향 확정 — in-app brief/thread/versioning/schedule/billing으로 Notion+Slack+세금계산서 통합 대체.
 - 2026-05-29: §AP nav에서 Marketing Studio 제거, Lookbook Studio를 Americano로 정정 — §AR은 internal Higgsfield CLI asset 제작 흐름으로 분리.
+- 2026-05-29: FU-20260529-guest-deliverable-url-server-rls 등록 — 외부 guest 실투입 전 deliverable URL validation/RLS 이관 gate.
