@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import {
   Archive,
+  Coffee,
   CreditCard,
   FolderOpen,
   Menu,
@@ -40,8 +41,7 @@ type TopNavItem = {
     | "explore"
     | "projects"
     | "campaigns"
-    | "lookbook_studio"
-    | "marketing_studio"
+    | "americano"
     | "assets"
     | "billing";
   href: string;
@@ -52,8 +52,7 @@ const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "explore", href: "/app/explore", icon: Sparkles },
   { key: "projects", href: "/app/projects", icon: FolderOpen },
   { key: "campaigns", href: "/app/campaigns", icon: Megaphone },
-  { key: "lookbook_studio", href: "/app/lookbook", icon: Archive },
-  { key: "marketing_studio", href: "/app/marketing", icon: Sparkles },
+  { key: "americano", href: "/app/americano", icon: Coffee },
   { key: "assets", href: "/app/assets", icon: Archive },
   { key: "billing", href: "/app/billing", icon: CreditCard },
 ];

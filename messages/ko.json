@@ -184,8 +184,7 @@
     "explore": "Explore",
     "projects": "프로젝트",
     "campaigns": "캠페인",
-    "lookbook_studio": "Lookbook Studio",
-    "marketing_studio": "Marketing Studio",
+    "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
     "credit_balance": "0 credits",
@@ -219,22 +218,36 @@
     "explore": {
       "eyebrow": "Explore",
       "title": "레퍼런스와 기획 출발점을 탐색하세요",
-      "description": "브랜드 캠페인, 뮤직비디오, 룩북 모듈을 연결하는 탐색 화면입니다. §AP horizontal nav 전환을 위해 먼저 진입면을 열어둡니다."
+      "description": "브랜드 캠페인, 뮤직비디오, Americano 모듈을 연결하는 탐색 화면입니다. §AP horizontal nav 전환을 위해 먼저 진입면을 열어둡니다."
     },
     "campaigns": {
       "eyebrow": "Campaigns",
       "title": "캠페인 운영 화면",
       "description": "분산 캠페인 요청, 진행 현황, 크리에이터 채널 운영을 묶는 화면입니다. 상세 워크플로우는 Campaigns phase에서 연결됩니다."
     },
-    "lookbook": {
-      "eyebrow": "Lookbook Studio",
-      "title": "Lookbook Studio",
-      "description": "Americano 룩북 모듈이 흡수될 자리입니다. 패션 룩북 제작 흐름은 Phase 9 이후 연결됩니다."
-    },
-    "marketing": {
-      "eyebrow": "Marketing Studio",
-      "title": "Marketing Studio",
-      "description": "내부 마케팅 비주얼 파이프라인 진입점입니다. Nano Banana Pro 기반 작업 흐름은 운영 도구로 단계적으로 연결됩니다."
+    "americano": {
+      "eyebrow": "Americano",
+      "title": "Americano",
+      "description": "다나의 fashion lookbook SaaS가 야기 platform에 흡수될 자리입니다. 모델 지정, 룩북 자동화, campaign asset 흐름을 같은 workspace 안에서 연결합니다.",
+      "status": "기능 준비 중",
+      "cards": {
+        "model": {
+          "title": "Model Casting",
+          "description": "브랜드 무드에 맞는 모델 지정과 일관성 설정을 준비합니다."
+        },
+        "lookbook": {
+          "title": "Lookbook Automation",
+          "description": "상품 컷과 스타일링 레퍼런스를 기반으로 룩북 시퀀스를 구성합니다."
+        },
+        "layout": {
+          "title": "Editorial Layout",
+          "description": "웹, PDF, SNS 카드로 확장 가능한 룩북 레이아웃을 다룹니다."
+        },
+        "campaign": {
+          "title": "Campaign Asset",
+          "description": "룩북 결과물을 캠페인 소재와 Asset Library로 연결합니다."
+        }
+      }
     },
     "assets": {
       "eyebrow": "Assets",

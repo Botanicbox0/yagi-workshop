@@ -1139,12 +1139,11 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 
 ### Sidebar dashboard → Top-bar horizontal nav (Higgsfield 패턴 참고)
 
-카테고리 (잠정):
+카테고리:
 - **Explore** — 디지털 트윈 roster + 야기 자산 탐색
 - **Projects** — 외주 의뢰 + 진행 관리 (Wave A.2.a backend 활용)
 - **Campaigns** — Mass AI Campaign (Phase 7 재활용)
-- **Lookbook Studio** — §AQ Americano integration 후
-- **Marketing Studio** — 영상 ad pipeline
+- **Americano** — §AQ 다나 fashion SaaS integration module
 - **Assets** — 받은 deliverable 관리 + 다운로드
 - **Billing** — 견적 + 인보이스 + 세금계산서 + 누적 거래
 
@@ -1161,7 +1160,7 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 
 ### 통합 plan
 1. GitHub release 후 yagi-workshop platform에 module로 흡수
-2. BRAND surface의 "Lookbook Studio" section 등재
+2. BRAND surface의 "Americano" section 등재
 3. 공유 auth + billing + workspace + asset library
 4. 다나 main maintainer, 야기 PM
 5. Phase 9 또는 별 Wave (Americano release 시점 후 결정)
@@ -1171,8 +1170,9 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 ## §AR Marketing Visual Pipeline — 야기 Internal Tool (2026-05-28)
 
 ### Scope 명시
-- **목적**: yagi-workshop platform의 marketing / landing / feature illustration 생성 (Higgsfield Supercomputer / AI Canvas / Marketing Studio 페이지 톤)
+- **목적**: yagi-workshop platform의 marketing / landing / feature illustration 생성
 - **야기/다나 internal tool only** — Brand가 platform에서 직접 generate 기능 X (Phase 10+ defer)
+- **platform nav 항목 아님** — Higgsfield CLI로 내부 에셋을 제작하고 결과물만 platform 정적 asset으로 반영
 - Brand deliverable 제작 시에도 동일 도구/룰 활용
 
 ### 이미지 콘텐츠 룰 (필수)
@@ -1219,8 +1219,8 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 - 새 reference 추가 시 그 추가 image도 semantic label 부여
 - 최종본 confirm 시 그 이미지를 Brand Asset Library 또는 야기 Internal Library에 저장 → 향후 reference로 재활용
 
-### Workflow (현재 = 외부 Higgsfield UI 활용)
-- 야기/다나가 https://higgsfield.ai 외부 UI에서 generate
+### Workflow (현재 = 외부 Higgsfield UI/CLI 활용)
+- 야기/다나가 https://higgsfield.ai 외부 UI 또는 Higgsfield CLI에서 generate
 - Pinterest에서 reference 복붙 가능 (영감 + semantic label 부여 후 Higgsfield에 attach)
 - 결과물 platform 정적 asset으로 업로드 (public/marketing/...)
 - platform 안에서 generate UI 빌트인 = over-engineering, Phase 10+ defer
@@ -1269,6 +1269,7 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 - 2026-05-28: §AN BRAND-only vertical pivot 확정 — BRAND = 유일 self-signup, CELEBRITY = internal asset, CREATOR = campaign channel.
 - 2026-05-28: §AO design system v1.2 dark lock — bg/surface/ink/border + Red `#ED1E1E` + Gold `#FAD204`, 이전 v1.1 폐기.
 - 2026-05-28: §AP IA refactor 확정 — sidebar 폐기, Higgsfield-style horizontal nav.
-- 2026-05-28: §AQ Americano integration 방향 기록 — GitHub release 후 Lookbook Studio module로 흡수.
+- 2026-05-28: §AQ Americano integration 방향 기록 — GitHub release 후 Americano module로 흡수.
 - 2026-05-28: §AR marketing visual pipeline 확정 — 야기/다나 internal tool, Nano Banana Pro 2K, 이미지 내 텍스트/특정 brand 노출 금지.
 - 2026-05-28: §AS operations automation 방향 확정 — in-app brief/thread/versioning/schedule/billing으로 Notion+Slack+세금계산서 통합 대체.
+- 2026-05-29: §AP nav에서 Marketing Studio 제거, Lookbook Studio를 Americano로 정정 — §AR은 internal Higgsfield CLI asset 제작 흐름으로 분리.

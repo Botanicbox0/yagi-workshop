@@ -184,8 +184,7 @@
     "explore": "Explore",
     "projects": "Projects",
     "campaigns": "Campaigns",
-    "lookbook_studio": "Lookbook Studio",
-    "marketing_studio": "Marketing Studio",
+    "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
     "credit_balance": "0 credits",
@@ -219,22 +218,36 @@
     "explore": {
       "eyebrow": "Explore",
       "title": "Explore references and starting points",
-      "description": "A discovery surface connecting brand campaigns, music videos, and lookbook modules. This opens the entry point for the §AP horizontal nav transition."
+      "description": "A discovery surface connecting brand campaigns, music videos, and the Americano module. This opens the entry point for the §AP horizontal nav transition."
     },
     "campaigns": {
       "eyebrow": "Campaigns",
       "title": "Campaign operations",
       "description": "A home for distributed campaign requests, progress, and creator-channel operations. Detailed workflows will connect in the Campaigns phase."
     },
-    "lookbook": {
-      "eyebrow": "Lookbook Studio",
-      "title": "Lookbook Studio",
-      "description": "The future home for the Americano lookbook module. Fashion lookbook production flows will connect after Phase 9."
-    },
-    "marketing": {
-      "eyebrow": "Marketing Studio",
-      "title": "Marketing Studio",
-      "description": "The entry point for the internal marketing visual pipeline. Nano Banana Pro based workflows will connect progressively as operations tooling."
+    "americano": {
+      "eyebrow": "Americano",
+      "title": "Americano",
+      "description": "The future home for Dana's fashion lookbook SaaS inside the YAGI platform, connecting model selection, lookbook automation, and campaign assets in one workspace.",
+      "status": "Feature placeholder",
+      "cards": {
+        "model": {
+          "title": "Model Casting",
+          "description": "Prepare model selection and consistency settings for each brand mood."
+        },
+        "lookbook": {
+          "title": "Lookbook Automation",
+          "description": "Build lookbook sequences from product shots and styling references."
+        },
+        "layout": {
+          "title": "Editorial Layout",
+          "description": "Shape lookbook layouts that can extend to web, PDF, and social cards."
+        },
+        "campaign": {
+          "title": "Campaign Asset",
+          "description": "Connect lookbook outputs to campaign assets and the Asset Library."
+        }
+      }
     },
     "assets": {
       "eyebrow": "Assets",

@@ -101,11 +101,50 @@ Claude review gate는 아래에만 발동한다.
 | `yagi-design-system` | `src/app/globals.css`, `tailwind.config.ts`, `.yagi-autobuild/PRODUCT-MASTER.md` §AO | v1.2 dark tokens 확인. `#0A0A0A`, `#161616`, `#F0F0F0`, `#2A2A2A`, `#ED1E1E`, `#FAD204`. |
 | Playwright 검증 패턴 | Codex 작업 루프 §2 + MCP `playwright` | UI touch 시 smoke/screenshot. docs-only 생략 가능. |
 | Supabase 검증 패턴 | Codex 작업 루프 §3/§5/§6 + MCP `supabase` read-only | read-only 기본. write/RLS/auth는 HIGH/DANGER gate. |
-| Higgsfield | Codex MCP `higgsfield` | 설정 존재. 사용 전 `codex mcp login higgsfield` 필요. |
+| Higgsfield | CLI `/home/yagi/.local/bin/higgsfield` + Codex MCP `higgsfield` | CLI 설치/인증 완료. MCP는 별도 필요 시 `codex mcp login higgsfield`. token/secret 출력 금지. |
 | GitHub | Codex MCP `github` | token env var 이름만 기록. force push 금지. |
 | Hermes self-evolving / learned-skill | 동결 | `.yagi-autobuild/hermes-config/*`에 mirror 존재. 검증 전까지 learned-skill/routine 성장 금지. |
 | Chroma RAG | Codex 보강 retrieval | `/mnt/d/AI/chroma` 및 `chroma-search.service` 존재. repo direct read 우선. |
 | LEANN | 폐기 완료 | `yagi-workshop-docs` 계열/runtime/service/tool/log 제거 완료. `claude-chat-history`는 보존. |
+
+### §8.2 Higgsfield CLI 사용법
+
+설치/인증 상태:
+
+- 설치: `npm i -g @higgsfield/cli --prefix /home/yagi/.local`
+- PATH: `/home/yagi/.local/bin/higgsfield`
+- 확인: `higgsfield --version`
+- 인증: `higgsfield auth login`
+- 금지: `higgsfield auth token` 출력, token/secret 로그화, `.env.local` 값 문서화, 생성 결과 무단 commit.
+
+주요 명령:
+
+- 모델 조회: `higgsfield model list --image`
+- Nano Banana Pro 파라미터 확인: `higgsfield model get nano_banana_2`
+- 비용 추정(생성 없음): `higgsfield generate cost nano_banana_2 --prompt "<prompt>"`
+- 이미지 생성: `higgsfield generate create nano_banana_2 --prompt "<prompt>" --resolution 2k --aspect_ratio 16:9 --image ./reference.png --wait`
+- reference 업로드: `higgsfield upload create ./reference.png`
+- product photoshoot prompt enhancement: `higgsfield product-photoshoot create --mode product_shot --prompt "<intent>" --image ./product.png --count 3`
+- prompt enhancement만 확인(생성 없음): `higgsfield product-photoshoot create --mode product_shot --prompt "<intent>" --image ./product.png --enhance-only`
+- Higgsfield DTC ads: `higgsfield marketing-studio dtc-ads generate --prompt "<brief>" --format-id <format_id> --resolution 2k --quality high --wait`
+
+Nano Banana Pro 지정:
+
+- `job_set_type` = `nano_banana_2`
+- 모델명 = Nano Banana Pro
+- 주요 파라미터: `prompt`(required), `aspect_ratio`(`auto`, `1:1`, `3:2`, `2:3`, `4:3`, `3:4`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`), `input_images`, `resolution`(`1k`, `2k`, `4k`; default `2k`)
+- CLI media flag: `--image <upload_id|job_id|local_path>`; local path는 auto-upload.
+- §AR 기본값: `--resolution 2k`; 4K는 별도 upscale 단계로만 검토.
+
+§AR 연결 정책:
+
+- Nano Banana Pro 2K only. 플랫폼 marketing illustration은 pure imagery only.
+- Higgsfield CLI는 내부 asset production 도구이며 platform nav 항목이 아니다.
+- 이미지 자체에 text/logo/specific brand name 금지. 텍스트, CTA, label은 platform UI overlay가 담당.
+- Prompt는 5-pillar 구조로 작성: Subject, Composition, Action, Location, Style.
+- Reference는 4-tier 전략을 따른다: Brand Asset Library, 야기 Internal Library, AI-Generated Mood Board, 외부 inspiration reference.
+- Reference image는 semantic naming 필수. `image 1`, `image 2` 같은 위치명 금지.
+- 외부 Higgsfield 생성 결과는 repo로 바로 commit하지 않는다. 선별 후 platform 정적 asset 경로(`public/marketing/...`)로 업로드하고 파일명은 semantic naming을 사용한다.
 
 ## §9 잔재 삭제 후보
 

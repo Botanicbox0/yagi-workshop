@@ -14,9 +14,9 @@
 ## PRODUCT-MASTER active rules (§AN–§AS, 요약)
 - **§AN BRAND-Only Vertical Pivot** — BRAND = 유일 self-signup persona, 모든 surface가 BRAND 관점. CELEBRITY = 야기 internal asset (manual 등록, self-signup·public 노출 X). CREATOR = Distributed Campaign 채널.
 - **§AO Design System v1.2 — Dark Brand UI** — dark이 main canvas + default. 확정 hex 아래 참조.
-- **§AP IA Refactor — Horizontal Nav** — sidebar 폐기, top-bar horizontal nav (Higgsfield 패턴). Explore/Projects/Campaigns/Lookbook/Marketing/Assets/Billing.
-- **§AQ Americano Integration** — 다나의 fashion 룩북 SaaS, GitHub release 후 "Lookbook Studio" module로 흡수 (Phase 9+).
-- **§AR Marketing Visual Pipeline** — 야기/다나 internal tool only (Nano Banana Pro 2K). 이미지 자체엔 텍스트·특정 brand 노출 X (UI overlay가 텍스트 담당).
+- **§AP IA Refactor — Horizontal Nav** — sidebar 폐기, top-bar horizontal nav (Higgsfield 패턴). Explore/Projects/Campaigns/Americano/Assets/Billing.
+- **§AQ Americano Integration** — 다나의 fashion 룩북 SaaS, GitHub release 후 "Americano" module로 흡수 (Phase 9+).
+- **§AR Marketing Visual Pipeline** — 야기/다나 internal tool only (Higgsfield CLI + Nano Banana Pro 2K). platform nav 항목 아님. 이미지 자체엔 텍스트·특정 brand 노출 X (UI overlay가 텍스트 담당).
 - **§AS Operations Automation** — in-app brief/thread/versioning/schedule/billing이 notion+slack+세금계산서 통합 대체.
 
 ## Design System v1.2 — 확정 토큰 (NEVER v1.1)
