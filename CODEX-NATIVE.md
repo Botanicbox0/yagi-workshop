@@ -92,10 +92,12 @@ Claude review gate는 아래에만 발동한다.
 | filesystem | `@modelcontextprotocol/server-filesystem`, scope = repo root | repo 작업 전용. scope 밖 파일은 read-only 성격의 확인만. |
 | playwright | `@playwright/mcp@latest` | UI touch 시 smoke/screenshot 검증 자동화. docs-only는 생략 가능. |
 | higgsfield | remote MCP URL | `codex mcp login higgsfield` 필요. 이미지/비디오 생성 자동화용, secret 노출 금지. |
-| supabase | remote MCP URL, `read_only=true` | 기본 read-only. prod DB write/RLS/grants는 HIGH/DANGER gate. |
+| supabase | remote MCP URL, prod DB write enabled | RLS 정책 추가/변경, ALTER, 일반 migration apply 가능. 비가역 파괴 작업은 여전히 명시 승인 필요. |
 | github | remote MCP URL, token env var = `GITHUB_PAT_TOKEN` | force push 금지. token 값 문서화 금지. |
 
 환경 변수 문서화 원칙: 변수명과 사용 policy만 기록한다. 값, token, URL secret, `.env.local` 내용은 기록하지 않는다.
+
+⚠️ TEMPORARY: Supabase prod DB write 상시 허용 중 (플랫폼 빌딩 기간). 종료 조건 = 외부 유저 도입 전 read_only=true 복구. 복구 시 이 마커 제거.
 
 ## §7 retrieval
 
