@@ -34,6 +34,8 @@ import { EmptyStateTab } from "@/components/project-detail/empty-state-tab";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
+import { GuestProjectRoom } from "@/components/project-detail/guest-project-room";
+import { GuestInviteForm } from "@/components/project-detail/guest-invite-form";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -67,6 +69,16 @@ type ProjectDetail = {
   submitted_at: string | null;
   // Phase 6 Wave B.2
   has_external_brand_party: boolean;
+};
+
+type ProjectGate = {
+  id: string;
+  title: string;
+  status: string;
+  workspace_id: string;
+  created_by: string;
+  target_delivery_at: string | null;
+  created_at: string;
 };
 
 function parseTab(value: string | undefined): TabKey {
@@ -114,11 +126,86 @@ export default async function ProjectDetailPage({
   } = await supabase.auth.getUser();
   if (!user) notFound();
 
+  // Phase 8 Wave A.2.b — authorize before any full project detail fetch.
+  // Guest users must not cause the server to fetch budget/brief/brand/admin
+  // data. Resolve the narrow gate row first, then branch into the guest-safe
+  // room or the existing owner/admin detail surface.
   // Fetch project. budget_band / submitted_at / twin_intent / kind columns
   // are not in generated database.types.ts (Phase 3.0 + Phase 4.x); use
   // the same any-cast pattern the existing detail page used.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.0/4.x columns not in generated types
   const sb = supabase as any;
+  const { data: projectGateRaw, error: projectGateErr } = (await sb
+    .from("projects")
+    .select("id, title, status, workspace_id, created_by, target_delivery_at, created_at")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle()) as {
+    data: ProjectGate | null;
+    error: unknown;
+  };
+
+  if (projectGateErr || !projectGateRaw) notFound();
+
+  const { data: roleRows } = await supabase
+    .from("user_roles")
+    .select("role, workspace_id")
+    .eq("user_id", user.id);
+
+  const roles = new Set(
+    (roleRows ?? [])
+      .filter(
+        (r) =>
+          r.workspace_id === null || r.workspace_id === projectGateRaw.workspace_id
+      )
+      .map((r) => r.role as string)
+  );
+
+  const isYagiAdmin = roles.has("yagi_admin");
+  const isWsAdmin = roles.has("workspace_admin");
+  const isOwner = projectGateRaw.created_by === user.id;
+
+  let isProjectGuest = false;
+  if (!isYagiAdmin && !isWsAdmin && !isOwner) {
+    const { data: guestAllowed } = await sb.rpc("is_project_guest", {
+      p_project_id: projectGateRaw.id,
+      p_user_id: user.id,
+    });
+    isProjectGuest = guestAllowed === true;
+  }
+
+  if (!isYagiAdmin && !isWsAdmin && !isOwner && !isProjectGuest) notFound();
+
+  if (isProjectGuest) {
+    return (
+      <GuestProjectRoom
+        project={{
+          id: projectGateRaw.id,
+          title: projectGateRaw.title,
+          status: projectGateRaw.status,
+          created_at: projectGateRaw.created_at,
+          target_delivery_at: projectGateRaw.target_delivery_at,
+        }}
+        userId={user.id}
+        locale={locale}
+        labels={{
+          eyebrow: tDetail("guest.eyebrow"),
+          title: tDetail("guest.title"),
+          subtitle: tDetail("guest.subtitle"),
+          status: tDetail("guest.meta.status"),
+          created: tDetail("guest.meta.created"),
+          targetDelivery: tDetail("guest.meta.target_delivery"),
+          unset: tDetail("guest.meta.unset"),
+          schedule: {
+            title: tDetail("guest.schedule.title"),
+            empty: tDetail("guest.schedule.empty"),
+            due: tDetail("guest.schedule.due"),
+          },
+        }}
+      />
+    );
+  }
+
   const { data: projectRaw, error: projectErr } = (await sb
     .from("projects")
     .select(
@@ -256,27 +343,6 @@ export default async function ProjectDetailPage({
   } catch {
     // Non-fatal — render empty attachments section
   }
-
-  // Authorization (BLOCKER 1 consistency: use created_by, NOT owner_id).
-  const { data: roleRows } = await supabase
-    .from("user_roles")
-    .select("role, workspace_id")
-    .eq("user_id", user.id);
-
-  const roles = new Set(
-    (roleRows ?? [])
-      .filter(
-        (r) =>
-          r.workspace_id === null || r.workspace_id === project.workspace_id
-      )
-      .map((r) => r.role as string)
-  );
-
-  const isYagiAdmin = roles.has("yagi_admin");
-  const isWsAdmin = roles.has("workspace_admin");
-  const isOwner = project.created_by === user.id;
-
-  if (!isYagiAdmin && !isWsAdmin && !isOwner) notFound();
 
   const viewerRole: "admin" | "client" = isYagiAdmin || isWsAdmin
     ? "admin"
@@ -624,7 +690,8 @@ export default async function ProjectDetailPage({
 
       {/* L6 Admin actions row */}
       {viewerRole === "admin" && (
-        <div className="border-t border-border/40 pt-8 flex flex-wrap items-center gap-4">
+        <div className="border-t border-border/40 pt-8 flex flex-wrap items-start gap-4">
+          <GuestInviteForm workspaceId={project.workspace_id} projectId={project.id} />
           <ProjectActionButtons
             projectId={project.id}
             status={project.status}

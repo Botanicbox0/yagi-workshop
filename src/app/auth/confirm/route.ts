@@ -28,6 +28,7 @@ const NEXT_ALLOWLIST_PREFIXES: readonly string[] = [
   "/onboarding/workspace",
   "/onboarding/brand",
   "/onboarding/invite",
+  "/auth/accept-guest",
   "/app",
 ];
 const RECOVERY_NEXT = "/reset-password";

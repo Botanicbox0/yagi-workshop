@@ -142,7 +142,29 @@
     "expired_resend_cooldown": "Try again in {seconds}s",
     "expired_resend_rate_limited": "For security, only one request per 60 seconds is allowed. Please try again shortly.",
     "expired_resend_invalid_email": "Please check the email format.",
-    "expired_resend_generic_error": "Send failed. Please try again in a moment."
+    "expired_resend_generic_error": "Send failed. Please try again in a moment.",
+    "guest_accept": {
+      "title": "Accept guest invitation",
+      "sub": "Sign in with the invited email address to enter the project room.",
+      "email_label": "Invited email",
+      "email_placeholder": "you@company.com",
+      "send_magic_link": "Send login link",
+      "sending": "Sending...",
+      "sent": "Login link sent. Check your email.",
+      "error_email": "Please enter a valid email.",
+      "error_title": "Could not accept invitation",
+      "error": {
+        "validation": "The invitation link is not valid.",
+        "unauthenticated": "Please sign in with the invited email address.",
+        "user_not_found": "We could not find this account. Sign in with the invited email address first.",
+        "invitation_not_found": "This invitation does not exist or has been removed.",
+        "wrong_invitation_kind": "This link is not a project guest invitation.",
+        "invitation_already_accepted": "This invitation has already been accepted.",
+        "invitation_expired": "This invitation has expired. Ask the project admin to send a new one.",
+        "invitation_email_mismatch": "This invitation belongs to a different email address. Sign in with the invited email.",
+        "db": "A database error occurred. Please try again shortly."
+      }
+    }
   },
   "onboarding": {
     "display_name": "Display name",
@@ -2222,6 +2244,66 @@
       "placeholder": "YAGI team comments will appear here."
     },
     "delivered_placeholder": "The draft viewing surface lands in a future phase. (Phase 6+)",
+    "guest": {
+      "eyebrow": "Guest project room",
+      "title": "Guest room",
+      "subtitle": "You can read shared messages, submit deliverable links, and check the project schedule. Billing, budget, brand data, and admin actions are not shown in this room.",
+      "meta": {
+        "status": "Status",
+        "created": "Created",
+        "target_delivery": "Target delivery",
+        "unset": "Not set"
+      },
+      "thread": {
+        "title": "Shared thread",
+        "empty": "No shared messages yet.",
+        "placeholder": "Write a shared message for the project team.",
+        "send": "Send",
+        "sending": "Sending...",
+        "sent": "Message sent.",
+        "unknown_author": "Member",
+        "error_validation": "Please enter a message.",
+        "error_unauthenticated": "Please sign in again.",
+        "error_forbidden": "You don't have permission.",
+        "error_db": "Failed to send. Please try again."
+      },
+      "deliverables": {
+        "title": "Assets",
+        "empty": "No submitted assets yet.",
+        "version": "Version {version}",
+        "stored_files": "{count} stored files",
+        "url_label": "Asset URL",
+        "note_label": "Note",
+        "note_placeholder": "Add context, version notes, or review requests.",
+        "submit": "Submit asset",
+        "submitting": "Submitting...",
+        "submitted": "Asset submitted.",
+        "error_url": "Enter a valid http or https URL.",
+        "error_unauthenticated": "Please sign in again.",
+        "error_db": "Failed to submit. Please try again."
+      },
+      "schedule": {
+        "title": "Schedule",
+        "empty": "No milestones yet.",
+        "due": "Due"
+      },
+      "invite": {
+        "title": "Invite guest",
+        "placeholder": "guest@example.com",
+        "send": "Send invite",
+        "sending": "Sending...",
+        "success": "Guest invitation sent.",
+        "copy": "Copy link",
+        "copied": "Invite link copied.",
+        "copy_failed": "Could not copy link.",
+        "error_validation": "Please check the email address.",
+        "error_unauthenticated": "Please sign in again.",
+        "error_forbidden": "You don't have permission.",
+        "error_duplicate": "An active invitation already exists for this email.",
+        "error_project_not_in_workspace": "This project does not belong to the selected workspace.",
+        "error_db": "Failed to send invitation."
+      }
+    },
     "material_append": {
       "trigger": "Add materials",
       "title": "Add materials?",
