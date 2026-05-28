@@ -2675,6 +2675,7 @@ export type Database = {
           expires_at: string
           id: string
           invited_by: string | null
+          project_id: string | null
           role: string
           token: string
           workspace_id: string
@@ -2686,6 +2687,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string | null
+          project_id?: string | null
           role: string
           token: string
           workspace_id: string
@@ -2697,6 +2699,7 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string | null
+          project_id?: string | null
           role?: string
           token?: string
           workspace_id?: string
@@ -2707,6 +2710,13 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
