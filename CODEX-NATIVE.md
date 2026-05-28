@@ -49,6 +49,17 @@ Claude review gate는 아래에만 발동한다.
 - 사용자가 second opinion을 요청한 경우
 - Codex가 같은 blocker를 반복해서 해결하지 못하고, review가 실질적으로 위험을 낮추는 경우
 
+### §3.1 Review Packet Protocol
+
+보안/auth/DB/RLS/billing/외부클라이언트/주요 디자인 변경 같은 critical wave 종료 시 Codex는 야기가 Claude Code에 그대로 붙여 넣을 수 있는 review packet을 출력한다. 상세 format은 `~/.codex/yagi-studio-system.md`의 `Review Packet Protocol`을 따른다.
+
+원칙:
+
+- machine check는 `pnpm lint`, `pnpm tsc --noEmit`, Playwright, visual smoke 각각의 실제 exit code로 채운다. 파이프 끝 성공으로 대체 금지.
+- smoke를 생략하면 `skipped + reason`으로 표기한다. fake PASS 금지.
+- `.env.local`, service role key, API key, token, Popbill SecretKey 같은 secret 값은 packet에 포함하지 않는다. 변수명만 허용한다.
+- 단순 LOW/MED routine 작업에는 출력하지 않는다.
+
 ## §4 Claude 개입 금지
 
 아래는 Codex 단독 처리.
