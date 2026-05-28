@@ -4,6 +4,12 @@ import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import {
+  addCampaignDistribution,
+  logCampaignDistributionMetrics,
+  reviewCampaignSubmission,
+  setCampaignWorkflowStatus,
+} from "@/lib/campaigns/actions";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 
 const createCampaignSchema = z.object({
@@ -94,4 +100,44 @@ export async function createCampaignRequest(
 
   revalidatePath("/[locale]/app/campaigns", "page");
   return { ok: true, id: campaign.id, slug: campaign.slug };
+}
+
+export async function reviewCampaignSubmissionAction(input: unknown) {
+  const supabase = await createSupabaseServer();
+  const result = await reviewCampaignSubmission(supabase, input);
+  if (result.ok) {
+    revalidatePath("/[locale]/app/admin/campaigns", "page");
+    revalidatePath("/[locale]/app/my-submissions", "page");
+  }
+  return result;
+}
+
+export async function addCampaignDistributionAction(input: unknown) {
+  const supabase = await createSupabaseServer();
+  const result = await addCampaignDistribution(supabase, input);
+  if (result.ok) {
+    revalidatePath("/[locale]/app/admin/campaigns", "page");
+    revalidatePath("/[locale]/app/my-submissions", "page");
+  }
+  return result;
+}
+
+export async function logCampaignDistributionMetricsAction(input: unknown) {
+  const supabase = await createSupabaseServer();
+  const result = await logCampaignDistributionMetrics(supabase, input);
+  if (result.ok) {
+    revalidatePath("/[locale]/app/admin/campaigns", "page");
+    revalidatePath("/[locale]/app/my-submissions", "page");
+  }
+  return result;
+}
+
+export async function setCampaignWorkflowStatusAction(input: unknown) {
+  const supabase = await createSupabaseServer();
+  const result = await setCampaignWorkflowStatus(supabase, input);
+  if (result.ok) {
+    revalidatePath("/[locale]/app/admin/campaigns", "page");
+    revalidatePath("/[locale]/app/campaigns", "page");
+  }
+  return result;
 }

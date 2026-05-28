@@ -13,6 +13,68 @@ const sendSchema = z.object({
   visibility: z.enum(["shared", "internal"]).default("shared"),
 });
 
+async function findOrCreateDefaultThread({
+  supabase,
+  projectId,
+  userId,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_threads types lag generated DB schema
+  supabase: any;
+  projectId: string;
+  userId: string;
+}): Promise<{ ok: true; threadId: string } | { ok: false; message?: string }> {
+  const { data: existing } = await supabase
+    .from("project_threads")
+    .select("id")
+    .eq("project_id", projectId)
+    .limit(1)
+    .maybeSingle();
+
+  if (existing?.id) {
+    return { ok: true, threadId: existing.id };
+  }
+
+  const { data: created, error: threadErr } = await supabase
+    .from("project_threads")
+    .insert({
+      project_id: projectId,
+      created_by: userId,
+    })
+    .select("id")
+    .single();
+
+  if (created?.id) {
+    return { ok: true, threadId: created.id };
+  }
+
+  // Phase 8 A.2.b guest room: guests have SELECT on project_threads and
+  // INSERT on thread_messages, but intentionally no project_threads INSERT
+  // policy. If the room is empty, create the thread only after verifying the
+  // caller is a project-scoped guest. The message insert below still runs
+  // through the session client and its RLS policy.
+  const { data: isProjectGuest } = await supabase.rpc("is_project_guest", {
+    p_project_id: projectId,
+    p_user_id: userId,
+  });
+  if (isProjectGuest === true) {
+    const admin = createSupabaseService();
+    const { data: adminThread, error: adminErr } = await admin
+      .from("project_threads")
+      .insert({
+        project_id: projectId,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+    if (adminThread?.id) {
+      return { ok: true, threadId: adminThread.id };
+    }
+    return { ok: false, message: adminErr?.message };
+  }
+
+  return { ok: false, message: threadErr?.message };
+}
+
 export async function sendMessage(input: unknown) {
   const parsed = sendSchema.safeParse(input);
   if (!parsed.success) return { error: "validation" as const };
@@ -37,37 +99,17 @@ export async function sendMessage(input: unknown) {
     }
   }
 
-  // Find or create the default thread for this project.
-  // Note: project_threads has no 'kind' column — omit it.
-  // project_threads requires 'created_by' on insert.
-  let threadId: string;
-  const { data: existing } = await supabase
-    .from("project_threads")
-    .select("id")
-    .eq("project_id", parsed.data.projectId)
-    .limit(1)
-    .maybeSingle();
-
-  if (existing?.id) {
-    threadId = existing.id;
-  } else {
-    const { data: created, error: threadErr } = await supabase
-      .from("project_threads")
-      .insert({
-        project_id: parsed.data.projectId,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
-    if (threadErr || !created)
-      return { error: "db" as const, message: threadErr?.message };
-    threadId = created.id;
-  }
+  const thread = await findOrCreateDefaultThread({
+    supabase,
+    projectId: parsed.data.projectId,
+    userId: user.id,
+  });
+  if (!thread.ok) return { error: "db" as const, message: thread.message };
 
   const { data: inserted, error } = await supabase
     .from("thread_messages")
     .insert({
-      thread_id: threadId,
+      thread_id: thread.threadId,
       author_id: user.id,
       body: parsed.data.body,
       visibility: parsed.data.visibility,
@@ -190,30 +232,12 @@ export async function sendMessageWithAttachments(input: unknown) {
     }
   }
 
-  // Find or create the default thread for this project.
-  let threadId: string;
-  const { data: existing } = await supabase
-    .from("project_threads")
-    .select("id")
-    .eq("project_id", d.projectId)
-    .limit(1)
-    .maybeSingle();
-
-  if (existing?.id) {
-    threadId = existing.id;
-  } else {
-    const { data: created, error: threadErr } = await supabase
-      .from("project_threads")
-      .insert({
-        project_id: d.projectId,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
-    if (threadErr || !created)
-      return { error: "db" as const, message: threadErr?.message };
-    threadId = created.id;
-  }
+  const thread = await findOrCreateDefaultThread({
+    supabase,
+    projectId: d.projectId,
+    userId: user.id,
+  });
+  if (!thread.ok) return { error: "db" as const, message: thread.message };
 
   // Normalize body — null when empty (attachments-only case).
   const bodyTrim = (d.body ?? "").trim();
@@ -223,7 +247,7 @@ export async function sendMessageWithAttachments(input: unknown) {
   const { data: inserted, error } = await supabase
     .from("thread_messages")
     .insert({
-      thread_id: threadId,
+      thread_id: thread.threadId,
       author_id: user.id,
       body: bodyValue,
       visibility: d.visibility,
