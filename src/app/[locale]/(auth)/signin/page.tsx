@@ -45,6 +45,7 @@ export default function SignInPage() {
   const t = useTranslations("auth");
   const c = useTranslations("common");
   const router = useRouter();
+  const [hydrated, setHydrated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const {
     register,
@@ -53,6 +54,7 @@ export default function SignInPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   useEffect(() => {
+    setHydrated(true);
     const error = readHashError();
     if (!error) return;
     // Strip the fragment so a refresh doesn't re-trigger.
@@ -88,7 +90,7 @@ export default function SignInPage() {
         <p className="text-sm text-muted-foreground">{t("signin_sub")}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">{t("email")}</Label>
           <Input
@@ -115,7 +117,7 @@ export default function SignInPage() {
             <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
         </div>
-        <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+        <Button type="submit" className="w-full" size="lg" disabled={!hydrated || submitting}>
           {submitting ? t("sending") : c("signin")}
         </Button>
       </form>

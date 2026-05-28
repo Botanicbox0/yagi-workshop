@@ -326,6 +326,72 @@
       }
     }
   },
+  "campaigns_app": {
+    "eyebrow": "Campaigns",
+    "title": "캠페인을 요청하고 진행 상태를 관리하세요",
+    "description": "브랜드나 아티스트가 하나의 brief를 열면, 크리에이터가 각자의 해석으로 콘텐츠를 만들고 본인 채널에 유포하는 Distributed Campaign 흐름입니다.",
+    "new_cta": "새 캠페인 요청",
+    "metrics": {
+      "total": "전체",
+      "requested": "요청됨",
+      "live": "운영 중"
+    },
+    "status": {
+      "requested": "요청됨",
+      "in_review": "검토 중",
+      "declined": "거절됨",
+      "draft": "초안",
+      "published": "공개중",
+      "submission_closed": "접수 종료",
+      "distributing": "배포 중",
+      "archived": "보관됨"
+    },
+    "card": {
+      "closes": "{date} 마감",
+      "no_window": "관리자가 접수 일정을 확정합니다",
+      "submit_page": "응모 페이지"
+    },
+    "empty": {
+      "title": "아직 요청한 캠페인이 없습니다",
+      "description": "곡, 제품, IP의 핵심 brief를 남기면 야기가 검토 후 campaign 운영 방식과 접수 일정을 확정합니다.",
+      "cta": "첫 캠페인 요청"
+    },
+    "new": {
+      "eyebrow": "Campaign Request",
+      "title": "크리에이터가 해석할 campaign brief를 남겨주세요",
+      "description": "지금은 sponsor 요청 단계입니다. 야기가 검토한 뒤 category, 접수 기간, 파일 정책, 공개 여부를 확정합니다.",
+      "back": "캠페인으로 돌아가기",
+      "field_title": "캠페인 제목",
+      "field_title_placeholder": "예: 신곡 발매 AI 영상 캠페인",
+      "field_description": "한 줄 설명",
+      "field_description_placeholder": "캠페인의 목적과 분위기를 짧게 적어주세요.",
+      "field_brief": "Creative brief",
+      "field_brief_placeholder": "곡/제품/IP 소개, 원하는 무드, 필요한 산출물, 피해야 할 표현, 참고 채널을 적어주세요.",
+      "field_contact_name": "담당자 이름",
+      "field_contact_name_placeholder": "홍길동",
+      "field_contact_email": "담당자 이메일",
+      "field_contact_email_placeholder": "name@example.com",
+      "field_contact_phone": "담당자 연락처",
+      "field_contact_phone_placeholder": "010-0000-0000",
+      "field_references": "레퍼런스 / 자료 메모",
+      "field_references_placeholder": "참고 영상, 음원, 브랜드 가이드, 드라이브 링크 등을 적어주세요.",
+      "error_title": "제목은 2자 이상 입력해주세요.",
+      "error_brief": "Brief는 10자 이상 입력해주세요.",
+      "error_contact_name": "담당자 이름을 입력해주세요.",
+      "error_contact_email": "이메일 형식을 확인해주세요.",
+      "error_contact_phone": "연락처를 입력해주세요.",
+      "submit": "캠페인 요청",
+      "submitting": "요청 중",
+      "success": "캠페인 요청을 생성했습니다.",
+      "server_error": {
+        "validation": "입력값을 확인해주세요.",
+        "unauthenticated": "로그인이 필요합니다.",
+        "no_workspace": "워크스페이스를 먼저 생성해주세요.",
+        "unsupported_workspace": "이 워크스페이스에서는 캠페인을 요청할 수 없습니다.",
+        "db": "캠페인 요청 생성에 실패했습니다."
+      }
+    }
+  },
   "commission": {
     "list_title": "내 의뢰",
     "list_new_cta": "새 의뢰 작성",

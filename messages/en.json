@@ -326,6 +326,72 @@
       }
     }
   },
+  "campaigns_app": {
+    "eyebrow": "Campaigns",
+    "title": "Request campaigns and manage progress",
+    "description": "A Distributed Campaign starts from one brief, then creators produce their own interpretations and distribute approved work through their own channels.",
+    "new_cta": "Request campaign",
+    "metrics": {
+      "total": "Total",
+      "requested": "Requested",
+      "live": "Live"
+    },
+    "status": {
+      "requested": "Requested",
+      "in_review": "In review",
+      "declined": "Declined",
+      "draft": "Draft",
+      "published": "Published",
+      "submission_closed": "Closed",
+      "distributing": "Distributing",
+      "archived": "Archived"
+    },
+    "card": {
+      "closes": "Closes {date}",
+      "no_window": "YAGI will confirm the submission window",
+      "submit_page": "Submission page"
+    },
+    "empty": {
+      "title": "No campaign requests yet",
+      "description": "Share the core brief for a song, product, or IP. YAGI will review it and confirm the operating plan and submission window.",
+      "cta": "Request first campaign"
+    },
+    "new": {
+      "eyebrow": "Campaign Request",
+      "title": "Share the campaign brief creators will interpret",
+      "description": "This first step creates a sponsor request. YAGI reviews it before confirming categories, submission windows, file policy, and publish timing.",
+      "back": "Back to campaigns",
+      "field_title": "Campaign title",
+      "field_title_placeholder": "e.g. New release AI video campaign",
+      "field_description": "Short description",
+      "field_description_placeholder": "Summarize the campaign goal and tone.",
+      "field_brief": "Creative brief",
+      "field_brief_placeholder": "Describe the song/product/IP, desired mood, deliverables, restrictions, and reference channels.",
+      "field_contact_name": "Contact name",
+      "field_contact_name_placeholder": "Jane Kim",
+      "field_contact_email": "Contact email",
+      "field_contact_email_placeholder": "name@example.com",
+      "field_contact_phone": "Contact phone",
+      "field_contact_phone_placeholder": "+82 10 0000 0000",
+      "field_references": "References / asset notes",
+      "field_references_placeholder": "Add video links, audio references, brand guides, drive links, or notes.",
+      "error_title": "Enter at least 2 characters.",
+      "error_brief": "Enter at least 10 characters for the brief.",
+      "error_contact_name": "Enter a contact name.",
+      "error_contact_email": "Check the email format.",
+      "error_contact_phone": "Enter a contact phone number.",
+      "submit": "Request campaign",
+      "submitting": "Requesting",
+      "success": "Campaign request created.",
+      "server_error": {
+        "validation": "Check the entered fields.",
+        "unauthenticated": "Sign in is required.",
+        "no_workspace": "Create a workspace first.",
+        "unsupported_workspace": "This workspace cannot request campaigns.",
+        "db": "Failed to create the campaign request."
+      }
+    }
+  },
   "commission": {
     "list_title": "My commissions",
     "list_new_cta": "New commission",

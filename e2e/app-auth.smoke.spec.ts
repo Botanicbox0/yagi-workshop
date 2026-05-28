@@ -92,4 +92,51 @@ test.describe("authenticated app shell smoke", () => {
       });
     });
   }
+
+  for (const viewport of viewports) {
+    test(`Campaign request surfaces render on ${viewport.name}`, async ({ page }) => {
+      const consoleErrors: string[] = [];
+      page.on("console", (msg) => {
+        if (msg.type() === "error") consoleErrors.push(msg.text());
+      });
+      page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+      await page.setViewportSize({
+        width: viewport.width,
+        height: viewport.height,
+      });
+
+      await page.goto("/ko/app/campaigns", { waitUntil: "domcontentloaded" });
+      await expect(page).toHaveURL(/\/ko\/app\/campaigns/);
+      await expect(
+        page.getByRole("heading", {
+          name: "캠페인을 요청하고 진행 상태를 관리하세요",
+          level: 1,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "새 캠페인 요청" }),
+      ).toBeVisible();
+
+      await page.goto("/ko/app/campaigns/new", {
+        waitUntil: "domcontentloaded",
+      });
+      await expect(page).toHaveURL(/\/ko\/app\/campaigns\/new/);
+      await expect(
+        page.getByRole("heading", {
+          name: "크리에이터가 해석할 campaign brief를 남겨주세요",
+          level: 1,
+        }),
+      ).toBeVisible();
+      await expect(page.getByLabel("캠페인 제목")).toBeVisible();
+      await expect(page.getByLabel("Creative brief")).toBeVisible();
+      await expect(page.getByRole("button", { name: "캠페인 요청" })).toBeVisible();
+      expect(consoleErrors).toEqual([]);
+
+      await page.screenshot({
+        path: `test-results/app-campaigns-new-${viewport.name}.png`,
+        fullPage: true,
+      });
+    });
+  }
 });
