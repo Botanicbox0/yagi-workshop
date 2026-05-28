@@ -7,10 +7,12 @@ const hasAuthEnv =
 test.describe("authenticated app shell smoke", () => {
   test.skip(!hasAuthEnv, "E2E_CLIENT_EMAIL / E2E_CLIENT_PASSWORD missing");
 
-  for (const viewport of [
+  const viewports = [
     { name: "desktop", width: 1280, height: 900 },
     { name: "mobile", width: 375, height: 900 },
-  ] as const) {
+  ] as const;
+
+  for (const viewport of viewports) {
     test(`§AP top-nav and Americano render on ${viewport.name}`, async ({
       page,
     }) => {
@@ -51,6 +53,41 @@ test.describe("authenticated app shell smoke", () => {
 
       await page.screenshot({
         path: `test-results/app-americano-${viewport.name}.png`,
+        fullPage: true,
+      });
+    });
+  }
+
+  for (const viewport of viewports) {
+    test(`Explore dashboard hub renders on ${viewport.name}`, async ({ page }) => {
+      const consoleErrors: string[] = [];
+      page.on("console", (msg) => {
+        if (msg.type() === "error") consoleErrors.push(msg.text());
+      });
+      page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+      await page.setViewportSize({
+        width: viewport.width,
+        height: viewport.height,
+      });
+
+      await page.goto("/ko/app/explore", { waitUntil: "domcontentloaded" });
+      await expect(page).toHaveURL(/\/ko\/app\/explore/);
+      await expect(
+        page.getByRole("heading", {
+          name: "오늘 진행할 작업을 한 화면에서 확인하세요",
+          level: 1,
+        }),
+      ).toBeVisible();
+      await expect(page.getByRole("heading", { name: "최근 프로젝트" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "진행 중 캠페인" })).toBeVisible();
+      await expect(page.getByText("크레딧 잔액")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "빠른 액션" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "추천 레퍼런스" })).toBeVisible();
+      expect(consoleErrors).toEqual([]);
+
+      await page.screenshot({
+        path: `test-results/app-explore-dashboard-${viewport.name}.png`,
         fullPage: true,
       });
     });

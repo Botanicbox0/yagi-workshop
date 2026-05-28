@@ -260,6 +260,72 @@
       "description": "The surface for payment, tax invoice, and billing flows. Tax details are collected at payment or invoice issuance."
     }
   },
+  "explore_dashboard": {
+    "eyebrow": "Explore",
+    "title": "See today's workspace at a glance",
+    "description": "A dashboard hub for projects, campaigns, credits, and the Americano entry point. Jump straight into the next surface; empty areas show the next useful action.",
+    "actions": {
+      "new_project": "Start a project",
+      "americano": "Open Americano"
+    },
+    "credit": {
+      "title": "Credit balance",
+      "description": "This is the future home for recharge, payment, tax invoice, and transaction flows. Billing carries the next step.",
+      "cta": "Top up / billing"
+    },
+    "recent_projects": {
+      "title": "Recent projects",
+      "view_all": "View all",
+      "empty_title": "No projects yet",
+      "empty_description": "Start the first request and recent status updates will appear here.",
+      "empty_cta": "Start a project"
+    },
+    "campaigns": {
+      "title": "Active campaigns",
+      "view_all": "View campaigns",
+      "empty_title": "No active campaigns",
+      "empty_description": "Campaign requests and progress will appear here as the workflow opens.",
+      "empty_cta": "Open campaigns",
+      "closes": "Closes {date}"
+    },
+    "campaign_status": {
+      "requested": "Requested",
+      "in_review": "In review",
+      "declined": "Declined",
+      "draft": "Draft",
+      "published": "Published",
+      "submission_closed": "Closed",
+      "distributing": "Distributing",
+      "archived": "Archived"
+    },
+    "quick_actions": {
+      "title": "Quick actions",
+      "new_project_title": "Start a project",
+      "new_project_description": "Open a new music video, campaign visual, or AI VFX request.",
+      "americano_title": "Americano",
+      "americano_description": "Go to the future lookbook surface for Dana's fashion SaaS module."
+    },
+    "references": {
+      "title": "Recommended references",
+      "items": {
+        "music_video": {
+          "tag": "Music Video",
+          "title": "Moodboard-led MV visuals",
+          "description": "Reference space for connecting artist identity and scene tone."
+        },
+        "campaign_visual": {
+          "tag": "Campaign",
+          "title": "Release campaign assets",
+          "description": "Prepare platform-specific stills and short-form asset flows."
+        },
+        "fashion_lookbook": {
+          "tag": "Americano",
+          "title": "Fashion lookbook automation",
+          "description": "A placeholder for model, product shot, and editorial layout flows."
+        }
+      }
+    }
+  },
   "commission": {
     "list_title": "My commissions",
     "list_new_cta": "New commission",

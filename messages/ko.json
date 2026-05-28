@@ -260,6 +260,72 @@
       "description": "결제, 세금계산서, 송장 흐름을 다루는 화면입니다. 세무정보는 결제·발행 시점에 수집합니다."
     }
   },
+  "explore_dashboard": {
+    "eyebrow": "Explore",
+    "title": "오늘 진행할 작업을 한 화면에서 확인하세요",
+    "description": "프로젝트, 캠페인, 크레딧, Americano 진입점을 하나로 묶은 dashboard 허브입니다. 필요한 기능으로 바로 이동하고, 비어 있는 영역은 다음 액션을 보여줍니다.",
+    "actions": {
+      "new_project": "새 프로젝트 의뢰",
+      "americano": "Americano 바로가기"
+    },
+    "credit": {
+      "title": "크레딧 잔액",
+      "description": "현재는 결제·세금계산서 흐름과 연결될 자리입니다. 충전과 거래 내역은 Billing에서 이어집니다.",
+      "cta": "충전 / 정산 보기"
+    },
+    "recent_projects": {
+      "title": "최근 프로젝트",
+      "view_all": "전체 보기",
+      "empty_title": "아직 프로젝트가 없습니다",
+      "empty_description": "첫 의뢰를 만들면 진행 상태와 최근 업데이트가 여기에 표시됩니다.",
+      "empty_cta": "프로젝트 시작"
+    },
+    "campaigns": {
+      "title": "진행 중 캠페인",
+      "view_all": "캠페인 보기",
+      "empty_title": "진행 중인 캠페인이 없습니다",
+      "empty_description": "캠페인 요청과 운영 현황은 준비되는 즉시 이 영역에 표시됩니다.",
+      "empty_cta": "캠페인 화면 열기",
+      "closes": "{date} 마감"
+    },
+    "campaign_status": {
+      "requested": "요청됨",
+      "in_review": "검토 중",
+      "declined": "거절됨",
+      "draft": "초안",
+      "published": "공개중",
+      "submission_closed": "접수 종료",
+      "distributing": "배포 중",
+      "archived": "보관됨"
+    },
+    "quick_actions": {
+      "title": "빠른 액션",
+      "new_project_title": "새 프로젝트 의뢰",
+      "new_project_description": "뮤직비디오, 캠페인 비주얼, AI VFX 작업을 바로 시작합니다.",
+      "americano_title": "Americano",
+      "americano_description": "다나 fashion SaaS 기능이 들어올 룩북 제작 영역으로 이동합니다."
+    },
+    "references": {
+      "title": "추천 레퍼런스",
+      "items": {
+        "music_video": {
+          "tag": "Music Video",
+          "title": "무드보드 기반 MV 비주얼",
+          "description": "아티스트 정체성과 장면 톤을 연결하는 레퍼런스 영역입니다."
+        },
+        "campaign_visual": {
+          "tag": "Campaign",
+          "title": "릴리즈 캠페인 소재",
+          "description": "플랫폼별 이미지와 숏폼 asset 흐름을 준비합니다."
+        },
+        "fashion_lookbook": {
+          "tag": "Americano",
+          "title": "패션 룩북 자동화",
+          "description": "모델, 상품 컷, editorial layout을 연결하는 자리입니다."
+        }
+      }
+    }
+  },
   "commission": {
     "list_title": "내 의뢰",
     "list_new_cta": "새 의뢰 작성",
