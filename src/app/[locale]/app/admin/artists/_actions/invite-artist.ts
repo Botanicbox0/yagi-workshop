@@ -85,7 +85,7 @@ export async function inviteArtistAction(
   // 5. Send magic-link invite via Supabase auth admin API
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://studio.yagiworkshop.xyz";
-  const redirectTo = `${siteUrl}/auth/confirm?next=/app/projects`;
+  const redirectTo = `${siteUrl}/auth/confirm?next=/app/campaigns/new`;
 
   const { data: inviteData, error: inviteErr } =
     await sbAdmin.auth.admin.inviteUserByEmail(email, { redirectTo });

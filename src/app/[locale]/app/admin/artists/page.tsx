@@ -142,19 +142,24 @@ export default async function AdminArtistsPage({ params }: Props) {
   });
 
   return (
-    <div className="px-10 py-12 max-w-5xl space-y-10">
-      {/* Header */}
-      <div>
-        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1 keep-all">
+    <div className="mx-auto flex w-full max-w-content flex-col gap-8 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+      <header className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6 lg:p-8">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-label text-brand">
+          {t("eyebrow")}
+        </p>
+        <h1 className="font-suit text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
           {t("title")}
         </h1>
-      </div>
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground keep-all">
+          {t("description")}
+        </p>
+      </header>
 
       {/* Invite section */}
       <InviteArtistSection t_invite_cta={t("invite_cta")} />
 
       {/* Artist table */}
-      <section>
+      <section className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
           {t("table_heading")}
         </h2>
@@ -162,23 +167,23 @@ export default async function AdminArtistsPage({ params }: Props) {
         {artists.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4">{t("table_empty")}</p>
         ) : (
-          <div className="border border-border rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border border-border/70">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <tr className="border-b border-border/70 bg-surface-card">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-label text-muted-foreground">
                     {t("column_name")}
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide hidden md:table-cell">
+                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-label text-muted-foreground md:table-cell">
                     {t("column_email")}
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
+                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-label text-muted-foreground lg:table-cell">
                     {t("column_instagram")}
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide hidden md:table-cell">
+                  <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-label text-muted-foreground md:table-cell">
                     {t("column_joined_at")}
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-label text-muted-foreground">
                     {t("column_status")}
                   </th>
                 </tr>
@@ -189,7 +194,7 @@ export default async function AdminArtistsPage({ params }: Props) {
                   return (
                     <tr
                       key={artist.workspaceId}
-                      className="border-b border-border last:border-0 hover:bg-accent/50 transition-colors"
+                      className="border-b border-border/70 transition-colors last:border-0 hover:bg-accent/40"
                     >
                       <td className="px-4 py-3 font-medium keep-all">
                         {artist.displayName ?? "—"}

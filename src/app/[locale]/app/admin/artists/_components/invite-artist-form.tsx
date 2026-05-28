@@ -63,13 +63,17 @@ export function InviteArtistForm({ onSuccess }: InviteArtistFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-md space-y-4">
+      <p className="text-sm leading-6 text-muted-foreground keep-all">
+        {t("form_helper")}
+      </p>
       <div className="space-y-1.5">
         <Label htmlFor="invite-email">{t("form_email")}</Label>
         <Input
           id="invite-email"
           type="email"
           placeholder="artist@example.com"
+          className="bg-surface-card"
           {...register("email")}
         />
         {errors.email && (
@@ -82,6 +86,7 @@ export function InviteArtistForm({ onSuccess }: InviteArtistFormProps) {
         <Input
           id="invite-name"
           placeholder={t("form_display_name_ph")}
+          className="bg-surface-card"
           {...register("displayName")}
         />
         {errors.displayName && (
@@ -98,6 +103,7 @@ export function InviteArtistForm({ onSuccess }: InviteArtistFormProps) {
           id="invite-bio"
           placeholder={t("form_short_bio_ph")}
           rows={3}
+          className="bg-surface-card"
           {...register("shortBio")}
         />
         {errors.shortBio && (
@@ -105,7 +111,11 @@ export function InviteArtistForm({ onSuccess }: InviteArtistFormProps) {
         )}
       </div>
 
-      <Button type="submit" disabled={submitting} className="rounded-full px-6">
+      <Button
+        type="submit"
+        disabled={submitting}
+        className="rounded-full bg-brand px-6 text-brand-on hover:bg-brand/90"
+      >
         {submitting ? "..." : t("form_submit")}
       </Button>
     </form>

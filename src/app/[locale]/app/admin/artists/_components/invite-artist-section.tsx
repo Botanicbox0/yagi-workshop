@@ -27,15 +27,14 @@ export function InviteArtistSection({
   return (
     <section className="space-y-4">
       <Button
-        variant="outline"
-        className="rounded-full px-6 border-border"
+        className="rounded-full bg-brand px-6 text-brand-on hover:bg-brand/90"
         onClick={() => setOpen((v) => !v)}
       >
         {t_invite_cta}
       </Button>
 
       {open && (
-        <div className="border border-border rounded-lg p-6 bg-background">
+        <div className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6">
           <InviteArtistForm onSuccess={handleSuccess} />
         </div>
       )}

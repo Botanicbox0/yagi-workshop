@@ -122,6 +122,7 @@ export default async function CampaignsPage({ params }: Props) {
                   : t("card.no_window")
               }
               submitLabel={t("card.submit_page")}
+              detailLabel={t("card.detail_page")}
             />
           ))}
         </section>
@@ -168,12 +169,14 @@ function CampaignCard({
   statusLabel,
   closeLabel,
   submitLabel,
+  detailLabel,
 }: {
   campaign: CampaignRow;
   dateLabel: string;
   statusLabel: string;
   closeLabel: string;
   submitLabel: string;
+  detailLabel: string;
 }) {
   const isLive = ["published", "submission_closed", "distributing"].includes(
     campaign.status,
@@ -207,15 +210,25 @@ function CampaignCard({
           <CalendarClock className="h-4 w-4 text-gold" aria-hidden="true" />
           {closeLabel}
         </p>
-        {isLive ? (
-          <a
-            href={`/campaigns/${campaign.slug}/submit`}
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href={`/app/campaigns/${campaign.slug}` as `/app/campaigns/${string}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-foreground transition-colors hover:text-brand"
           >
-            {submitLabel}
+            {detailLabel}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </a>
-        ) : null}
+          </Link>
+          {isLive ? (
+            <a
+              // Public campaign routes intentionally live outside the localized app shell.
+              href={`/campaigns/${campaign.slug}/submit`}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-brand"
+            >
+              {submitLabel}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </a>
+          ) : null}
+        </div>
       </div>
     </article>
   );

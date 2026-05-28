@@ -349,7 +349,8 @@
     "card": {
       "closes": "{date} 마감",
       "no_window": "관리자가 접수 일정을 확정합니다",
-      "submit_page": "응모 페이지"
+      "submit_page": "응모 페이지",
+      "detail_page": "상세 보기"
     },
     "empty": {
       "title": "아직 요청한 캠페인이 없습니다",
@@ -390,6 +391,69 @@
         "unsupported_workspace": "이 워크스페이스에서는 캠페인을 요청할 수 없습니다.",
         "db": "캠페인 요청 생성에 실패했습니다."
       }
+    },
+    "detail": {
+      "back": "캠페인으로 돌아가기",
+      "eyebrow": "Mass Campaign Request",
+      "description_empty": "캠페인 설명이 아직 입력되지 않았습니다.",
+      "updated": "{date} 업데이트",
+      "sponsor_kind": "Sponsor",
+      "workspace_kind": {
+        "brand": "BRAND sponsor",
+        "artist": "ARTIST sponsor",
+        "agency": "AGENCY workspace",
+        "creator": "CREATOR workspace",
+        "yagi_admin": "YAGI admin"
+      },
+      "submission_window": "접수 기간",
+      "public_entry": "Public entry",
+      "not_confirmed": "야기가 확정 예정",
+      "public_ready": "응모 페이지 공개 가능",
+      "public_pending": "검토 후 공개",
+      "lifecycle_title": "Mass Campaign lifecycle",
+      "status_description": {
+        "requested": "BRAND 또는 ARTIST sponsor가 campaign brief를 제출한 상태입니다.",
+        "in_review": "야기가 campaign 목적, IP/음원 자료, category, 파일 정책을 검토합니다.",
+        "declined": "이번 요청은 보류 또는 거절된 상태입니다. 야기와 조건을 다시 조정해야 합니다.",
+        "draft": "야기가 public campaign으로 열기 전 category, 접수 기간, 보상/유포 정책을 구성합니다.",
+        "published": "크리에이터가 campaign brief를 보고 AI 콘텐츠를 제출할 수 있습니다.",
+        "submission_closed": "응모 접수는 닫혔고 야기가 제출작 검수와 유포 승인을 진행합니다.",
+        "distributing": "승인된 크리에이터가 본인 채널에 콘텐츠를 유포하고 있습니다.",
+        "archived": "캠페인이 종료되어 결과와 distribution record를 보관합니다."
+      },
+      "brief_title": "Campaign brief",
+      "brief_label": "Creative brief",
+      "references_label": "레퍼런스 / 자료 메모",
+      "decision_label": "YAGI decision note",
+      "decision_pending": "아직 검토 메모가 없습니다.",
+      "empty_value": "입력된 내용 없음",
+      "request_title": "Request contact",
+      "contact_name": "담당자 이름",
+      "contact_email": "담당자 이메일",
+      "contact_phone": "담당자 연락처",
+      "created": "요청일",
+      "mass_campaign_title": "Projects와 다른 점",
+      "mass_campaign": {
+        "sponsor": {
+          "title": "1 sponsor brief",
+          "description": "BRAND 또는 ARTIST가 하나의 곡, 제품, IP, MV 자료를 campaign brief로 엽니다."
+        },
+        "creator": {
+          "title": "N creator interpretations",
+          "description": "크리에이터는 납품자가 아니라 각자 해석한 AI 콘텐츠를 응모하는 참여자입니다."
+        },
+        "distribution": {
+          "title": "N channel distribution",
+          "description": "승인된 콘텐츠는 크리에이터 본인 채널에서 유포되고, 성과 수치는 별도로 기록합니다."
+        }
+      },
+      "publish_title": "Public campaign readiness",
+      "file_policy": "파일 정책",
+      "file_upload": "파일 업로드",
+      "external_url": "외부 URL",
+      "distribution_start": "유포 시작",
+      "open_public": "응모 페이지 열기",
+      "public_locked": "아직 public campaign으로 공개되지 않았습니다. 야기가 검토 후 접수 기간과 응모 페이지를 확정합니다."
     }
   },
   "commission": {
@@ -2357,8 +2421,10 @@
     }
   },
   "admin_artists": {
-    "title": "소속 아티스트",
-    "invite_cta": "+ 새 아티스트 영입",
+    "eyebrow": "Artist Sponsors",
+    "title": "ARTIST campaign sponsor 계정",
+    "description": "ARTIST는 음악, 뮤직비디오, IP 자료를 기반으로 Mass AI Campaign을 열 수 있습니다. 관리자는 아티스트 workspace를 만들고 이메일 초대 링크를 발송합니다.",
+    "invite_cta": "새 ARTIST 초대",
     "table_heading": "아티스트 명단",
     "table_empty": "아직 영입된 아티스트가 없습니다.",
     "column_name": "이름",
@@ -2366,17 +2432,18 @@
     "column_instagram": "Instagram",
     "column_joined_at": "가입일",
     "column_status": "상태",
-    "status_invite_pending": "⏳ 초대 발송",
-    "status_onboarding": "⏳ 온보딩 중",
-    "status_active": "✅ 활성",
+    "status_invite_pending": "초대 발송",
+    "status_onboarding": "온보딩 중",
+    "status_active": "활성",
     "form_email": "이메일",
+    "form_helper": "초대 메일을 받은 ARTIST가 본인 이메일로 계정을 활성화하면 artist workspace가 연결되고 Campaign 요청 화면으로 진입합니다.",
     "form_display_name": "아티스트 이름",
     "form_display_name_ph": "예: 김예진",
     "form_short_bio": "소개",
     "form_short_bio_ph": "짧은 자기소개 (선택)",
     "form_submit": "초대 보내기",
     "optional": "선택",
-    "invite_success": "초대 이메일을 발송했습니다.",
+    "invite_success": "ARTIST 초대 이메일을 발송했습니다. 아티스트는 로그인 후 Campaign을 요청할 수 있습니다.",
     "invite_error_validation": "입력값을 확인해 주세요.",
     "invite_error_unauthenticated": "로그인이 필요합니다.",
     "invite_error_forbidden": "권한이 없습니다.",

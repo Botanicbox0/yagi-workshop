@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -28,8 +28,13 @@ type FieldErrors = Partial<
 export function CampaignRequestForm() {
   const t = useTranslations("campaigns_app.new");
   const router = useRouter();
+  const [hydrated, setHydrated] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   function submit(formData: FormData) {
     setErrors({});
@@ -72,7 +77,7 @@ export function CampaignRequestForm() {
   }
 
   return (
-    <form action={submit} className="space-y-6">
+    <form action={submit} className="space-y-6" data-ready={hydrated}>
       <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
         <div className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6">
           <div className="space-y-5">
@@ -189,7 +194,7 @@ export function CampaignRequestForm() {
         </Button>
         <Button
           type="submit"
-          disabled={isPending}
+          disabled={!hydrated || isPending}
           className="rounded-full bg-brand px-6 text-brand-on hover:bg-brand/90"
         >
           {isPending ? (

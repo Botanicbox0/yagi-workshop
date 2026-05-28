@@ -349,7 +349,8 @@
     "card": {
       "closes": "Closes {date}",
       "no_window": "YAGI will confirm the submission window",
-      "submit_page": "Submission page"
+      "submit_page": "Submission page",
+      "detail_page": "View detail"
     },
     "empty": {
       "title": "No campaign requests yet",
@@ -390,6 +391,69 @@
         "unsupported_workspace": "This workspace cannot request campaigns.",
         "db": "Failed to create the campaign request."
       }
+    },
+    "detail": {
+      "back": "Back to campaigns",
+      "eyebrow": "Mass Campaign Request",
+      "description_empty": "No campaign description has been entered yet.",
+      "updated": "Updated {date}",
+      "sponsor_kind": "Sponsor",
+      "workspace_kind": {
+        "brand": "BRAND sponsor",
+        "artist": "ARTIST sponsor",
+        "agency": "AGENCY workspace",
+        "creator": "CREATOR workspace",
+        "yagi_admin": "YAGI admin"
+      },
+      "submission_window": "Submission window",
+      "public_entry": "Public entry",
+      "not_confirmed": "YAGI will confirm",
+      "public_ready": "Submission page ready",
+      "public_pending": "Pending review",
+      "lifecycle_title": "Mass Campaign lifecycle",
+      "status_description": {
+        "requested": "A BRAND or ARTIST sponsor has submitted the campaign brief.",
+        "in_review": "YAGI reviews the campaign purpose, IP or music assets, categories, and file policy.",
+        "declined": "This request is currently declined or paused. Terms need to be adjusted with YAGI.",
+        "draft": "YAGI configures categories, submission windows, compensation, and distribution policy before publishing.",
+        "published": "Creators can view the campaign brief and submit AI content.",
+        "submission_closed": "Submissions are closed while YAGI reviews entries and approves distribution.",
+        "distributing": "Approved creators are distributing content through their own channels.",
+        "archived": "The campaign has ended and distribution records are preserved."
+      },
+      "brief_title": "Campaign brief",
+      "brief_label": "Creative brief",
+      "references_label": "References / asset notes",
+      "decision_label": "YAGI decision note",
+      "decision_pending": "No review note yet.",
+      "empty_value": "No value entered",
+      "request_title": "Request contact",
+      "contact_name": "Contact name",
+      "contact_email": "Contact email",
+      "contact_phone": "Contact phone",
+      "created": "Requested",
+      "mass_campaign_title": "Not a Project workflow",
+      "mass_campaign": {
+        "sponsor": {
+          "title": "1 sponsor brief",
+          "description": "A BRAND or ARTIST opens one song, product, IP, or MV asset as a campaign brief."
+        },
+        "creator": {
+          "title": "N creator interpretations",
+          "description": "Creators are not delivery vendors; they submit their own AI content interpretations."
+        },
+        "distribution": {
+          "title": "N channel distribution",
+          "description": "Approved work is distributed through creator-owned channels, with metrics recorded separately."
+        }
+      },
+      "publish_title": "Public campaign readiness",
+      "file_policy": "File policy",
+      "file_upload": "File upload",
+      "external_url": "External URL",
+      "distribution_start": "Distribution start",
+      "open_public": "Open submission page",
+      "public_locked": "This is not public yet. YAGI will confirm submission windows and the public entry page after review."
     }
   },
   "commission": {
@@ -2292,8 +2356,10 @@
     }
   },
   "admin_artists": {
-    "title": "Roster",
-    "invite_cta": "+ Invite new Artist",
+    "eyebrow": "Artist Sponsors",
+    "title": "ARTIST campaign sponsor accounts",
+    "description": "ARTIST workspaces can open Mass AI Campaigns with music, MV, or IP assets. Admins create the artist workspace and send the account invite by email.",
+    "invite_cta": "Invite ARTIST",
     "table_heading": "Artist list",
     "table_empty": "No artists invited yet.",
     "column_name": "Name",
@@ -2301,17 +2367,18 @@
     "column_instagram": "Instagram",
     "column_joined_at": "Joined",
     "column_status": "Status",
-    "status_invite_pending": "⏳ Invited",
-    "status_onboarding": "⏳ Onboarding",
-    "status_active": "✅ Active",
+    "status_invite_pending": "Invited",
+    "status_onboarding": "Onboarding",
+    "status_active": "Active",
     "form_email": "Email",
+    "form_helper": "When the ARTIST activates the account from the invite email, the artist workspace is connected and the flow lands on Campaign request.",
     "form_display_name": "Artist name",
     "form_display_name_ph": "e.g. Jane Kim",
     "form_short_bio": "Short bio",
     "form_short_bio_ph": "A short introduction (optional)",
     "form_submit": "Send invite",
     "optional": "optional",
-    "invite_success": "Invite email sent.",
+    "invite_success": "ARTIST invite email sent. The artist can request Campaigns after signing in.",
     "invite_error_validation": "Please check your input.",
     "invite_error_unauthenticated": "Please sign in.",
     "invite_error_forbidden": "You don't have permission.",

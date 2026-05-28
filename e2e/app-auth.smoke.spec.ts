@@ -118,9 +118,30 @@ test.describe("authenticated app shell smoke", () => {
         page.getByRole("link", { name: "새 캠페인 요청" }),
       ).toBeVisible();
 
+      if ((await page.getByRole("link", { name: "상세 보기" }).count()) === 0) {
+        await page.goto("/ko/app/campaigns/new", {
+          waitUntil: "domcontentloaded",
+        });
+        await expect(page.locator("form[data-ready='true']")).toBeVisible();
+        const suffix = `${viewport.name}-${Date.now()}`;
+        await page.getByLabel("캠페인 제목").fill(`E2E Mass Campaign ${suffix}`);
+        await page
+          .getByLabel("한 줄 설명")
+          .fill("E2E 검증용 Mass AI Campaign request");
+        await page
+          .getByLabel("Creative brief")
+          .fill("아티스트 음악과 뮤직비디오 소스를 여러 크리에이터가 해석하는 E2E 캠페인입니다.");
+        await page.getByLabel("담당자 이름").fill("YAGI E2E");
+        await page.getByLabel("담당자 이메일").fill("test-e2e@example.com");
+        await page.getByLabel("담당자 연락처").fill("010-0000-0000");
+        await page.getByRole("button", { name: "캠페인 요청" }).click();
+        await expect(page).toHaveURL(/\/ko\/app\/campaigns/);
+      }
+
       await page.goto("/ko/app/campaigns/new", {
         waitUntil: "domcontentloaded",
       });
+      await expect(page.locator("form[data-ready='true']")).toBeVisible();
       await expect(page).toHaveURL(/\/ko\/app\/campaigns\/new/);
       await expect(
         page.getByRole("heading", {
@@ -135,6 +156,26 @@ test.describe("authenticated app shell smoke", () => {
 
       await page.screenshot({
         path: `test-results/app-campaigns-new-${viewport.name}.png`,
+        fullPage: true,
+      });
+
+      await page.goto("/ko/app/campaigns", { waitUntil: "domcontentloaded" });
+      const detailHref = await page
+        .getByRole("link", { name: "상세 보기" })
+        .first()
+        .getAttribute("href");
+      expect(detailHref).toBeTruthy();
+      await page.goto(detailHref!);
+      await expect(page).toHaveURL(/\/ko\/app\/campaigns\/[^/]+$/);
+      await expect(
+        page.getByRole("heading", { name: "Mass Campaign lifecycle" }),
+      ).toBeVisible();
+      await expect(page.getByText("Projects와 다른 점")).toBeVisible();
+      await expect(page.getByText("BRAND sponsor").first()).toBeVisible();
+      expect(consoleErrors).toEqual([]);
+
+      await page.screenshot({
+        path: `test-results/app-campaigns-detail-${viewport.name}.png`,
         fullPage: true,
       });
     });
