@@ -1,0 +1,14 @@
+[Unit]
+Description=YAGI Chroma Search Daemon (TASK 33 — replaces LEANN)
+After=default.target
+
+[Service]
+Type=simple
+Environment=CUDA_VISIBLE_DEVICES=
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/mnt/d/AI/leann-indexes/workspace/.venv/bin/python /mnt/d/AI/scripts/chroma/server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

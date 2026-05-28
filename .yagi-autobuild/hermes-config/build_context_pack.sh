@@ -8,9 +8,31 @@ RISK="${2:-LOW}"
 REPO="/mnt/d/AI/projects/yagi-workshop"
 
 LAST_COMMIT="$(cd "$REPO" && git log -1 --oneline 2>/dev/null)"
-# LEANN retrieval (CPU mode은 느리거나 crash 가능 — 실패 시 graceful degrade).
-RAG="$(timeout 45 leann search yagi-workshop-docs "$INTENT" --top-k 3 2>/dev/null | head -15)"
-[ -z "$RAG" ] && RAG="(LEANN unavailable — inspect .yagi-autobuild/PRODUCT-MASTER.md directly)"
+
+# Chroma retrieval (TASK 33 — replaces LEANN). Daemon on 127.0.0.1:8900 keeps the
+# 0.6B model resident; hot queries return in ~100-450 ms. urlencode via python3.
+# Falls back to a one-line note if the daemon is down (graceful degrade).
+Q_ENC="$(printf '%s' "$INTENT" | python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.read()))' 2>/dev/null)"
+RAG="$(timeout 5 curl -s "http://127.0.0.1:8900/?q=${Q_ENC}&k=3" 2>/dev/null \
+  | python3 -c '
+import json, sys
+try:
+    items = json.load(sys.stdin)
+    if not items:
+        print("(no hits)")
+        sys.exit(0)
+    for it in items:
+        src = it.get("source", "?")
+        head = it.get("heading", "")
+        score = it.get("score", 0)
+        print(f"- [{src}] {head} (score {score})")
+        snip = it.get("snippet", "").replace("\n", " ")[:180]
+        if snip:
+            print(f"    {snip}")
+except Exception as e:
+    print(f"(retrieval parse error: {e})")
+' 2>/dev/null)"
+[ -z "$RAG" ] && RAG="(Chroma daemon unavailable — inspect .yagi-autobuild/PRODUCT-MASTER.md directly)"
 
 cat << CTXPACK
 [Task Context Pack — Hermes router]
@@ -23,7 +45,7 @@ Reason for routing: derived from intent + AGENTS.md + skill catalog.
 Active Phase: Phase 8 후반
 Last commit: $LAST_COMMIT
 
-PRODUCT-MASTER active 룰 (LEANN retrieval):
+PRODUCT-MASTER active 룰 (Chroma retrieval, port 8900):
 $RAG
 
 Implementation Constraints:
