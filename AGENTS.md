@@ -30,7 +30,7 @@
 ## 거버넌스
 - **BRAND vertical lock** — BRAND = sole self-signup; CELEBRITY = internal manual asset.
 - **K-05 dual review** (Codex K-05 adversarial) = HIGH/DANGER 작업에서만 mandatory: prod DB write, RLS/grants/SECURITY DEFINER, auth, destructive, deployment, billing. LOW/MED는 발동 X.
-- **PRODUCT-MASTER.md append-only** — 기존 § 덮어쓰기 금지, supersede only. 새 § 추가 시 다음 letter.
+- **PRODUCT-MASTER.md living document** — 본문은 항상 현재 진실로 직접 수정한다. git이 버전 관리/백업한다. 큰 변경은 commit message에 사유를 명시하고, 문서 끝 `Decision Log`에 날짜+한 줄로 무엇이 왜 바뀌었는지 기록한다.
 - secrets commit 금지 (`.husky/pre-commit` scanner). `--no-verify` 금지 — redact 후 re-stage.
 
 ## Commit pattern

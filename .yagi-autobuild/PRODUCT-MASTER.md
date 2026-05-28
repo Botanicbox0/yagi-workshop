@@ -5,7 +5,7 @@
 
 # v1.6 Amendment (2026-05-05, post-v1.5, Phase 7 PIVOT)
 
-> append-only. **Phase 7 재정의 — Challenge (contest) → Distributed Campaign (mass content marketing)**.
+> Historical amendment note. **Phase 7 재정의 — Challenge (contest) → Distributed Campaign (mass content marketing)**.
 > 야기 vision pivot (chat 2026-05-05): "야기의 진짜 product = K-pop AI 콘텐츠 마케팅의 Distributed Campaign.
 > Challenge = me-too 사례 있음 (KAICF). Phase 7 SPEC v2 deprecated.
 > Manual creator pool 영입 + 기존 AI 제작자 네트워크 활용 = creator pool 0명 risk 해결."
@@ -221,7 +221,7 @@ PRODUCT-MASTER v1.5 §K 확장의 third entry **`[+ 챌린지 요청]` → `[+ �
 ```
 Artist workspace (Phase 7 ship 후):
 
-[새 프로젝트 시작]      [브랜드 협업 제안]      [+ 캠페인 요청]
+[새 프로젝트 시작]      [브랜드 협업 요청]      [+ 캠페인 요청]
 (Talent-Initiated)     (Inbound Track)         (Distributed Campaign)
 Phase 6 ship            Phase 10 ship           Phase 7 ship (NEW)
                         (deferred / hidden)     (sponsor: 가수 가 fan 대상 캠페인)
@@ -255,7 +255,7 @@ Third entry = Artist (Roster) 가 sponsor 가 되어 캠페인 hosting:
 | **Phase 7 (NEW)** | Distributed Campaign + Light Creator workspace | 6주 |
 | **Phase 8** | Creator Hub 확장 (portfolio + browse + Roster funnel admin tool + distribution metric API auto-fetch 일부) | 4-5주 |
 | **Phase 9 (optional, deferred)** | Challenge MVP — KAICF style contest hosting (was Phase 7 SPEC v2 vision) | 3-4주 |
-| Phase 10 | Inbound Track (Brand RFP → Roster 매칭, Artist [브랜드 협업 제안] 큐) | 2-3주 |
+| Phase 10 | Inbound Track (Brand RFP → Roster 매칭, Artist [브랜드 협업 요청] 큐) | 2-3주 |
 | Phase 11 | 수신 설정 + 시안 confirm + 사용료/Compensation 정산 + ff-merge gate | 2-3주 |
 
 **Total roadmap = 17-21주 (4-5개월)**.
@@ -287,7 +287,7 @@ Phase 9 (Challenge) = optional. Phase 7 (Distributed Campaign) ship 후 *시장 
 
 # v1.8 Amendment (2026-05-09, post-Wave-C-v2-ship, NORTH STAR re-lock)
 
-> append-only. v1.7 손실 (PRODUCT-MASTER 복구 사고) 으로 NORTH STAR 표현이
+> Historical amendment note. v1.7 손실 (PRODUCT-MASTER 복구 사고) 으로 NORTH STAR 표현이
 > 메모리/handoff 에 분산. 본 amendment 로 정본에 lock.
 > 추가로 v1.6 §W 의 "B2B SaaS for K-pop content marketing" 표현이
 > 회사/Product 정체성과 정합 안 됨을 인지 — 정정.
@@ -485,10 +485,10 @@ Phase 8+ (확장 시점):
 
 # v1.9 Amendment (2026-05-11, Wave C v2 ship retrospective — Locale-Free Route Checklist lock)
 
-> append-only. Wave C v2 ship 진행 중 3개 hotfix (HIGH-7/8/9) 가 모두
+> Historical amendment note. Wave C v2 ship 진행 중 3개 hotfix (HIGH-7/8/9) 가 모두
 > **"신규 locale-free public route 도입 패턴"** 의 일부로 드러남을
 > 인지. v1.8 footer 의 §AD pricing model lock 안내는 넓은 의미의 next-amendment
-> 제안이었으나, 해당 후보는 별도 amendment (v1.10+) 로 소괄. 이번 §AD는
+> 후보였으나, 해당 후보는 별도 amendment (v1.10+) 로 소괄. 이번 §AD는
 > 실제 retrospective의 긴급도가 더 높은 구조 lock 용도.
 >
 > Trigger: Wave C v2 production smoke (chat 2026-05-11) 에서 세 번 연속 404 / 500 / 500
@@ -686,7 +686,7 @@ K-05 Codex (data/server action 검증) + K-06 Opus subagent (design 검증) 두 
 
 # v1.10 Amendment (2026-05-12, Full Product Vision lock — 4 actor + 3 mechanism)
 
-> append-only. 이전 amendment 들은 NORTH STAR (v1.8 §Z) + technical retrospective (v1.9 §AD)
+> Historical amendment note. 이전 amendment 들은 NORTH STAR (v1.8 §Z) + technical retrospective (v1.9 §AD)
 > 에 국한. 그러나 **product 전체 vision (4 actor + 3 mechanism + identity
 > extension matrix)** 은 PM 정본에 명시 lock 안 됨.
 >
@@ -861,7 +861,7 @@ Workspace kind 별 surface mapping:
 
 ### Phase 8+ 잠정 priority (야기 결정 필요)
 
-제안:
+검토안:
 
 ```
 Option A — Twin-first (high impact, high complexity):
@@ -944,7 +944,7 @@ phase priority 결정 = 별도 amendment (야기 + Web Claude phase planning cha
 
 **Lock**: Phase 8+ priority Option B (compressed) + §AJ partial resolutions
 **Trigger**: §AJ Q#1 lock + Phase 8 spec entry prerequisite (Q#7 schema migration)
-**Rule**: append-only. v1.5/v1.7 사고 학습 적용 — 본문 overwrite 금지.
+**Rule**: living document. 본문은 항상 현재 진실로 직접 수정한다. git이 버전 관리/백업하며 큰 변경은 commit message와 Decision Log에 사유를 남긴다.
 
 ### §AJ Q#1~Q#7 status update
 
@@ -1055,9 +1055,9 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 ### BRAND User Journey (실측 KAIPER + SLOGK 사례 기반)
 
 1. **Onboarding**
-   - Brand 가입 → workspace 생성
-   - 회사 정보 + 세무 정보 입력 (사업자등록증 + 통장사본 + 세금계산서 수신 정보)
-   - Brand Asset Library 셋업 (logo + product 사진 + brand guideline)
+   - Brand 계정 + workspace 생성만 진행 (최소 마찰)
+   - 세무 정보(사업자등록증 + 통장사본 + 세금계산서 수신 정보)는 결제·세금계산서 발행 시점에 수집 (KAIPER 실사례 정합, lazy collection)
+   - Brand Asset Library는 선택 사항. 프로젝트 진행 중 언제든 logo + product 사진 + brand guideline 업로드 가능
 
 2. **Project Brief 작성** (notion 대체)
    - Type A: 일반 외주 (Curated Project, Wave A.2.a backend, digital twin 활용 가능)
@@ -1109,9 +1109,9 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 - Secondary: **#FAD204** (warm gold, highlights + tags + accent, 5-10%)
 - Background: **#0A0A0A** (확정)
 - Ink primary: **#F0F0F0** (확정)
-- Surface: **#161616** (제안, 야기 confirm 후 lock)
-- Ink muted: **#888888** (제안)
-- Border: **#2A2A2A** (제안)
+- Surface: **#161616** (확정 lock)
+- Ink muted: **#888888** (확정 lock)
+- Border: **#2A2A2A** (확정 lock)
 
 ### Typography
 - Display: **Editorial New** (확정)
@@ -1260,3 +1260,15 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 - 장기 협업 할인 자동 적용
 - 미수금 status 추적
 
+---
+
+## Decision Log
+
+- 2026-05-28: append-only 폐기 → 살아있는 문서로 전환 (git 버전관리/백업, 본문 = 현재 진실).
+- 2026-05-28: §AN onboarding 세무정보/asset 강제 → lazy collection (결제·세금계산서 발행 시점/선택 업로드).
+- 2026-05-28: §AN BRAND-only vertical pivot 확정 — BRAND = 유일 self-signup, CELEBRITY = internal asset, CREATOR = campaign channel.
+- 2026-05-28: §AO design system v1.2 dark lock — bg/surface/ink/border + Red `#ED1E1E` + Gold `#FAD204`, 이전 v1.1 폐기.
+- 2026-05-28: §AP IA refactor 확정 — sidebar 폐기, Higgsfield-style horizontal nav.
+- 2026-05-28: §AQ Americano integration 방향 기록 — GitHub release 후 Lookbook Studio module로 흡수.
+- 2026-05-28: §AR marketing visual pipeline 확정 — 야기/다나 internal tool, Nano Banana Pro 2K, 이미지 내 텍스트/특정 brand 노출 금지.
+- 2026-05-28: §AS operations automation 방향 확정 — in-app brief/thread/versioning/schedule/billing으로 Notion+Slack+세금계산서 통합 대체.

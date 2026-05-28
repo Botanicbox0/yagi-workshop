@@ -2,10 +2,10 @@
 
 > Scoped rules for the spec/ops layer. Inherits top-level `AGENTS.md`.
 
-## PRODUCT-MASTER.md is append-only
-- **기존 § 내용 수정·삭제 금지.** 변경은 **supersede**로만 표현 (새 §가 옛 §를 명시적으로 대체).
-- 새 § 추가 시 **다음 letter**를 부여. 현재 마지막 = **§AS** → 다음 = **§AT**.
-- supersede 시 옛 §에 "(supersedes §XX)" / 새 §에 어느 것을 대체하는지 명기.
+## PRODUCT-MASTER.md is a living document
+- 본문은 항상 현재 진실로 직접 수정한다. git이 버전 관리/백업한다.
+- 큰 변경은 commit message에 사유를 명시한다.
+- 문서 맨 끝 `Decision Log`에 날짜+한 줄로 무엇이 왜 바뀌었는지 기록한다.
 - 날짜 표기는 절대일자 (`2026-05-28`), 상대 표현 X.
 
 ## Phase / Wave 작업 패턴
