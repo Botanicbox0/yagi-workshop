@@ -95,6 +95,58 @@ const UploadAssetInput = z.object({
     .max(209715200, "file exceeds 200MB"),
 });
 
+const MoodKeywordSchema = z.enum([
+  "emotional",
+  "sophisticated",
+  "humorous",
+  "dynamic",
+  "minimal",
+  "warm",
+  "luxurious",
+  "trendy",
+  "friendly",
+]);
+
+const ChannelSchema = z.enum([
+  "instagram",
+  "youtube",
+  "tiktok",
+  "facebook",
+  "website",
+  "offline",
+  "other",
+]);
+
+const VisualRatioSchema = z.enum([
+  "1_1",
+  "16_9",
+  "9_16",
+  "4_5",
+  "239_1",
+  "custom",
+]);
+
+const UpdateProductionSpecInput = z.object({
+  projectId: z.string().uuid(),
+  mood_keywords: z.array(MoodKeywordSchema).max(12).default([]),
+  mood_keywords_free: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+  visual_ratio: VisualRatioSchema.optional().nullable(),
+  visual_ratio_custom: z
+    .string()
+    .trim()
+    .max(80)
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+  channels: z.array(ChannelSchema).max(12).default([]),
+});
+
 // -----------------------------------------------------------------------------
 // Internal helpers
 // -----------------------------------------------------------------------------
@@ -256,6 +308,70 @@ export async function saveBrief(
     ok: true,
     data: { updatedAt: updated.updated_at, status: updated.status as "editing" | "locked" },
   };
+}
+
+// -----------------------------------------------------------------------------
+// Production spec — structured project metadata on projects
+// -----------------------------------------------------------------------------
+
+export async function updateProductionSpec(
+  input: unknown
+): Promise<BriefActionResult<{ savedAt: string }>> {
+  const parsed = UpdateProductionSpecInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: "validation", issues: parsed.error.issues };
+  }
+
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "unauthenticated" };
+
+  const visualRatio = parsed.data.visual_ratio ?? null;
+  const visualRatioCustom =
+    visualRatio === "custom" ? parsed.data.visual_ratio_custom : null;
+
+  const { data: current, error: currentErr } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", parsed.data.projectId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (currentErr) {
+    console.error("[updateProductionSpec] read error", currentErr);
+    return { error: "db", message: currentErr.message };
+  }
+  if (!current) return { error: "not_found" };
+
+  const { data: updated, error: updErr } = await (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- production spec columns pending generated type refresh
+    supabase as any
+  )
+    .from("projects")
+    .update({
+      mood_keywords: parsed.data.mood_keywords,
+      mood_keywords_free: parsed.data.mood_keywords_free,
+      visual_ratio: visualRatio,
+      visual_ratio_custom: visualRatioCustom,
+      channels: parsed.data.channels,
+    })
+    .eq("id", parsed.data.projectId)
+    .is("deleted_at", null)
+    .select("updated_at")
+    .maybeSingle();
+
+  if (updErr) {
+    console.error("[updateProductionSpec] update error", updErr);
+    if (/row-level security|violates row-level security|permission denied/i.test(updErr.message)) {
+      return { error: "forbidden", reason: "projects_update denied" };
+    }
+    return { error: "db", message: updErr.message };
+  }
+  if (!updated) {
+    return { error: "forbidden", reason: "projects_update denied" };
+  }
+
+  revalidatePath(`/[locale]/app/projects/${parsed.data.projectId}`, "page");
+  return { ok: true, data: { savedAt: updated.updated_at as string } };
 }
 
 // -----------------------------------------------------------------------------

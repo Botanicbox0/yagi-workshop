@@ -1,8 +1,10 @@
 // Phase 5 Wave C C_4 — 브리프 tab read-only view + [브리프 완성하기 →] CTA.
 //
 // Renders 3 sections:
-//   Stage 1 (Intent)   — title, deliverable_types, description, mood_keywords,
-//                         channels, target_audience, visual_ratio, additional_notes
+//   Stage 1 (Intent)   — title, deliverable_types, description,
+//                         target_audience, additional_notes
+//   Production Spec    — mood_keywords, channels, visual_ratio as structured
+//                         editable metadata on projects
 //   Stage 2 (Commit)   — budget_band, target_delivery_at, meeting_preferred_at,
 //                         interested_in_twin (3-way: true/false/null)
 //   Stage 3 (Submit)   — submitted_at, creator display name
@@ -21,12 +23,16 @@
 //   - chips for text[] columns
 //   - date-only for target_delivery_at (YYYY-MM-DD)
 //   - date+time for meeting_preferred_at and submitted_at (YYYY-MM-DD HH:mm)
-//   - visual_ratio enum translated + visual_ratio_custom alongside if 'custom'
+//   - production spec renders as chips and writes back to projects metadata
 //
 // CTA href: /${locale}/app/projects/new?project={projectId}
 //   Query-param hydration wired in Wave B.5 commit 0dfc641.
 
 import Link from "next/link";
+import {
+  ProductionSpecCard,
+  type ProductionSpecLabels,
+} from "./production-spec-card";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,6 +66,7 @@ export type BriefTabProps = {
   // Stage 3 (submit meta)
   submitted_at: string | null;
   creator_display_name: string | null;
+  canEditProductionSpec: boolean;
 
   // i18n labels (passed from server page so no client i18n dependency)
   labels: BriefTabLabels;
@@ -77,10 +84,7 @@ export type BriefTabLabels = {
   field_project_name: string;
   field_deliverable_types: string;
   field_description: string;
-  field_mood_keywords: string;
-  field_channels: string;
   field_target_audience: string;
-  field_visual_ratio: string;
   field_additional_notes: string;
   // Stage 2 field labels
   field_budget_band: string;
@@ -105,14 +109,9 @@ export type BriefTabLabels = {
   budget_1m_to_5m: string;
   budget_5m_to_10m: string;
   budget_negotiable: string;
-  // Mood options map (union of known keys + fallback)
-  mood_options: Record<string, string>;
-  // Channel options map
-  channel_options: Record<string, string>;
-  // Visual ratio options map
-  visual_ratio_options: Record<string, string>;
   // Deliverable type options map
   deliverable_type_options: Record<string, string>;
+  production_spec: ProductionSpecLabels;
 };
 
 // ---------------------------------------------------------------------------
@@ -243,6 +242,7 @@ export function BriefTab({
   has_external_brand_party,
   submitted_at,
   creator_display_name,
+  canEditProductionSpec,
   labels,
 }: BriefTabProps) {
   const isDraft = status === "draft";
@@ -251,25 +251,6 @@ export function BriefTab({
   const resolvedDeliverableTypes = deliverable_types
     .map((k) => labels.deliverable_type_options[k] ?? k)
     .filter(Boolean);
-
-  const resolvedMoodKeywords = mood_keywords
-    .map((k) => labels.mood_options[k] ?? k)
-    .filter(Boolean);
-
-  const moodDisplay: string[] = [...resolvedMoodKeywords];
-  if (mood_keywords_free?.trim()) {
-    moodDisplay.push(mood_keywords_free.trim());
-  }
-
-  const resolvedChannels = channels
-    .map((k) => labels.channel_options[k] ?? k)
-    .filter(Boolean);
-
-  const resolvedVisualRatio = visual_ratio
-    ? visual_ratio === "custom"
-      ? `${labels.visual_ratio_options["custom"] ?? "custom"}${visual_ratio_custom ? ` (${visual_ratio_custom})` : ""}`
-      : (labels.visual_ratio_options[visual_ratio] ?? visual_ratio)
-    : null;
 
   const resolvedBudgetBand = budget_band
     ? budget_band === "under_1m"
@@ -328,25 +309,12 @@ export function BriefTab({
             dash
           )}
         </FieldRow>
-        <FieldRow label={labels.field_mood_keywords}>
-          {moodDisplay.length > 0 ? <ChipList items={moodDisplay} /> : dash}
-        </FieldRow>
-        <FieldRow label={labels.field_channels}>
-          {resolvedChannels.length > 0 ? (
-            <ChipList items={resolvedChannels} />
-          ) : (
-            dash
-          )}
-        </FieldRow>
         <FieldRow label={labels.field_target_audience}>
           {target_audience ? (
             <span className="whitespace-pre-wrap">{target_audience}</span>
           ) : (
             dash
           )}
-        </FieldRow>
-        <FieldRow label={labels.field_visual_ratio}>
-          {resolvedVisualRatio || dash}
         </FieldRow>
         <FieldRow label={labels.field_additional_notes}>
           {additional_notes ? (
@@ -356,6 +324,19 @@ export function BriefTab({
           )}
         </FieldRow>
       </SectionCard>
+
+      <ProductionSpecCard
+        projectId={projectId}
+        canEdit={canEditProductionSpec}
+        initial={{
+          mood_keywords,
+          mood_keywords_free: mood_keywords_free ?? "",
+          visual_ratio: visual_ratio ?? "",
+          visual_ratio_custom: visual_ratio_custom ?? "",
+          channels,
+        }}
+        labels={labels.production_spec}
+      />
 
       {/* Stage 2 — Commit */}
       <SectionCard heading={labels.section_stage2}>
