@@ -1358,6 +1358,9 @@
       "count_label": "{count} invoices"
     },
     "projects": {
+      "queue_title": "Project operations",
+      "queue_description": "Review direct commissions and curated projects in one operations queue.",
+      "curated_new_cta": "Create curated project",
       "references": {
         "title": "References",
         "copyUrl": "Copy URL",
@@ -1365,7 +1368,48 @@
         "empty": "No references"
       },
       "queue": {
-        "assetCount": "{count}"
+        "assetCount": "{count}",
+        "empty": "No projects at this time",
+        "waiting": "Waiting",
+        "processing": "Processing...",
+        "action_start": "Start",
+        "action_deliver": "Mark delivered",
+        "action_restart": "Restart",
+        "action_archive": "Archive",
+        "references": "Refs: {count}",
+        "tabs": {
+          "draft": "Draft",
+          "in_review": "In review",
+          "in_progress": "In progress",
+          "in_revision": "Revision",
+          "delivered": "Delivered",
+          "approved": "Approved"
+        },
+        "project_type": {
+          "direct_commission": "Direct",
+          "contest_brief": "Campaign",
+          "curated": "Curated"
+        }
+      },
+      "curated_new": {
+        "back": "← Project operations",
+        "eyebrow": "Curated Project",
+        "title": "Create curated project",
+        "description": "Create a project room for YAGI-selected creators and collaborators.",
+        "form_title": "Request details",
+        "workspace_label": "Target workspace",
+        "workspace_placeholder": "Select workspace",
+        "title_label": "Project title",
+        "title_placeholder": "e.g. New single visual extension curation",
+        "brief_label": "Brief",
+        "brief_placeholder": "Describe the goal, selection criteria, and context to share with creators.",
+        "submit": "Create project",
+        "submitting": "Creating...",
+        "success": "Curated project created.",
+        "error_validation": "Check the input values.",
+        "error_unauthenticated": "Login is required.",
+        "error_forbidden": "You do not have access.",
+        "error_db": "Failed to create project."
       },
       "detail": {
         "client": "Client",
@@ -2303,6 +2347,23 @@
         "error_project_not_in_workspace": "This project does not belong to the selected workspace.",
         "error_db": "Failed to send invitation."
       }
+    },
+    "curated": {
+      "eyebrow": "Curated Project Room",
+      "subtitle": "A three-party project room for YAGI-selected creators and collaborators.",
+      "workspace": "Workspace",
+      "status": "Status",
+      "created": "Created",
+      "target_delivery": "Target delivery",
+      "unset": "Not set",
+      "brief_title": "Brief",
+      "brief_empty": "No brief yet.",
+      "collaborators_title": "Accepted creators",
+      "collaborators_empty": "No creators have accepted yet.",
+      "pending_title": "Pending invitations",
+      "pending_empty": "No pending invitations.",
+      "invited_at": "Accepted",
+      "expires_at": "Expires"
     },
     "material_append": {
       "trigger": "Add materials",

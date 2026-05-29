@@ -1358,6 +1358,9 @@
       "count_label": "{count}건"
     },
     "projects": {
+      "queue_title": "프로젝트 관리",
+      "queue_description": "일반 외주와 curated 프로젝트를 같은 운영 큐에서 확인합니다.",
+      "curated_new_cta": "Curated 프로젝트 생성",
       "references": {
         "title": "참고 자료",
         "copyUrl": "URL 복사",
@@ -1365,7 +1368,48 @@
         "empty": "참고 자료가 없습니다"
       },
       "queue": {
-        "assetCount": "{count}개"
+        "assetCount": "{count}개",
+        "empty": "현재 프로젝트가 없습니다",
+        "waiting": "대기 중",
+        "processing": "처리 중...",
+        "action_start": "진행 시작",
+        "action_deliver": "납품 완료",
+        "action_restart": "재시작",
+        "action_archive": "아카이브",
+        "references": "참고: {count}",
+        "tabs": {
+          "draft": "초안",
+          "in_review": "검토 중",
+          "in_progress": "진행 중",
+          "in_revision": "수정 중",
+          "delivered": "납품됨",
+          "approved": "승인 완료"
+        },
+        "project_type": {
+          "direct_commission": "일반 외주",
+          "contest_brief": "캠페인",
+          "curated": "Curated"
+        }
+      },
+      "curated_new": {
+        "back": "← 프로젝트 관리",
+        "eyebrow": "Curated Project",
+        "title": "Curated 프로젝트 생성",
+        "description": "YAGI가 내부에서 선별한 creator/협업자와 함께 진행할 프로젝트 룸을 만듭니다.",
+        "form_title": "발주 정보",
+        "workspace_label": "대상 workspace",
+        "workspace_placeholder": "워크스페이스 선택",
+        "title_label": "프로젝트 제목",
+        "title_placeholder": "예: 신곡 visual extension 큐레이션",
+        "brief_label": "Brief",
+        "brief_placeholder": "작업 목표, 선별 기준, creator에게 공유할 맥락을 입력하세요.",
+        "submit": "프로젝트 생성",
+        "submitting": "생성 중...",
+        "success": "Curated 프로젝트를 생성했습니다.",
+        "error_validation": "입력값을 확인해 주세요.",
+        "error_unauthenticated": "로그인이 필요합니다.",
+        "error_forbidden": "권한이 없습니다.",
+        "error_db": "프로젝트 생성에 실패했습니다."
       },
       "detail": {
         "client": "클라이언트",
@@ -2368,6 +2412,23 @@
         "error_project_not_in_workspace": "이 프로젝트는 선택한 워크스페이스에 속하지 않아요.",
         "error_db": "초대 발송에 실패했어요."
       }
+    },
+    "curated": {
+      "eyebrow": "Curated Project Room",
+      "subtitle": "YAGI가 선별한 creator/협업자와 함께 진행하는 3자 프로젝트 룸입니다.",
+      "workspace": "Workspace",
+      "status": "상태",
+      "created": "생성일",
+      "target_delivery": "납기 희망",
+      "unset": "미정",
+      "brief_title": "Brief",
+      "brief_empty": "아직 brief가 없습니다.",
+      "collaborators_title": "초대 수락 creator",
+      "collaborators_empty": "아직 수락한 creator가 없습니다.",
+      "pending_title": "대기 중인 초대",
+      "pending_empty": "대기 중인 초대가 없습니다.",
+      "invited_at": "초대 수락",
+      "expires_at": "만료"
     },
     "material_append": {
       "trigger": "자료 추가하기",

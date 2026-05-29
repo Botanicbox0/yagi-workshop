@@ -22,25 +22,25 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const getStatusStyles = (s: Status): string => {
     switch (s) {
       case 'draft':
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-surface-card text-muted-foreground';
       case 'submitted':
-        return 'bg-zinc-100 text-zinc-700';
+        return 'bg-surface-card text-foreground';
       case 'in_review':
-        return 'bg-zinc-200 text-zinc-800';
+        return 'bg-brand-soft text-brand';
       case 'in_progress':
-        return 'bg-zinc-900 text-white';
+        return 'bg-foreground text-background';
       case 'in_revision':
-        return 'bg-zinc-200 text-zinc-700 border border-dashed border-zinc-400';
+        return 'bg-warning text-warning-foreground border border-dashed border-warning-foreground/40';
       case 'delivered':
-        return 'bg-zinc-800 text-white';
+        return 'bg-info text-info-foreground';
       case 'approved':
-        return 'bg-foreground text-background ring-2 ring-foreground';
+        return 'bg-gold text-gold-on';
       case 'cancelled':
-        return 'bg-zinc-50 text-zinc-400 line-through';
+        return 'bg-muted text-muted-foreground line-through';
       case 'archived':
-        return 'bg-zinc-50 text-zinc-400';
+        return 'bg-muted text-muted-foreground';
       default:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-surface-card text-muted-foreground';
     }
   };
 

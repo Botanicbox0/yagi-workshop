@@ -24,6 +24,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import { MessageSquare, Package } from "lucide-react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
@@ -36,6 +37,11 @@ import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
 import { GuestProjectRoom } from "@/components/project-detail/guest-project-room";
 import { GuestInviteForm } from "@/components/project-detail/guest-invite-form";
+import {
+  CuratedProjectRoom,
+  type CuratedProjectGuest,
+  type CuratedProjectPendingInvite,
+} from "@/components/project-detail/curated-project-room";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -47,6 +53,7 @@ type ProjectDetail = {
   title: string;
   brief: string | null;
   status: string;
+  project_type: string;
   workspace_id: string;
   created_by: string;
   budget_band: string | null;
@@ -75,6 +82,7 @@ type ProjectGate = {
   id: string;
   title: string;
   status: string;
+  project_type: string;
   workspace_id: string;
   created_by: string;
   target_delivery_at: string | null;
@@ -137,7 +145,9 @@ export default async function ProjectDetailPage({
   const sb = supabase as any;
   const { data: projectGateRaw, error: projectGateErr } = (await sb
     .from("projects")
-    .select("id, title, status, workspace_id, created_by, target_delivery_at, created_at")
+    .select(
+      "id, title, status, project_type, workspace_id, created_by, target_delivery_at, created_at",
+    )
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle()) as {
@@ -164,6 +174,9 @@ export default async function ProjectDetailPage({
   const isYagiAdmin = roles.has("yagi_admin");
   const isWsAdmin = roles.has("workspace_admin");
   const isOwner = projectGateRaw.created_by === user.id;
+  const viewerRole: "admin" | "client" = isYagiAdmin || isWsAdmin
+    ? "admin"
+    : "client";
 
   let isProjectGuest = false;
   if (!isYagiAdmin && !isWsAdmin && !isOwner) {
@@ -211,6 +224,7 @@ export default async function ProjectDetailPage({
     .select(
       `
       id, title, brief, status,
+      project_type,
       workspace_id, created_by,
       budget_band, target_delivery_at,
       meeting_preferred_at, twin_intent, created_at,
@@ -239,6 +253,7 @@ export default async function ProjectDetailPage({
     title: projectRaw.title as string,
     brief: projectRaw.brief as string | null,
     status: projectRaw.status as string,
+    project_type: projectRaw.project_type as string,
     workspace_id: projectRaw.workspace_id as string,
     created_by: projectRaw.created_by as string,
     budget_band: (projectRaw.budget_band as string | null) ?? null,
@@ -285,6 +300,110 @@ export default async function ProjectDetailPage({
     has_external_brand_party:
       (projectRaw.has_external_brand_party as boolean | undefined) ?? false,
   };
+
+  const localeNarrow: "ko" | "en" = locale === "en" ? "en" : "ko";
+  const workspaceName = project.workspace?.name ?? "—";
+  const brandName = project.brand?.name ?? null;
+
+  if (project.project_type === "curated" && viewerRole === "admin") {
+    const sbAdmin = createSupabaseService();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_guests generated types pending
+    const adminAny = sbAdmin as any;
+    const [{ data: guestRowsRaw }, { data: pendingRowsRaw }] = await Promise.all([
+      adminAny
+        .from("project_guests")
+        .select(
+          "id, granted_at, workspace_member:workspace_members!inner(id, role, profile:profiles!workspace_members_user_id_fkey(id, display_name))",
+        )
+        .eq("project_id", project.id)
+        .order("granted_at", { ascending: false }),
+      adminAny
+        .from("workspace_invitations")
+        .select("id, email, created_at, expires_at")
+        .eq("project_id", project.id)
+        .eq("role", "guest")
+        .is("accepted_at", null)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const guestRows = (guestRowsRaw ?? []) as Array<{
+      id: string;
+      granted_at: string;
+      workspace_member:
+        | {
+            role: string;
+            profile: { display_name: string | null } | null;
+          }
+        | Array<{
+            role: string;
+            profile: { display_name: string | null } | null;
+          }>;
+    }>;
+    const guests: CuratedProjectGuest[] = guestRows.map((row) => {
+      const member = Array.isArray(row.workspace_member)
+        ? row.workspace_member[0]
+        : row.workspace_member;
+      const profile = Array.isArray(member?.profile)
+        ? member?.profile[0]
+        : member?.profile;
+      return {
+        id: row.id,
+        displayName: profile?.display_name ?? null,
+        role: member?.role ?? "guest",
+        grantedAt: row.granted_at,
+      };
+    });
+
+    const pendingRows = (pendingRowsRaw ?? []) as Array<{
+      id: string;
+      email: string;
+      created_at: string;
+      expires_at: string;
+    }>;
+    const pendingInvites: CuratedProjectPendingInvite[] = pendingRows.map(
+      (row) => ({
+        id: row.id,
+        email: row.email,
+        createdAt: row.created_at,
+        expiresAt: row.expires_at,
+      }),
+    );
+
+    return (
+      <CuratedProjectRoom
+        project={{
+          id: project.id,
+          title: project.title,
+          brief: project.brief,
+          status: project.status,
+          workspace_id: project.workspace_id,
+          workspace_name: workspaceName,
+          created_at: project.created_at,
+          target_delivery_at: project.target_delivery_at,
+        }}
+        guests={guests}
+        pendingInvites={pendingInvites}
+        locale={locale}
+        labels={{
+          eyebrow: tDetail("curated.eyebrow"),
+          subtitle: tDetail("curated.subtitle"),
+          workspace: tDetail("curated.workspace"),
+          status: tDetail("curated.status"),
+          created: tDetail("curated.created"),
+          targetDelivery: tDetail("curated.target_delivery"),
+          unset: tDetail("curated.unset"),
+          briefTitle: tDetail("curated.brief_title"),
+          briefEmpty: tDetail("curated.brief_empty"),
+          collaboratorsTitle: tDetail("curated.collaborators_title"),
+          collaboratorsEmpty: tDetail("curated.collaborators_empty"),
+          pendingTitle: tDetail("curated.pending_title"),
+          pendingEmpty: tDetail("curated.pending_empty"),
+          invitedAt: tDetail("curated.invited_at"),
+          expiresAt: tDetail("curated.expires_at"),
+        }}
+      />
+    );
+  }
 
   // Fetch creator display name for the brief tab Stage 3 metadata.
   // Use the same service-role bypass pattern (profiles may be RLS-restricted
@@ -343,14 +462,6 @@ export default async function ProjectDetailPage({
   } catch {
     // Non-fatal — render empty attachments section
   }
-
-  const viewerRole: "admin" | "client" = isYagiAdmin || isWsAdmin
-    ? "admin"
-    : "client";
-
-  const localeNarrow: "ko" | "en" = locale === "en" ? "en" : "ko";
-  const workspaceName = project.workspace?.name ?? "—";
-  const brandName = project.brand?.name ?? null;
 
   // Status pill label (uses existing translations namespace -- same map
   // already powers StatusBadge elsewhere).

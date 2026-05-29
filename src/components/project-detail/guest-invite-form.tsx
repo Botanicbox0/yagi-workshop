@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Copy, MailPlus } from "lucide-react";
@@ -20,6 +21,7 @@ export function GuestInviteForm({
   projectId: string;
 }) {
   const t = useTranslations("project_detail.guest.invite");
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -38,12 +40,13 @@ export function GuestInviteForm({
     });
     setSubmitting(false);
     if (!result.ok) {
-      toast.error(t(`error_${result.error}` as "error_db"));
+      toast.error(t(`error_${result.error}` as Parameters<typeof t>[0]));
       return;
     }
     setEmail("");
     setInviteUrl(result.inviteUrl);
     toast.success(t("success"));
+    router.refresh();
   }
 
   async function onCopy() {
@@ -57,10 +60,10 @@ export function GuestInviteForm({
   }
 
   return (
-    <div className="w-full rounded-card border border-border bg-card-deep p-4 md:max-w-xl">
+    <div className="w-full rounded-lg border border-border/70 bg-surface-card p-4 md:max-w-xl">
       <div className="mb-3 flex items-center gap-2">
         <MailPlus className="h-4 w-4 text-brand" aria-hidden="true" />
-        <h2 className="text-sm font-semibold ink-primary">{t("title")}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
@@ -81,8 +84,8 @@ export function GuestInviteForm({
         </Button>
       </div>
       {inviteUrl && (
-        <div className="mt-3 flex flex-col gap-2 rounded-card border border-border bg-background p-3 sm:flex-row sm:items-center">
-          <p className="min-w-0 flex-1 truncate text-xs ink-tertiary">
+        <div className="mt-3 flex flex-col gap-2 rounded-lg border border-border/70 bg-background p-3 sm:flex-row sm:items-center">
+          <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
             {inviteUrl}
           </p>
           <Button

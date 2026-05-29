@@ -27,6 +27,7 @@ export type ProjectStatus =
 export type ProjectQueueRow = {
   id: string;
   title: string;
+  project_type: string;
   status: ProjectStatus;
   submitted_at: string | null;
   created_at: string;
@@ -40,15 +41,21 @@ export type ProjectsQueueProps = {
   initialTab?: ProjectStatus;
 };
 
-type TabKey = 'newly_submitted' | 'in_review' | 'in_progress' | 'in_revision' | 'delivered' | 'approved';
+type TabKey =
+  | 'draft'
+  | 'in_review'
+  | 'in_progress'
+  | 'in_revision'
+  | 'delivered'
+  | 'approved';
 
 const TABS: Array<{ key: TabKey; status: ProjectStatus; label: string }> = [
-  { key: 'newly_submitted', status: 'in_review', label: '신규 접수' },
-  { key: 'in_review', status: 'in_review', label: '검토 중' },
-  { key: 'in_progress', status: 'in_progress', label: '진행 중' },
-  { key: 'in_revision', status: 'in_revision', label: '수정 중' },
-  { key: 'delivered', status: 'delivered', label: '납품됨' },
-  { key: 'approved', status: 'approved', label: '승인 완료' },
+  { key: 'draft', status: 'draft', label: 'draft' },
+  { key: 'in_review', status: 'in_review', label: 'in_review' },
+  { key: 'in_progress', status: 'in_progress', label: 'in_progress' },
+  { key: 'in_revision', status: 'in_revision', label: 'in_revision' },
+  { key: 'delivered', status: 'delivered', label: 'delivered' },
+  { key: 'approved', status: 'approved', label: 'approved' },
 ];
 
 export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQueueProps) {
@@ -105,18 +112,38 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
 
     switch (project.status) {
       case 'in_review':
-        actions.push({ label: '진행 시작', action: 'start', variant: 'primary' });
+        actions.push({
+          label: t('admin.projects.queue.action_start'),
+          action: 'start',
+          variant: 'primary',
+        });
         break;
       case 'in_progress':
-        actions.push({ label: '납품 완료', action: 'deliver', variant: 'primary' });
+        actions.push({
+          label: t('admin.projects.queue.action_deliver'),
+          action: 'deliver',
+          variant: 'primary',
+        });
         break;
       case 'in_revision':
-        actions.push({ label: '재시작', action: 'start', variant: 'primary' });
+        actions.push({
+          label: t('admin.projects.queue.action_restart'),
+          action: 'start',
+          variant: 'primary',
+        });
         break;
       case 'delivered':
-        return <span className="text-xs text-zinc-400">대기 중</span>;
+        return (
+          <span className="text-xs text-muted-foreground">
+            {t('admin.projects.queue.waiting')}
+          </span>
+        );
       case 'approved':
-        actions.push({ label: '아카이브', action: 'archive', variant: 'primary' });
+        actions.push({
+          label: t('admin.projects.queue.action_archive'),
+          action: 'archive',
+          variant: 'primary',
+        });
         break;
       case 'draft':
       case 'submitted':
@@ -135,11 +162,13 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
             className={cn(
               'text-xs font-medium px-3 py-1 rounded-md transition-colors',
               variant === 'primary'
-                ? 'bg-foreground text-background hover:bg-foreground/90'
-                : 'bg-background text-foreground border border-border/40 hover:bg-zinc-50'
+                ? 'bg-brand text-brand-on hover:bg-brand/90'
+                : 'bg-background text-foreground border border-border/70 hover:bg-accent'
             )}
           >
-            {loadingId === project.id ? '처리 중...' : label}
+            {loadingId === project.id
+              ? t('admin.projects.queue.processing')
+              : label}
           </button>
         ))}
       </div>
@@ -149,24 +178,24 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
   return (
     <div>
       {/* Tab strip */}
-      <div className="flex gap-6 border-b border-border mb-6">
+      <div className="mb-6 flex gap-3 overflow-x-auto border-b border-border/70">
         {TABS.map(({ key, status, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(status)}
             className={cn(
-              'pb-3 text-sm font-medium transition-colors relative',
+              'relative whitespace-nowrap pb-3 text-sm font-medium transition-colors',
               activeTab === status
                 ? 'text-foreground font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            {label}
-            <span className="ml-2 inline-flex items-center justify-center bg-zinc-100 text-zinc-700 rounded-full px-2 py-0.5 text-xs font-semibold">
+            {t(`admin.projects.queue.tabs.${label}` as Parameters<typeof t>[0])}
+            <span className="ml-2 inline-flex items-center justify-center rounded-full bg-surface-card px-2 py-0.5 text-xs font-semibold text-muted-foreground">
               {getTabCount(status)}
             </span>
             {activeTab === status && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
             )}
           </button>
         ))}
@@ -176,22 +205,35 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
       <div className="space-y-4">
         {filteredProjects.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
-            {t('projects.admin.queue.empty')}
+            {t('admin.projects.queue.empty')}
           </div>
         ) : (
           filteredProjects.map((project) => (
             <Link
               key={project.id}
               href={`/app/projects/${project.id}` as `/app/projects/${string}`}
-              className="block p-4 rounded-lg border border-border/40 hover:bg-zinc-50 transition-colors divide-y divide-border/40"
+              className="block divide-y divide-border/70 rounded-lg border border-border/70 bg-surface-raised p-4 transition-colors hover:border-brand/40"
             >
               <div className="flex items-start justify-between pb-3">
                 <div className="flex-1">
-                  <h3 className="font-suit font-semibold text-sm text-foreground mb-1">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-border/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      {t(
+                        `admin.projects.queue.project_type.${project.project_type}` as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                    </span>
+                  </div>
+                  <h3 className="mb-1 text-sm font-semibold text-foreground">
                     {project.title}
                   </h3>
-                  <p className="text-sm text-zinc-600 mb-0.5">{project.client?.name}</p>
-                  <p className="text-xs text-zinc-500">{project.workspace?.name}</p>
+                  <p className="mb-0.5 text-sm text-muted-foreground">
+                    {project.client?.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {project.workspace?.name}
+                  </p>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
                   <StatusBadge status={project.status} />
@@ -209,7 +251,11 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
                       minute: '2-digit',
                     }).format(new Date(project.submitted_at || project.created_at))}
                   </span>
-                  <span>참고: {project.ref_count}</span>
+                  <span>
+                    {t('admin.projects.queue.references', {
+                      count: project.ref_count,
+                    })}
+                  </span>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
                   {getActionButtons(project)}

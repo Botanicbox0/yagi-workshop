@@ -1,14 +1,16 @@
-import { getTranslations } from 'next-intl/server';
-import { createSupabaseServer } from '@/lib/supabase/server';
-import { ProjectsQueue } from '@/components/admin/projects-queue';
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
+import { Plus } from "lucide-react";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { ProjectsQueue } from "@/components/admin/projects-queue";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
 export default async function AdminProjectsPage({ params }: Props) {
-  await params; // params required by Next.js route convention
-  const tAdmin = await getTranslations('admin');
+  const { locale } = await params;
+  const tAdmin = await getTranslations({ locale, namespace: "admin" });
 
   const supabase = await createSupabaseServer();
 
@@ -24,6 +26,7 @@ export default async function AdminProjectsPage({ params }: Props) {
       id,
       title,
       status,
+      project_type,
       submitted_at,
       created_at,
       created_by,
@@ -33,11 +36,11 @@ export default async function AdminProjectsPage({ params }: Props) {
       boards:project_boards(asset_index)
     `
     )
-    .in('status', ['in_review', 'in_progress', 'in_revision', 'delivered', 'approved'])
-    .order('submitted_at', { ascending: false, nullsFirst: false });
+    .in("status", ["draft", "in_review", "in_progress", "in_revision", "delivered", "approved"])
+    .order("submitted_at", { ascending: false, nullsFirst: false });
 
   if (error) {
-    console.error('[AdminProjectsPage] Supabase error:', error);
+    console.error("[AdminProjectsPage] Supabase error:", error);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Database query result typing
@@ -54,6 +57,7 @@ export default async function AdminProjectsPage({ params }: Props) {
     return {
       id: p.id,
       title: p.title,
+      project_type: p.project_type,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic status type from database
       status: p.status as any,
       submitted_at: p.submitted_at,
@@ -65,19 +69,29 @@ export default async function AdminProjectsPage({ params }: Props) {
   });
 
   return (
-    <div className="px-10 py-12 max-w-6xl">
-      {/* Header with eyebrow */}
-      <div className="mb-12">
-        <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-2">
-          {tAdmin('label')}
-        </p>
-        <h1 className="font-suit text-3xl font-bold tracking-tight">
-          프로젝트 관리
-        </h1>
+    <main className="mx-auto w-full max-w-content px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-label text-brand">
+            {tAdmin("label")}
+          </p>
+          <h1 className="text-3xl font-semibold text-foreground keep-all sm:text-4xl">
+            {tAdmin("projects.queue_title")}
+          </h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground keep-all">
+            {tAdmin("projects.queue_description")}
+          </p>
+        </div>
+        <Link
+          href="/app/admin/projects/curated/new"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {tAdmin("projects.curated_new_cta")}
+        </Link>
       </div>
 
-      {/* Queue component */}
-      <ProjectsQueue projects={projectRows} initialTab="in_review" />
-    </div>
+      <ProjectsQueue projects={projectRows} initialTab="draft" />
+    </main>
   );
 }
