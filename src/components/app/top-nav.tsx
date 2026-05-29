@@ -13,6 +13,7 @@ import {
   Megaphone,
   Search,
   Sparkles,
+  UserRound,
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
@@ -40,6 +41,7 @@ type TopNavItem = {
     | "explore"
     | "projects"
     | "campaigns"
+    | "twins"
     | "americano"
     | "assets"
     | "billing";
@@ -51,6 +53,7 @@ const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "explore", href: "/app/explore", icon: Sparkles },
   { key: "projects", href: "/app/projects", icon: FolderOpen },
   { key: "campaigns", href: "/app/campaigns", icon: Megaphone },
+  { key: "twins", href: "/app/twins", icon: UserRound },
   { key: "americano", href: "/app/americano", icon: Coffee },
   { key: "assets", href: "/app/assets", icon: Archive },
   { key: "billing", href: "/app/billing", icon: CreditCard },
@@ -100,7 +103,11 @@ export function TopNav({
           </span>
         </Link>
 
-        <DesktopNav pathname={pathname} t={t} />
+        <DesktopNav
+          pathname={pathname}
+          t={t}
+          showArtistTwins={activeWorkspace?.kind === "artist"}
+        />
 
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
           <CreditBalance label={t("credit_balance")} />
@@ -152,16 +159,22 @@ export function TopNav({
 function DesktopNav({
   pathname,
   t,
+  showArtistTwins,
 }: {
   pathname: string;
   t: ReturnType<typeof useTranslations>;
+  showArtistTwins: boolean;
 }) {
+  const items = TOP_NAV_ITEMS.filter(
+    (item) => item.key !== "twins" || showArtistTwins,
+  );
+
   return (
     <nav
       className="hidden min-w-0 flex-1 items-center justify-center gap-1 px-2 lg:flex"
       aria-label="Primary"
     >
-      {TOP_NAV_ITEMS.map((item) => (
+      {items.map((item) => (
         <TopNavLink
           key={item.key}
           item={item}
@@ -269,6 +282,9 @@ function MobileMenu({
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
+  const items = TOP_NAV_ITEMS.filter(
+    (item) => item.key !== "twins" || activeWorkspace?.kind === "artist",
+  );
 
   useEffect(() => {
     setOpen(false);
@@ -318,7 +334,7 @@ function MobileMenu({
         </div>
 
         <nav className="mt-6 flex flex-col gap-1" aria-label="Primary">
-          {TOP_NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <TopNavLink
               key={item.key}
               item={item}

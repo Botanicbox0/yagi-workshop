@@ -206,6 +206,7 @@
     "explore": "Explore",
     "projects": "Projects",
     "campaigns": "Campaigns",
+    "twins": "My Twins",
     "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
@@ -280,6 +281,57 @@
       "eyebrow": "Billing",
       "title": "Billing",
       "description": "The surface for payment, tax invoice, and billing flows. Tax details are collected at payment or invoice issuance."
+    }
+  },
+  "twins": {
+    "eyebrow": "Digital Twin",
+    "title": "My Twins",
+    "description": "Manage the Digital Twin personas owned by this Artist workspace. Most artists start with one self twin, then add separate personas only when needed.",
+    "empty": {
+      "title": "No twins yet",
+      "description": "Start with a self twin, then add separate personas such as anime, younger-era, actor, or influencer versions when needed."
+    },
+    "create": {
+      "title": "Add twin"
+    },
+    "fields": {
+      "name": "Name",
+      "name_placeholder": "Leave blank to use the artist name",
+      "type": "Type",
+      "type_placeholder": "e.g. self, anime, actor",
+      "description": "Description",
+      "description_placeholder": "Tone, usage scope, and notes for this persona"
+    },
+    "actions": {
+      "create": "Create twin",
+      "creating": "Creating...",
+      "save": "Save",
+      "saving": "Saving...",
+      "activate": "Activate",
+      "pause": "Pause"
+    },
+    "self_twin": "Self twin",
+    "status": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "paused_help": "Paused means new collaboration and production stop for this persona. In-flight work and legal notice follow the contract terms.",
+    "fee": {
+      "title": "Minimum collaboration fee",
+      "label": "Amount",
+      "placeholder": "e.g. 3000000",
+      "public": "Fee public",
+      "private": "Fee private",
+      "unset": "Not set"
+    },
+    "visual_empty": "No cover visual",
+    "toast": {
+      "create_success": "Twin created.",
+      "update_success": "Twin details saved.",
+      "status_success": "Twin status changed.",
+      "fee_success": "Minimum fee saved.",
+      "validation_error": "Check the entered values.",
+      "generic_error": "Could not save twin details."
     }
   },
   "billing_page": {

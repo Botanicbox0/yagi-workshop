@@ -206,6 +206,7 @@
     "explore": "Explore",
     "projects": "프로젝트",
     "campaigns": "캠페인",
+    "twins": "내 트윈",
     "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
@@ -280,6 +281,57 @@
       "eyebrow": "Billing",
       "title": "Billing",
       "description": "결제, 세금계산서, 송장 흐름을 다루는 화면입니다. 세무정보는 결제·발행 시점에 수집합니다."
+    }
+  },
+  "twins": {
+    "eyebrow": "Digital Twin",
+    "title": "내 트윈",
+    "description": "아티스트 본인이 소유한 디지털 트윈 페르소나를 관리합니다. 대부분은 나 자신 트윈 1개로 시작하고, 필요할 때만 별도 페르소나를 추가합니다.",
+    "empty": {
+      "title": "아직 등록된 트윈이 없습니다",
+      "description": "먼저 나 자신 트윈을 하나 만들고, 필요할 때 애니메 캐릭터·과거 버전·배우 페르소나 같은 별도 트윈을 추가하세요."
+    },
+    "create": {
+      "title": "트윈 추가"
+    },
+    "fields": {
+      "name": "이름",
+      "name_placeholder": "비우면 아티스트명 사용",
+      "type": "타입",
+      "type_placeholder": "예: 나 자신, 애니메, 배우",
+      "description": "설명",
+      "description_placeholder": "이 페르소나의 톤, 활용 범위, 주의사항"
+    },
+    "actions": {
+      "create": "트윈 만들기",
+      "creating": "생성 중...",
+      "save": "저장",
+      "saving": "저장 중...",
+      "activate": "활성화",
+      "pause": "일시중지"
+    },
+    "self_twin": "나 자신 트윈",
+    "status": {
+      "active": "활성",
+      "paused": "일시중지"
+    },
+    "paused_help": "일시중지는 새 협업·제작을 중단하는 상태입니다. 진행 중 작업 처리와 법적 통지는 계약 조건에 따릅니다.",
+    "fee": {
+      "title": "최소 협업 금액",
+      "label": "금액",
+      "placeholder": "예: 3000000",
+      "public": "금액 공개",
+      "private": "금액 비공개",
+      "unset": "미설정"
+    },
+    "visual_empty": "대표 비주얼 없음",
+    "toast": {
+      "create_success": "트윈을 만들었습니다.",
+      "update_success": "트윈 정보를 저장했습니다.",
+      "status_success": "트윈 상태를 변경했습니다.",
+      "fee_success": "최소 금액을 저장했습니다.",
+      "validation_error": "입력값을 확인해 주세요.",
+      "generic_error": "트윈 정보를 저장하지 못했습니다."
     }
   },
   "billing_page": {
