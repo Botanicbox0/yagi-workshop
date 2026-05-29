@@ -324,12 +324,25 @@
       "private": "금액 비공개",
       "unset": "미설정"
     },
+    "assets": {
+      "title": "학습 소재",
+      "description": "이미지, 영상, 음성 같은 트윈 제작 참고 소재를 이 페르소나에 묶어 둡니다.",
+      "empty": "아직 업로드된 소재가 없습니다.",
+      "upload": "업로드",
+      "uploading": "업로드 중...",
+      "delete": "삭제",
+      "note": "소재 메모",
+      "note_placeholder": "메모 (선택)",
+      "unsupported": "지원하지 않는 파일 형식입니다."
+    },
     "visual_empty": "대표 비주얼 없음",
     "toast": {
       "create_success": "트윈을 만들었습니다.",
       "update_success": "트윈 정보를 저장했습니다.",
       "status_success": "트윈 상태를 변경했습니다.",
       "fee_success": "최소 금액을 저장했습니다.",
+      "asset_success": "학습 소재를 업로드했습니다.",
+      "asset_delete_success": "학습 소재를 삭제했습니다.",
       "validation_error": "입력값을 확인해 주세요.",
       "generic_error": "트윈 정보를 저장하지 못했습니다."
     }

@@ -324,12 +324,25 @@
       "private": "Fee private",
       "unset": "Not set"
     },
+    "assets": {
+      "title": "Training material",
+      "description": "Attach images, videos, audio, and other reference material to this persona for future twin production.",
+      "empty": "No material uploaded yet.",
+      "upload": "Upload",
+      "uploading": "Uploading...",
+      "delete": "Delete",
+      "note": "Material note",
+      "note_placeholder": "Note (optional)",
+      "unsupported": "This file type is not supported."
+    },
     "visual_empty": "No cover visual",
     "toast": {
       "create_success": "Twin created.",
       "update_success": "Twin details saved.",
       "status_success": "Twin status changed.",
       "fee_success": "Minimum fee saved.",
+      "asset_success": "Training material uploaded.",
+      "asset_delete_success": "Training material deleted.",
       "validation_error": "Check the entered values.",
       "generic_error": "Could not save twin details."
     }

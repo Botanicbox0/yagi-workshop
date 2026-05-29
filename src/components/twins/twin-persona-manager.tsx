@@ -8,15 +8,21 @@ import {
   PlayCircle,
   Plus,
   Save,
+  Trash2,
+  Upload,
   UserRound,
 } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 import {
+  createTwinPersonaAssetAction,
   createPersona,
+  deleteTwinPersonaAssetAction,
+  getTwinPersonaAssetUploadPutUrlAction,
   updatePersona,
   updatePersonaFee,
   updatePersonaStatus,
+  type TwinPersonaAsset,
   type TwinPersona,
 } from "@/app/[locale]/app/twins/actions";
 import { Button } from "@/components/ui/button";
@@ -53,10 +59,21 @@ type Labels = {
   feePrivate: string;
   feeUnset: string;
   visualEmpty: string;
+  assetsTitle: string;
+  assetsDescription: string;
+  assetsEmpty: string;
+  assetsUpload: string;
+  assetsUploading: string;
+  assetsDelete: string;
+  assetsNote: string;
+  assetsNotePlaceholder: string;
+  assetsUnsupported: string;
   successCreate: string;
   successUpdate: string;
   successStatus: string;
   successFee: string;
+  successAsset: string;
+  successAssetDelete: string;
   errorValidation: string;
   errorGeneric: string;
 };
@@ -65,12 +82,14 @@ export function TwinPersonaManager({
   artistWorkspaceId,
   fallbackName,
   personas,
+  assets,
   labels,
   locale,
 }: {
   artistWorkspaceId: string;
   fallbackName: string;
   personas: TwinPersona[];
+  assets: TwinPersonaAsset[];
   labels: Labels;
   locale: string;
 }) {
@@ -130,6 +149,7 @@ export function TwinPersonaManager({
               key={persona.id}
               artistWorkspaceId={artistWorkspaceId}
               persona={persona}
+              assets={assets.filter((asset) => asset.persona_id === persona.id)}
               fallbackName={fallbackName}
               labels={labels}
               locale={locale}
@@ -197,6 +217,7 @@ export function TwinPersonaManager({
 function TwinPersonaCard({
   artistWorkspaceId,
   persona,
+  assets,
   fallbackName,
   labels,
   locale,
@@ -204,6 +225,7 @@ function TwinPersonaCard({
 }: {
   artistWorkspaceId: string;
   persona: TwinPersona;
+  assets: TwinPersonaAsset[];
   fallbackName: string;
   labels: Labels;
   locale: string;
@@ -221,6 +243,9 @@ function TwinPersonaCard({
   const [isSavingProfile, startProfileTransition] = useTransition();
   const [isSavingFee, startFeeTransition] = useTransition();
   const [isToggling, startStatusTransition] = useTransition();
+  const [isUploading, startUploadTransition] = useTransition();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [assetNote, setAssetNote] = useState("");
 
   useEffect(() => {
     setName(persona.name ?? "");
@@ -304,6 +329,83 @@ function TwinPersonaCard({
       }
 
       toast.success(labels.successStatus);
+      onRefresh();
+    });
+  }
+
+  function uploadAsset() {
+    if (!selectedFile) return;
+    const file = selectedFile;
+
+    startUploadTransition(async () => {
+      const uploadResult = await getTwinPersonaAssetUploadPutUrlAction({
+        artistWorkspaceId,
+        personaId: persona.id,
+        fileName: file.name,
+        contentType: file.type || "application/octet-stream",
+        sizeBytes: file.size,
+      });
+
+      if (!uploadResult.ok) {
+        toast.error(
+          uploadResult.error === "unsupported_file"
+            ? labels.assetsUnsupported
+            : labels.errorGeneric,
+        );
+        return;
+      }
+      if (!uploadResult.upload) {
+        toast.error(labels.errorGeneric);
+        return;
+      }
+
+      const putResponse = await fetch(uploadResult.upload.putUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+        },
+        body: file,
+      });
+
+      if (!putResponse.ok) {
+        toast.error(labels.errorGeneric);
+        return;
+      }
+
+      const createResult = await createTwinPersonaAssetAction({
+        artistWorkspaceId,
+        personaId: persona.id,
+        storagePath: uploadResult.upload.storagePath,
+        fileName: file.name,
+        note: assetNote,
+      });
+
+      if (!createResult.ok) {
+        toast.error(labels.errorGeneric);
+        return;
+      }
+
+      setSelectedFile(null);
+      setAssetNote("");
+      toast.success(labels.successAsset);
+      onRefresh();
+    });
+  }
+
+  function deleteAsset(asset: TwinPersonaAsset) {
+    startUploadTransition(async () => {
+      const result = await deleteTwinPersonaAssetAction({
+        artistWorkspaceId,
+        personaId: persona.id,
+        assetId: asset.id,
+      });
+
+      if (!result.ok) {
+        toast.error(labels.errorGeneric);
+        return;
+      }
+
+      toast.success(labels.successAssetDelete);
       onRefresh();
     });
   }
@@ -460,6 +562,91 @@ function TwinPersonaCard({
                 {isSavingFee ? labels.saving : labels.save}
               </Button>
             </div>
+          </div>
+
+          <div className="space-y-4 rounded-lg border border-border/70 bg-surface-card-deep p-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground keep-all">
+                {labels.assetsTitle}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground keep-all">
+                {labels.assetsDescription}
+              </p>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+              <Input
+                type="file"
+                accept="image/*,video/*,audio/*,.pdf,.zip"
+                onChange={(event) =>
+                  setSelectedFile(event.target.files?.[0] ?? null)
+                }
+                className="bg-surface-card"
+              />
+              <Input
+                value={assetNote}
+                onChange={(event) => setAssetNote(event.target.value)}
+                placeholder={labels.assetsNotePlaceholder}
+                maxLength={500}
+                aria-label={labels.assetsNote}
+                className="bg-surface-card"
+              />
+              <Button
+                type="button"
+                onClick={uploadAsset}
+                disabled={!selectedFile || isUploading}
+                className="gap-2 rounded-full bg-brand px-5 text-brand-on hover:bg-brand/90"
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                )}
+                {isUploading ? labels.assetsUploading : labels.assetsUpload}
+              </Button>
+            </div>
+
+            {assets.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border/70 bg-surface-card px-3 py-3 text-xs text-muted-foreground keep-all">
+                {labels.assetsEmpty}
+              </p>
+            ) : (
+              <div className="divide-y divide-border/70 overflow-hidden rounded-md border border-border/70 bg-surface-card">
+                {assets.map((asset) => (
+                  <div
+                    key={asset.id}
+                    className="grid gap-3 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {asset.file_name ?? asset.storage_path}
+                        </p>
+                        {asset.asset_type && (
+                          <span className="rounded-full border border-border/70 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                            {asset.asset_type}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {asset.note || asset.storage_path}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteAsset(asset)}
+                      disabled={isUploading}
+                      className="h-8 gap-1.5 rounded-full text-muted-foreground hover:text-foreground"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      {labels.assetsDelete}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

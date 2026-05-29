@@ -4,7 +4,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { redirect } from "@/i18n/routing";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { TwinPersonaManager } from "@/components/twins/twin-persona-manager";
-import { listMyPersonas } from "./actions";
+import { listMyPersonaAssets, listMyPersonas } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -48,6 +48,13 @@ export default async function TwinsPage({ params }: Props) {
 
   const fallbackName = profile?.display_name ?? active.name;
   const personas = personaResult.ok ? (personaResult.personas ?? []) : [];
+  const assetResult = await listMyPersonaAssets({
+    artistWorkspaceId: active.id,
+  });
+  if (!assetResult.ok) {
+    console.error("[TwinsPage] listMyPersonaAssets error:", assetResult);
+  }
+  const assets = assetResult.ok ? (assetResult.assets ?? []) : [];
 
   return (
     <main className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
@@ -69,6 +76,7 @@ export default async function TwinsPage({ params }: Props) {
         artistWorkspaceId={active.id}
         fallbackName={fallbackName}
         personas={personas}
+        assets={assets}
         locale={locale}
         labels={{
           emptyTitle: t("empty.title"),
@@ -97,6 +105,17 @@ export default async function TwinsPage({ params }: Props) {
           feePrivate: t("fee.private"),
           feeUnset: t("fee.unset"),
           visualEmpty: t("visual_empty"),
+          assetsTitle: t("assets.title"),
+          assetsDescription: t("assets.description"),
+          assetsEmpty: t("assets.empty"),
+          assetsUpload: t("assets.upload"),
+          assetsUploading: t("assets.uploading"),
+          assetsDelete: t("assets.delete"),
+          assetsNote: t("assets.note"),
+          assetsNotePlaceholder: t("assets.note_placeholder"),
+          assetsUnsupported: t("assets.unsupported"),
+          successAsset: t("toast.asset_success"),
+          successAssetDelete: t("toast.asset_delete_success"),
           successCreate: t("toast.create_success"),
           successUpdate: t("toast.update_success"),
           successStatus: t("toast.status_success"),
