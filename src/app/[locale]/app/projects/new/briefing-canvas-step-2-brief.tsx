@@ -154,7 +154,7 @@ export function Step2BriefColumn({
   }
 
   return (
-    <section className="rounded-3xl border border-border/40 p-6 bg-background flex flex-col gap-5">
+    <section className="rounded-lg border border-border/70 bg-surface-raised p-5 lg:p-6 flex flex-col gap-5">
       <header>
         <h2 className="text-base font-semibold tracking-tight keep-all">
           {t("briefing.step2.sections.brief.title")}

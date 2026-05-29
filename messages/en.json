@@ -988,10 +988,10 @@
             }
           },
           "description": {
-            "label": "Briefly describe the project",
-            "helper": "Optional. The rest can wait until the next step.",
-            "optional": "(optional)",
-            "placeholder": "e.g., spring season product launch. We need short Instagram Reels content."
+            "label": "Objective / direction",
+            "helper": "Tell us what this project should achieve.",
+            "optional": "",
+            "placeholder": "e.g., We want the new product to land with younger customers and need a more cinematic AI visual direction than our usual ads."
           }
         },
         "cta": {
@@ -999,7 +999,8 @@
         },
         "error": {
           "name_required": "Please enter a project name",
-          "deliverable_types_required": "Pick at least one content type"
+          "deliverable_types_required": "Pick at least one content type",
+          "description_required": "Enter the objective and direction"
         },
         "toast": {
           "unauthenticated": "You need to be signed in. Please sign in and try again.",
@@ -1040,7 +1041,8 @@
             }
           },
           "detail": {
-            "title": "Details",
+            "title": "Audience",
+            "helper": "Tell us who this is for first. Mood, aspect ratio, and channel specs can wait until the kickoff and production stage.",
             "mood": {
               "label": "Mood / keywords",
               "helper": "Multiple selection + free input",
@@ -1124,7 +1126,7 @@
           "empty_placeholder": "—",
           "project_name": "Project name",
           "deliverable_types": "Content",
-          "description": "Core brief",
+          "description": "Objective / direction",
           "documents_brief": "{count} materials",
           "documents_reference": "{count} references",
           "mood": "Mood",
@@ -1146,11 +1148,13 @@
             }
           },
           "delivery": {
-            "label": "Target delivery"
+            "label": "Target delivery",
+            "placeholder": "e.g., June 15, 2026"
           },
           "meeting": {
             "label": "Preferred meeting time",
-            "helper": "Select a date and time if you'd like a kickoff meeting"
+            "helper": "Write a date and time if you'd like a kickoff meeting",
+            "placeholder": "e.g., June 10, 2026 14:30"
           },
           "twin": {
             "label": "🪞 Interested in Digital Twin",

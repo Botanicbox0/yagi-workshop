@@ -31,7 +31,6 @@ const sharedFields = {
   title: z.string().trim().min(1).max(200),
   description: z.string().max(4000).optional().nullable(),
   brand_id: z.string().uuid().nullable().optional(),
-  tone: z.string().max(500).optional().nullable(),
   // Phase 2.7.2: free-text tag list (was a closed enum). Maps to the
   // existing `deliverable_types text[]` Postgres column — no migration
   // needed; the meaning shifts from "format" to "intended use".
@@ -92,7 +91,6 @@ export async function createProject(input: unknown): Promise<ActionResult> {
 
   // Column mapping notes:
   // - spec field `description` → DB column `brief` (no standalone `description` col)
-  // - spec field `tone` → NO matching column on `projects`; omitted from insert
   // - `estimated_budget_range` matches exactly
   const data = parsed.data;
 
@@ -200,7 +198,6 @@ const wizardDraftFields = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().max(4000).optional().nullable(),
   brand_id: z.string().uuid().nullable().optional(),
-  tone: z.string().max(500).optional().nullable(),
   deliverable_types: z
     .array(z.string().trim().min(1).max(60))
     .max(10)

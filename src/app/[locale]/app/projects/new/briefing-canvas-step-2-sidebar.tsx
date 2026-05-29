@@ -1,14 +1,10 @@
 "use client";
 
 // =============================================================================
-// Phase 5 Wave B task_05 v3 hotfix-5 — Step 2 detail (4 fields + autosave)
+// Phase 5 Wave B task_05 v3 hotfix-6 — Step 2 essential audience only
 //
-// Down from 12 fields to 4 after yagi visual review. Step 2 now hosts
-// only the "shape of the work" inputs:
-//   - mood_keywords + mood_keywords_free
-//   - visual_ratio + visual_ratio_custom
-//   - channels
-//   - target_audience
+// Production spec fields moved out of the intake form. Step 2 keeps only
+// target_audience because audience/objective is essential upfront.
 //
 // The remaining 6 fields (has_plan, additional_notes, budget_band,
 // target_delivery_at, meeting_preferred_at, interested_in_twin) move
@@ -16,11 +12,6 @@
 // task_06 v3. The DB columns are unchanged; updateProjectMetadataAction
 // keeps the full 12-field schema (every field optional / partial-update
 // safe) so Step 3 can reuse it.
-//
-// Layout (lg+):
-//   Row 1: mood             | visual_ratio
-//   Row 2: channels         | target_audience
-// (mobile stacks single column.)
 //
 // Local form state debounces 5 seconds then commits via
 // updateProjectMetadataAction. Visible status indicator in the sticky
@@ -48,171 +39,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateProjectMetadataAction } from "./briefing-step2-actions";
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const MOOD_OPTIONS = [
-  "emotional",
-  "sophisticated",
-  "humorous",
-  "dynamic",
-  "minimal",
-  "warm",
-  "luxurious",
-  "trendy",
-  "friendly",
-] as const;
-
-const CHANNEL_OPTIONS = [
-  "instagram",
-  "youtube",
-  "tiktok",
-  "facebook",
-  "website",
-  "offline",
-  "other",
-] as const;
-
-const VISUAL_RATIO_OPTIONS = [
-  "1_1",
-  "16_9",
-  "9_16",
-  "4_5",
-  "239_1",
-  "custom",
-] as const;
-
-// ---------------------------------------------------------------------------
-// Form state shape — 4 fields after hotfix-5. The remaining DB columns
-// (has_plan, additional_notes, budget_band, target_delivery_at,
-// meeting_preferred_at, interested_in_twin) ship in Step 3.
+// Form state shape — target_audience only.
 // ---------------------------------------------------------------------------
 
 export type SidebarFormData = {
-  mood_keywords: string[];
-  mood_keywords_free: string;
-  visual_ratio: string;
-  visual_ratio_custom: string;
-  channels: string[];
   target_audience: string;
 };
 
 export type AutosaveState = "idle" | "saving" | "saved" | "error";
-
-// ---------------------------------------------------------------------------
-// Multi-select chip
-// ---------------------------------------------------------------------------
-
-function ChipMulti({
-  options,
-  value,
-  onChange,
-  labelOf,
-}: {
-  options: readonly string[];
-  value: string[];
-  onChange: (next: string[]) => void;
-  labelOf: (opt: string) => string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {options.map((opt) => {
-        const selected = value.includes(opt);
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() =>
-              onChange(
-                selected
-                  ? value.filter((v) => v !== opt)
-                  : [...value, opt],
-              )
-            }
-            aria-pressed={selected}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-medium transition-colors keep-all",
-              selected
-                ? "bg-foreground text-background"
-                : "border border-border/60 hover:border-border",
-            )}
-          >
-            {labelOf(opt)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function ChipSingle({
-  options,
-  value,
-  onChange,
-  labelOf,
-}: {
-  options: readonly string[];
-  value: string;
-  onChange: (next: string) => void;
-  labelOf: (opt: string) => string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {options.map((opt) => {
-        const selected = value === opt;
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onChange(selected ? "" : opt)}
-            aria-pressed={selected}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-xs font-medium transition-colors keep-all",
-              selected
-                ? "bg-foreground text-background"
-                : "border border-border/60 hover:border-border",
-            )}
-          >
-            {labelOf(opt)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function FieldBlock({
-  title,
-  helper,
-  children,
-}: {
-  title: string;
-  helper?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <Label className="text-sm font-semibold tracking-tight keep-all">
-          {title}
-        </Label>
-        {helper && (
-          <p className="text-xs text-muted-foreground mt-1 keep-all leading-relaxed">
-            {helper}
-          </p>
-        )}
-      </div>
-      {children}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Sidebar component
@@ -246,18 +85,8 @@ export function Step2Sidebar({
     inFlightRef.current = true;
     try {
       onAutosaveStateRef.current("saving");
-      // Step 2 owns 4 fields. Step 3 (task_06 v3) sends the remaining
-      // 6 (has_plan, additional_notes, budget_band, target_delivery_at,
-      // meeting_preferred_at, interested_in_twin). The action's metadata
-      // schema treats every field as optional / partial-update safe, so
-      // omitting them here leaves their stored values untouched.
       const res = await updateProjectMetadataAction({
         projectId,
-        mood_keywords: snapshot.mood_keywords,
-        mood_keywords_free: snapshot.mood_keywords_free || null,
-        visual_ratio: snapshot.visual_ratio || null,
-        visual_ratio_custom: snapshot.visual_ratio_custom || null,
-        channels: snapshot.channels,
         target_audience: snapshot.target_audience || null,
       });
       if (res.ok) {
@@ -300,98 +129,27 @@ export function Step2Sidebar({
   ) => setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <section className="rounded-3xl border border-border/40 p-6 lg:p-8 bg-background flex flex-col gap-8">
+    <section className="rounded-lg border border-border/70 bg-surface-raised p-5 lg:p-6 flex flex-col gap-5">
       <header>
         <h2 className="text-base font-semibold tracking-tight keep-all">
           {t("briefing.step2.sections.detail.title")}
         </h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground keep-all">
+          {t("briefing.step2.sections.detail.helper")}
+        </p>
       </header>
 
-      {/* Internal 2-col form grid (full-width row). Mood / channels /
-          textareas span single cells; the divider span the full row. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
-        <FieldBlock
-          title={t("briefing.step2.sections.detail.mood.label")}
-          helper={t("briefing.step2.sections.detail.mood.helper")}
-        >
-          <ChipMulti
-            options={MOOD_OPTIONS}
-            value={form.mood_keywords}
-            onChange={(v) => set("mood_keywords", v)}
-            labelOf={(k) =>
-              t(
-                `briefing.step2.sections.detail.mood.options.${k}` as Parameters<
-                  typeof t
-                >[0],
-              )
-            }
-          />
-          <Input
-            value={form.mood_keywords_free}
-            onChange={(e) => set("mood_keywords_free", e.target.value)}
-            placeholder={t(
-              "briefing.step2.sections.detail.mood.free_input_placeholder",
-            )}
-            className="text-sm"
-          />
-        </FieldBlock>
-
-        <FieldBlock
-          title={t("briefing.step2.sections.detail.visual_ratio.label")}
-        >
-          <ChipSingle
-            options={VISUAL_RATIO_OPTIONS}
-            value={form.visual_ratio}
-            onChange={(v) => set("visual_ratio", v)}
-            labelOf={(k) =>
-              t(
-                `briefing.step2.sections.detail.visual_ratio.options.${k}` as Parameters<
-                  typeof t
-                >[0],
-              )
-            }
-          />
-          {form.visual_ratio === "custom" && (
-            <Input
-              value={form.visual_ratio_custom}
-              onChange={(e) => set("visual_ratio_custom", e.target.value)}
-              placeholder={t(
-                "briefing.step2.sections.detail.visual_ratio.custom_placeholder",
-              )}
-              className="text-sm max-w-xs"
-            />
-          )}
-        </FieldBlock>
-
-        <FieldBlock
-          title={t("briefing.step2.sections.detail.channels.label")}
-          helper={t("briefing.step2.sections.detail.channels.helper")}
-        >
-          <ChipMulti
-            options={CHANNEL_OPTIONS}
-            value={form.channels}
-            onChange={(v) => set("channels", v)}
-            labelOf={(k) =>
-              t(
-                `briefing.step2.sections.detail.channels.options.${k}` as Parameters<
-                  typeof t
-                >[0],
-              )
-            }
-          />
-        </FieldBlock>
-
-        <FieldBlock title={t("briefing.step2.sections.detail.target.label")}>
-          <Textarea
-            value={form.target_audience}
-            onChange={(e) => set("target_audience", e.target.value)}
-            placeholder={t(
-              "briefing.step2.sections.detail.target.placeholder",
-            )}
-            rows={3}
-            className="resize-none text-sm"
-          />
-        </FieldBlock>
+      <div className="flex flex-col gap-3">
+        <Label className="text-sm font-semibold tracking-tight keep-all">
+          {t("briefing.step2.sections.detail.target.label")}
+        </Label>
+        <Textarea
+          value={form.target_audience}
+          onChange={(e) => set("target_audience", e.target.value)}
+          placeholder={t("briefing.step2.sections.detail.target.placeholder")}
+          rows={4}
+          className="resize-none text-sm"
+        />
       </div>
     </section>
   );

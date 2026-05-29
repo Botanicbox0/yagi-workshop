@@ -5,8 +5,7 @@
 //
 // task_04 v3 (Step 1 → Step 2 transition):
 //   - ensureBriefingDraftProject(input) — INSERT new draft OR UPDATE
-//     existing draft with Step 1's 4 fields (name + deliverable_types
-//     + purpose + description?).
+//     existing draft with Step 1's essential intake fields.
 //
 // task_05 v3 (Step 2 — workspace 3-column + autosave):
 //   - getBriefingDocumentPutUrlAction(input)        — R2 presigned PUT
@@ -47,7 +46,7 @@ const ensureBriefingDraftInput = z.object({
     .array(z.string().trim().min(1).max(60))
     .min(1)
     .max(15),
-  description: z.string().trim().max(500).optional().nullable(),
+  description: z.string().trim().min(1).max(1000),
 });
 
 export type EnsureBriefingDraftInput = z.input<typeof ensureBriefingDraftInput>;
@@ -65,6 +64,26 @@ export type EnsureBriefingDraftResult =
         | "db";
       message?: string;
     };
+
+async function ensureProjectBriefRow(
+  supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
+  projectId: string,
+  userId: string,
+): Promise<string | null> {
+  const { data: existing, error: selectErr } = await supabase
+    .from("project_briefs")
+    .select("project_id")
+    .eq("project_id", projectId)
+    .maybeSingle();
+  if (selectErr) return selectErr.message;
+  if (existing) return null;
+
+  const { error: insertErr } = await supabase.from("project_briefs").insert({
+    project_id: projectId,
+    updated_by: userId,
+  });
+  return insertErr?.message ?? null;
+}
 
 export async function ensureBriefingDraftProject(
   input: unknown,
@@ -89,10 +108,7 @@ export async function ensureBriefingDraftProject(
     return { ok: false, error: "no_workspace" };
   }
 
-  // The `purpose` text[] column is added by migration 20260504162550 and is
-  // not in the auto-generated database.types.ts yet. Cast to any for the
-  // INSERT/UPDATE call sites only — same pattern Phase 3.0+ uses for
-  // newly-added columns awaiting the supabase gen types refresh.
+  // Cast to any for newly-added draft columns awaiting generated type refresh.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new Phase 5 columns not in generated types
   const sb = supabase as any;
 
@@ -148,6 +164,15 @@ export async function ensureBriefingDraftProject(
       if (updErr) {
         console.error("[ensureBriefingDraftProject] UPDATE error:", updErr);
         return { ok: false, error: "db", message: updErr.message };
+      }
+
+      const briefErr = await ensureProjectBriefRow(supabase, data.projectId, user.id);
+      if (briefErr) {
+        console.error(
+          "[ensureBriefingDraftProject] project_briefs ensure failed:",
+          briefErr,
+        );
+        return { ok: false, error: "db", message: `brief insert failed: ${briefErr}` };
       }
 
       revalidatePath("/[locale]/app/projects", "page");
@@ -227,6 +252,20 @@ export async function ensureBriefingDraftProject(
       ok: false,
       error: "db",
       message: insErr?.message ?? "insert failed",
+    };
+  }
+
+  const briefErr = await ensureProjectBriefRow(supabase, project.id, user.id);
+  if (briefErr) {
+    console.error(
+      "[ensureBriefingDraftProject] project_briefs insert failed (rolling back project):",
+      briefErr,
+    );
+    await sbAdmin.from("projects").delete().eq("id", project.id);
+    return {
+      ok: false,
+      error: "db",
+      message: `brief insert failed: ${briefErr}`,
     };
   }
 

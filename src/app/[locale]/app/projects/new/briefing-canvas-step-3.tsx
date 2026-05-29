@@ -88,9 +88,6 @@ type SummarySnapshot = {
   description: string | null;
   briefDocsCount: number;
   refDocsCount: number;
-  mood_keywords: string[];
-  visual_ratio: string | null;
-  channels: string[];
   target_audience: string | null;
 };
 
@@ -98,9 +95,6 @@ type ProjectRow = {
   title: string | null;
   deliverable_types: string[] | null;
   brief: string | null;
-  mood_keywords: string[] | null;
-  visual_ratio: string | null;
-  channels: string[] | null;
   target_audience: string | null;
   budget_band: string | null;
   target_delivery_at: string | null;
@@ -168,7 +162,7 @@ export function BriefingCanvasStep3({
         sb
           .from("projects")
           .select(
-            "title, deliverable_types, brief, mood_keywords, visual_ratio, channels, target_audience, budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin, additional_notes, has_external_brand_party",
+            "title, deliverable_types, brief, target_audience, budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin, additional_notes, has_external_brand_party",
           )
           .eq("id", projectId)
           .maybeSingle(),
@@ -192,9 +186,6 @@ export function BriefingCanvasStep3({
         description: proj?.brief ?? null,
         briefDocsCount: briefCount,
         refDocsCount: refCount,
-        mood_keywords: proj?.mood_keywords ?? [],
-        visual_ratio: proj?.visual_ratio ?? null,
-        channels: proj?.channels ?? [],
         target_audience: proj?.target_audience ?? null,
       });
       const seed: CommitFormData = {
@@ -344,24 +335,6 @@ export function BriefingCanvasStep3({
         typeof t
       >[0],
     );
-  const labelMood = (k: string) =>
-    t(
-      `briefing.step2.sections.detail.mood.options.${k}` as Parameters<
-        typeof t
-      >[0],
-    );
-  const labelVisualRatio = (k: string) =>
-    t(
-      `briefing.step2.sections.detail.visual_ratio.options.${k}` as Parameters<
-        typeof t
-      >[0],
-    );
-  const labelChannel = (k: string) =>
-    t(
-      `briefing.step2.sections.detail.channels.options.${k}` as Parameters<
-        typeof t
-      >[0],
-    );
 
   return (
     <TooltipProvider>
@@ -381,7 +354,7 @@ export function BriefingCanvasStep3({
 
         <div className="max-w-3xl mx-auto px-6 lg:px-12 flex flex-col gap-6">
           {/* Summary card */}
-          <section className="rounded-3xl border border-border/40 p-6 lg:p-8 bg-background flex flex-col gap-5">
+          <section className="rounded-lg border border-border/70 bg-surface-raised p-5 lg:p-6 flex flex-col gap-5">
             <h2 className="text-base font-semibold tracking-tight keep-all">
               {t("briefing.step3.summary.title")}
             </h2>
@@ -411,28 +384,6 @@ export function BriefingCanvasStep3({
               value=""
               labelOnly
             />
-            {summary.mood_keywords.length > 0 && (
-              <SummaryRow
-                label={t("briefing.step3.summary.mood")}
-                value={summary.mood_keywords.map(labelMood).join(", ")}
-              />
-            )}
-            {summary.visual_ratio && (
-              <SummaryRow
-                label={t("briefing.step3.summary.visual_ratio")}
-                value={
-                  summary.visual_ratio === "custom"
-                    ? summary.visual_ratio
-                    : labelVisualRatio(summary.visual_ratio)
-                }
-              />
-            )}
-            {summary.channels.length > 0 && (
-              <SummaryRow
-                label={t("briefing.step3.summary.channels")}
-                value={summary.channels.map(labelChannel).join(", ")}
-              />
-            )}
             {summary.target_audience && (
               <SummaryRow
                 label={t("briefing.step3.summary.target_audience")}
@@ -468,7 +419,7 @@ export function BriefingCanvasStep3({
             className="contents"
           >
           {/* Commit form (2x2 grid) */}
-          <section className="rounded-3xl border border-border/40 p-6 lg:p-8 bg-background flex flex-col gap-8">
+          <section className="rounded-lg border border-border/70 bg-surface-raised p-5 lg:p-6 flex flex-col gap-8">
             <h2 className="text-base font-semibold tracking-tight keep-all">
               {t("briefing.step3.commit.title")}
             </h2>
@@ -492,10 +443,10 @@ export function BriefingCanvasStep3({
                         }
                         aria-pressed={selected}
                         className={cn(
-                          "rounded-full px-3 py-1.5 text-xs font-medium transition-colors keep-all",
+                          "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors keep-all",
                           selected
-                            ? "bg-foreground text-background"
-                            : "border border-border/60 hover:border-border",
+                            ? "border-brand bg-brand-soft text-brand"
+                            : "border-border/70 hover:border-border text-muted-foreground hover:text-foreground",
                         )}
                       >
                         {t(
@@ -510,11 +461,10 @@ export function BriefingCanvasStep3({
               </FieldBlock>
 
               <FieldBlock title={t("briefing.step3.commit.delivery.label")}>
-                <Input
-                  type="date"
+                <KoreanDateInput
                   value={form.target_delivery_at}
-                  onChange={(e) => set("target_delivery_at", e.target.value)}
-                  className="text-sm max-w-xs"
+                  onChange={(value) => set("target_delivery_at", value)}
+                  placeholder={t("briefing.step3.commit.delivery.placeholder")}
                 />
               </FieldBlock>
 
@@ -522,11 +472,10 @@ export function BriefingCanvasStep3({
                 title={t("briefing.step3.commit.meeting.label")}
                 helper={t("briefing.step3.commit.meeting.helper")}
               >
-                <Input
-                  type="datetime-local"
+                <KoreanDateTimeInput
                   value={form.meeting_preferred_at}
-                  onChange={(e) => set("meeting_preferred_at", e.target.value)}
-                  className="text-sm max-w-xs"
+                  onChange={(value) => set("meeting_preferred_at", value)}
+                  placeholder={t("briefing.step3.commit.meeting.placeholder")}
                 />
               </FieldBlock>
 
@@ -534,8 +483,8 @@ export function BriefingCanvasStep3({
                 className={cn(
                   "rounded-2xl p-4 flex items-start gap-3 self-start",
                   form.interested_in_twin
-                    ? "bg-emerald-50 border border-emerald-200"
-                    : "border border-border/40",
+                    ? "bg-brand-soft border border-brand/50"
+                    : "border border-border/70 bg-surface-card",
                 )}
               >
                 <input
@@ -614,7 +563,7 @@ export function BriefingCanvasStep3({
           </section>
 
           {/* Final notes */}
-          <section className="rounded-3xl border border-border/40 p-6 lg:p-8 bg-background flex flex-col gap-4">
+          <section className="rounded-lg border border-border/70 bg-surface-raised p-5 lg:p-6 flex flex-col gap-4">
             <Label className="text-sm font-semibold tracking-tight keep-all">
               {t("briefing.step3.notes.label")}
             </Label>
@@ -710,6 +659,140 @@ export function BriefingCanvasStep3({
 // ---------------------------------------------------------------------------
 // Subcomponents
 // ---------------------------------------------------------------------------
+
+function pad2(value: string | number) {
+  return String(value).padStart(2, "0");
+}
+
+function formatKoreanDate(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return value;
+  return `${match[1]}년 ${match[2]}월 ${match[3]}일`;
+}
+
+function formatKoreanDateTime(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return value;
+  return `${match[1]}년 ${match[2]}월 ${match[3]}일 ${match[4]}:${match[5]}`;
+}
+
+function parseDateText(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const parts = trimmed.match(/\d+/g);
+  if (!parts || parts.length < 3) return "";
+  const [year, month, day] = parts;
+  if (year.length !== 4) return "";
+  const mm = Number(month);
+  const dd = Number(day);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return "";
+  return `${year}-${pad2(mm)}-${pad2(dd)}`;
+}
+
+function parseDateTimeText(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}T${iso[4]}:${iso[5]}`;
+  const parts = trimmed.match(/\d+/g);
+  if (!parts || parts.length < 5) return "";
+  const [year, month, day, hour, minute] = parts;
+  if (year.length !== 4) return "";
+  const mm = Number(month);
+  const dd = Number(day);
+  const hh = Number(hour);
+  const min = Number(minute);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31 || hh > 23 || min > 59) {
+    return "";
+  }
+  return `${year}-${pad2(mm)}-${pad2(dd)}T${pad2(hh)}:${pad2(min)}`;
+}
+
+function KoreanDateInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const [text, setText] = useState(() => formatKoreanDate(value));
+
+  useEffect(() => {
+    setText(formatKoreanDate(value));
+  }, [value]);
+
+  function commit(nextText: string) {
+    const parsed = parseDateText(nextText);
+    onChange(parsed);
+    setText(parsed ? formatKoreanDate(parsed) : nextText);
+  }
+
+  return (
+    <Input
+      type="text"
+      inputMode="numeric"
+      value={text}
+      onChange={(event) => {
+        const next = event.target.value;
+        setText(next);
+        if (next.trim() === "") onChange("");
+        else {
+          const parsed = parseDateText(next);
+          if (parsed) onChange(parsed);
+        }
+      }}
+      onBlur={() => commit(text)}
+      placeholder={placeholder}
+      className="text-sm max-w-xs"
+    />
+  );
+}
+
+function KoreanDateTimeInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const [text, setText] = useState(() => formatKoreanDateTime(value));
+
+  useEffect(() => {
+    setText(formatKoreanDateTime(value));
+  }, [value]);
+
+  function commit(nextText: string) {
+    const parsed = parseDateTimeText(nextText);
+    onChange(parsed);
+    setText(parsed ? formatKoreanDateTime(parsed) : nextText);
+  }
+
+  return (
+    <Input
+      type="text"
+      inputMode="numeric"
+      value={text}
+      onChange={(event) => {
+        const next = event.target.value;
+        setText(next);
+        if (next.trim() === "") onChange("");
+        else {
+          const parsed = parseDateTimeText(next);
+          if (parsed) onChange(parsed);
+        }
+      }}
+      onBlur={() => commit(text)}
+      placeholder={placeholder}
+      className="text-sm max-w-xs"
+    />
+  );
+}
 
 function SummaryRow({
   label,

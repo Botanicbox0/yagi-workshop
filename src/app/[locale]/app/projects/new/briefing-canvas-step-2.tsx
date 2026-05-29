@@ -15,13 +15,10 @@
 // Sticky bottom CTA bar (sidebar-offset on md+):
 //   [← 이전]  ·  자동 저장 status indicator  ·  [확인 →]
 //
-// Whiteboard expandable mounts under the detail row; collapsed by default
-// per KICKOFF v1.2 §task_05 (90% 안 씀).
-//
 // Initial data:
 //   - briefing_documents fetched on mount via supabase browser client
 //     (RLS-scoped to the project's workspace members).
-//   - projects metadata fetched on mount and seeded into Step2Sidebar.
+//   - target audience fetched on mount and seeded into Step2Sidebar.
 // =============================================================================
 
 import { useState, useEffect } from "react";
@@ -41,20 +38,10 @@ import {
 } from "./briefing-canvas-step-2-sidebar";
 
 type ProjectMetadata = {
-  mood_keywords: string[] | null;
-  mood_keywords_free: string | null;
-  visual_ratio: string | null;
-  visual_ratio_custom: string | null;
-  channels: string[] | null;
   target_audience: string | null;
 };
 
 const EMPTY_SIDEBAR: SidebarFormData = {
-  mood_keywords: [],
-  mood_keywords_free: "",
-  visual_ratio: "",
-  visual_ratio_custom: "",
-  channels: [],
   target_audience: "",
 };
 
@@ -104,9 +91,7 @@ export function BriefingCanvasStep2({
           .order("created_at", { ascending: true }),
         sb
           .from("projects")
-          .select(
-            "mood_keywords, mood_keywords_free, visual_ratio, visual_ratio_custom, channels, target_audience",
-          )
+          .select("target_audience")
           .eq("id", projectId)
           .maybeSingle(),
       ]);
@@ -151,11 +136,6 @@ export function BriefingCanvasStep2({
       const meta = (projRes.data as ProjectMetadata | null) ?? null;
       setSidebarInitial({
         ...EMPTY_SIDEBAR,
-        mood_keywords: meta?.mood_keywords ?? [],
-        mood_keywords_free: meta?.mood_keywords_free ?? "",
-        visual_ratio: meta?.visual_ratio ?? "",
-        visual_ratio_custom: meta?.visual_ratio_custom ?? "",
-        channels: meta?.channels ?? [],
         target_audience: meta?.target_audience ?? "",
       });
       setLoading(false);
@@ -185,7 +165,7 @@ export function BriefingCanvasStep2({
         </p>
       </div>
 
-      {/* 2-row layout: top = brief + reference (2-col on lg), bottom = full-width detail */}
+      {/* 2-row layout: top = brief + reference, bottom = essential audience */}
       <div className="max-w-7xl mx-auto px-6 lg:px-12 flex flex-col gap-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Step2BriefColumn
@@ -218,24 +198,6 @@ export function BriefingCanvasStep2({
             if (ts) setSavedAt(ts);
           }}
         />
-      </div>
-
-      {/* Whiteboard expandable — task_05 v3 ships the disclosure pattern;
-          full tldraw mount is FU-Phase5-3. */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 mt-8">
-        <details className="group rounded-3xl border border-border/40 p-4">
-          <summary className="cursor-pointer text-sm font-medium select-none list-none flex items-center justify-between">
-            <span>{t("briefing.step2.whiteboard.expand_cta")}</span>
-            <span className="text-xs text-muted-foreground group-open:rotate-180 transition-transform">
-              ▾
-            </span>
-          </summary>
-          <div className="mt-4 p-12 rounded-2xl bg-muted/40 text-center">
-            <p className="text-xs text-muted-foreground keep-all leading-relaxed">
-              {t("briefing.step2.whiteboard.placeholder")}
-            </p>
-          </div>
-        </details>
       </div>
 
       {/* Sticky bottom CTA — sidebar-offset on md+ (sidebar is 240px wide) */}

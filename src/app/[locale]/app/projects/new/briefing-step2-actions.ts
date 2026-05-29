@@ -522,7 +522,9 @@ export async function updateBriefingDocumentNoteAction(
 // 5. updateProjectMetadataAction — Step 2 sidebar autosave
 // ===========================================================================
 
-// Step 2 owns 6 creative-direction fields. The remaining 5 commit fields
+// Step 2 now owns target_audience only. Production spec fields stay accepted
+// for backwards compatibility / future room editing, but this intake UI no
+// longer sends them. The remaining commit fields
 // (budget_band, target_delivery_at, meeting_preferred_at, interested_in_twin,
 // additional_notes) live in updateProjectCommitAction in
 // briefing-step3-actions.ts — kept on a separate action so each surface

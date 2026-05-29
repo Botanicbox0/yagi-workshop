@@ -122,7 +122,7 @@ function SectionBlock({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-border/70 bg-surface-raised p-5">
       <header>
         <div className="flex items-baseline gap-2">
           <h2 className="text-base font-semibold tracking-tight keep-all">
@@ -230,17 +230,20 @@ export function BriefingCanvasStep1({
           )}
         </SectionBlock>
 
-        {/* Description (optional) */}
-        <SectionBlock
-          title={t("briefing.step1.field.description.label")}
-          optional={t("briefing.step1.field.description.optional")}
-        >
+        {/* Objective / direction */}
+        <SectionBlock title={t("briefing.step1.field.description.label")}>
           <Textarea
             {...register("description")}
             placeholder={t("briefing.step1.field.description.placeholder")}
-            rows={4}
+            rows={5}
             className="resize-none"
+            aria-invalid={Boolean(errors.description)}
           />
+          {errors.description && (
+            <p className="text-xs text-destructive mt-2 keep-all">
+              {t("briefing.step1.error.description_required")}
+            </p>
+          )}
         </SectionBlock>
       </div>
 

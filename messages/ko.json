@@ -988,10 +988,10 @@
             }
           },
           "description": {
-            "label": "간단히 설명해주세요",
-            "helper": "선택 사항입니다. 나머지는 다음 단계에서 채울 수 있어요.",
-            "optional": "(선택)",
-            "placeholder": "예: 봄 시즌 신제품 런칭 캠페인. 인스타그램 릴스로 활용할 짧은 영상 콘텐츠가 필요해요."
+            "label": "목적 / 방향",
+            "helper": "이 프로젝트로 무엇을 이루고 싶은지 적어주세요.",
+            "optional": "",
+            "placeholder": "예: 신제품을 20대 고객에게 빠르게 각인시키고 싶어요. 기존 광고보다 더 감각적인 AI 비주얼 방향을 찾고 싶습니다."
           }
         },
         "cta": {
@@ -999,7 +999,8 @@
         },
         "error": {
           "name_required": "프로젝트 이름을 입력해주세요",
-          "deliverable_types_required": "콘텐츠 유형을 1개 이상 선택해주세요"
+          "deliverable_types_required": "콘텐츠 유형을 1개 이상 선택해주세요",
+          "description_required": "목적과 방향을 입력해주세요"
         },
         "toast": {
           "unauthenticated": "로그인이 필요해요. 다시 로그인 후 시도해주세요.",
@@ -1040,7 +1041,8 @@
             }
           },
           "detail": {
-            "title": "디테일",
+            "title": "대상",
+            "helper": "누구에게 보여줄 작업인지 먼저 알려주세요. 무드, 비율, 채널 같은 production spec은 미팅과 작업 단계에서 구체화합니다.",
             "mood": {
               "label": "분위기 / 키워드",
               "helper": "복수 선택 가능 + 직접 입력",
@@ -1124,13 +1126,13 @@
           "empty_placeholder": "—",
           "project_name": "프로젝트 이름",
           "deliverable_types": "콘텐츠",
-          "description": "핵심 brief",
+          "description": "목적 / 방향",
           "documents_brief": "{count}개 자료",
           "documents_reference": "{count}개 레퍼런스",
           "mood": "분위기",
           "visual_ratio": "화면 비율",
           "channels": "채널",
-          "target_audience": "타겟",
+          "target_audience": "대상",
           "edit_step1": "Step 1 수정",
           "edit_step2": "Step 2 수정"
         },
@@ -1146,11 +1148,13 @@
             }
           },
           "delivery": {
-            "label": "원하는 납기"
+            "label": "원하는 납기",
+            "placeholder": "예: 2026년 06월 15일"
           },
           "meeting": {
             "label": "미팅 가능한 일자",
-            "helper": "미팅을 희망하시는 경우 일자와 시간을 선택해주세요"
+            "helper": "미팅을 희망하시는 경우 일자와 시간을 적어주세요",
+            "placeholder": "예: 2026년 06월 10일 14:30"
           },
           "twin": {
             "label": "🪞 Digital Twin 활용 의향이 있어요",

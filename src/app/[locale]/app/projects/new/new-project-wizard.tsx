@@ -332,7 +332,6 @@ export function NewProjectWizard({
       title: v.name.trim(),
       description: v.description || null,
       brand_id: null,
-      tone: null,
       deliverable_types: v.deliverable_types ?? [],
       estimated_budget_range: v.budget_band || null,
       target_delivery_at:

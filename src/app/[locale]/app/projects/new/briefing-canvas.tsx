@@ -5,8 +5,7 @@
 //
 // 3-step paradigm — "프로젝트 생애주기의 시작 3단계":
 //   Step 1 — Brief Start. Minimal intent: name + deliverable_types +
-//            optional description. (purpose was removed in hotfix-4 —
-//            it duplicated Step 2's "활용 채널" sidebar field.)
+//            objective/direction stored in projects.brief.
 //   Step 2 — Workspace. 2-row layout: top row = 보유 자료 + 레퍼런스
 //            (2-col on lg+); bottom row = full-width 디테일 with its
 //            own internal 2-col form grid. Autosave + expandable
@@ -40,13 +39,13 @@ import { BriefingCanvasStep2 } from "./briefing-canvas-step-2";
 import { BriefingCanvasStep3 } from "./briefing-canvas-step-3";
 
 // ---------------------------------------------------------------------------
-// Step 1 form schema — v3 minimal (3 fields after hotfix-4 purpose removal)
+// Step 1 form schema — v3 minimal essential intake.
 // ---------------------------------------------------------------------------
 
 export const step1Schema = z.object({
   name: z.string().trim().min(1).max(200),
   deliverable_types: z.array(z.string()).min(1),
-  description: z.string().trim().max(500).optional(),
+  description: z.string().trim().min(1).max(1000),
 });
 
 export type Step1FormData = z.input<typeof step1Schema>;
@@ -205,9 +204,11 @@ export function BriefingCanvas({
       )[0];
       const errorKey =
         firstKey === "name"
-          ? "briefing.step1.error.name_required"
+            ? "briefing.step1.error.name_required"
           : firstKey === "deliverable_types"
             ? "briefing.step1.error.deliverable_types_required"
+            : firstKey === "description"
+              ? "briefing.step1.error.description_required"
             : "briefing.step1.toast.draft_failed";
       toast.error(t(errorKey));
     },
