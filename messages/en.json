@@ -285,7 +285,7 @@
   "billing_page": {
     "eyebrow": "Billing",
     "title": "Billing and tax invoices",
-    "description_admin_ko": "Admin-only Korean e-tax invoice automation status. Popbill is called server-side only, and live production issue stays locked until a separate guard is enabled.",
+    "description_admin": "Admin-only Korean e-tax invoice automation status. Popbill is called server-side only, and live production issue stays locked until a separate guard is enabled.",
     "description_general": "Payment, tax invoice, and invoice flows live here. Tax details are collected at payment or invoice issuance time.",
     "received_invoices": "Received invoices",
     "mode_title": "Popbill mode",
@@ -313,8 +313,8 @@
     "check_live_guard": "Keep the live issue guard locked",
     "admin_invoices": "Admin invoices",
     "popbill_docs": "Popbill guide",
-    "customer_title": "Billing in progress",
-    "customer_description": "Korean e-tax automation is visible only in the Korean admin surface. Customer billing will connect payment and invoice review flows separately."
+    "customer_title": "Billing records in progress",
+    "customer_description": "Settlement records and tax invoice review are still being prepared. When payment or issuance is needed, your YAGI contact will guide the next step."
   },
   "explore_dashboard": {
     "eyebrow": "Explore",

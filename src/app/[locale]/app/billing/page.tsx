@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowRight, CheckCircle2, CreditCard, KeyRound } from "l
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { getPopbillConfigStatus } from "@/lib/popbill/client";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -23,16 +23,11 @@ export default async function BillingPage({ params }: Props) {
     return null;
   }
 
-  const { data: adminRoles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .is("workspace_id", null)
-    .eq("role", "yagi_admin");
-
-  const isYagiAdmin = Boolean(adminRoles && adminRoles.length > 0);
-  const popbill = getPopbillConfigStatus();
-  const taxInvoiceVisible = locale === "ko" && isYagiAdmin;
+  const activeWorkspace = await resolveActiveWorkspace(user.id);
+  const showOperationsConsole = activeWorkspace?.kind === "yagi_admin";
+  const popbill = showOperationsConsole
+    ? (await import("@/lib/popbill/client")).getPopbillConfigStatus()
+    : null;
 
   return (
     <main className="mx-auto flex w-full max-w-content flex-col gap-8 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
@@ -47,7 +42,7 @@ export default async function BillingPage({ params }: Props) {
               {t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">
-              {taxInvoiceVisible ? t("description_admin_ko") : t("description_general")}
+              {showOperationsConsole ? t("description_admin") : t("description_general")}
             </p>
           </div>
           <Link
@@ -60,7 +55,7 @@ export default async function BillingPage({ params }: Props) {
         </div>
       </section>
 
-      {taxInvoiceVisible ? (
+      {showOperationsConsole && popbill ? (
         <>
           <section className="grid gap-4 lg:grid-cols-3">
             <StatusCard

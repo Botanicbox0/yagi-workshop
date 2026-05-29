@@ -285,7 +285,7 @@
   "billing_page": {
     "eyebrow": "Billing",
     "title": "정산과 세금계산서",
-    "description_admin_ko": "관리자 전용 전자세금계산서 자동화 상태입니다. Popbill은 서버에서만 호출하고, 운영 발행은 별도 잠금 해제 전까지 차단합니다.",
+    "description_admin": "관리자 전용 전자세금계산서 자동화 상태입니다. Popbill은 서버에서만 호출하고, 운영 발행은 별도 잠금 해제 전까지 차단합니다.",
     "description_general": "결제, 세금계산서, 송장 흐름을 다루는 화면입니다. 세무정보는 결제 또는 발행 시점에 수집합니다.",
     "received_invoices": "받은 송장",
     "mode_title": "Popbill 모드",
@@ -313,8 +313,8 @@
     "check_live_guard": "운영 발행 가드 잠금 유지",
     "admin_invoices": "관리자 송장 보기",
     "popbill_docs": "Popbill 가이드",
-    "customer_title": "정산 준비 중",
-    "customer_description": "세금계산서는 한국 관리자 화면에서만 자동화합니다. 고객 화면에는 결제·송장 확인 흐름만 순차적으로 연결합니다."
+    "customer_title": "정산 내역 준비 중",
+    "customer_description": "정산 내역과 세금계산서 확인 기능은 준비 중입니다. 결제 또는 발행이 필요한 경우 담당자가 별도로 안내합니다."
   },
   "explore_dashboard": {
     "eyebrow": "Explore",
