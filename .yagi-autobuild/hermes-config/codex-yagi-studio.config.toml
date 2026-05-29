@@ -10,8 +10,8 @@ model_verbosity = "low"
 model_reasoning_summary = "concise"
 experimental_instructions_file = "/home/yagi/.codex/yagi-studio-system.md"
 
-sandbox_mode = "workspace-write"
-approval_policy = "on-failure"
+sandbox_mode = "danger-full-access"
+approval_policy = "on-request"
 
 # MCP servers (playwright / filesystem / supabase --read-only / higgsfield) live in
 # base ~/.codex/config.toml: V2 profile files do NOT layer [mcp_servers.*] tables,
