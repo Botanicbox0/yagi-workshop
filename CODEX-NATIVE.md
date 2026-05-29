@@ -60,6 +60,15 @@ Claude review gate는 아래에만 발동한다.
 - `.env.local`, service role key, API key, token, Popbill SecretKey 같은 secret 값은 packet에 포함하지 않는다. 변수명만 허용한다.
 - 단순 LOW/MED routine 작업에는 출력하지 않는다.
 
+### §3.2 RLS & Security-Definer Test Gate
+
+RLS 정책 / GRANT / SECURITY DEFINER 함수 / auth·invite RPC를 추가·변경하는 모든 작업은 commit 전 아래 둘 다 통과해야 한다.
+
+1. NEGATIVE test — 권한 없는 actor(다른 workspace, granted 안 된 guest, anon)가 보호 대상 읽기/쓰기 시 0 rows 또는 거부됨을 Supabase MCP `execute_sql` 실제 쿼리로 증명한다. 정책 텍스트 읽기·추측으로 대체 금지.
+2. POSITIVE 실행 test — 함수/RPC가 실제 실행되어 의도한 row 변화가 일어나는지 실제 호출로 증명한다. 정의만 읽고 판정 금지. 2026-05-29 `accept_guest_invitation`은 정의가 맞아 보였지만 `workspace_id` ambiguous로 prod 실행 실패했고, 실행 테스트 누락으로 못 잡았다. 이 사례가 본 gate의 신설 근거다.
+
+하나라도 실패하면 즉시 HALT하고 commit·push 금지. Codex 자체 실행이며 Claude 호출은 불필요하다. Review packet `MACHINE CHECK`에는 (a)(b) 결과를 actor / 대상 / expected / actual 행으로 포함한다.
+
 ## §4 Claude 개입 금지
 
 아래는 Codex 단독 처리.
@@ -195,6 +204,7 @@ Nano Banana Pro 지정:
 - `PRODUCT-MASTER.md`는 append-only. 기존 § 덮어쓰기 금지, supersede만 허용.
 - `.env.local.example`은 변수명만 참조. `.env.local` 값은 read/report/commit 금지.
 - 삭제 정리는 식별과 분류가 먼저다. 실제 삭제·이동·chmod·systemd service 변경은 별도 승인 후 진행한다.
+- SECURITY DEFINER / RETURNS TABLE 함수는 output 변수명과 본문 컬럼명 ambiguous 충돌을 정적으로 못 잡는다 — 반드시 실제 호출로 검증(§3.2-b).
 
 ## 환경 검증 완료 기록
 
