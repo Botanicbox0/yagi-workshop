@@ -949,10 +949,10 @@ phase priority 결정 = 별도 amendment (야기 + Web Claude phase planning cha
 ### §AJ Q#1~Q#7 status update
 
 - **Q#1** (Phase 8+ priority): **RESOLVED** → §AK 참조
-- **Q#2** (Twin asset 소유권 — celebrity 고정 vs license 구조): **DEFERRED** → Phase 8 mid Twin discovery 시 lock
-- **Q#3** (Twin per-use approval vs blanket license): **DEFERRED** → Q#2와 동시 Phase 8 mid lock
+- **Q#2** (Twin asset 소유권 — celebrity 고정 vs license 구조): **RESOLVED (2026-05-30, §AT)** → 소유권 default=아티스트, 플랫폼은 deal로 케이스별 저장
+- **Q#3** (Twin per-use approval vs blanket license): **RESOLVED (2026-05-30, §AT)** → 야기 딜메이커 선검토 모델, 위임 토글
 - **Q#4** (Twin training operator): **DEFAULT LOCKED** → yagi internal default. Creator outsource는 Phase 10+ scale-up 시 재검토.
-- **Q#5** (Revenue share 구조): **DEFERRED** → Phase 9 첫 Celebrity client 계약 시 lock
+- **Q#5** (Revenue share 구조): **RESOLVED (2026-05-30, §AT)** → 수수료 모델(딜별 율), 입금후 지급, 기록만, 수취주체 필드
 - **Q#6** (UI naming — Artist vs Celebrity vs 연예인): **RESOLVED (Builder, 2026-05-22)** → Wave D 시점 "Artist / 아티스트" 유지. Phase 9 Twin ship 시 "Celebrity / 연예인" rename 재검토 (v1.12+ amendment 후보).
 - **Q#7** (External collaborator role schema): **LOCKED** → `workspace_members.role = 'guest'` 도입, project-scoped permission (workspace-wide 권한 없음). Phase 8 Wave A spec entry 전 schema migration 필수.
 
@@ -1018,7 +1018,7 @@ Strict A 불가 (Q1 cash lead 죽임 + Phase 7 Wave C v2 momentum 손실). Stric
 ---
 
 *v1.11 amendment 끝. Phase 8+ Option B (compressed) lock + §AJ partial resolutions.*
-*다음 amendment 후보 (v1.12+): Q#6 Phase 9 rename, Q#2/Q#3 Phase 8 mid Twin discovery 반영, §AL KPI 정밀화, Q#5 Phase 9 첫 Celebrity 계약.*
+*다음 amendment 후보 (v1.12+): Q#6 Phase 9 rename, §AL KPI 정밀화.*
 
 ---
 
@@ -1274,6 +1274,75 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 
 ---
 
+## §AT — Artist / Agency Identity Model (2026-05-30)
+
+§AE 4-actor + §AF ① Digital Twin flow 갱신. §AJ Q#2/Q#3/Q#5 (DEFERRED) → RESOLVED.
+근거: 야기 결정 + SOTA 레퍼런스(TrueRights 7-step rights infra, wcr.legal 3자 아바타 라이선싱 two-agreement structure) + IR deck p4 "한 번의 IP 등록 → Content + Monetization 두 흐름".
+
+### 1. Actor 5종 (§AE supersede — AGENCY 활성화, ARTIST 능동화)
+
+| Actor | kind | 정체성 | 핵심 capability |
+|---|---|---|---|
+| **BRAND** | `brand` | 광고주 | 광고/콘텐츠 의뢰 (유일 self-signup, §AN 유지) |
+| **ARTIST/CELEBRITY** | `artist` | identity owner (능동 actor) | 가입 + 야기에 제작 의뢰 + 캠페인 개설 요청 + 협업 제안 수락/거절/협의 + Rights Profile·N Persona Twin 소유 |
+| **AGENCY** (엔터사) | `agency` | 소속 아티스트 관리 주체 | roster(N artist) 관리 + (위임 시) deal 대행·승인 + 정산 수취 |
+| **CREATOR** | `creator` | AI 제작 skill | 캠페인 응모 / curated invite (§AF 유지) |
+| **YAGI INTERNAL** | `yagi_admin` | studio operator + **딜 메이커(중개)** | 의뢰 선검토·조율 + 제작 + 모든 ops orchestrate |
+
+- **§AN과의 관계**: §AN은 "CELEBRITY = 수동 internal asset"이었으나, 본 섹션에서 ARTIST는 **능동 actor**로 갱신. BRAND-only self-signup 원칙(§AN)은 유지하되, ARTIST/AGENCY는 **야기 초대 링크 기반 가입**(가입 default는 brand, 초대 시 artist/agency).
+- AGENCY ↔ ARTIST: 아티스트는 항상 본인 계정 보유. agency 있으면 그 위에 관리 계층(위임). **소속사 통제 + 독립 아티스트 가입 둘 다 지원.**
+
+### 2. Artist Rights Profile → N Persona Twin (§AF ① supersede)
+
+- 기존 "1 celebrity → 1 twin asset" → **1 artist → N persona twin**으로 갱신.
+- 한 아티스트가 복수 페르소나 트윈 보유 가능 (예: 애니메 캐릭터 / 젊은 시절 / 배우 페르소나 / 인플루언서 페르소나).
+- 각 persona twin = ① 콘텐츠 생성 단위 ② 브랜드 협업 단위 ③ SNS 운영 단위 (IR deck service 04 Digital Twin SNS 연결).
+- 소유권/승인/정산/상태/최소금액은 **persona 단위**로 차등 설정 가능.
+
+### 3. 소유권 (§AJ Q#2 RESOLVED)
+
+- **default = 아티스트.** agency 소속이어도 소유는 아티스트, agency는 위임받은 관리 권한(소유 이전 아님).
+- 플랫폼은 소유권을 강제하지 않음 — **계약(deal) 객체로 케이스별 협상 결과 저장·집행.** ("소유권 딜은 미팅 필수" — 플랫폼이 거스르지 않음.)
+
+### 4. 승인 흐름 — 야기 딜 메이커 모델 (§AJ Q#3 RESOLVED, §AF flow 갱신)
+[BRAND] 아티스트 활용 의뢰 (브리프 + 예산 제시 = 협상 시작점)
+↓
+[YAGI INTERNAL] 1차 선검토 — 적정성·스팸 거르고, 브랜드와 제안금액·세부사항 협의·조율
+↓
+[ARTIST 또는 위임 AGENCY] 야기가 정리한 확정 범위 확인 → 수락 / 거절 / 협의
+↓ (수락)
+[YAGI INTERNAL] 제작 착수 (persona twin 활용, 기존 project room)
+↓
+[BRAND] 결과물 수령·승인
+↓
+정산 (아래 6)
+- 승인 주체 = artist 또는 (위임 시) agency. **위임 설정 토글로 변경 가능** (소속사마다 통제 강도 다름).
+- wcr.legal two-agreement structure 정합: 야기가 Brand·Artist 양쪽과 각각 딜 (직거래 아닌 중개).
+
+### 5. 트윈 상태 + 최소 금액 (persona 단위)
+
+- **트윈 상태 = 활성 / 일시중지 (Active / Paused).** "철회권"의 유저 친화 워딩. 일시중지 = 새 협업·제작 중단, 되돌릴 수 있는 스위치(영구삭제 아님). 진행 중 작업 처리·법적 통지 등 디테일은 계약 영역(별도 협의).
+- **최소 협업 금액**: 아티스트가 설정. **공개 여부 선택** (톱 셀럽 비공개 / 인디 공개). deal 협상 시작점.
+- 상태·최소금액은 persona twin 단위로 설정 (예: 애니메 트윈 활성, 배우 트윈 일시중지).
+- **이용 설정(금지 필터 등) = 미도입.** 건별 수락/거절로 통제 충분. 의뢰량 증가 시 재검토.
+
+### 6. 정산 (§AJ Q#5 RESOLVED)
+
+- **수수료 모델 (에이전트, 투명)**: 브랜드 지불 → 야기 수수료 X% → 나머지 아티스트. **X%는 deal마다 협상** (deal 필드 기록).
+- **트리거**: 브랜드 입금 확인 후 아티스트 지급.
+- **플랫폼 역할 = 기록만**: deal terms·금액·세금계산서(Popbill 재사용) 기록·표시. **실제 송금은 야기 수동.** 정산 자동화(PG/에스크로)는 scale-up 시 재검토.
+- **수취 주체**: agency 소속 → 소속사가 수취(소속사 내부 배분은 야기 관여 밖). 독립 → 아티스트 본인. deal에 "정산 수취 주체" 필드.
+
+### 7. 미정 (구현 단계에서 SOTA 보며 결정)
+
+- 아티스트/agency 가입 링크 UX, persona twin 생성 UX, Digital Twin SNS 운영(IR service 04) 연결 디테일, deal 객체 스키마 상세.
+
+### 8. 연관 조정 (백로그)
+
+- IR deck p4 "브랜드 광고 commission 실시간 수신" → **"엄선된 협업 제안 수신"**으로 다듬기 (딜 메이커 모델 반영, 프리미엄 포지셔닝).
+
+---
+
 ## Decision Log
 
 - 2026-05-28: append-only 폐기 → 살아있는 문서로 전환 (git 버전관리/백업, 본문 = 현재 진실).
@@ -1286,3 +1355,4 @@ Tier 4 — Pinterest 등 외부 reference (야기/다나 internal 큐레이션, 
 - 2026-05-28: §AS operations automation 방향 확정 — in-app brief/thread/versioning/schedule/billing으로 Notion+Slack+세금계산서 통합 대체.
 - 2026-05-29: §AP nav에서 Marketing Studio 제거, Lookbook Studio를 Americano로 정정 — §AR은 internal Higgsfield CLI asset 제작 흐름으로 분리.
 - 2026-05-29: FU-20260529-guest-deliverable-url-server-rls 등록 — 외부 guest 실투입 전 deliverable URL validation/RLS 이관 gate.
+- 2026-05-30: §AT Artist/Agency Identity Model 확정 — 5 actor(AGENCY 활성화, ARTIST 능동화), 1 artist→N persona twin, 소유권 default=아티스트, 야기 딜메이커 승인 모델, 수수료 정산(기록만), Q#2/3/5 RESOLVED.
