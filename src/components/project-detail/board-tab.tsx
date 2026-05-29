@@ -34,6 +34,11 @@ type DeliverableRow = {
     | null;
 };
 
+type ThreadRow = {
+  id: string;
+  deliverable_id: string | null;
+};
+
 function detectStorageKind(key: string): "image" | "video" | "file" {
   const ext = key.split(".").pop()?.toLowerCase();
   if (ext && ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(ext)) {
@@ -109,6 +114,39 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
   };
 
   const rows = rowsRaw ?? [];
+  const deliverableIds = rows.map((row) => row.id);
+  const feedbackCountByDeliverable = new Map<string, number>();
+  if (deliverableIds.length > 0) {
+    const { data: threadsRaw } = (await supabase
+      .from("project_threads")
+      .select("id, deliverable_id")
+      .eq("project_id", projectId)
+      .in("deliverable_id", deliverableIds)) as { data: ThreadRow[] | null };
+
+    const threads = threadsRaw ?? [];
+    const threadToDeliverable = new Map(
+      threads
+        .filter((thread) => thread.deliverable_id)
+        .map((thread) => [thread.id, thread.deliverable_id as string]),
+    );
+    if (threadToDeliverable.size > 0) {
+      const { data: messageRows } = (await supabase
+        .from("thread_messages")
+        .select("thread_id")
+        .in("thread_id", Array.from(threadToDeliverable.keys()))) as {
+        data: Array<{ thread_id: string }> | null;
+      };
+      for (const message of messageRows ?? []) {
+        const deliverableId = threadToDeliverable.get(message.thread_id);
+        if (!deliverableId) continue;
+        feedbackCountByDeliverable.set(
+          deliverableId,
+          (feedbackCountByDeliverable.get(deliverableId) ?? 0) + 1,
+        );
+      }
+    }
+  }
+
   const deliverables: VersionStackDeliverable[] = await Promise.all(
     rows.map(async (row) => {
       const externalAssets = await Promise.all(
@@ -129,6 +167,7 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         version: row.version,
         status: row.status,
         note: row.note,
+        feedbackCount: feedbackCountByDeliverable.get(row.id) ?? 0,
         createdAt: row.created_at,
         submittedBy: profileName(row),
         storageAssets: (row.storage_paths ?? []).map((key) => ({
@@ -169,6 +208,8 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         openExternal: t("open_external"),
         storedFile: t("stored_file"),
         noNote: t("no_note"),
+        feedback: t("feedback"),
+        feedbackCount: t("feedback_count", { count: "{count}" }),
         success: t("success"),
         errors: {
           assetRequired: t("errors.asset_required"),

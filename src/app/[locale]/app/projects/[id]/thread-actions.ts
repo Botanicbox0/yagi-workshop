@@ -9,6 +9,7 @@ import { notifyNewMessage } from "@/lib/email/new-message";
 
 const sendSchema = z.object({
   projectId: z.string().uuid(),
+  deliverableId: z.string().uuid().nullable().optional(),
   body: z.string().trim().min(1).max(10_000),
   visibility: z.enum(["shared", "internal"]).default("shared"),
 });
@@ -16,19 +17,36 @@ const sendSchema = z.object({
 async function findOrCreateDefaultThread({
   supabase,
   projectId,
+  deliverableId,
   userId,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_threads types lag generated DB schema
   supabase: any;
   projectId: string;
+  deliverableId?: string | null;
   userId: string;
 }): Promise<{ ok: true; threadId: string } | { ok: false; message?: string }> {
-  const { data: existing } = await supabase
+  if (deliverableId) {
+    const { data: deliverable } = await supabase
+      .from("project_deliverables")
+      .select("id")
+      .eq("id", deliverableId)
+      .eq("project_id", projectId)
+      .maybeSingle();
+    if (!deliverable?.id) {
+      return { ok: false, message: "deliverable_not_found" };
+    }
+  }
+
+  let existingQuery = supabase
     .from("project_threads")
     .select("id")
     .eq("project_id", projectId)
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+  existingQuery = deliverableId
+    ? existingQuery.eq("deliverable_id", deliverableId)
+    : existingQuery.is("deliverable_id", null);
+  const { data: existing } = await existingQuery.maybeSingle();
 
   if (existing?.id) {
     return { ok: true, threadId: existing.id };
@@ -38,6 +56,7 @@ async function findOrCreateDefaultThread({
     .from("project_threads")
     .insert({
       project_id: projectId,
+      deliverable_id: deliverableId ?? null,
       created_by: userId,
     })
     .select("id")
@@ -57,11 +76,13 @@ async function findOrCreateDefaultThread({
     p_user_id: userId,
   });
   if (isProjectGuest === true) {
-    const admin = createSupabaseService();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag project_threads.deliverable_id
+    const admin = createSupabaseService() as any;
     const { data: adminThread, error: adminErr } = await admin
       .from("project_threads")
       .insert({
         project_id: projectId,
+        deliverable_id: deliverableId ?? null,
         created_by: userId,
       })
       .select("id")
@@ -102,6 +123,7 @@ export async function sendMessage(input: unknown) {
   const thread = await findOrCreateDefaultThread({
     supabase,
     projectId: parsed.data.projectId,
+    deliverableId: parsed.data.deliverableId ?? null,
     userId: user.id,
   });
   if (!thread.ok) return { error: "db" as const, message: thread.message };
@@ -169,6 +191,7 @@ const attachmentSchema = z.object({
 const sendWithAttachmentsSchema = z
   .object({
     projectId: z.string().uuid(),
+    deliverableId: z.string().uuid().nullable().optional(),
     body: z.string().max(10_000).nullable().optional(),
     visibility: z.enum(["shared", "internal"]).default("shared"),
     attachments: z.array(attachmentSchema).max(5).default([]),
@@ -235,6 +258,7 @@ export async function sendMessageWithAttachments(input: unknown) {
   const thread = await findOrCreateDefaultThread({
     supabase,
     projectId: d.projectId,
+    deliverableId: d.deliverableId ?? null,
     userId: user.id,
   });
   if (!thread.ok) return { error: "db" as const, message: thread.message };

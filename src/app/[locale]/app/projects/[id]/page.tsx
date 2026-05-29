@@ -25,12 +25,13 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { MessageSquare, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import { type TwinIntent } from "@/components/project-detail/info-rail";
 import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
+import { CommentsTab } from "@/components/project-detail/comments-tab";
 import { EmptyStateTab } from "@/components/project-detail/empty-state-tab";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
@@ -45,7 +46,7 @@ import {
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; feedback?: string }>;
 };
 
 type ProjectDetail = {
@@ -784,10 +785,10 @@ export default async function ProjectDetailPage({
           />
         )}
         {activeTab === "comments" && (
-          <EmptyStateTab
-            heading={tDetail("empty_state.comments.heading")}
-            subtext={tDetail("empty_state.comments.subtext")}
-            Icon={MessageSquare}
+          <CommentsTab
+            projectId={project.id}
+            selectedDeliverableId={sp.feedback ?? null}
+            locale={localeNarrow}
           />
         )}
         {activeTab === "deliverables" && (

@@ -138,10 +138,23 @@ type ComposerChip = {
 
 type Props = {
   projectId: string;
+  deliverableId?: string | null;
   threadId: string | null;
   currentUserId: string;
   isYagiAdmin: boolean;
   initialMessages: ThreadMessage[];
+};
+
+type ThreadLookupQuery = {
+  select(columns: string): ThreadLookupQuery;
+  eq(column: string, value: string): ThreadLookupQuery;
+  maybeSingle(): Promise<{
+    data: { id: string; deliverable_id: string | null } | null;
+  }>;
+};
+
+type ThreadLookupClient = {
+  from(table: "project_threads"): ThreadLookupQuery;
 };
 
 function formatBytes(n: number): string {
@@ -153,6 +166,7 @@ function formatBytes(n: number): string {
 
 export function ThreadPanel({
   projectId,
+  deliverableId = null,
   threadId: initialThreadId,
   currentUserId,
   isYagiAdmin,
@@ -199,7 +213,7 @@ export function ThreadPanel({
   useEffect(() => {
     const supabase = createSupabaseBrowser();
     const channel = supabase
-      .channel(`project:${projectId}:thread`)
+      .channel(`project:${projectId}:thread:${deliverableId ?? "general"}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "thread_messages" },
@@ -219,13 +233,15 @@ export function ThreadPanel({
           // the first visible INSERT (the previous code path) leaked
           // other-project messages into this panel.
           if (!threadId) {
-            const { data: t } = await supabase
+            const threadLookup = supabase as unknown as ThreadLookupClient;
+            const { data: t } = await threadLookup
               .from("project_threads")
-              .select("id")
+              .select("id, deliverable_id")
               .eq("id", row.thread_id)
               .eq("project_id", projectId)
               .maybeSingle();
             if (!t) return; // not our project — drop the row.
+            if ((t.deliverable_id ?? null) !== (deliverableId ?? null)) return;
             setThreadId(t.id);
             setMessages((prev) =>
               prev.some((m) => m.id === row.id) ? prev : [...prev, row]
@@ -238,7 +254,7 @@ export function ThreadPanel({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId, threadId]);
+  }, [deliverableId, projectId, threadId]);
 
   /** Add file(s) from picker or drop. Validates, starts upload immediately. */
   async function handleFiles(fileList: FileList | File[]) {
@@ -416,6 +432,7 @@ export function ThreadPanel({
         // Text-only path — preserve legacy sendMessage.
         const result = await sendMessage({
           projectId,
+          deliverableId,
           body: trimmed,
           visibility,
         });
@@ -446,6 +463,7 @@ export function ThreadPanel({
 
       const result = await sendMessageWithAttachments({
         projectId,
+        deliverableId,
         body: trimmed.length > 0 ? trimmed : null,
         visibility,
         attachments,

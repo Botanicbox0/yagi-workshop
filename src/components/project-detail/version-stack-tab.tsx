@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Download,
@@ -9,6 +10,7 @@ import {
   ImageIcon,
   LinkIcon,
   Loader2,
+  MessageSquare,
   PackagePlus,
   Upload,
 } from "lucide-react";
@@ -27,6 +29,7 @@ export type VersionStackDeliverable = {
   version: number;
   status: "submitted" | "changes_requested" | "approved" | string;
   note: string | null;
+  feedbackCount: number;
   createdAt: string;
   submittedBy: string | null;
   storageAssets: Array<{
@@ -64,6 +67,8 @@ type Labels = {
   openExternal: string;
   storedFile: string;
   noNote: string;
+  feedback: string;
+  feedbackCount: string;
   errors: {
     assetRequired: string;
     invalidUrl: string;
@@ -373,6 +378,19 @@ function VersionCard({
         <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
           {labels.assets.replace("{count}", String(assets))}
         </span>
+        <Link
+          href={`?tab=comments&feedback=${deliverable.id}`}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-brand hover:text-brand"
+        >
+          <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{labels.feedback}</span>
+          <span className="text-muted-foreground">
+            {labels.feedbackCount.replace(
+              "{count}",
+              String(deliverable.feedbackCount),
+            )}
+          </span>
+        </Link>
       </div>
 
       <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_280px]">

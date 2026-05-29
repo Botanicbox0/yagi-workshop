@@ -2151,6 +2151,8 @@
       "open_external": "열기",
       "stored_file": "저장된 파일",
       "no_note": "버전 노트가 없습니다.",
+      "feedback": "피드백",
+      "feedback_count": "{count}",
       "success": "새 버전을 업로드했습니다.",
       "upload": {
         "title": "새 버전 업로드",
@@ -2179,6 +2181,15 @@
         "forbidden": "버전을 업로드할 권한이 없습니다.",
         "generic": "버전을 만들지 못했습니다."
       }
+    },
+    "comments": {
+      "eyebrow": "Feedback",
+      "filter_title": "피드백 필터",
+      "general_title": "전체 프로젝트",
+      "general_subtitle": "버전과 무관한 전체 논의와 운영 메모를 남깁니다.",
+      "version_title": "V{version} 피드백",
+      "version_subtitle": "이 버전에 대한 수정 요청과 확인 사항만 모읍니다.",
+      "count": "{count}개"
     },
     "banner": {
       "cancelled": "이 의뢰는 취소되었어요. 새 의뢰를 작성하려면",

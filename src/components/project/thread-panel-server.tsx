@@ -9,10 +9,24 @@ import type {
 const ATTACHMENT_BUCKET = "thread-attachments";
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
+type ThreadLookupQuery = {
+  select(columns: string): ThreadLookupQuery;
+  eq(column: string, value: string): ThreadLookupQuery;
+  is(column: string, value: null): ThreadLookupQuery;
+  limit(count: number): ThreadLookupQuery;
+  maybeSingle(): Promise<{ data: { id: string } | null }>;
+};
+
+type ThreadLookupClient = {
+  from(table: "project_threads"): ThreadLookupQuery;
+};
+
 export async function ThreadPanelServer({
   projectId,
+  deliverableId = null,
 }: {
   projectId: string;
+  deliverableId?: string | null;
 }) {
   const supabase = await createSupabaseServer();
   const {
@@ -21,12 +35,16 @@ export async function ThreadPanelServer({
   if (!user) return null;
 
   // Find the thread (may be null if no messages yet — the client panel handles that).
-  const { data: thread } = await supabase
+  const threadLookup = supabase as unknown as ThreadLookupClient;
+  let threadQuery = threadLookup
     .from("project_threads")
     .select("id")
     .eq("project_id", projectId)
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+  threadQuery = deliverableId
+    ? threadQuery.eq("deliverable_id", deliverableId)
+    : threadQuery.is("deliverable_id", null);
+  const { data: thread } = await threadQuery.maybeSingle();
 
   // Fetch initial messages (empty array if no thread yet).
   // Profiles are fetched separately to avoid FK-hint syntax issues.
@@ -179,6 +197,7 @@ export async function ThreadPanelServer({
   return (
     <ThreadPanel
       projectId={projectId}
+      deliverableId={deliverableId}
       threadId={thread?.id ?? null}
       currentUserId={user.id}
       isYagiAdmin={isYagiAdmin}

@@ -2086,6 +2086,8 @@
       "open_external": "Open",
       "stored_file": "Stored file",
       "no_note": "No version note.",
+      "feedback": "Feedback",
+      "feedback_count": "{count}",
       "success": "New version uploaded.",
       "upload": {
         "title": "Upload new version",
@@ -2114,6 +2116,15 @@
         "forbidden": "You do not have permission to upload a version.",
         "generic": "Could not create the version."
       }
+    },
+    "comments": {
+      "eyebrow": "Feedback",
+      "filter_title": "Feedback filter",
+      "general_title": "General project",
+      "general_subtitle": "Use this for project-wide discussion that is not tied to one version.",
+      "version_title": "V{version} feedback",
+      "version_subtitle": "Keep revision notes and approvals for this version in one thread.",
+      "count": "{count}"
     },
     "banner": {
       "cancelled": "This brief was cancelled. To start a new one,",

@@ -17,7 +17,7 @@
 // `false` because Next.js's path-change scroll heuristic treats
 // query-param-only navigation inconsistently in App Router; we drive
 // the scroll explicitly via onClick to guarantee deterministic UX.
-// Disabled tabs (comments / deliverables) keep the same visual rhythm
+// Disabled tabs (deliverables) keep the same visual rhythm
 // but use cursor-not-allowed + aria-disabled and DO NOT render an
 // anchor — clicks are no-ops and produce no router push.
 
@@ -39,7 +39,7 @@ const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
   { key: "status", disabled: false },
   { key: "brief", disabled: false },
   { key: "board", disabled: false },
-  { key: "comments", disabled: true },
+  { key: "comments", disabled: false },
   { key: "deliverables", disabled: true },
 ];
 
