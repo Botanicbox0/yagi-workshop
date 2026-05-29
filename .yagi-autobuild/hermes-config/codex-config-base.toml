@@ -13,6 +13,8 @@ sandbox_mode = "workspace-write"
 approval_policy = "on-failure"
 personality = "pragmatic"
 
+notify = ["python3", "/home/yagi/.codex/notify.py"]
+
 [projects."/tmp/codex-test"]
 trust_level = "trusted"
 
@@ -21,6 +23,9 @@ trust_level = "trusted"
 
 [projects."/mnt/c/Users/User"]
 trust_level = "trusted"
+
+[tui]
+notifications = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 1
