@@ -2143,6 +2143,21 @@
       "comments": "코멘트",
       "deliverables": "결과물"
     },
+    "duplicate_project": {
+      "trigger": "이 설정으로 새 작업",
+      "title": "프로젝트 설정 복제",
+      "description": "브리프 본문, 버전, 피드백, 게스트는 비우고 사양과 기본 설정만 복사합니다.",
+      "title_label": "새 프로젝트 이름",
+      "title_placeholder": "새 프로젝트 이름",
+      "default_title": "{title} (복제)",
+      "cancel": "취소",
+      "submit": "복제",
+      "submitting": "복제 중...",
+      "success": "새 프로젝트를 만들었습니다.",
+      "error_validation": "프로젝트 이름을 입력해 주세요.",
+      "error_forbidden": "이 프로젝트를 복제할 권한이 없습니다.",
+      "error_generic": "프로젝트 복제에 실패했습니다."
+    },
     "versions": {
       "title": "버전 스택",
       "subtitle": "영상/이미지 산출물을 V1부터 최신 버전까지 한 흐름으로 검수합니다. 최신 버전이 위에 표시됩니다.",

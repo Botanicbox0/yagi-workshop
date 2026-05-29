@@ -35,6 +35,7 @@ import { DeliverablesTab } from "@/components/project-detail/deliverables-tab";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
+import { DuplicateProjectButton } from "@/components/project-detail/duplicate-project-button";
 import { GuestProjectRoom } from "@/components/project-detail/guest-project-room";
 import { GuestInviteForm } from "@/components/project-detail/guest-invite-form";
 import {
@@ -532,7 +533,7 @@ export default async function ProjectDetailPage({
           PRODUCT-MASTER §C.4 v1.2 + H2D1 / H2D2 / H2D3. */}
 
       {/* L4 Tabs — Wave C C_1: 5-tab structure (status default). */}
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <DetailTabs
           active={activeTab}
           labels={{
@@ -541,6 +542,26 @@ export default async function ProjectDetailPage({
             board: tDetail("tab.board"),
             comments: tDetail("tab.comments"),
             deliverables: tDetail("tab.deliverables"),
+          }}
+        />
+        <DuplicateProjectButton
+          projectId={project.id}
+          defaultTitle={tDetail("duplicate_project.default_title", {
+            title: project.title,
+          })}
+          labels={{
+            trigger: tDetail("duplicate_project.trigger"),
+            title: tDetail("duplicate_project.title"),
+            description: tDetail("duplicate_project.description"),
+            titleLabel: tDetail("duplicate_project.title_label"),
+            titlePlaceholder: tDetail("duplicate_project.title_placeholder"),
+            cancel: tDetail("duplicate_project.cancel"),
+            submit: tDetail("duplicate_project.submit"),
+            submitting: tDetail("duplicate_project.submitting"),
+            success: tDetail("duplicate_project.success"),
+            errorValidation: tDetail("duplicate_project.error_validation"),
+            errorForbidden: tDetail("duplicate_project.error_forbidden"),
+            errorGeneric: tDetail("duplicate_project.error_generic"),
           }}
         />
       </div>

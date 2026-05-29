@@ -2078,6 +2078,21 @@
       "comments": "Comments",
       "deliverables": "Deliverables"
     },
+    "duplicate_project": {
+      "trigger": "Start from these settings",
+      "title": "Duplicate project settings",
+      "description": "Only the settings skeleton is copied. Brief content, versions, feedback, and guests start empty.",
+      "title_label": "New project name",
+      "title_placeholder": "New project name",
+      "default_title": "{title} (Copy)",
+      "cancel": "Cancel",
+      "submit": "Duplicate",
+      "submitting": "Duplicating...",
+      "success": "New project created.",
+      "error_validation": "Enter a project name.",
+      "error_forbidden": "You do not have permission to duplicate this project.",
+      "error_generic": "Failed to duplicate project."
+    },
     "versions": {
       "title": "Version stack",
       "subtitle": "Review each delivery in order. Newer versions stay on top so the V1 to V5 loop is easy to scan.",
