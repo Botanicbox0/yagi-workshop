@@ -2088,6 +2088,8 @@
       "no_note": "No version note.",
       "feedback": "Feedback",
       "feedback_count": "{count}",
+      "delivery": "Delivery",
+      "final": "Final",
       "success": "New version uploaded.",
       "upload": {
         "title": "Upload new version",
@@ -2115,6 +2117,46 @@
         "upload_failed": "Upload failed.",
         "forbidden": "You do not have permission to upload a version.",
         "generic": "Could not create the version."
+      }
+    },
+    "deliverables": {
+      "title": "Deliverables",
+      "subtitle": "Review submitted versions, request changes, or record final written approval for the selected delivery.",
+      "final_count": "{count} final",
+      "version": "V{version}",
+      "final": "Final",
+      "submitted_by": "Submitted by",
+      "submitted_at": "Submitted",
+      "reviewed_by": "Reviewed by",
+      "reviewed_at": "Reviewed",
+      "review_note": "Written sign-off",
+      "version_note": "Version note",
+      "no_note": "No note recorded.",
+      "download": "Download",
+      "open_external": "Open",
+      "stored_file": "Stored file",
+      "empty": {
+        "title": "No deliverables yet",
+        "sub": "Submitted versions from the work tab will appear here for final approval."
+      },
+      "status": {
+        "submitted": "Submitted",
+        "changes_requested": "Changes requested",
+        "approved": "Approved"
+      },
+      "review": {
+        "title": "Approval decision",
+        "approve": "Approve",
+        "request_changes": "Request changes",
+        "note_label": "Review note",
+        "note_placeholder": "Record the approval or requested changes.",
+        "submitting": "Saving...",
+        "success": "Review decision recorded.",
+        "errors": {
+          "validation": "Add a review note before saving.",
+          "forbidden": "You do not have permission to review this version.",
+          "generic": "Could not save the review decision."
+        }
       }
     },
     "comments": {

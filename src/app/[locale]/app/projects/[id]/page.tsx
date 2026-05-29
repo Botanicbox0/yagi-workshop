@@ -25,14 +25,13 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
-import { Package } from "lucide-react";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import { type TwinIntent } from "@/components/project-detail/info-rail";
 import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
 import { CommentsTab } from "@/components/project-detail/comments-tab";
-import { EmptyStateTab } from "@/components/project-detail/empty-state-tab";
+import { DeliverablesTab } from "@/components/project-detail/deliverables-tab";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
@@ -175,6 +174,12 @@ export default async function ProjectDetailPage({
   const isYagiAdmin = roles.has("yagi_admin");
   const isWsAdmin = roles.has("workspace_admin");
   const isOwner = projectGateRaw.created_by === user.id;
+  const { data: isWorkspaceMemberForReview } = await sb.rpc("is_ws_member", {
+    uid: user.id,
+    wsid: projectGateRaw.workspace_id,
+  });
+  const canReviewDeliverables =
+    isYagiAdmin || isWorkspaceMemberForReview === true;
   const viewerRole: "admin" | "client" = isYagiAdmin || isWsAdmin
     ? "admin"
     : "client";
@@ -792,10 +797,10 @@ export default async function ProjectDetailPage({
           />
         )}
         {activeTab === "deliverables" && (
-          <EmptyStateTab
-            heading={tDetail("empty_state.deliverables.heading")}
-            subtext={tDetail("empty_state.deliverables.subtext")}
-            Icon={Package}
+          <DeliverablesTab
+            projectId={project.id}
+            canReview={canReviewDeliverables}
+            locale={localeNarrow}
           />
         )}
       </div>

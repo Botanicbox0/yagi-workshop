@@ -210,6 +210,8 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         noNote: t("no_note"),
         feedback: t("feedback"),
         feedbackCount: t("feedback_count", { count: "{count}" }),
+        delivery: t("delivery"),
+        final: t("final"),
         success: t("success"),
         errors: {
           assetRequired: t("errors.asset_required"),

@@ -1,36 +1,32 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  BadgeCheck,
+  CheckCircle2,
   Download,
   ExternalLink,
   FileVideo,
   ImageIcon,
   LinkIcon,
   Loader2,
-  MessageSquare,
-  PackagePlus,
-  SendHorizontal,
-  Upload,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  createProjectDeliverableVersionAction,
-  getDeliverableUploadPutUrlAction,
-} from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
+import { reviewProjectDeliverableAction } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 
-export type VersionStackDeliverable = {
+export type DeliveryReviewDeliverable = {
   id: string;
   version: number;
   status: "submitted" | "changes_requested" | "approved" | string;
   note: string | null;
-  feedbackCount: number;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
   createdAt: string;
   submittedBy: string | null;
   storageAssets: Array<{
@@ -49,51 +45,35 @@ export type VersionStackDeliverable = {
 type Labels = {
   title: string;
   subtitle: string;
-  uploadTitle: string;
-  uploadFile: string;
-  uploadUrl: string;
-  uploadUrlPlaceholder: string;
-  uploadNote: string;
-  uploadNotePlaceholder: string;
-  uploadSubmit: string;
-  uploadSubmitting: string;
+  finalCount: string;
   emptyTitle: string;
   emptySub: string;
   version: string;
+  final: string;
   submittedBy: string;
   submittedAt: string;
-  versionsCount: string;
-  assets: string;
+  reviewedBy: string;
+  reviewedAt: string;
+  reviewNote: string;
+  versionNote: string;
+  noNote: string;
   download: string;
   openExternal: string;
   storedFile: string;
-  noNote: string;
-  feedback: string;
-  feedbackCount: string;
-  delivery: string;
-  final: string;
+  reviewTitle: string;
+  approve: string;
+  requestChanges: string;
+  noteLabel: string;
+  notePlaceholder: string;
+  submitting: string;
+  success: string;
   errors: {
-    assetRequired: string;
-    invalidUrl: string;
-    fileTooLarge: string;
-    uploadFailed: string;
+    validation: string;
     forbidden: string;
     generic: string;
   };
-  success: string;
   status: Record<string, string>;
 };
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
-
-function isHttpUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "https:" || parsed.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
 
 function getYouTubeEmbedUrl(url: string): string | null {
   try {
@@ -142,99 +122,26 @@ function statusClass(status: string) {
   return "border-border bg-surface-card text-muted-foreground";
 }
 
-export function VersionStackTab({
+export function DeliverablesReviewPanel({
   projectId,
   deliverables,
-  canUpload,
+  canReview,
   locale,
   labels,
 }: {
   projectId: string;
-  deliverables: VersionStackDeliverable[];
-  canUpload: boolean;
+  deliverables: DeliveryReviewDeliverable[];
+  canReview: boolean;
   locale: string;
   labels: Labels;
 }) {
-  const router = useRouter();
-  const [file, setFile] = useState<File | null>(null);
-  const [externalUrl, setExternalUrl] = useState("");
-  const [note, setNote] = useState("");
-  const [isPending, startTransition] = useTransition();
-
   const sortedDeliverables = useMemo(
     () => [...deliverables].sort((a, b) => b.version - a.version),
     [deliverables],
   );
-
-  function resetForm() {
-    setFile(null);
-    setExternalUrl("");
-    setNote("");
-  }
-
-  async function submit() {
-    const trimmedUrl = externalUrl.trim();
-    if (!file && !trimmedUrl) {
-      toast.error(labels.errors.assetRequired);
-      return;
-    }
-    if (file && file.size > MAX_FILE_SIZE) {
-      toast.error(labels.errors.fileTooLarge);
-      return;
-    }
-    if (trimmedUrl && !isHttpUrl(trimmedUrl)) {
-      toast.error(labels.errors.invalidUrl);
-      return;
-    }
-
-    startTransition(async () => {
-      let storagePaths: string[] = [];
-      if (file) {
-        const presign = await getDeliverableUploadPutUrlAction({
-          projectId,
-          fileName: file.name,
-          contentType: file.type,
-        });
-        if (!presign.ok) {
-          toast.error(
-            presign.error === "forbidden"
-              ? labels.errors.forbidden
-              : labels.errors.uploadFailed,
-          );
-          return;
-        }
-
-        const putRes = await fetch(presign.putUrl, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": file.type },
-        });
-        if (!putRes.ok) {
-          toast.error(labels.errors.uploadFailed);
-          return;
-        }
-        storagePaths = [presign.storageKey];
-      }
-
-      const result = await createProjectDeliverableVersionAction({
-        projectId,
-        storagePaths,
-        externalUrls: trimmedUrl ? [trimmedUrl] : [],
-        note: note.trim() || undefined,
-      });
-
-      if (!result.ok) {
-        toast.error(
-          result.error === "forbidden" ? labels.errors.forbidden : labels.errors.generic,
-        );
-        return;
-      }
-
-      resetForm();
-      toast.success(labels.success);
-      router.refresh();
-    });
-  }
+  const finalCount = sortedDeliverables.filter(
+    (deliverable) => deliverable.status === "approved",
+  ).length;
 
   return (
     <section className="space-y-5">
@@ -248,73 +155,12 @@ export function VersionStackTab({
               {labels.subtitle}
             </p>
           </div>
-          <div className="rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            {labels.versionsCount.replace(
-              "{count}",
-              String(sortedDeliverables.length),
-            )}
+          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium text-gold">
+            <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            {labels.finalCount.replace("{count}", String(finalCount))}
           </div>
         </div>
       </div>
-
-      {canUpload && (
-        <div className="rounded-lg border border-border/70 bg-surface-card p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <PackagePlus className="h-4 w-4 text-brand" aria-hidden="true" />
-            <h3 className="text-base font-semibold text-foreground">
-              {labels.uploadTitle}
-            </h3>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="space-y-2">
-              <Label htmlFor="version-file">{labels.uploadFile}</Label>
-              <Input
-                id="version-file"
-                type="file"
-                accept="image/*,video/*,application/pdf"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                disabled={isPending}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="version-url">{labels.uploadUrl}</Label>
-              <Input
-                id="version-url"
-                type="url"
-                value={externalUrl}
-                onChange={(event) => setExternalUrl(event.target.value)}
-                placeholder={labels.uploadUrlPlaceholder}
-                disabled={isPending}
-              />
-            </div>
-            <div className="space-y-2 lg:col-span-2">
-              <Label htmlFor="version-note">{labels.uploadNote}</Label>
-              <Textarea
-                id="version-note"
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                placeholder={labels.uploadNotePlaceholder}
-                className="min-h-[88px] resize-none"
-                disabled={isPending}
-                maxLength={2000}
-              />
-            </div>
-          </div>
-          <Button
-            type="button"
-            onClick={submit}
-            disabled={isPending}
-            className="mt-4 gap-2 bg-brand text-brand-on hover:bg-brand/90"
-          >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Upload className="h-4 w-4" aria-hidden="true" />
-            )}
-            {isPending ? labels.uploadSubmitting : labels.uploadSubmit}
-          </Button>
-        </div>
-      )}
 
       {sortedDeliverables.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border/70 bg-surface-card px-4 py-14 text-center">
@@ -329,9 +175,11 @@ export function VersionStackTab({
       ) : (
         <div className="space-y-4">
           {sortedDeliverables.map((deliverable) => (
-            <VersionCard
+            <DeliverableCard
               key={deliverable.id}
+              projectId={projectId}
               deliverable={deliverable}
+              canReview={canReview}
               locale={locale}
               labels={labels}
             />
@@ -342,12 +190,16 @@ export function VersionStackTab({
   );
 }
 
-function VersionCard({
+function DeliverableCard({
+  projectId,
   deliverable,
+  canReview,
   locale,
   labels,
 }: {
-  deliverable: VersionStackDeliverable;
+  projectId: string;
+  deliverable: DeliveryReviewDeliverable;
+  canReview: boolean;
   locale: string;
   labels: Labels;
 }) {
@@ -368,6 +220,11 @@ function VersionCard({
             >
               {labels.status[deliverable.status] ?? deliverable.status}
             </span>
+            {deliverable.status === "approved" ? (
+              <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-gold">
+                {labels.final}
+              </span>
+            ) : null}
           </div>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span>
@@ -379,35 +236,12 @@ function VersionCard({
           </div>
         </div>
         <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
-          {labels.assets.replace("{count}", String(assets))}
+          {assets}
         </span>
-        <Link
-          href={`?tab=comments&feedback=${deliverable.id}`}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-brand hover:text-brand"
-        >
-          <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{labels.feedback}</span>
-          <span className="text-muted-foreground">
-            {labels.feedbackCount.replace(
-              "{count}",
-              String(deliverable.feedbackCount),
-            )}
-          </span>
-        </Link>
-        <Link
-          href="?tab=deliverables"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-brand hover:text-brand"
-        >
-          <SendHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{labels.delivery}</span>
-          {deliverable.status === "approved" ? (
-            <span className="text-gold">{labels.final}</span>
-          ) : null}
-        </Link>
       </div>
 
-      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid content-start gap-3 md:grid-cols-2">
           {deliverable.storageAssets.map((asset) => (
             <StoragePreview key={asset.key} asset={asset} labels={labels} />
           ))}
@@ -415,17 +249,147 @@ function VersionCard({
             <ExternalPreview key={asset.url} asset={asset} labels={labels} />
           ))}
         </div>
-        <div className="rounded-lg border border-border/70 bg-background/40 p-4">
-          {deliverable.note ? (
-            <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground keep-all">
-              {deliverable.note}
+
+        <div className="space-y-3">
+          <NoteBlock title={labels.versionNote} value={deliverable.note} labels={labels} />
+          <div className="rounded-lg border border-border/70 bg-background/40 p-4">
+            <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
+              {labels.reviewNote}
             </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">{labels.noNote}</p>
-          )}
+            {deliverable.reviewNote ? (
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground keep-all">
+                {deliverable.reviewNote}
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">{labels.noNote}</p>
+            )}
+            {deliverable.reviewedAt ? (
+              <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                <p>
+                  {labels.reviewedAt}: {formatDate(deliverable.reviewedAt, locale)}
+                </p>
+                <p>
+                  {labels.reviewedBy}: {deliverable.reviewedBy ?? "-"}
+                </p>
+              </div>
+            ) : null}
+          </div>
+          {canReview ? (
+            <ReviewControls
+              projectId={projectId}
+              deliverable={deliverable}
+              labels={labels}
+            />
+          ) : null}
         </div>
       </div>
     </article>
+  );
+}
+
+function NoteBlock({
+  title,
+  value,
+  labels,
+}: {
+  title: string;
+  value: string | null;
+  labels: Labels;
+}) {
+  return (
+    <div className="rounded-lg border border-border/70 bg-background/40 p-4">
+      <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
+        {title}
+      </p>
+      {value ? (
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground keep-all">
+          {value}
+        </p>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">{labels.noNote}</p>
+      )}
+    </div>
+  );
+}
+
+function ReviewControls({
+  projectId,
+  deliverable,
+  labels,
+}: {
+  projectId: string;
+  deliverable: DeliveryReviewDeliverable;
+  labels: Labels;
+}) {
+  const router = useRouter();
+  const [note, setNote] = useState(deliverable.reviewNote ?? "");
+  const [isPending, startTransition] = useTransition();
+  const disabled = isPending || note.trim().length === 0;
+
+  function review(status: "approved" | "changes_requested") {
+    startTransition(async () => {
+      const result = await reviewProjectDeliverableAction({
+        projectId,
+        deliverableId: deliverable.id,
+        status,
+        reviewNote: note.trim(),
+      });
+
+      if (!result.ok) {
+        if (result.error === "validation") toast.error(labels.errors.validation);
+        else if (result.error === "forbidden") toast.error(labels.errors.forbidden);
+        else toast.error(labels.errors.generic);
+        return;
+      }
+
+      toast.success(
+        labels.success.replace("{status}", labels.status[status] ?? status),
+      );
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="rounded-lg border border-border/70 bg-surface-card p-4">
+      <p className="text-sm font-semibold text-foreground">{labels.reviewTitle}</p>
+      <div className="mt-3 space-y-2">
+        <Label htmlFor={`review-note-${deliverable.id}`}>{labels.noteLabel}</Label>
+        <Textarea
+          id={`review-note-${deliverable.id}`}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder={labels.notePlaceholder}
+          className="min-h-[88px] resize-none"
+          disabled={isPending}
+          maxLength={2000}
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          onClick={() => review("approved")}
+          disabled={disabled}
+          className="gap-2 bg-brand text-brand-on hover:bg-brand/90"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+          )}
+          {isPending ? labels.submitting : labels.approve}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => review("changes_requested")}
+          disabled={disabled}
+          className="gap-2"
+        >
+          <Pencil className="h-4 w-4" aria-hidden="true" />
+          {labels.requestChanges}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -433,7 +397,7 @@ function StoragePreview({
   asset,
   labels,
 }: {
-  asset: VersionStackDeliverable["storageAssets"][number];
+  asset: DeliveryReviewDeliverable["storageAssets"][number];
   labels: Labels;
 }) {
   return (
@@ -469,7 +433,7 @@ function ExternalPreview({
   asset,
   labels,
 }: {
-  asset: VersionStackDeliverable["externalAssets"][number];
+  asset: DeliveryReviewDeliverable["externalAssets"][number];
   labels: Labels;
 }) {
   const embedUrl =

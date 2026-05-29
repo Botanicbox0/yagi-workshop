@@ -216,3 +216,83 @@ export async function createProjectDeliverableVersionAction(
     version: inserted.version as number,
   };
 }
+
+const reviewDeliverableSchema = z.object({
+  projectId: z.string().uuid(),
+  deliverableId: z.string().uuid(),
+  status: z.enum(["approved", "changes_requested"]),
+  reviewNote: z.string().trim().min(1).max(2000),
+});
+
+export type ReviewProjectDeliverableResult =
+  | { ok: true }
+  | {
+      ok: false;
+      error: "validation" | "unauthenticated" | "forbidden" | "not_found" | "db";
+      message?: string;
+    };
+
+export async function reviewProjectDeliverableAction(
+  input: unknown,
+): Promise<ReviewProjectDeliverableResult> {
+  const parsed = reviewDeliverableSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+
+  const { projectId, deliverableId, status, reviewNote } = parsed.data;
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag project_deliverables review columns in action updates
+  const sb = supabase as any;
+  const { data: deliverable, error: lookupError } = await sb
+    .from("project_deliverables")
+    .select("id, project_id, project:projects!inner(id, workspace_id)")
+    .eq("id", deliverableId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (lookupError) {
+    console.error("[reviewProjectDeliverableAction] lookup error:", lookupError);
+    return { ok: false, error: "db", message: lookupError.message };
+  }
+  if (!deliverable) return { ok: false, error: "not_found" };
+
+  const project = Array.isArray(deliverable.project)
+    ? deliverable.project[0]
+    : deliverable.project;
+  const workspaceId = project?.workspace_id as string | undefined;
+  if (!workspaceId) return { ok: false, error: "not_found" };
+
+  const [{ data: isAdmin }, { data: isMember }] = await Promise.all([
+    supabase.rpc("is_yagi_admin", { uid: user.id }),
+    supabase.rpc("is_ws_member", { uid: user.id, wsid: workspaceId }),
+  ]);
+
+  if (isAdmin !== true && isMember !== true) {
+    return { ok: false, error: "forbidden" };
+  }
+
+  const { error: updateError } = await sb
+    .from("project_deliverables")
+    .update({
+      status,
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+      review_note: reviewNote,
+    })
+    .eq("id", deliverableId)
+    .eq("project_id", projectId);
+
+  if (updateError) {
+    console.error("[reviewProjectDeliverableAction] update error:", updateError);
+    return { ok: false, error: "db", message: updateError.message };
+  }
+
+  revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
+  return { ok: true };
+}

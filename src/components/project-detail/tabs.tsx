@@ -10,16 +10,16 @@
 //   현황 (status) — DEFAULT, full ship in C_2/C_3
 //   브리프 (brief) — read-only Stage 1/2/3 view, ships in C_4
 //   작업 (board) — version stack gallery backed by project_deliverables
-//   코멘트 (comments) — placeholder, FU-Phase5-10
-//   결과물 (deliverables) — placeholder, FU-Phase5-11
+//   코멘트 (comments) — deliverable-scoped feedback threads
+//   결과물 (deliverables) — final approval / written sign-off
 //
 // Routing: ?tab= query param. Next.js Link `scroll` prop is left at
 // `false` because Next.js's path-change scroll heuristic treats
 // query-param-only navigation inconsistently in App Router; we drive
 // the scroll explicitly via onClick to guarantee deterministic UX.
-// Disabled tabs (deliverables) keep the same visual rhythm
-// but use cursor-not-allowed + aria-disabled and DO NOT render an
-// anchor — clicks are no-ops and produce no router push.
+// Disabled tabs keep the same visual rhythm but use cursor-not-allowed +
+// aria-disabled and DO NOT render an anchor — clicks are no-ops and
+// produce no router push.
 
 import Link from "next/link";
 
@@ -40,7 +40,7 @@ const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
   { key: "brief", disabled: false },
   { key: "board", disabled: false },
   { key: "comments", disabled: false },
-  { key: "deliverables", disabled: true },
+  { key: "deliverables", disabled: false },
 ];
 
 // Tabs scroll to top on switch so users land at the section heading rather

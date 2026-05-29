@@ -2153,6 +2153,8 @@
       "no_note": "버전 노트가 없습니다.",
       "feedback": "피드백",
       "feedback_count": "{count}",
+      "delivery": "납품",
+      "final": "최종",
       "success": "새 버전을 업로드했습니다.",
       "upload": {
         "title": "새 버전 업로드",
@@ -2180,6 +2182,46 @@
         "upload_failed": "업로드에 실패했습니다.",
         "forbidden": "버전을 업로드할 권한이 없습니다.",
         "generic": "버전을 만들지 못했습니다."
+      }
+    },
+    "deliverables": {
+      "title": "납품",
+      "subtitle": "제출된 버전을 검수하고 수정 요청 또는 최종 승인 기록을 남깁니다.",
+      "final_count": "최종 {count}개",
+      "version": "V{version}",
+      "final": "최종",
+      "submitted_by": "제출자",
+      "submitted_at": "제출",
+      "reviewed_by": "검수자",
+      "reviewed_at": "검수",
+      "review_note": "승인 기록",
+      "version_note": "버전 노트",
+      "no_note": "기록된 노트가 없습니다.",
+      "download": "다운로드",
+      "open_external": "열기",
+      "stored_file": "저장된 파일",
+      "empty": {
+        "title": "아직 납품 버전이 없습니다",
+        "sub": "작업 탭에서 제출된 버전이 최종 승인 대상으로 표시됩니다."
+      },
+      "status": {
+        "submitted": "제출됨",
+        "changes_requested": "수정 요청",
+        "approved": "승인됨"
+      },
+      "review": {
+        "title": "승인 결정",
+        "approve": "승인",
+        "request_changes": "수정 요청",
+        "note_label": "검수 노트",
+        "note_placeholder": "승인 또는 수정 요청 내용을 기록해주세요.",
+        "submitting": "저장 중...",
+        "success": "검수 결정을 저장했습니다.",
+        "errors": {
+          "validation": "저장 전 검수 노트를 입력해주세요.",
+          "forbidden": "이 버전을 검수할 권한이 없습니다.",
+          "generic": "검수 결정을 저장하지 못했습니다."
+        }
       }
     },
     "comments": {
