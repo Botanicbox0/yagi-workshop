@@ -15,6 +15,12 @@ personality = "pragmatic"
 
 notify = ["python3", "/home/yagi/.codex/notify.py"]
 
+[features.network_proxy]
+enabled = true
+
+[features.network_proxy.domains]
+"hooks.slack.com" = "allow"
+
 [projects."/tmp/codex-test"]
 trust_level = "trusted"
 
