@@ -127,14 +127,14 @@ export function UrlCard({ url_entry, onRemove, onNoteUpdate, disabled }: Props) 
           href={url_entry.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-suit text-sm font-medium text-foreground hover:underline block truncate"
+          className="font-sans text-sm font-medium text-foreground hover:underline block truncate"
           title={url_entry.url}
         >
           {url_entry.title ?? url_entry.url}
         </a>
 
         {/* Provider + date */}
-        <p className="font-suit text-xs text-muted-foreground mt-0.5">
+        <p className="font-sans text-xs text-muted-foreground mt-0.5">
           {providerLabel && <span>{providerLabel} · </span>}
           {t("added_at", { date: formatDate(url_entry.added_at) })}
         </p>
@@ -150,7 +150,7 @@ export function UrlCard({ url_entry, onRemove, onNoteUpdate, disabled }: Props) 
               onKeyDown={handleNoteKeyDown}
               onClick={handleNoteClick}
               className={[
-                "font-suit text-xs text-muted-foreground block",
+                "font-sans text-xs text-muted-foreground block",
                 !disabled ? "cursor-text hover:text-foreground" : "",
                 editingNote
                   ? "outline outline-1 outline-border/60 rounded px-1 -mx-1"
@@ -170,7 +170,7 @@ export function UrlCard({ url_entry, onRemove, onNoteUpdate, disabled }: Props) 
               <button
                 type="button"
                 onClick={handleNoteClick}
-                className="font-suit text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                className="font-sans text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
               >
                 {t("note_edit")}
               </button>

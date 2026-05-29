@@ -9,7 +9,7 @@
 // Each row has a "수정" link that navigates back to the appropriate step.
 //
 // Design rules:
-//   - font-suit for section header (L-010)
+//   - font-sans for section header (L-010)
 //   - Achromatic only (L-011)
 //   - Soft layered shadow — shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)] (L-013)
 //   - No internal page seams between sections (L-012): use divide-y divide-border/40
@@ -152,7 +152,7 @@ export function SummaryCard({
     >
       {/* Section header */}
       <div className="px-4 pt-3 pb-2 border-b border-border/40">
-        <h3 className="font-suit text-sm font-semibold tracking-tight">
+        <h3 className="font-sans text-sm font-semibold tracking-tight">
           {t("wizard.summary.title")}
         </h3>
       </div>

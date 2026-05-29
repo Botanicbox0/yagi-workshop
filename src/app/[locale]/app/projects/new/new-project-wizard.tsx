@@ -9,7 +9,7 @@
 //   3. 최종 확인 (Final review)         — summary card, re-editable refs, submit
 //
 // Design rules applied:
-//   - font-suit for step titles (L-010, PRINCIPLES §4.1)
+//   - font-sans for step titles (L-010, PRINCIPLES §4.1)
 //   - Achromatic only (L-011, PRINCIPLES §4.2)
 //   - No border-b between header + form (L-012, ANTI_PATTERNS §10.1)
 //   - Soft layered shadow on cards (L-013, PRINCIPLES §4.3)
@@ -926,7 +926,7 @@ export function NewProjectWizard({
       {/* Step header — no border-b below (L-012) */}
       <div className="mb-8">
         <Eyebrow>{t(stepEyebrowKey)}</Eyebrow>
-        <h2 className="font-suit text-3xl font-bold tracking-tight mt-1 keep-all">
+        <h2 className="font-sans text-3xl font-bold tracking-tight mt-1 keep-all">
           {t(stepTitleKey)}
         </h2>
       </div>

@@ -63,10 +63,10 @@ export function PdfCard({ pdf, onRemove, disabled }: Props) {
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="font-suit text-sm font-medium text-foreground truncate">
+        <p className="font-sans text-sm font-medium text-foreground truncate">
           {pdf.filename}
         </p>
-        <p className="font-suit text-xs text-muted-foreground mt-0.5">
+        <p className="font-sans text-xs text-muted-foreground mt-0.5">
           {formatBytes(pdf.size_bytes)} &middot;{" "}
           {t("uploaded_at", { date: formatDate(pdf.uploaded_at) })}
         </p>

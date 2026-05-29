@@ -4,7 +4,7 @@
  * asset-action-menu.tsx
  * Phase 3.1 — Contextual asset action menu for yagi-image, yagi-pdf, yagi-url-card shapes.
  * Shown on hover (300ms delay) or right-click over a matching shape.
- * Achromatic styling (L-011), soft shadow (L-013), font-suit (L-010).
+ * Achromatic styling (L-011), soft shadow (L-013), font-sans (L-010).
  */
 
 import { useCallback } from "react";
@@ -108,7 +108,7 @@ export function AssetActionMenu({
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
-            fontFamily: "var(--font-suit, sans-serif)",
+            fontFamily: "var(--ds-font-body)",
             fontSize: "13px",
             fontWeight: 400,
             color: "#0a0a0a",
@@ -141,7 +141,7 @@ export function AssetActionMenu({
               border: "none",
               borderRadius: "5px",
               cursor: "pointer",
-              fontFamily: "var(--font-suit, sans-serif)",
+              fontFamily: "var(--ds-font-body)",
               fontSize: "13px",
               fontWeight: 400,
               color: "#0a0a0a",

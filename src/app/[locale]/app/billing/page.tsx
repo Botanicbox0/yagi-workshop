@@ -43,7 +43,7 @@ export default async function BillingPage({ params }: Props) {
         </p>
         <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="max-w-3xl">
-            <h1 className="font-suit text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
+            <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl">
               {t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">

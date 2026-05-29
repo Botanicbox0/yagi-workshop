@@ -69,7 +69,7 @@ function createPdfIcon() {
         textAnchor: "middle",
         fontSize: 9,
         fontWeight: 700,
-        fontFamily: "var(--font-suit, sans-serif)",
+        fontFamily: "var(--ds-font-body)",
         fill: "#555555",
         letterSpacing: "0.08em",
       },
@@ -162,7 +162,7 @@ export class PdfShapeUtil extends ShapeUtil<any> { // eslint-disable-line @types
             fontSize: "12px",
             fontWeight: 500,
             color: "#0a0a0a",
-            fontFamily: "var(--font-suit, sans-serif)",
+            fontFamily: "var(--ds-font-body)",
             textAlign: "center",
             lineHeight: 1.4,
             overflow: "hidden",
@@ -178,7 +178,7 @@ export class PdfShapeUtil extends ShapeUtil<any> { // eslint-disable-line @types
               style: {
                 fontSize: "11px",
                 color: "#888888",
-                fontFamily: "var(--font-suit, sans-serif)",
+                fontFamily: "var(--ds-font-body)",
               },
             },
             `${pageCount} pages`

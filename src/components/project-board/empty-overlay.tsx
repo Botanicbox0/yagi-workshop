@@ -6,7 +6,7 @@
  * Shows when no shapes placed; fades out when first shape is added.
  * Styling: text-muted-foreground/40 text-sm font-normal pointer-events-none
  * per KICKOFF.md Q-D spec.
- * L-010: font-suit (NOT a heading display family — Wave C v2 retired Fraunces)
+ * L-010: font-sans (NOT a heading display family — Wave C v2 retired Fraunces)
  * L-011: achromatic colors only
  */
 
@@ -35,7 +35,7 @@ export function EmptyOverlay({ hasShapes }: EmptyOverlayProps) {
       }}
     >
       <p
-        className="font-suit text-sm font-normal"
+        className="font-sans text-sm font-normal"
         style={{
           color: "rgba(10, 10, 10, 0.35)",
           textAlign: "center",

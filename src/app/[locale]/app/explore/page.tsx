@@ -109,7 +109,7 @@ export default async function ExplorePage({ params }: Props) {
             {t("eyebrow")}
           </p>
           <div className="max-w-3xl">
-            <h1 className="font-suit text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl">
+            <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl">
               {t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">

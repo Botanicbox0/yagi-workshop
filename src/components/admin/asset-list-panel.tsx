@@ -4,7 +4,7 @@
  * asset-list-panel.tsx
  * Phase 3.1 task_07 — admin right-rail panel listing all images/PDFs/URLs from
  * project_boards.asset_index (server-side computed via extractAssetIndex).
- * Achromatic (L-011), soft shadow (L-013), font-suit (L-010), no internal seams (L-012).
+ * Achromatic (L-011), soft shadow (L-013), font-sans (L-010), no internal seams (L-012).
  *
  * Phase 3.1 hotfix-3 update: AssetIndexEntry shape changed.
  *   - shapeId → shape_id (optional)

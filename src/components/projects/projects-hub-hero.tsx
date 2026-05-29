@@ -5,7 +5,7 @@ import { InteractiveVisualStack } from "./interactive-visual-stack";
 
 // Phase 2.9 G_B9_D — editorial hero on /app/projects empty state.
 //
-// LEFT zone — informational. PROJECT eyebrow → 3-line SUIT headline →
+// LEFT zone — informational. PROJECT eyebrow → 3-line display headline →
 // sub copy → 3 bullets with 32px circle icons (mono, no color) → CTA
 // pill + avatar stack social proof.
 //
@@ -34,7 +34,7 @@ export async function ProjectsHubHero({ locale }: Props) {
           {t("hero_meta_eyebrow")}
         </p>
 
-        <h1 className="font-suit text-4xl md:text-5xl lg:text-[56px] leading-[1.1] tracking-[-0.02em] font-bold text-foreground whitespace-pre-line keep-all">
+        <h1 className="font-display text-4xl md:text-5xl lg:text-[56px] leading-[1.1] tracking-[-0.02em] font-bold text-foreground whitespace-pre-line keep-all">
           {t("hero_title")}
         </h1>
 

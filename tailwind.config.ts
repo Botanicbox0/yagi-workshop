@@ -16,7 +16,6 @@ const config: Config = {
   			// for KO and when the Editorial New face is not yet loaded (font
   			// file not in repo — config-only stack per TASK 24-follow).
   			display: ["Editorial New", "Pretendard Variable", "ui-sans-serif", "system-ui"],
-  			suit: ["var(--font-suit)", "Pretendard Variable", "ui-sans-serif", "system-ui"],
   			// Phase 4.x Wave C.5b sub_00 — yagi-design-system v1.0 font tokens.
   			// `body`/`display-ds`/`accent-ds` resolve via CSS vars so [lang="en"]
   			// can swap families (Pretendard ↔ Geist/Redaction) without touching JSX.

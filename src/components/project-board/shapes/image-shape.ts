@@ -122,7 +122,7 @@ export class ImageShapeUtil extends ShapeUtil<any> { // eslint-disable-line @typ
                 justifyContent: "center",
                 color: "#888888",
                 fontSize: "13px",
-                fontFamily: "var(--font-suit, sans-serif)",
+                fontFamily: "var(--ds-font-body)",
               },
             },
             "Loading..."

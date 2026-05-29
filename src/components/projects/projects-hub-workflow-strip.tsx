@@ -31,10 +31,10 @@ export async function ProjectsHubWorkflowStrip({ locale }: Props) {
             className="rounded-2xl bg-card p-6 lg:p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)]"
           >
             <Icon className="w-5 h-5 text-foreground mb-6" />
-            <p className="font-suit text-sm font-bold tabular-nums tracking-tight text-foreground">
+            <p className="font-sans text-sm font-bold tabular-nums tracking-tight text-foreground">
               {String(i).padStart(2, "0")}
             </p>
-            <h3 className="font-suit text-base lg:text-lg font-bold mt-2 mb-3 tracking-tight keep-all">
+            <h3 className="font-sans text-base lg:text-lg font-bold mt-2 mb-3 tracking-tight keep-all">
               {t(`hero_step_${i}_title` as "hero_step_1_title")}
             </h3>
             <p className="text-[13px] text-muted-foreground leading-relaxed keep-all">

@@ -147,7 +147,7 @@ export default async function AdminArtistsPage({ params }: Props) {
         <p className="mb-3 text-xs font-semibold uppercase tracking-label text-brand">
           {t("eyebrow")}
         </p>
-        <h1 className="font-suit text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
+        <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
           {t("title")}
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground keep-all">

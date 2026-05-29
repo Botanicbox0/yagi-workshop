@@ -35,7 +35,7 @@ export function LockedBanner({ isLocked }: Props) {
       }}
     >
       <span aria-hidden="true">🔒</span>
-      <span className="font-suit keep-all">{t("banner_for_client")}</span>
+      <span className="font-sans keep-all">{t("banner_for_client")}</span>
     </div>
   );
 }

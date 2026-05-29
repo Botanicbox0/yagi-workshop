@@ -76,7 +76,7 @@ export function InteractiveVisualStack({ strings }: { strings: Strings }) {
             <p className="text-[11px] font-semibold tracking-[0.12em] text-white/80 uppercase mb-2">
               {strings.card1Eyebrow}
             </p>
-            <h3 className="font-suit text-xl lg:text-2xl font-bold text-white leading-tight tracking-tight">
+            <h3 className="font-sans text-xl lg:text-2xl font-bold text-white leading-tight tracking-tight">
               {strings.card1Title}
               {strings.card1TitleSub && (
                 <span className="text-white/70 text-base font-normal ml-2">
@@ -137,7 +137,7 @@ export function InteractiveVisualStack({ strings }: { strings: Strings }) {
             <p className="text-[11px] font-semibold tracking-[0.12em] text-white/80 uppercase mb-2">
               {strings.card2Eyebrow}
             </p>
-            <h3 className="font-suit text-xl lg:text-2xl font-bold text-white leading-tight tracking-tight">
+            <h3 className="font-sans text-xl lg:text-2xl font-bold text-white leading-tight tracking-tight">
               {strings.card2Title}
               {strings.card2TitleSub && (
                 <span className="text-white/70 text-base font-normal ml-2">

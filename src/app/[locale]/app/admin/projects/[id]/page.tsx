@@ -1,7 +1,7 @@
 // Phase 3.1 task_07 — Admin project detail page with right-rail asset panel.
 // Auth: yagi_admin only (user_roles check; non-admin → notFound).
 // Reads project_boards.asset_index server-side and renders AssetListPanel.
-// Design: achromatic (L-011), soft shadow (L-013), font-suit (L-010), no seams (L-012).
+// Design: achromatic (L-011), soft shadow (L-013), font-sans (L-010), no seams (L-012).
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -121,7 +121,7 @@ export default async function AdminProjectDetailPage({ params }: Props) {
         </span>
       </nav>
 
-      {/* L2 headline (L-010 font-suit, L-012 no seam below) */}
+      {/* L2 headline (L-010 font-sans, L-012 no seam below) */}
       <div className="mb-8">
         <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-2">
           {workspaceName}
@@ -132,7 +132,7 @@ export default async function AdminProjectDetailPage({ params }: Props) {
             </>
           )}
         </p>
-        <h1 className="font-suit text-3xl font-bold tracking-tight text-foreground keep-all mb-3">
+        <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground keep-all mb-3">
           {projectRaw.title as string}
         </h1>
         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">

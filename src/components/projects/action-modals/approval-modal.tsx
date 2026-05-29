@@ -77,7 +77,7 @@ export function ApprovalModal({ projectId, open, onClose, locale = 'ko' }: Props
       >
         <h2
           id="approval-modal-title"
-          className="font-suit text-2xl font-bold tracking-tight text-foreground mb-4"
+          className="font-sans text-2xl font-bold tracking-tight text-foreground mb-4"
         >
           {c.title}
         </h2>

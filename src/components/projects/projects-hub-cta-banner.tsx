@@ -16,7 +16,7 @@ export async function ProjectsHubCtaBanner({ locale }: Props) {
   return (
     <section className="rounded-3xl border border-border bg-surface-raised px-8 py-16 lg:px-16 lg:py-20 mt-16 lg:mt-20 text-foreground">
       <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] gap-8 lg:gap-12 items-center">
-        <h2 className="font-suit text-3xl lg:text-4xl font-bold leading-[1.1] tracking-[-0.01em] whitespace-pre-line keep-all">
+        <h2 className="font-display text-3xl lg:text-4xl font-bold leading-[1.1] tracking-[-0.01em] whitespace-pre-line keep-all">
           {t("cta_banner_title")}
         </h2>
         <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line keep-all">

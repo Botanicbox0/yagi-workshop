@@ -4,7 +4,7 @@
  * version-history-panel.tsx
  * Phase 3.1 task_05 — version history side panel for ProjectBoard brief mode.
  * Lists last 20 versions; click to preview; restore (admin only).
- * Achromatic (L-011), soft shadow (L-013), font-suit (L-010), no internal seams (L-012).
+ * Achromatic (L-011), soft shadow (L-013), font-sans (L-010), no internal seams (L-012).
  */
 
 import { useState, useTransition } from "react";

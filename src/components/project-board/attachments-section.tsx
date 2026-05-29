@@ -6,7 +6,7 @@
  * Used in wizard Step 2 (boardId=null, mode=wizard) and project detail brief mode.
  *
  * Design system v0.2.0 compliance (L-018 read before coding):
- *   - L-010: font-suit eyebrows (text-xs uppercase tracking-wider)
+ *   - L-010: font-sans eyebrows (text-xs uppercase tracking-wider)
  *   - L-011: achromatic only (no color accents)
  *   - L-012: no internal page seams — section dividers are hairline borders
  *   - L-013: soft shadow + border-border/40 on cards (no harsh 1px)
@@ -238,11 +238,11 @@ export function AttachmentsSection({
           .join(" ")}
         aria-label="PDF attachments"
       >
-        {/* Eyebrow — L-010: font-suit text-xs uppercase tracking-wider */}
-        <p className="font-suit text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground/70 mb-1">
+        {/* Eyebrow — L-010: font-sans text-xs uppercase tracking-wider */}
+        <p className="font-sans text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground/70 mb-1">
           {t("pdf.eyebrow")}
         </p>
-        <p className="font-suit text-sm text-muted-foreground mb-4">
+        <p className="font-sans text-sm text-muted-foreground mb-4">
           {t("pdf.sub")}
         </p>
 
@@ -253,7 +253,7 @@ export function AttachmentsSection({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={pdfUploading}
-              className="font-suit text-sm rounded-md px-4 py-2 border border-border/40 text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="font-sans text-sm rounded-md px-4 py-2 border border-border/40 text-foreground hover:bg-muted transition-colors disabled:opacity-50"
               style={{
                 boxShadow:
                   "0 1px 2px rgba(0,0,0,0.04)",
@@ -275,7 +275,7 @@ export function AttachmentsSection({
 
         {/* Error message */}
         {pdfError && (
-          <p className="font-suit text-xs text-foreground mb-3 px-1">
+          <p className="font-sans text-xs text-foreground mb-3 px-1">
             {pdfError}
           </p>
         )}
@@ -293,7 +293,7 @@ export function AttachmentsSection({
             ))}
           </div>
         ) : (
-          <p className="font-suit text-sm text-muted-foreground/60">
+          <p className="font-sans text-sm text-muted-foreground/60">
             {t("pdf.empty")}
           </p>
         )}
@@ -305,10 +305,10 @@ export function AttachmentsSection({
       {/* ─────────────────── URL SECTION ─────────────────── */}
       <section className="py-6" aria-label="URL attachments">
         {/* Eyebrow — L-010 */}
-        <p className="font-suit text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground/70 mb-1">
+        <p className="font-sans text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground/70 mb-1">
           {t("url.eyebrow")}
         </p>
-        <p className="font-suit text-sm text-muted-foreground mb-4">
+        <p className="font-sans text-sm text-muted-foreground mb-4">
           {t("url.sub")}
         </p>
 
@@ -324,13 +324,13 @@ export function AttachmentsSection({
                   if (urlError) setUrlError("");
                 }}
                 placeholder={t("url.placeholder")}
-                className="flex-1 font-suit text-sm rounded-md px-3 py-2 border border-border/40 bg-background placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-foreground/20"
+                className="flex-1 font-sans text-sm rounded-md px-3 py-2 border border-border/40 bg-background placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-foreground/20"
                 aria-label="URL input"
               />
               <button
                 type="submit"
                 disabled={urlSubmitting || !urlInput.trim()}
-                className="font-suit text-sm rounded-md px-4 py-2 border border-border/40 text-foreground hover:bg-muted transition-colors disabled:opacity-50 shrink-0"
+                className="font-sans text-sm rounded-md px-4 py-2 border border-border/40 text-foreground hover:bg-muted transition-colors disabled:opacity-50 shrink-0"
                 style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}
               >
                 {urlSubmitting ? "추가 중..." : t("url.add")}
@@ -345,13 +345,13 @@ export function AttachmentsSection({
                 onChange={(e) => setNoteInput(e.target.value)}
                 placeholder={t("url.note_placeholder")}
                 maxLength={500}
-                className="w-full font-suit text-sm rounded-md px-3 py-2 border border-border/40 bg-background placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-foreground/20"
+                className="w-full font-sans text-sm rounded-md px-3 py-2 border border-border/40 bg-background placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-foreground/20"
                 aria-label="URL note input"
               />
             )}
 
             {urlError && (
-              <p className="font-suit text-xs text-foreground">{urlError}</p>
+              <p className="font-sans text-xs text-foreground">{urlError}</p>
             )}
           </form>
         )}
@@ -370,7 +370,7 @@ export function AttachmentsSection({
             ))}
           </div>
         ) : (
-          <p className="font-suit text-sm text-muted-foreground/60">
+          <p className="font-sans text-sm text-muted-foreground/60">
             {t("url.empty")}
           </p>
         )}

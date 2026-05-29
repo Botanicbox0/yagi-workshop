@@ -66,11 +66,11 @@ function ConfirmDialog({
       >
         <h2
           id="lock-confirm-title"
-          className="font-suit text-base font-semibold text-foreground mb-2"
+          className="font-sans text-base font-semibold text-foreground mb-2"
         >
           {t("confirm.title")}
         </h2>
-        <p className="font-suit text-sm text-muted-foreground mb-5 keep-all">
+        <p className="font-sans text-sm text-muted-foreground mb-5 keep-all">
           {t("confirm.body")}
         </p>
 
@@ -78,14 +78,14 @@ function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="font-suit text-sm rounded-md px-4 py-2 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="font-sans text-sm rounded-md px-4 py-2 border border-border/40 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             {t("confirm.cancel")}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="font-suit text-sm rounded-md px-4 py-2 border border-border/60 bg-foreground text-background hover:opacity-90 transition-opacity"
+            className="font-sans text-sm rounded-md px-4 py-2 border border-border/60 bg-foreground text-background hover:opacity-90 transition-opacity"
           >
             {t("confirm.confirm")}
           </button>
@@ -144,7 +144,7 @@ export function LockButton({ boardId: _boardId, isLocked, onToggle }: Props) {
             : t("lock_button")
         }
         className={[
-          "font-suit text-xs rounded-md px-3 py-1.5 transition-colors disabled:opacity-50 flex items-center gap-1.5",
+          "font-sans text-xs rounded-md px-3 py-1.5 transition-colors disabled:opacity-50 flex items-center gap-1.5",
           optimisticLocked
             ? // Filled (locked state) — achromatic, no color
               "border border-border/60 bg-foreground text-background hover:opacity-90"

@@ -92,7 +92,7 @@ export function RevisionRequestModal({ projectId, open, onClose, locale = 'ko' }
       >
         <h2
           id="revision-modal-title"
-          className="font-suit text-2xl font-bold tracking-tight text-foreground mb-4"
+          className="font-sans text-2xl font-bold tracking-tight text-foreground mb-4"
         >
           {c.title}
         </h2>

@@ -531,7 +531,7 @@ export function ProjectBoard({
           }}
         >
           <span
-            className="font-suit text-sm"
+            className="font-sans text-sm"
             style={{ color: "#555555", textAlign: "center" }}
           >
             {t("mobileBanner")}
@@ -558,7 +558,7 @@ export function ProjectBoard({
           }}
         >
           <span
-            className="font-suit text-sm"
+            className="font-sans text-sm"
             style={{ color: "#555555", textAlign: "center" }}
           >
             {/* TASK_05_STUB filled: boardLocked i18n key from task_05 */}

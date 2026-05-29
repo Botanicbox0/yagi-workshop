@@ -169,7 +169,7 @@ export default async function CampaignDetailPage({ params }: Props) {
               <Megaphone className="h-4 w-4" aria-hidden="true" />
               {t("detail.eyebrow")}
             </p>
-            <h1 className="font-suit text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
+            <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
               {campaign.title}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">

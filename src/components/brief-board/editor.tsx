@@ -678,11 +678,11 @@ export function BriefBoardEditor({
           )}
         </div>
       )}
-      {/* Phase 3.1 task_06 — Legacy banner for readOnly mode (L-010 font-suit, L-013 border-border/40) */}
+      {/* Phase 3.1 task_06 — Legacy banner for readOnly mode (L-010 font-sans, L-013 border-border/40) */}
       {readOnly && (
         <div
           role="status"
-          className="px-4 py-3 border-b border-border/40 font-suit"
+          className="px-4 py-3 border-b border-border/40 font-sans"
           style={{ background: "#fafafa" }}
         >
           <p className="text-sm font-medium text-foreground keep-all">

@@ -77,7 +77,7 @@ export function CancelModal({ projectId, open, onClose, locale = 'ko' }: Props) 
       >
         <h2
           id="cancel-modal-title"
-          className="font-suit text-2xl font-bold tracking-tight text-foreground mb-1"
+          className="font-sans text-2xl font-bold tracking-tight text-foreground mb-1"
         >
           {c.title}
         </h2>
