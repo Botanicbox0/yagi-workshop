@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { createProjectDeliverableVersionAction } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 
 export type GuestDeliverable = {
   id: string;
@@ -50,26 +50,16 @@ export function GuestDeliverablesPanel({
       return;
     }
     setSubmitting(true);
-    const supabase = createSupabaseBrowser();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setSubmitting(false);
-      toast.error(t("error_unauthenticated"));
-      return;
-    }
-
-    const { error } = await supabase.from("project_deliverables").insert({
-      project_id: projectId,
-      submitted_by: user.id,
-      external_urls: [trimmedUrl],
-      storage_paths: [],
-      note: note.trim() || null,
+    const result = await createProjectDeliverableVersionAction({
+      projectId,
+      externalUrls: [trimmedUrl],
+      note: note.trim() || undefined,
     });
     setSubmitting(false);
-    if (error) {
-      toast.error(t("error_db"));
+    if (!result.ok) {
+      toast.error(
+        result.error === "unauthenticated" ? t("error_unauthenticated") : t("error_db"),
+      );
       return;
     }
     setUrl("");

@@ -2062,7 +2062,7 @@
       "no_twin": "No Twin"
     },
     "tabs": {
-      "board": "Board",
+      "board": "Versions",
       "progress": "Progress",
       "comment": "Comments",
       "deliverable": "Deliverables"
@@ -2070,9 +2070,50 @@
     "tab": {
       "status": "Status",
       "brief": "Brief",
-      "board": "Board",
+      "board": "Versions",
       "comments": "Comments",
       "deliverables": "Deliverables"
+    },
+    "versions": {
+      "title": "Version stack",
+      "subtitle": "Review each delivery in order. Newer versions stay on top so the V1 to V5 loop is easy to scan.",
+      "version": "V{version}",
+      "submitted_by": "Submitted by",
+      "submitted_at": "Submitted",
+      "versions_count": "{count} versions",
+      "assets": "{count} assets",
+      "download": "Download",
+      "open_external": "Open",
+      "stored_file": "Stored file",
+      "no_note": "No version note.",
+      "success": "New version uploaded.",
+      "upload": {
+        "title": "Upload new version",
+        "file": "File",
+        "url": "External video URL",
+        "url_placeholder": "https://youtube.com/...",
+        "note": "Version note",
+        "note_placeholder": "What changed in this version?",
+        "submit": "Upload version",
+        "submitting": "Uploading..."
+      },
+      "empty": {
+        "title": "No versions yet",
+        "sub": "Uploaded files and external video links will appear here as a chronological review stack."
+      },
+      "status": {
+        "submitted": "Submitted",
+        "changes_requested": "Changes requested",
+        "approved": "Approved"
+      },
+      "errors": {
+        "asset_required": "Add a file or an external URL.",
+        "invalid_url": "Enter a valid http(s) URL.",
+        "file_too_large": "File is too large.",
+        "upload_failed": "Upload failed.",
+        "forbidden": "You do not have permission to upload a version.",
+        "generic": "Could not create the version."
+      }
     },
     "banner": {
       "cancelled": "This brief was cancelled. To start a new one,",

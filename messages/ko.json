@@ -2127,7 +2127,7 @@
       "no_twin": "Twin 활용 안 함"
     },
     "tabs": {
-      "board": "보드",
+      "board": "작업",
       "progress": "진행",
       "comment": "코멘트",
       "deliverable": "결과물"
@@ -2135,9 +2135,50 @@
     "tab": {
       "status": "현황",
       "brief": "브리프",
-      "board": "보드",
+      "board": "작업",
       "comments": "코멘트",
       "deliverables": "결과물"
+    },
+    "versions": {
+      "title": "버전 스택",
+      "subtitle": "영상/이미지 산출물을 V1부터 최신 버전까지 한 흐름으로 검수합니다. 최신 버전이 위에 표시됩니다.",
+      "version": "V{version}",
+      "submitted_by": "제출자",
+      "submitted_at": "제출",
+      "versions_count": "버전 {count}개",
+      "assets": "에셋 {count}개",
+      "download": "다운로드",
+      "open_external": "열기",
+      "stored_file": "저장된 파일",
+      "no_note": "버전 노트가 없습니다.",
+      "success": "새 버전을 업로드했습니다.",
+      "upload": {
+        "title": "새 버전 업로드",
+        "file": "파일",
+        "url": "외부 영상 URL",
+        "url_placeholder": "https://youtube.com/...",
+        "note": "버전 노트",
+        "note_placeholder": "이번 버전에서 달라진 점을 적어주세요.",
+        "submit": "버전 업로드",
+        "submitting": "업로드 중..."
+      },
+      "empty": {
+        "title": "아직 업로드된 버전이 없습니다",
+        "sub": "파일 또는 외부 영상 링크를 올리면 시간순 검수 스택으로 표시됩니다."
+      },
+      "status": {
+        "submitted": "제출됨",
+        "changes_requested": "수정 요청",
+        "approved": "승인됨"
+      },
+      "errors": {
+        "asset_required": "파일 또는 외부 URL을 추가해주세요.",
+        "invalid_url": "올바른 http(s) URL을 입력해주세요.",
+        "file_too_large": "파일이 너무 큽니다.",
+        "upload_failed": "업로드에 실패했습니다.",
+        "forbidden": "버전을 업로드할 권한이 없습니다.",
+        "generic": "버전을 만들지 못했습니다."
+      }
     },
     "banner": {
       "cancelled": "이 의뢰는 취소되었어요. 새 의뢰를 작성하려면",

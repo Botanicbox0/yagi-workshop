@@ -4,14 +4,12 @@
 //
 // Now a client component (was server). The "use client" was added in
 // HF1_0 so the tab Link can attach an onClick handler that scrolls
-// to the top of the viewport on tab switch — except for the 보드
-// (board) tab, where canvas viewport is preserved per HD7 / SPEC
-// §"HF1.0".
+// to the top of the viewport on tab switch.
 //
 // Tab order per SPEC §"Scope: 5 tab 구조":
 //   현황 (status) — DEFAULT, full ship in C_2/C_3
 //   브리프 (brief) — read-only Stage 1/2/3 view, ships in C_4
-//   보드 (board) — wraps existing brief-board-shell-client
+//   작업 (board) — version stack gallery backed by project_deliverables
 //   코멘트 (comments) — placeholder, FU-Phase5-10
 //   결과물 (deliverables) — placeholder, FU-Phase5-11
 //
@@ -45,12 +43,10 @@ const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
   { key: "deliverables", disabled: true },
 ];
 
-// Board tab preserves canvas viewport (no scroll) per HD7. All other
-// tabs scroll to top on switch so users land at the section heading
-// rather than mid-page (Wave C bug: tab content changes but viewport
-// stays at the previous tab's scroll offset).
-function maybeScrollToTop(targetKey: TabKey) {
-  if (targetKey === "board") return;
+// Tabs scroll to top on switch so users land at the section heading rather
+// than mid-page (Wave C bug: tab content changes but viewport stays at the
+// previous tab's scroll offset).
+function maybeScrollToTop() {
   if (typeof window === "undefined") return;
   // requestAnimationFrame defers to after Next.js Link's navigation
   // commit so the new tab's content is mounted before we scroll.
@@ -97,7 +93,7 @@ export function DetailTabs({ active, labels }: Props) {
             key={key}
             href={`?tab=${key}`}
             scroll={false}
-            onClick={() => maybeScrollToTop(key)}
+            onClick={maybeScrollToTop}
             role="tab"
             aria-selected={isActive}
             className={`${baseClass} ${stateClass}`}

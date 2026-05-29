@@ -1,32 +1,17 @@
-// Phase 4.x task_04 — Board tab (server component) for the post-submit
-// detail page. Wraps the existing Phase 3.1 BriefBoardShellClient so
-// the redesigned page.tsx stays slim. Fetches its own data so the
-// disabled tabs (코멘트 / 결과물) never trigger this code path -- they
-// short-circuit to EmptyStateTab in page.tsx.
+// Phase 8 — Work tab as version stack gallery.
 //
-// Self-review (KICKOFF section task_04):
-// - project-scope authorization is the responsibility of page.tsx
-//   (BLOCKER 1: project.created_by === auth.uid() OR yagi_admin).
-//   This component is only rendered after authorization passes.
-// - The board RLS itself enforces row-scope (project_boards policy).
-//
-// Phase 3.1 routing rule preserved: when only a legacy project_briefs
-// row exists with no new-system board row at all, render the legacy
-// read-only banner.
-//
-// HF1.6 fix (Hypothesis B): the original source IN ('wizard_seed',
-// 'admin_init') check was too narrow — boards with source='migrated'
-// (and any other future source values) were silently falling through to
-// the "보드가 곧 준비됩니다" placeholder instead of mounting tldraw.
-// Fix: ANY project_boards row is treated as a renderable board and passed
-// to BriefBoardShellClient. The legacy banner is reserved exclusively for
-// projects with NO board row but with an old project_briefs row.
+// The historic tldraw board data remains in project_boards, but the project
+// room "작업 / Versions" tab now surfaces the real review loop:
+// upload -> comment -> version stack -> approve/revision later.
 
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
-import { BriefBoardShellClient } from "@/components/project-board/brief-board-shell-client";
-import type { VersionEntry } from "@/components/project-board/version-history-panel";
-import type { PdfAttachment, UrlAttachment } from "@/lib/board/asset-index";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { briefObjectPublicUrl } from "@/lib/r2/client";
+import { fetchVideoMetadata } from "@/lib/oembed";
+import {
+  VersionStackTab,
+  type VersionStackDeliverable,
+} from "@/components/project-detail/version-stack-tab";
 
 type Props = {
   projectId: string;
@@ -35,111 +20,170 @@ type Props = {
   locale: "ko" | "en";
 };
 
-type BoardRow = {
+type DeliverableRow = {
   id: string;
-  document: Record<string, unknown> | null;
-  source: string | null;
-  is_locked: boolean | null;
-  attached_pdfs: PdfAttachment[] | null;
-  attached_urls: UrlAttachment[] | null;
+  version: number;
+  status: string;
+  note: string | null;
+  storage_paths: string[];
+  external_urls: string[];
+  created_at: string;
+  submitted_by_profile:
+    | { display_name: string | null; handle: string | null }
+    | Array<{ display_name: string | null; handle: string | null }>
+    | null;
 };
 
-type BriefRow = {
-  content_json: unknown;
-};
+function detectStorageKind(key: string): "image" | "video" | "file" {
+  const ext = key.split(".").pop()?.toLowerCase();
+  if (ext && ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(ext)) {
+    return "image";
+  }
+  if (ext && ["mp4", "mov", "webm"].includes(ext)) {
+    return "video";
+  }
+  return "file";
+}
+
+function detectExternalProvider(url: string): "youtube" | "vimeo" | "generic" {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtu.be") {
+      return "youtube";
+    }
+    if (host === "vimeo.com" || host.endsWith(".vimeo.com")) {
+      return "vimeo";
+    }
+  } catch {
+    // fall through to generic
+  }
+  return "generic";
+}
+
+function profileName(row: DeliverableRow) {
+  const profile = Array.isArray(row.submitted_by_profile)
+    ? row.submitted_by_profile[0]
+    : row.submitted_by_profile;
+  return profile?.display_name ?? profile?.handle ?? null;
+}
 
 export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
-  // Phase 3.1 tables are not yet in the generated database.types.ts.
-  // The same any-cast pattern used by the existing detail page applies.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag schema
   const supabase = (await createSupabaseServer()) as any;
-  const tBrief = await getTranslations({ locale, namespace: "brief_board" });
+  const t = await getTranslations({
+    locale,
+    namespace: "project_detail.versions",
+  });
 
-  const { data: boardRow } = (await supabase
-    .from("project_boards")
-    .select("id, document, source, is_locked, attached_pdfs, attached_urls")
-    .eq("project_id", projectId)
-    .maybeSingle()) as { data: BoardRow | null };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { data: briefRow } = (await supabase
-    .from("project_briefs")
-    .select("content_json")
-    .eq("project_id", projectId)
-    .maybeSingle()) as { data: BriefRow | null };
-
-  // HF1.6: any board row (regardless of source) is renderable via
-  // BriefBoardShellClient. The legacy-only check was the regression.
-  const hasBoardRow = !!boardRow;
-  const hasLegacyBrief = !!briefRow && !!briefRow.content_json;
-  // Legacy banner only when there is NO board row but there IS a legacy brief.
-  const useLegacyBanner = !hasBoardRow && hasLegacyBrief;
-
-  if (hasBoardRow && boardRow) {
-    const { data: bvRaw } = (await supabase
-      .from("project_board_versions")
-      .select("id, version, created_at, label")
-      .eq("board_id", boardRow.id)
-      .order("version", { ascending: false })
-      .limit(20)) as {
-      data:
-        | {
-            id: string;
-            version: number;
-            created_at: string;
-            label: string | null;
-          }[]
-        | null;
-    };
-
-    const versions: VersionEntry[] = (bvRaw ?? []).map((v) => ({
-      id: v.id,
-      version: v.version,
-      created_at: v.created_at,
-      label: v.label,
-    }));
-
-    return (
-      <BriefBoardShellClient
-        projectId={projectId}
-        boardId={boardRow.id}
-        initialDocument={boardRow.document ?? {}}
-        initialLocked={boardRow.is_locked === true}
-        viewerRole={isYagiAdmin ? "yagi_admin" : "client"}
-        initialPdfs={boardRow.attached_pdfs ?? []}
-        initialUrls={boardRow.attached_urls ?? []}
-        versions={versions}
-        currentVersion={versions.length > 0 ? versions[0].version : 0}
-        boardTitle={tBrief("title")}
-      />
-    );
+  let isProjectGuest = false;
+  if (user && !isYagiAdmin) {
+    const { data } = await supabase.rpc("is_project_guest", {
+      p_project_id: projectId,
+      p_user_id: user.id,
+    });
+    isProjectGuest = data === true;
   }
 
-  if (useLegacyBanner) {
-    return (
-      <div
-        className="border border-border/40 rounded-3xl p-8 text-center"
-        role="region"
-      >
-        <p className="text-sm text-muted-foreground keep-all">
-          {locale === "ko"
-            ? "이 프로젝트는 이전 시스템에서 만들어졌어요. 보드는 읽기 전용으로 표시됩니다."
-            : "This project was created on the legacy system. The board is read-only."}
-        </p>
-      </div>
-    );
-  }
+  const { data: rowsRaw } = (await supabase
+    .from("project_deliverables")
+    .select(
+      `
+      id,
+      version,
+      status,
+      note,
+      storage_paths,
+      external_urls,
+      created_at,
+      submitted_by_profile:profiles!project_deliverables_submitted_by_fkey(display_name, handle)
+    `,
+    )
+    .eq("project_id", projectId)
+    .order("version", { ascending: false })
+    .order("created_at", { ascending: false })) as {
+    data: DeliverableRow[] | null;
+  };
 
-  // No board + no legacy brief -- render an empty state. Should be rare
-  // (every wizard submit seeds a project_boards row). If it happens,
-  // surface a calm 'preparing' line rather than 404.
+  const rows = rowsRaw ?? [];
+  const deliverables: VersionStackDeliverable[] = await Promise.all(
+    rows.map(async (row) => {
+      const externalAssets = await Promise.all(
+        (row.external_urls ?? []).map(async (url) => {
+          const provider = detectExternalProvider(url);
+          const metadata = provider === "generic" ? null : await fetchVideoMetadata(url);
+          return {
+            url,
+            provider,
+            title: metadata?.title ?? null,
+            thumbnailUrl: metadata?.thumbnailUrl ?? null,
+          };
+        }),
+      );
+
+      return {
+        id: row.id,
+        version: row.version,
+        status: row.status,
+        note: row.note,
+        createdAt: row.created_at,
+        submittedBy: profileName(row),
+        storageAssets: (row.storage_paths ?? []).map((key) => ({
+          key,
+          url: briefObjectPublicUrl(key),
+          kind: detectStorageKind(key),
+        })),
+        externalAssets,
+      };
+    }),
+  );
+
   return (
-    <div
-      className="border border-border/40 rounded-3xl p-12 text-center"
-      role="region"
-    >
-      <p className="text-sm text-muted-foreground keep-all">
-        {locale === "ko" ? "보드가 곧 준비됩니다." : "Board coming soon."}
-      </p>
-    </div>
+    <VersionStackTab
+      projectId={projectId}
+      deliverables={deliverables}
+      canUpload={isYagiAdmin || isProjectGuest}
+      locale={locale}
+      labels={{
+        title: t("title"),
+        subtitle: t("subtitle"),
+        uploadTitle: t("upload.title"),
+        uploadFile: t("upload.file"),
+        uploadUrl: t("upload.url"),
+        uploadUrlPlaceholder: t("upload.url_placeholder"),
+        uploadNote: t("upload.note"),
+        uploadNotePlaceholder: t("upload.note_placeholder"),
+        uploadSubmit: t("upload.submit"),
+        uploadSubmitting: t("upload.submitting"),
+        emptyTitle: t("empty.title"),
+        emptySub: t("empty.sub"),
+        version: t("version", { version: "{version}" }),
+        submittedBy: t("submitted_by"),
+        submittedAt: t("submitted_at"),
+        versionsCount: t("versions_count", { count: "{count}" }),
+        assets: t("assets", { count: "{count}" }),
+        download: t("download"),
+        openExternal: t("open_external"),
+        storedFile: t("stored_file"),
+        noNote: t("no_note"),
+        success: t("success"),
+        errors: {
+          assetRequired: t("errors.asset_required"),
+          invalidUrl: t("errors.invalid_url"),
+          fileTooLarge: t("errors.file_too_large"),
+          uploadFailed: t("errors.upload_failed"),
+          forbidden: t("errors.forbidden"),
+          generic: t("errors.generic"),
+        },
+        status: {
+          submitted: t("status.submitted"),
+          changes_requested: t("status.changes_requested"),
+          approved: t("status.approved"),
+        },
+      }}
+    />
   );
 }
