@@ -103,6 +103,19 @@
   "auth": {
     "signin_title": "로그인",
     "signin_sub": "이메일과 비밀번호로 로그인",
+    "signin_split_head_main": "광고도, 룩북도, 제품컷도",
+    "signin_split_head_soft": "— 촬영 없이.",
+    "signin_split_sub": "맡기셔도, 직접 만드셔도. 가장 높은 퀄리티의 AI 비주얼을 구현합니다.",
+    "login_showcase": {
+      "eyebrow": "Brand Visual System",
+      "title": "당신의 브랜드로 바로 확장되는 비주얼 결과물",
+      "categories": {
+        "ads": "광고 영상",
+        "lookbook": "룩북",
+        "product": "제품컷",
+        "twin": "디지털 트윈"
+      }
+    },
     "signup_title": "계정 만들기",
     "signup_sub": "이메일과 비밀번호로 시작하세요",
     "email": "이메일",

@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { TwinCard } from "@/components/twins/twin-card";
 import { DealProposalForm } from "../deal-proposal-form";
 import { listDiscoverablePersonas } from "../data";
-import { PersonaCover } from "../persona-cover";
 
 type Props = {
   params: Promise<{ locale: string; personaId: string }>;
@@ -61,10 +61,23 @@ export default async function DiscoverDetailPage({ params }: Props) {
       <section className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
           <div className="border-b border-border/70 lg:border-b-0 lg:border-r">
-            <PersonaCover
-              src={persona.cover_asset_path}
-              emptyLabel={t("no_cover")}
-            />
+            <div className="bg-surface-card-deep p-5 sm:p-6 lg:p-8">
+              <div className="mx-auto max-w-sm">
+                <TwinCard
+                  name={persona.name ?? t("untitled")}
+                  personaType={persona.persona_type ?? t("default_type")}
+                  coverUrl={persona.cover_asset_path}
+                  tilt={0}
+                  priceLabel={
+                    persona.min_fee !== null
+                      ? t("fee_from", {
+                          amount: moneyFormatter.format(persona.min_fee),
+                        })
+                      : t("fee_negotiable")
+                  }
+                />
+              </div>
+            </div>
             <div className="space-y-5 p-5 sm:p-6 lg:p-8">
               <div className="space-y-3">
                 <span className="inline-flex h-6 items-center rounded px-2 text-[11px] font-medium uppercase tracking-label bg-gold-soft text-gold">

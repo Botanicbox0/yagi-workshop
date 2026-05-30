@@ -4,8 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { TwinCard } from "@/components/twins/twin-card";
 import { listDiscoverablePersonas } from "./data";
-import { PersonaCover } from "./persona-cover";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -68,36 +68,22 @@ export default async function DiscoverPage({ params }: Props) {
             <Link
               key={persona.id}
               href={`/app/discover/${persona.id}`}
-              className="stagger-item group overflow-hidden rounded-lg border border-border/70 bg-surface-card transition duration-flora ease-flora hover:-translate-y-0.5 hover:border-border hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="stagger-item block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               style={{ "--i": index } as CSSProperties}
             >
-              <PersonaCover
-                src={persona.cover_asset_path}
-                emptyLabel={t("card.no_cover")}
+              <TwinCard
+                name={persona.name ?? t("card.untitled")}
+                personaType={persona.persona_type ?? t("card.default_type")}
+                coverUrl={persona.cover_asset_path}
+                tilt={0}
+                priceLabel={
+                  persona.min_fee !== null
+                    ? t("card.from", {
+                        amount: moneyFormatter.format(persona.min_fee),
+                      })
+                    : t("card.negotiable")
+                }
               />
-              <div className="space-y-4 p-5">
-                <div className="space-y-2">
-                  <span className="inline-flex h-6 items-center rounded px-2 text-[11px] font-medium uppercase tracking-label bg-gold-soft text-gold">
-                    {persona.persona_type ?? t("card.default_type")}
-                  </span>
-                  <h2 className="text-xl font-semibold text-foreground keep-all">
-                    {persona.name ?? t("card.untitled")}
-                  </h2>
-                  <p className="line-clamp-2 min-h-12 text-sm leading-6 text-muted-foreground keep-all">
-                    {persona.description ?? t("card.no_description")}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between gap-3 border-t border-border/70 pt-4">
-                  <span className="text-sm font-semibold text-foreground">
-                    {persona.min_fee !== null
-                      ? t("card.from", {
-                          amount: moneyFormatter.format(persona.min_fee),
-                        })
-                      : t("card.negotiable")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{t("card.cta")}</span>
-                </div>
-              </div>
             </Link>
           ))}
         </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useRouter } from "@/i18n/routing";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { LoginShowcase } from "./login-showcase";
 
 const schema = z.object({
   email: z.string().email(),
@@ -82,59 +84,97 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-2 text-center">
-        <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight">
-          {t("signin_title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">{t("signin_sub")}</p>
+    <div className="mx-auto grid min-h-[calc(100dvh-48px)] w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]">
+      <div className="mx-auto w-full max-w-md space-y-9 lg:mx-0">
+        <div className="space-y-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-3"
+            aria-label="YAGI Workshop"
+          >
+            <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface">
+              <Image
+                src="/brand/yagi-mark-white.png"
+                alt=""
+                fill
+                sizes="36px"
+                className="object-contain p-1.5"
+                priority
+              />
+            </span>
+            <span className="text-sm font-bold tracking-normal text-foreground">
+              YAGI
+            </span>
+          </Link>
+
+          <div className="space-y-4">
+            <h1 className="text-4xl font-bold leading-tight tracking-normal text-foreground keep-all sm:text-5xl">
+              {t("signin_split_head_main")}{" "}
+              <span className="text-muted-foreground">
+                {t("signin_split_head_soft")}
+              </span>
+            </h1>
+            <p className="text-base leading-7 text-muted-foreground keep-all">
+              {t("signin_split_sub")}
+            </p>
+          </div>
+        </div>
+
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">{t("email")}</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder={t("email_placeholder")}
+              autoComplete="email"
+              className="h-11 bg-surface-card"
+              {...register("email")}
+            />
+            {errors.email && (
+              <p className="text-xs text-destructive">{errors.email.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">{t("password_label")}</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder={t("password_ph")}
+              autoComplete="current-password"
+              className="h-11 bg-surface-card"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="text-xs text-destructive">{errors.password.message}</p>
+            )}
+          </div>
+          <Button
+            type="submit"
+            className="h-12 w-full rounded-full bg-brand text-brand-on hover:bg-brand/90"
+            size="lg"
+            disabled={!hydrated || submitting}
+          >
+            {submitting ? t("sending") : c("signin")}
+          </Button>
+        </form>
+
+        <div className="space-y-2 text-center text-sm text-muted-foreground">
+          <p>
+            <Link href="/forgot-password" className="text-foreground hover:underline">
+              {t("forgot_password")}
+            </Link>
+          </p>
+          <p>
+            {t("no_account")}{" "}
+            <Link href="/signup" className="text-foreground hover:underline">
+              {c("signup")}
+            </Link>
+          </p>
+        </div>
       </div>
 
-      <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("email")}</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder={t("email_placeholder")}
-            autoComplete="email"
-            {...register("email")}
-          />
-          {errors.email && (
-            <p className="text-xs text-destructive">{errors.email.message}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">{t("password_label")}</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder={t("password_ph")}
-            autoComplete="current-password"
-            {...register("password")}
-          />
-          {errors.password && (
-            <p className="text-xs text-destructive">{errors.password.message}</p>
-          )}
-        </div>
-        <Button type="submit" className="w-full" size="lg" disabled={!hydrated || submitting}>
-          {submitting ? t("sending") : c("signin")}
-        </Button>
-      </form>
-
-      <div className="text-center text-sm text-muted-foreground space-y-2">
-        <p>
-          <Link href="/forgot-password" className="text-foreground hover:underline">
-            {t("forgot_password")}
-          </Link>
-        </p>
-        <p>
-          {t("no_account")}{" "}
-          <Link href="/signup" className="text-foreground hover:underline">
-            {c("signup")}
-          </Link>
-        </p>
-      </div>
+      <LoginShowcase />
     </div>
   );
 }
