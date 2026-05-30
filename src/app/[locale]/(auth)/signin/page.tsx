@@ -94,7 +94,7 @@ export default function SignInPage() {
           >
             <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface">
               <Image
-                src="/brand/yagi-mark-white.png"
+                src="/brand/yagi-symbol-mono-dark.png"
                 alt=""
                 fill
                 sizes="36px"
@@ -102,9 +102,14 @@ export default function SignInPage() {
                 priority
               />
             </span>
-            <span className="text-sm font-bold tracking-normal text-foreground">
-              YAGI
-            </span>
+            <Image
+              src="/brand/yagi-wordmark-white.png"
+              alt="YAGI"
+              width={64}
+              height={20}
+              className="h-5 w-auto object-contain"
+              priority
+            />
           </Link>
 
           <div className="space-y-4">

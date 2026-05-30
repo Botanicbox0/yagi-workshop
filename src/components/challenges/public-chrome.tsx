@@ -15,10 +15,11 @@ export async function PublicChrome({
           <div className="flex items-center gap-3">
             <Link href="/" aria-label="YAGI Workshop 홈">
               <Image
-                src="/assets/logo/yagi-symbol.png"
+                src="/brand/yagi-symbol-mono-dark.png"
                 alt="YAGI 심볼"
                 width={32}
                 height={32}
+                className="h-8 w-8 object-contain"
                 priority
               />
             </Link>

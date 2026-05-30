@@ -186,11 +186,11 @@ export function SupportWidget({
           <X className="h-5 w-5" />
         ) : (
           <Image
-            src="/brand/yagi-talk-icon.png"
+            src="/brand/yagi-symbol-mono-light.png"
             alt=""
             width={40}
             height={40}
-            className="h-10 w-10 opacity-95"
+            className="h-9 w-9 object-contain opacity-95"
             priority={false}
           />
         )}
@@ -215,11 +215,11 @@ export function SupportWidget({
           {/* Header */}
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <Image
-              src="/brand/yagi-mark.png"
+              src="/brand/yagi-symbol-mono-dark.png"
               alt=""
               width={24}
               height={24}
-              className="h-6 w-auto"
+              className="h-6 w-6 object-contain"
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold leading-tight">

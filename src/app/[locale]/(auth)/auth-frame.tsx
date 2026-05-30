@@ -23,20 +23,20 @@ export function AuthFrame({ children }: { children: React.ReactNode }) {
             aria-label="YAGI Workshop"
           >
             <Image
-              src="/brand/yagi-icon-logo-black.png"
+              src="/brand/yagi-symbol-mono-dark.png"
               alt=""
               width={28}
               height={28}
               priority
-              className="h-7 w-7 flex-shrink-0"
+              className="h-7 w-7 flex-shrink-0 object-contain"
             />
             <Image
-              src="/brand/yagi-text-logo-black.png"
+              src="/brand/yagi-wordmark-white.png"
               alt="YAGI WORKSHOP"
               width={56}
               height={18}
               priority
-              className="h-[18px] w-auto"
+              className="h-[18px] w-auto object-contain"
             />
           </Link>
         </header>

@@ -96,7 +96,7 @@ export function TopNav({
         >
           <span className="relative h-8 w-8 overflow-hidden rounded-md bg-surface-raised">
             <Image
-              src="/brand/yagi-mark-white.png"
+              src="/brand/yagi-symbol-mono-dark.png"
               alt=""
               fill
               sizes="32px"
@@ -104,9 +104,14 @@ export function TopNav({
               priority
             />
           </span>
-          <span className="hidden text-sm font-semibold tracking-normal text-foreground sm:inline">
-            YAGI
-          </span>
+          <Image
+            src="/brand/yagi-wordmark-white.png"
+            alt="YAGI"
+            width={56}
+            height={18}
+            className="hidden h-[18px] w-auto sm:block"
+            priority
+          />
         </Link>
 
         <DesktopNav
