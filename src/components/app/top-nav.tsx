@@ -7,8 +7,10 @@ import { Link, usePathname } from "@/i18n/routing";
 import {
   Archive,
   Coffee,
+  Compass,
   CreditCard,
   FolderOpen,
+  Handshake,
   Menu,
   Megaphone,
   Search,
@@ -41,7 +43,9 @@ type TopNavItem = {
     | "explore"
     | "projects"
     | "campaigns"
+    | "discover"
     | "twins"
+    | "deals"
     | "americano"
     | "assets"
     | "billing";
@@ -53,7 +57,9 @@ const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "explore", href: "/app/explore", icon: Sparkles },
   { key: "projects", href: "/app/projects", icon: FolderOpen },
   { key: "campaigns", href: "/app/campaigns", icon: Megaphone },
+  { key: "discover", href: "/app/discover", icon: Compass },
   { key: "twins", href: "/app/twins", icon: UserRound },
+  { key: "deals", href: "/app/deals", icon: Handshake },
   { key: "americano", href: "/app/americano", icon: Coffee },
   { key: "assets", href: "/app/assets", icon: Archive },
   { key: "billing", href: "/app/billing", icon: CreditCard },
@@ -106,7 +112,7 @@ export function TopNav({
         <DesktopNav
           pathname={pathname}
           t={t}
-          showArtistTwins={activeWorkspace?.kind === "artist"}
+          activeKind={activeWorkspace?.kind ?? null}
         />
 
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
@@ -159,14 +165,14 @@ export function TopNav({
 function DesktopNav({
   pathname,
   t,
-  showArtistTwins,
+  activeKind,
 }: {
   pathname: string;
   t: ReturnType<typeof useTranslations>;
-  showArtistTwins: boolean;
+  activeKind: WorkspaceItem["kind"] | null;
 }) {
-  const items = TOP_NAV_ITEMS.filter(
-    (item) => item.key !== "twins" || showArtistTwins,
+  const items = TOP_NAV_ITEMS.filter((item) =>
+    isTopNavItemVisible(item, activeKind),
   );
 
   return (
@@ -282,8 +288,8 @@ function MobileMenu({
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
-  const items = TOP_NAV_ITEMS.filter(
-    (item) => item.key !== "twins" || activeWorkspace?.kind === "artist",
+  const items = TOP_NAV_ITEMS.filter((item) =>
+    isTopNavItemVisible(item, activeWorkspace?.kind ?? null),
   );
 
   useEffect(() => {
@@ -369,4 +375,20 @@ function MobileMenu({
 
 function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isTopNavItemVisible(
+  item: TopNavItem,
+  activeKind: WorkspaceItem["kind"] | null,
+): boolean {
+  if (item.key === "discover") {
+    return activeKind === "brand";
+  }
+  if (item.key === "twins") {
+    return activeKind === "artist";
+  }
+  if (item.key === "deals") {
+    return activeKind === "brand" || activeKind === "artist";
+  }
+  return true;
 }

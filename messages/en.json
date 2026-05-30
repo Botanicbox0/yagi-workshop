@@ -206,7 +206,9 @@
     "explore": "Explore",
     "projects": "Projects",
     "campaigns": "Campaigns",
-    "twins": "My Twins",
+    "discover": "Digital Twins",
+    "twins": "Digital Twins",
+    "deals": "Deals",
     "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
@@ -281,6 +283,194 @@
       "eyebrow": "Billing",
       "title": "Billing",
       "description": "The surface for payment, tax invoice, and billing flows. Tax details are collected at payment or invoice issuance."
+    }
+  },
+  "deal_usage": {
+    "social_sns": "SNS ads",
+    "tv_commercial": "TV commercial",
+    "ooh": "OOH",
+    "web_display": "Web display",
+    "print": "Print",
+    "brand_film": "Brand film"
+  },
+  "discover": {
+    "eyebrow": "Digital Twins",
+    "title": "Find the right twin for your campaign",
+    "description": "Browse active artist twins and send a campaign proposal from your Brand workspace.",
+    "card": {
+      "no_cover": "No cover visual",
+      "default_type": "Twin",
+      "untitled": "Untitled twin",
+      "no_description": "No description yet.",
+      "from": "From {amount}",
+      "negotiable": "Price by discussion",
+      "cta": "View detail"
+    },
+    "empty": {
+      "title": "No discoverable twins yet",
+      "description": "Active artist twins will appear here when they are available."
+    },
+    "detail": {
+      "back": "Back to list",
+      "no_cover": "No cover visual",
+      "default_type": "Twin",
+      "untitled": "Untitled twin",
+      "no_description": "No description yet.",
+      "fee_label": "Minimum fee",
+      "fee_from": "From {amount}",
+      "fee_negotiable": "Price by discussion",
+      "status_label": "Status",
+      "status_active": "Available",
+      "proposal_eyebrow": "Deal Proposal",
+      "proposal_title": "Collaboration proposal",
+      "proposal_description": "Send the usage type and brief. YAGI will review terms and route the offer to the artist."
+    },
+    "proposal": {
+      "usage_label": "Campaign usage",
+      "brief_label": "Brief",
+      "brief_placeholder": "Share the goal, channels, deliverables, and timeline in 1000 characters or fewer.",
+      "budget_label": "Proposed budget",
+      "budget_placeholder": "e.g. 3000000",
+      "submit": "Send proposal",
+      "submitting": "Sending",
+      "success": "Proposal sent.",
+      "error_usage": "Select at least one campaign usage.",
+      "error_budget": "Proposed budget must be a non-negative integer.",
+      "server_error": {
+        "validation": "Check the input values.",
+        "unauthenticated": "Sign in is required.",
+        "no_workspace": "An active workspace is required.",
+        "brand_required": "Only Brand workspaces can send proposals.",
+        "db": "Could not save the proposal. Try again shortly."
+      }
+    }
+  },
+  "deals": {
+    "eyebrow": "Deals",
+    "title_brand": "Sent proposals",
+    "title_artist": "Incoming proposals",
+    "description_brand": "Track Digital Twin collaboration proposals sent from this Brand workspace.",
+    "description_artist": "Review offers sent to your twins and accept, decline, or request negotiation.",
+    "updated": "Updated {date}",
+    "empty": {
+      "title": "No deals yet",
+      "description_brand": "Choose a twin in Digital Twins and send your first collaboration proposal.",
+      "description_artist": "Brand proposals will appear here when they arrive."
+    },
+    "status": {
+      "submitted": "Submitted",
+      "offered": "Offered",
+      "negotiating": "Negotiating",
+      "accepted": "Accepted",
+      "delivered": "Delivered",
+      "settled": "Settled",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "payment": {
+      "pending": "Payment pending",
+      "brand_paid": "Brand paid",
+      "paid_out": "Paid out"
+    },
+    "payment_event": {
+      "brand_paid": "Brand payment confirmed",
+      "paid_out": "Artist payout complete"
+    },
+    "detail": {
+      "back": "Deals",
+      "untitled": "Digital Twin",
+      "brand_amount": "Brand amount",
+      "artist_amount": "Artist payout",
+      "amount_pending": "Terms pending",
+      "brief": "Brief",
+      "no_brief": "No brief provided.",
+      "amounts": "Amounts",
+      "proposed_budget": "Proposed budget",
+      "commission": "YAGI commission",
+      "production": "Production",
+      "project_in_progress": "Production in progress",
+      "project_pending": "Production room pending",
+      "project_none": "No production room linked yet.",
+      "brand_readonly": "YAGI is reviewing or coordinating this deal.",
+      "timeline": "Status history",
+      "timeline_empty": "No status history yet.",
+      "payments": "Payment ledger",
+      "payments_empty": "No payment events yet."
+    },
+    "actions": {
+      "title": "Artist response",
+      "description_offered": "Accept the current terms, decline them, or request negotiation from YAGI.",
+      "description_negotiating": "This deal is under negotiation. You can accept after YAGI sends an updated offer.",
+      "comment_placeholder": "Leave a note. For negotiation, include concrete terms or concerns.",
+      "accept": "Accept",
+      "negotiate": "Negotiate",
+      "decline": "Decline",
+      "submitting": "Working",
+      "success": {
+        "accepted": "Offer accepted.",
+        "negotiating": "Negotiation request sent.",
+        "declined": "Offer declined."
+      },
+      "server_error": {
+        "validation": "Check the input values.",
+        "unauthenticated": "Sign in is required.",
+        "no_workspace": "An active workspace is required.",
+        "artist_required": "Only Artist workspaces can respond.",
+        "db": "Could not change the status. Check the current terms."
+      }
+    }
+  },
+  "admin_deals": {
+    "eyebrow": "Admin Deals",
+    "title": "Deal pipeline",
+    "description": "Review brand proposals, send artist offers, and record settlement after delivery.",
+    "empty": "No deals.",
+    "detail": {
+      "back": "Admin deals",
+      "brand_amount": "Brand amount",
+      "brief": "Brief",
+      "no_brief": "No brief provided.",
+      "amounts": "Amounts",
+      "proposed_budget": "Proposed budget",
+      "commission": "YAGI commission",
+      "artist_payout": "Artist payout",
+      "history": "Status history",
+      "payments": "Payment ledger"
+    },
+    "actions": {
+      "offer_title": "Approve deal",
+      "revise_title": "Send revised terms",
+      "brand_amount": "Brand amount",
+      "commission": "YAGI commission",
+      "artist_payout": "Artist payout",
+      "commission_rate": "Commission rate",
+      "currency": "Currency",
+      "comment_placeholder": "Terms note for the artist",
+      "offer_submit": "Send offer",
+      "cancel_title": "Cancel deal",
+      "cancel_placeholder": "Cancellation reason",
+      "cancel_submit": "Cancel",
+      "brand_paid_title": "Confirm brand payment",
+      "paid_out_title": "Complete artist payout",
+      "payment_amount": "Amount",
+      "invoice_ref": "Invoice reference",
+      "payment_note": "Settlement note",
+      "payment_submit": "Record payment",
+      "submitting": "Working",
+      "error_balance": "Brand amount must equal YAGI commission plus artist payout.",
+      "success": {
+        "offer": "Offer sent.",
+        "cancel": "Deal cancelled.",
+        "brand_paid": "Brand payment recorded.",
+        "paid_out": "Artist payout recorded."
+      },
+      "server_error": {
+        "validation": "Check the input values.",
+        "unauthenticated": "Sign in is required.",
+        "forbidden": "YAGI admin permission is required.",
+        "balance": "Amounts do not balance.",
+        "db": "Could not process the request. Check the status and amounts."
+      }
     }
   },
   "twins": {

@@ -206,7 +206,9 @@
     "explore": "Explore",
     "projects": "프로젝트",
     "campaigns": "캠페인",
-    "twins": "내 트윈",
+    "discover": "디지털 트윈",
+    "twins": "디지털 트윈",
+    "deals": "딜",
     "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
@@ -281,6 +283,194 @@
       "eyebrow": "Billing",
       "title": "Billing",
       "description": "결제, 세금계산서, 송장 흐름을 다루는 화면입니다. 세무정보는 결제·발행 시점에 수집합니다."
+    }
+  },
+  "deal_usage": {
+    "social_sns": "SNS 광고",
+    "tv_commercial": "TV 광고",
+    "ooh": "옥외광고",
+    "web_display": "웹 디스플레이",
+    "print": "인쇄",
+    "brand_film": "브랜드필름"
+  },
+  "discover": {
+    "eyebrow": "Digital Twins",
+    "title": "캠페인에 맞는 트윈을 찾으세요",
+    "description": "활성화된 아티스트 트윈을 살펴보고 브랜드 캠페인 제안을 보낼 수 있습니다.",
+    "card": {
+      "no_cover": "대표 비주얼 없음",
+      "default_type": "트윈",
+      "untitled": "이름 없는 트윈",
+      "no_description": "설명이 아직 없습니다.",
+      "from": "{amount}부터",
+      "negotiable": "가격 협의",
+      "cta": "상세 보기"
+    },
+    "empty": {
+      "title": "탐색 가능한 트윈이 아직 없어요",
+      "description": "활성화된 아티스트 트윈이 공개되면 이 화면에 표시됩니다."
+    },
+    "detail": {
+      "back": "목록으로",
+      "no_cover": "대표 비주얼 없음",
+      "default_type": "트윈",
+      "untitled": "이름 없는 트윈",
+      "no_description": "설명이 아직 없습니다.",
+      "fee_label": "최소 금액",
+      "fee_from": "{amount}부터",
+      "fee_negotiable": "가격 협의",
+      "status_label": "상태",
+      "status_active": "제안 가능",
+      "proposal_eyebrow": "Deal Proposal",
+      "proposal_title": "협업 제안",
+      "proposal_description": "캠페인 유형과 브리프를 보내면 야기가 조건을 검토하고 아티스트에게 전달합니다."
+    },
+    "proposal": {
+      "usage_label": "캠페인 유형",
+      "brief_label": "브리프",
+      "brief_placeholder": "목표, 노출 채널, 제작물 형태, 일정 등을 1000자 이내로 적어주세요.",
+      "budget_label": "제시예산",
+      "budget_placeholder": "예: 3000000",
+      "submit": "협업 제안",
+      "submitting": "제안 중",
+      "success": "제안을 보냈습니다.",
+      "error_usage": "캠페인 유형을 최소 1개 선택해주세요.",
+      "error_budget": "제시예산은 0 이상의 정수로 입력해주세요.",
+      "server_error": {
+        "validation": "입력값을 확인해주세요.",
+        "unauthenticated": "로그인이 필요합니다.",
+        "no_workspace": "활성 워크스페이스가 필요합니다.",
+        "brand_required": "브랜드 워크스페이스에서만 제안할 수 있습니다.",
+        "db": "제안을 저장하지 못했습니다. 잠시 후 다시 시도해주세요."
+      }
+    }
+  },
+  "deals": {
+    "eyebrow": "Deals",
+    "title_brand": "보낸 제안",
+    "title_artist": "들어온 제안",
+    "description_brand": "브랜드 워크스페이스에서 보낸 트윈 협업 제안을 추적합니다.",
+    "description_artist": "내 트윈으로 들어온 제안을 검토하고 수락, 거절, 협의 요청을 처리합니다.",
+    "updated": "{date} 업데이트",
+    "empty": {
+      "title": "아직 딜이 없습니다",
+      "description_brand": "Digital Twins에서 트윈을 선택해 첫 협업 제안을 보내세요.",
+      "description_artist": "브랜드 제안이 들어오면 이 화면에 표시됩니다."
+    },
+    "status": {
+      "submitted": "제출됨",
+      "offered": "오퍼",
+      "negotiating": "협의 중",
+      "accepted": "수락됨",
+      "delivered": "납품됨",
+      "settled": "정산 완료",
+      "declined": "거절됨",
+      "cancelled": "취소됨"
+    },
+    "payment": {
+      "pending": "입금 대기",
+      "brand_paid": "브랜드 입금",
+      "paid_out": "지급 완료"
+    },
+    "payment_event": {
+      "brand_paid": "브랜드 입금 확인",
+      "paid_out": "아티스트 지급 완료"
+    },
+    "detail": {
+      "back": "딜 목록",
+      "untitled": "Digital Twin",
+      "brand_amount": "브랜드 금액",
+      "artist_amount": "아티스트 지급액",
+      "amount_pending": "조건 검토 중",
+      "brief": "브리프",
+      "no_brief": "브리프가 없습니다.",
+      "amounts": "금액",
+      "proposed_budget": "제시예산",
+      "commission": "야기 수수료",
+      "production": "제작",
+      "project_in_progress": "제작 진행 중",
+      "project_pending": "제작 룸 준비 중",
+      "project_none": "제작 룸이 아직 연결되지 않았습니다.",
+      "brand_readonly": "야기가 검토/조율 중입니다.",
+      "timeline": "상태 기록",
+      "timeline_empty": "상태 기록이 없습니다.",
+      "payments": "정산 원장",
+      "payments_empty": "정산 기록이 없습니다."
+    },
+    "actions": {
+      "title": "아티스트 응답",
+      "description_offered": "현재 조건을 수락하거나, 브리프 기준으로 협의를 요청할 수 있습니다.",
+      "description_negotiating": "협의 중인 딜입니다. 야기가 수정 조건을 다시 제시하면 수락할 수 있습니다.",
+      "comment_placeholder": "의견을 남기세요. 협의 요청 시 조건이나 우려사항을 구체적으로 적어주세요.",
+      "accept": "수락",
+      "negotiate": "협의",
+      "decline": "거절",
+      "submitting": "처리 중",
+      "success": {
+        "accepted": "제안을 수락했습니다.",
+        "negotiating": "협의 요청을 보냈습니다.",
+        "declined": "제안을 거절했습니다."
+      },
+      "server_error": {
+        "validation": "입력값을 확인해주세요.",
+        "unauthenticated": "로그인이 필요합니다.",
+        "no_workspace": "활성 워크스페이스가 필요합니다.",
+        "artist_required": "아티스트 워크스페이스에서만 응답할 수 있습니다.",
+        "db": "상태를 변경하지 못했습니다. 조건을 확인해주세요."
+      }
+    }
+  },
+  "admin_deals": {
+    "eyebrow": "Admin Deals",
+    "title": "딜 파이프라인",
+    "description": "브랜드 제안, 아티스트 오퍼, 제작 완료 후 정산까지 한 화면에서 처리합니다.",
+    "empty": "딜이 없습니다.",
+    "detail": {
+      "back": "관리 목록",
+      "brand_amount": "브랜드 금액",
+      "brief": "브리프",
+      "no_brief": "브리프가 없습니다.",
+      "amounts": "금액",
+      "proposed_budget": "제시예산",
+      "commission": "야기 수수료",
+      "artist_payout": "아티스트 지급액",
+      "history": "상태 기록",
+      "payments": "정산 원장"
+    },
+    "actions": {
+      "offer_title": "딜 승인",
+      "revise_title": "수정 조건 제시",
+      "brand_amount": "브랜드 금액",
+      "commission": "야기 수수료",
+      "artist_payout": "아티스트 지급액",
+      "commission_rate": "수수료율",
+      "currency": "통화",
+      "comment_placeholder": "아티스트에게 전달될 조건 메모",
+      "offer_submit": "오퍼 제시",
+      "cancel_title": "딜 취소",
+      "cancel_placeholder": "취소 사유",
+      "cancel_submit": "취소",
+      "brand_paid_title": "브랜드 입금 확인",
+      "paid_out_title": "아티스트 지급 완료",
+      "payment_amount": "금액",
+      "invoice_ref": "세금계산서 참조",
+      "payment_note": "정산 메모",
+      "payment_submit": "정산 기록",
+      "submitting": "처리 중",
+      "error_balance": "브랜드 금액은 야기 수수료와 아티스트 지급액의 합과 같아야 합니다.",
+      "success": {
+        "offer": "오퍼를 제시했습니다.",
+        "cancel": "딜을 취소했습니다.",
+        "brand_paid": "브랜드 입금을 기록했습니다.",
+        "paid_out": "아티스트 지급을 기록했습니다."
+      },
+      "server_error": {
+        "validation": "입력값을 확인해주세요.",
+        "unauthenticated": "로그인이 필요합니다.",
+        "forbidden": "야기 관리자 권한이 필요합니다.",
+        "balance": "금액 합계가 일치하지 않습니다.",
+        "db": "처리하지 못했습니다. 상태와 금액을 확인해주세요."
+      }
     }
   },
   "twins": {
