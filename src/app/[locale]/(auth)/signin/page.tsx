@@ -116,8 +116,11 @@ export default function SignInPage() {
             <p className="text-[11px] font-normal uppercase tracking-label text-muted-foreground">
               {t("signin_split_eyebrow")}
             </p>
-            <h1 className="text-4xl font-bold leading-tight tracking-normal text-foreground keep-all sm:text-5xl lg:whitespace-nowrap lg:text-[32px]">
-              {t("signin_split_head")}
+            <h1 className="text-4xl font-bold leading-tight tracking-normal text-foreground keep-all sm:text-5xl lg:text-[42px]">
+              <span className="block">{t("signin_split_head_main")}</span>
+              <span className="block text-muted-foreground">
+                {t("signin_split_head_soft")}
+              </span>
             </h1>
             <p className="text-base leading-7 text-muted-foreground keep-all">
               {t("signin_split_sub")}

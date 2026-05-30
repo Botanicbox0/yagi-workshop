@@ -317,3 +317,32 @@
   .ease-flora      { transition-timing-function: var(--ds-easing-default); }
   .duration-flora  { transition-duration: var(--ds-duration-default); }
 }
+
+@keyframes signin-showcase-kenburns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(-1.2%, -0.8%, 0);
+  }
+}
+
+@keyframes signin-showcase-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@layer utilities {
+  .signin-showcase-kenburns {
+    animation: signin-showcase-kenburns 6000ms ease-out forwards;
+    transform-origin: center;
+  }
+
+  .signin-showcase-progress {
+    animation: signin-showcase-progress 5000ms linear forwards;
+  }
+}

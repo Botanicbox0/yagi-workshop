@@ -104,7 +104,8 @@
     "signin_title": "Sign in",
     "signin_sub": "Sign in with email & password",
     "signin_split_eyebrow": "AI NATIVE CREATIVE STUDIO",
-    "signin_split_head": "Extend your brand into AI visuals.",
+    "signin_split_head_main": "Ads, lookbooks, product shots.",
+    "signin_split_head_soft": "No complex shoot.",
     "signin_split_sub": "Commission it or build it yourself — the highest-quality AI visuals, realized.",
     "login_showcase": {
       "caption": "Visual outcomes ready to extend your brand",
@@ -113,6 +114,12 @@
         "lookbook": "Lookbook",
         "product": "Product shots",
         "digital_twin": "Digital Twin"
+      },
+      "descriptions": {
+        "video_campaign": "Brand films completed without a set",
+        "lookbook": "Endless seasonal looks from one setup",
+        "product": "Commerce visuals without a studio",
+        "digital_twin": "AI personas dressed in your brand"
       }
     },
     "signup_title": "Create account",
