@@ -84,8 +84,8 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="mx-auto grid min-h-[calc(100dvh-48px)] w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]">
-      <div className="mx-auto w-full max-w-md space-y-9 lg:mx-0">
+    <div className="mx-auto grid min-h-[calc(100dvh-48px)] w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,0.46fr)_minmax(0,0.54fr)]">
+      <div className="mx-auto w-full max-w-md space-y-9 lg:mx-0 lg:max-w-[560px]">
         <div className="space-y-8">
           <Link
             href="/"
@@ -113,11 +113,11 @@ export default function SignInPage() {
           </Link>
 
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold leading-tight tracking-normal text-foreground keep-all sm:text-5xl">
-              {t("signin_split_head_main")}{" "}
-              <span className="text-muted-foreground">
-                {t("signin_split_head_soft")}
-              </span>
+            <p className="text-[11px] font-normal uppercase tracking-label text-muted-foreground">
+              {t("signin_split_eyebrow")}
+            </p>
+            <h1 className="text-4xl font-bold leading-tight tracking-normal text-foreground keep-all sm:text-5xl lg:whitespace-nowrap lg:text-[32px]">
+              {t("signin_split_head")}
             </h1>
             <p className="text-base leading-7 text-muted-foreground keep-all">
               {t("signin_split_sub")}
