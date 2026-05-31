@@ -56,6 +56,7 @@ export default async function AdminAgenciesPage({ params }: Props) {
     .from("workspaces")
     .select("id, name, created_at, member:workspace_members(user_id)")
     .eq("kind", "agency")
+    .eq("is_test", false)
     .order("created_at", { ascending: false });
 
   if (agencyErr) {
@@ -64,7 +65,8 @@ export default async function AdminAgenciesPage({ params }: Props) {
 
   const { data: artistRows, error: artistErr } = await sbAny
     .from("artist_profile")
-    .select("workspace_id, display_name, workspace:workspaces(id, name)")
+    .select("workspace_id, display_name, workspace:workspaces!inner(id, name, is_test)")
+    .eq("workspace.is_test", false)
     .order("created_at", { ascending: false });
 
   if (artistErr) {
@@ -78,8 +80,8 @@ export default async function AdminAgenciesPage({ params }: Props) {
       id,
       note,
       created_at,
-      agency:workspaces!agency_artist_roster_agency_workspace_id_fkey(id, name),
-      artist:workspaces!agency_artist_roster_artist_workspace_id_fkey(id, name)
+      agency:workspaces!agency_artist_roster_agency_workspace_id_fkey(id, name, is_test),
+      artist:workspaces!agency_artist_roster_artist_workspace_id_fkey(id, name, is_test)
     `,
     )
     .order("created_at", { ascending: false });
@@ -97,14 +99,14 @@ export default async function AdminAgenciesPage({ params }: Props) {
   type RawArtist = {
     workspace_id: string;
     display_name: string | null;
-    workspace: { id: string; name: string } | null;
+    workspace: { id: string; name: string; is_test?: boolean } | null;
   };
   type RawRoster = {
     id: string;
     note: string | null;
     created_at: string;
-    agency: { id: string; name: string } | null;
-    artist: { id: string; name: string } | null;
+    agency: { id: string; name: string; is_test?: boolean } | null;
+    artist: { id: string; name: string; is_test?: boolean } | null;
   };
 
   const rawAgencies: RawAgency[] = agencyRows ?? [];
@@ -149,13 +151,15 @@ export default async function AdminAgenciesPage({ params }: Props) {
     }),
   );
 
-  const roster: RosterRow[] = ((rosterRows ?? []) as RawRoster[]).map((row) => ({
-    id: row.id,
-    agencyName: row.agency?.name ?? "—",
-    artistName: row.artist?.name ?? "—",
-    note: row.note,
-    createdAt: row.created_at,
-  }));
+  const roster: RosterRow[] = ((rosterRows ?? []) as RawRoster[])
+    .filter((row) => row.agency?.is_test !== true && row.artist?.is_test !== true)
+    .map((row) => ({
+      id: row.id,
+      agencyName: row.agency?.name ?? "—",
+      artistName: row.artist?.name ?? "—",
+      note: row.note,
+      createdAt: row.created_at,
+    }));
 
   const labels = {
     inviteCta: t("invite_cta"),

@@ -11,18 +11,23 @@ import {
 } from "@/components/deals/deal-ui";
 import { AdminDealActions } from "./admin-deal-actions";
 import { listDeals, type DealRow } from "../../deals/data";
+import { TestDataToggle, TestWorkspaceBadge } from "@/components/admin/test-data-toggle";
+import { shouldIncludeTestData } from "@/lib/admin/test-data";
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ includeTest?: string | string[] }>;
 };
 
-export default async function AdminDealsPage({ params }: Props) {
+export default async function AdminDealsPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const includeTest = shouldIncludeTestData(await searchParams);
   const t = await getTranslations({ locale, namespace: "admin_deals" });
+  const tAdmin = await getTranslations({ locale, namespace: "admin" });
   const tDeals = await getTranslations({ locale, namespace: "deals" });
   const tUsage = await getTranslations({ locale, namespace: "deal_usage" });
   const supabase = await createSupabaseServer();
-  const { data, error } = await listDeals(supabase);
+  const { data, error } = await listDeals(supabase, { includeTest });
   if (error) {
     console.error("[AdminDealsPage] list deals error:", error);
   }
@@ -46,6 +51,15 @@ export default async function AdminDealsPage({ params }: Props) {
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">
             {t("description")}
           </p>
+          <div className="mt-4">
+            <TestDataToggle
+              baseHref="/app/admin/deals"
+              includeTest={includeTest}
+              label={tAdmin(includeTest ? "test_data_on" : "test_data_off")}
+              showLabel={tAdmin("test_data_show")}
+              hideLabel={tAdmin("test_data_hide")}
+            />
+          </div>
         </div>
       </section>
 
@@ -108,6 +122,7 @@ function AdminDealCard({
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <DealStatusBadge status={deal.status} label={statusLabel} />
+            {deal.is_test && <TestWorkspaceBadge label="TEST" />}
             <span className="inline-flex h-6 items-center rounded bg-surface-card px-2 text-[11px] font-medium text-muted-foreground">
               {paymentLabel}
             </span>

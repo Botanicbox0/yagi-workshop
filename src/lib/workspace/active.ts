@@ -36,6 +36,7 @@ export type ActiveWorkspaceMembership = {
   id: string;
   name: string;
   kind: WorkspaceKind;
+  isTest: boolean;
 };
 
 export const ACTIVE_WORKSPACE_COOKIE = "yagi_active_workspace";
@@ -78,7 +79,7 @@ export async function listOwnWorkspaces(
       `
       workspace_id,
       created_at,
-      workspace:workspaces ( id, name, kind )
+      workspace:workspaces ( id, name, kind, is_test )
     `,
     )
     .eq("user_id", userId)
@@ -86,7 +87,9 @@ export async function listOwnWorkspaces(
     data:
       | {
           workspace_id: string;
-          workspace: { id: string; name: string; kind?: string } | null;
+          workspace:
+            | { id: string; name: string; kind?: string; is_test?: boolean }
+            | null;
         }[]
       | null;
   };
@@ -98,6 +101,7 @@ export async function listOwnWorkspaces(
       id: r.workspace.id,
       name: r.workspace.name,
       kind: narrowKind(r.workspace.kind),
+      isTest: r.workspace.is_test === true,
     });
   }
   return list;
@@ -138,6 +142,12 @@ export async function resolveActiveWorkspace(
     // setActiveWorkspace server action is the only writer; if a stale
     // cookie keeps arriving here, the resolver silently falls back
     // without leaking which workspace_id the user does NOT belong to.
+  }
+
+  // YAGI admins should default to the internal admin workspace. Test
+  // Brand/Creator/Artist switching is opt-in via the workspace selector.
+  for (let i = memberships.length - 1; i >= 0; i--) {
+    if (memberships[i].kind === "yagi_admin") return memberships[i];
   }
 
   // Phase 6/A.2 — Artist sign-in default: prefer the most-recently-joined

@@ -1,8 +1,8 @@
 // Role-aware /app landing.
 //
-// yagi_admin is resolved from the global role first. Non-admin users land by
-// active workspace kind: brand -> Explore, artist -> Deals, creator -> open
-// Campaigns. Users without a resolved workspace return to onboarding.
+// The active workspace kind drives the landing target. yagi_admin falls back to
+// /app/admin when the active workspace is the internal admin workspace or there
+// is no role-specific workspace selection.
 
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";

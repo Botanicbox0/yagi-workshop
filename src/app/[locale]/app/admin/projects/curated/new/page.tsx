@@ -37,9 +37,12 @@ export default async function NewCuratedProjectPage({ params }: Props) {
   }
 
   const sbAdmin = createSupabaseService();
-  const { data: workspacesRaw } = await sbAdmin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workspaces.is_test typegen pending
+  const sbAny = sbAdmin as any;
+  const { data: workspacesRaw } = await sbAny
     .from("workspaces")
     .select("id, name")
+    .eq("is_test", false)
     .order("name", { ascending: true });
   const workspaces = (workspacesRaw ?? []) as WorkspaceOption[];
 

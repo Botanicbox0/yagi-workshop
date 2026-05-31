@@ -15,7 +15,11 @@ type MeetingRow = {
   scheduled_at: string;
   calendar_sync_status: string;
   updated_at: string;
-  project: { id: string; title: string } | null;
+  project: {
+    id: string;
+    title: string;
+    workspace: { is_test?: boolean | null } | null;
+  } | null;
 };
 
 function syncBadgeClass(status: string): string {
@@ -58,8 +62,10 @@ export default async function AdminDashboardPage({ params }: Props) {
   // Upcoming meetings: next 7 days, not cancelled or completed
   const now = new Date();
   const plus7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- nested workspaces.is_test typegen pending
+  const sb = supabase as any;
 
-  const { data: upcomingRaw, error: upcomingError } = await supabase
+  const { data: upcomingRaw, error: upcomingError } = await sb
     .from("meetings")
     .select(
       `
@@ -68,7 +74,7 @@ export default async function AdminDashboardPage({ params }: Props) {
       scheduled_at,
       calendar_sync_status,
       updated_at,
-      project:projects(id, title)
+      project:projects(id, title, workspace:workspaces(is_test))
     `
     )
     .gte("scheduled_at", now.toISOString())
@@ -80,12 +86,14 @@ export default async function AdminDashboardPage({ params }: Props) {
     console.error("[AdminDashboardPage] upcoming meetings error:", upcomingError);
   }
 
-  const upcomingMeetings = (upcomingRaw ?? []) as MeetingRow[];
+  const upcomingMeetings = ((upcomingRaw ?? []) as MeetingRow[]).filter(
+    (meeting) => meeting.project?.workspace?.is_test !== true,
+  );
 
   // Meetings needing attention: failed sync OR fallback_ics older than 1h
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-  const { data: attentionRaw, error: attentionError } = await supabase
+  const { data: attentionRaw, error: attentionError } = await sb
     .from("meetings")
     .select(
       `
@@ -94,7 +102,7 @@ export default async function AdminDashboardPage({ params }: Props) {
       scheduled_at,
       calendar_sync_status,
       updated_at,
-      project:projects(id, title)
+      project:projects(id, title, workspace:workspaces(is_test))
     `
     )
     .or(
@@ -106,7 +114,9 @@ export default async function AdminDashboardPage({ params }: Props) {
     console.error("[AdminDashboardPage] attention meetings error:", attentionError);
   }
 
-  const attentionMeetings = (attentionRaw ?? []) as MeetingRow[];
+  const attentionMeetings = ((attentionRaw ?? []) as MeetingRow[]).filter(
+    (meeting) => meeting.project?.workspace?.is_test !== true,
+  );
 
   return (
     <div className="px-10 py-12 max-w-5xl">

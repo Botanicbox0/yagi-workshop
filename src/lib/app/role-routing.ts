@@ -6,7 +6,6 @@ export function resolveAppActor(
   activeWorkspace: ActiveWorkspaceMembership | null,
   isYagiAdmin: boolean,
 ): AppActorKind | null {
-  if (isYagiAdmin) return "yagi_admin";
   if (
     activeWorkspace?.kind === "brand" ||
     activeWorkspace?.kind === "artist" ||
@@ -14,6 +13,7 @@ export function resolveAppActor(
   ) {
     return activeWorkspace.kind;
   }
+  if (activeWorkspace?.kind === "yagi_admin" || isYagiAdmin) return "yagi_admin";
   return null;
 }
 

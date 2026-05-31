@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/projects/status-badge';
+import { TestWorkspaceBadge } from '@/components/admin/test-data-toggle';
 import {
   startProjectAction,
   deliverProjectAction,
@@ -31,8 +32,9 @@ export type ProjectQueueRow = {
   status: ProjectStatus;
   submitted_at: string | null;
   created_at: string;
+  dateLabel: string;
   client: { id: string; name: string } | null;
-  workspace: { id: string; name: string } | null;
+  workspace: { id: string; name: string; isTest?: boolean } | null;
   ref_count: number;
 };
 
@@ -224,6 +226,9 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
                         >[0],
                       )}
                     </span>
+                    {project.workspace?.isTest && (
+                      <TestWorkspaceBadge label={t('admin.test_badge')} />
+                    )}
                   </div>
                   <h3 className="mb-1 text-sm font-semibold text-foreground">
                     {project.title}
@@ -243,13 +248,7 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
               <div className="flex items-center justify-between pt-3">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="tabular-nums">
-                    {new Intl.DateTimeFormat('ko-KR', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    }).format(new Date(project.submitted_at || project.created_at))}
+                    {project.dateLabel}
                   </span>
                   <span>
                     {t('admin.projects.queue.references', {

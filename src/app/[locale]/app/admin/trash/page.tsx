@@ -18,6 +18,7 @@ type DeletedProject = {
   workspace_id: string;
   deleted_at: string;
   brand: { id: string; name: string } | null;
+  workspace: { is_test?: boolean | null } | null;
 };
 
 const HARD_DELETE_AFTER_DAYS = 3;
@@ -43,9 +44,13 @@ export default async function AdminTrashPage({ params }: Props) {
 
   const t = await getTranslations({ locale, namespace: "admin_trash" });
 
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workspaces.is_test typegen pending
+  const sb = supabase as any;
+  const { data, error } = await sb
     .from("projects")
-    .select("id, title, status, workspace_id, deleted_at, brand:brands(id, name)")
+    .select(
+      "id, title, status, workspace_id, deleted_at, brand:brands(id, name), workspace:workspaces(is_test)",
+    )
     .not("deleted_at", "is", null)
     .order("deleted_at", { ascending: false });
 
@@ -53,7 +58,9 @@ export default async function AdminTrashPage({ params }: Props) {
     console.error("[AdminTrashPage] Supabase error:", error);
   }
 
-  const rows = (data ?? []) as DeletedProject[];
+  const rows = ((data ?? []) as DeletedProject[]).filter(
+    (row) => row.workspace?.is_test !== true,
+  );
 
   const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "ko-KR", {
     year: "numeric",

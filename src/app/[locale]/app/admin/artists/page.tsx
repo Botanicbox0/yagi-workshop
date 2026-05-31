@@ -18,9 +18,15 @@ import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { InviteArtistSection } from "./_components/invite-artist-section";
+import {
+  TestDataToggle,
+  TestWorkspaceBadge,
+} from "@/components/admin/test-data-toggle";
+import { shouldIncludeTestData } from "@/lib/admin/test-data";
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ includeTest?: string | string[] }>;
 };
 
 type ArtistRow = {
@@ -31,6 +37,7 @@ type ArtistRow = {
   instagramHandle: string | null;
   createdAt: string;
   emailConfirmedAt: string | null;
+  isTest: boolean;
 };
 
 function statusKey(row: ArtistRow): "invite_pending" | "onboarding" | "active" {
@@ -39,8 +46,9 @@ function statusKey(row: ArtistRow): "invite_pending" | "onboarding" | "active" {
   return "active";
 }
 
-export default async function AdminArtistsPage({ params }: Props) {
+export default async function AdminArtistsPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const includeTest = shouldIncludeTestData(await searchParams);
 
   // Auth gate — notFound for non-yagi_admin
   const supabase = await createSupabaseServer();
@@ -68,7 +76,7 @@ export default async function AdminArtistsPage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workspaces.kind not in generated types
   const sbAny = sbAdmin as any;
 
-  const { data: profileRows, error: profileErr } = await sbAny
+  let profileQuery = sbAny
     .from("artist_profile")
     .select(
       `
@@ -76,11 +84,17 @@ export default async function AdminArtistsPage({ params }: Props) {
       display_name,
       instagram_handle,
       created_at,
-      workspace:workspaces(id, name),
+      workspace:workspaces!inner(id, name, is_test),
       member:workspace_members(user_id)
     `
     )
     .order("created_at", { ascending: false });
+
+  if (!includeTest) {
+    profileQuery = profileQuery.eq("workspace.is_test", false);
+  }
+
+  const { data: profileRows, error: profileErr } = await profileQuery;
 
   if (profileErr) {
     console.error("[AdminArtistsPage] artist_profile fetch error:", profileErr);
@@ -91,7 +105,7 @@ export default async function AdminArtistsPage({ params }: Props) {
     display_name: string | null;
     instagram_handle: string | null;
     created_at: string;
-    workspace: { id: string; name: string } | null;
+    workspace: { id: string; name: string; is_test?: boolean } | null;
     member: { user_id: string }[] | null;
   };
 
@@ -138,6 +152,7 @@ export default async function AdminArtistsPage({ params }: Props) {
       instagramHandle: p.instagram_handle,
       createdAt: p.created_at,
       emailConfirmedAt: authInfo?.email_confirmed_at ?? null,
+      isTest: p.workspace?.is_test === true,
     };
   });
 
@@ -160,9 +175,18 @@ export default async function AdminArtistsPage({ params }: Props) {
 
       {/* Artist table */}
       <section className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-          {t("table_heading")}
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("table_heading")}
+          </h2>
+          <TestDataToggle
+            baseHref="/app/admin/artists"
+            includeTest={includeTest}
+            label={t(includeTest ? "test_data_on" : "test_data_off")}
+            showLabel={t("test_data_show")}
+            hideLabel={t("test_data_hide")}
+          />
+        </div>
 
         {artists.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4">{t("table_empty")}</p>
@@ -197,7 +221,12 @@ export default async function AdminArtistsPage({ params }: Props) {
                       className="border-b border-border/70 transition-colors last:border-0 hover:bg-accent/40"
                     >
                       <td className="px-4 py-3 font-medium keep-all">
-                        {artist.displayName ?? "—"}
+                        <span className="inline-flex items-center gap-2">
+                          {artist.displayName ?? "—"}
+                          {artist.isTest && (
+                            <TestWorkspaceBadge label={t("test_badge")} />
+                          )}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell text-[12px]">
                         {artist.email}

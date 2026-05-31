@@ -47,6 +47,7 @@ export type WorkspaceItem = {
   id: string;
   name: string;
   kind: WorkspaceKind;
+  isTest: boolean;
 };
 
 type Props = {
@@ -65,6 +66,7 @@ export function WorkspaceSwitcher({ current, workspaces, isYagiAdmin = false }: 
   // the section if it has 0 entries to keep Phase 4 dropdown clean -- only
   // Brands shows up for users without artist/admin memberships).
   const brands = workspaces.filter((w) => w.kind === "brand");
+  const creators = workspaces.filter((w) => w.kind === "creator");
   const artists = workspaces.filter((w) => w.kind === "artist");
   const admins = workspaces.filter((w) => w.kind === "yagi_admin");
 
@@ -103,6 +105,11 @@ export function WorkspaceSwitcher({ current, workspaces, isYagiAdmin = false }: 
         <span className="flex-1 truncate font-medium text-foreground keep-all">
           {current.name}
         </span>
+        {current.isTest && (
+          <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-label text-brand">
+            {t("test_badge")}
+          </span>
+        )}
         <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -125,6 +132,24 @@ export function WorkspaceSwitcher({ current, workspaces, isYagiAdmin = false }: 
               />
             ))}
           </DropdownMenuGroup>
+        )}
+        {creators.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.10em] text-muted-foreground">
+                {t("creators_group")}
+              </DropdownMenuLabel>
+              {creators.map((w) => (
+                <Row
+                  key={w.id}
+                  workspace={w}
+                  isCurrent={w.id === current.id}
+                  onSelect={() => handleSelect(w.id)}
+                />
+              ))}
+            </DropdownMenuGroup>
+          </>
         )}
         {artists.length > 0 && (
           <>
@@ -196,6 +221,11 @@ function Row({
       className="flex items-center gap-2"
     >
       <span className="flex-1 truncate text-sm keep-all">{workspace.name}</span>
+      {workspace.isTest && (
+        <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-label text-brand">
+          TEST
+        </span>
+      )}
       {isCurrent && (
         <Check className="h-3.5 w-3.5 text-foreground shrink-0" />
       )}

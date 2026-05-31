@@ -3,12 +3,18 @@ import { redirect } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import {
+  TestDataToggle,
+  TestWorkspaceBadge,
+} from "@/components/admin/test-data-toggle";
+import { shouldIncludeTestData } from "@/lib/admin/test-data";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ includeTest?: string | string[] }>;
 };
 
 type CampaignRow = {
@@ -18,6 +24,7 @@ type CampaignRow = {
   status: string;
   updated_at: string;
   submission_close_at: string | null;
+  sponsor: { is_test?: boolean } | null;
 };
 
 type SubmissionCountRow = {
@@ -25,8 +32,9 @@ type SubmissionCountRow = {
   status: string;
 };
 
-export default async function AdminCampaignsPage({ params }: Props) {
+export default async function AdminCampaignsPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const includeTest = shouldIncludeTestData(await searchParams);
   const t = await getTranslations({ locale, namespace: "admin_campaigns" });
   const supabase = await createSupabaseServer();
   const {
@@ -47,17 +55,25 @@ export default async function AdminCampaignsPage({ params }: Props) {
   const sbAdmin = createSupabaseService();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- campaign tables type regen pending
   const sb = sbAdmin as any;
-  const [{ data: campaignsRaw }, { data: submissionsRaw }] = await Promise.all([
-    sb
+  const campaignsQuery = sb
       .from("campaigns")
-      .select("id, slug, title, status, updated_at, submission_close_at")
-      .order("updated_at", { ascending: false })
-      .limit(50),
+      .select(
+        "id, slug, title, status, updated_at, submission_close_at, sponsor:workspaces!campaigns_sponsor_workspace_id_fkey(is_test)",
+      )
+      .order("updated_at", { ascending: false });
+
+  const [{ data: campaignsRaw }, { data: submissionsRaw }] = await Promise.all([
+    campaignsQuery,
     sb.from("campaign_submissions").select("campaign_id, status"),
   ]);
 
-  const campaigns = (campaignsRaw ?? []) as CampaignRow[];
-  const submissions = (submissionsRaw ?? []) as SubmissionCountRow[];
+  const campaigns = ((campaignsRaw ?? []) as CampaignRow[]).filter(
+    (campaign) => includeTest || campaign.sponsor?.is_test !== true,
+  ).slice(0, 50);
+  const campaignIds = new Set(campaigns.map((campaign) => campaign.id));
+  const submissions = ((submissionsRaw ?? []) as SubmissionCountRow[]).filter((row) =>
+    campaignIds.has(row.campaign_id),
+  );
   const countMap = new Map<
     string,
     { submitted: number; approved: number; distributed: number; total: number }
@@ -94,6 +110,13 @@ export default async function AdminCampaignsPage({ params }: Props) {
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground keep-all">
           {t("admin_description")}
         </p>
+        <TestDataToggle
+          baseHref="/app/admin/campaigns"
+          includeTest={includeTest}
+          label={t(includeTest ? "test_data_on" : "test_data_off")}
+          showLabel={t("test_data_show")}
+          hideLabel={t("test_data_hide")}
+        />
       </header>
 
       {campaigns.length === 0 ? (
@@ -120,9 +143,14 @@ export default async function AdminCampaignsPage({ params }: Props) {
                       <p className="mb-2 text-xs text-muted-foreground">
                         {dateFmt.format(new Date(campaign.updated_at))}
                       </p>
-                      <h2 className="truncate text-lg font-semibold text-foreground">
-                        {campaign.title}
-                      </h2>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <h2 className="truncate text-lg font-semibold text-foreground">
+                          {campaign.title}
+                        </h2>
+                        {campaign.sponsor?.is_test && (
+                          <TestWorkspaceBadge label={t("test_badge")} />
+                        )}
+                      </div>
                     </div>
                     <span
                       className={cn(

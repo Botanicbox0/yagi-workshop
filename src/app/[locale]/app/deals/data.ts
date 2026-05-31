@@ -22,6 +22,7 @@ export type DealRow = {
     invoice_number: string | null;
     status: string;
   } | null;
+  is_test?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -49,7 +50,7 @@ export type DealPaymentEventRow = {
 };
 
 export const DEAL_SELECT =
-  "id, persona_id, artist_workspace_id, brand_workspace_id, project_id, status, payment_status, brief, proposed_budget, brand_amount, yagi_commission_amount, artist_payout_amount, commission_rate, currency, usage_types, persona_name_snapshot, created_at, updated_at, invoices(id, invoice_number, status)";
+  "id, persona_id, artist_workspace_id, brand_workspace_id, project_id, status, payment_status, brief, proposed_budget, brand_amount, yagi_commission_amount, artist_payout_amount, commission_rate, currency, usage_types, persona_name_snapshot, created_at, updated_at, invoices(id, invoice_number, status), brand_workspace:workspaces!deals_brand_workspace_id_fkey(is_test), artist_workspace:workspaces!deals_artist_workspace_id_fkey(is_test)";
 
 function normalizeDeal(row: Record<string, unknown>): DealRow {
   const rawInvoices = row.invoices as
@@ -65,11 +66,15 @@ function normalizeDeal(row: Record<string, unknown>): DealRow {
   return {
     ...(row as Omit<DealRow, "invoice">),
     invoice,
+    is_test:
+      ((row.brand_workspace as { is_test?: boolean } | null)?.is_test === true) ||
+      ((row.artist_workspace as { is_test?: boolean } | null)?.is_test === true),
   };
 }
 
 export async function listDeals(
   supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
+  options: { includeTest?: boolean } = {},
 ) {
   const { data, error } = await (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 9 table typegen pending
@@ -79,7 +84,10 @@ export async function listDeals(
     .select(DEAL_SELECT)
     .order("updated_at", { ascending: false });
 
-  return { data: ((data ?? []) as Record<string, unknown>[]).map(normalizeDeal), error };
+  const rows = ((data ?? []) as Record<string, unknown>[])
+    .map(normalizeDeal)
+    .filter((deal) => options.includeTest === true || deal.is_test !== true);
+  return { data: rows, error };
 }
 
 export async function getDeal(

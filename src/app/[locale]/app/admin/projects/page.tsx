@@ -3,13 +3,17 @@ import { Link } from "@/i18n/routing";
 import { Plus } from "lucide-react";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ProjectsQueue } from "@/components/admin/projects-queue";
+import { TestDataToggle } from "@/components/admin/test-data-toggle";
+import { shouldIncludeTestData } from "@/lib/admin/test-data";
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ includeTest?: string | string[] }>;
 };
 
-export default async function AdminProjectsPage({ params }: Props) {
+export default async function AdminProjectsPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const includeTest = shouldIncludeTestData(await searchParams);
   const tAdmin = await getTranslations({ locale, namespace: "admin" });
 
   const supabase = await createSupabaseServer();
@@ -19,7 +23,7 @@ export default async function AdminProjectsPage({ params }: Props) {
   // for the asset-count indicator. Field is JSONB array; length used as count.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 project_boards not in generated types
   const sb = supabase as any;
-  const { data: projects, error } = await sb
+  let query = sb
     .from('projects')
     .select(
       `
@@ -30,18 +34,35 @@ export default async function AdminProjectsPage({ params }: Props) {
       submitted_at,
       created_at,
       created_by,
-      client:profiles!projects_created_by_fkey(id, name),
-      workspace:workspaces(id, name),
+      client:profiles!projects_created_by_fkey(id, display_name),
+      workspace:workspaces!inner(id, name, is_test),
       ref_count:project_references(count),
       boards:project_boards(asset_index)
     `
     )
-    .in("status", ["draft", "in_review", "in_progress", "in_revision", "delivered", "approved"])
-    .order("submitted_at", { ascending: false, nullsFirst: false });
+    .in("status", ["draft", "in_review", "in_progress", "in_revision", "delivered", "approved"]);
+
+  if (!includeTest) {
+    query = query.eq("workspace.is_test", false);
+  }
+
+  const { data: projects, error } = await query.order("submitted_at", {
+    ascending: false,
+    nullsFirst: false,
+  });
 
   if (error) {
     console.error("[AdminProjectsPage] Supabase error:", error);
   }
+
+  const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Seoul",
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Database query result typing
   const projectRows = (projects ?? []).map((p: any) => {
@@ -62,8 +83,13 @@ export default async function AdminProjectsPage({ params }: Props) {
       status: p.status as any,
       submitted_at: p.submitted_at,
       created_at: p.created_at,
-      client: p.client ? { id: p.client.id, name: p.client.name } : null,
-      workspace: p.workspace ? { id: p.workspace.id, name: p.workspace.name } : null,
+      dateLabel: dateFormatter.format(new Date(p.submitted_at || p.created_at)),
+      client: p.client
+        ? { id: p.client.id, name: p.client.display_name ?? "Unknown" }
+        : null,
+      workspace: p.workspace
+        ? { id: p.workspace.id, name: p.workspace.name, isTest: p.workspace.is_test === true }
+        : null,
       ref_count,
     };
   });
@@ -89,6 +115,15 @@ export default async function AdminProjectsPage({ params }: Props) {
           <Plus className="h-4 w-4" aria-hidden="true" />
           {tAdmin("projects.curated_new_cta")}
         </Link>
+      </div>
+      <div className="mb-6">
+        <TestDataToggle
+          baseHref="/app/admin/projects"
+          includeTest={includeTest}
+          label={tAdmin(includeTest ? "test_data_on" : "test_data_off")}
+          showLabel={tAdmin("test_data_show")}
+          hideLabel={tAdmin("test_data_hide")}
+        />
       </div>
 
       <ProjectsQueue projects={projectRows} initialTab="draft" />

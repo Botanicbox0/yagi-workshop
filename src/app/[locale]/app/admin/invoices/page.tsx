@@ -3,10 +3,16 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import {
+  TestDataToggle,
+  TestWorkspaceBadge,
+} from "@/components/admin/test-data-toggle";
+import { isRealWorkspace, shouldIncludeTestData } from "@/lib/admin/test-data";
 import { cn } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ includeTest?: string | string[] }>;
 };
 
 type InvoiceListRow = {
@@ -18,19 +24,20 @@ type InvoiceListRow = {
   total_krw: number;
   is_mock: boolean;
   project: { title: string } | null;
-  workspace: { name: string } | null;
-};
-
-type StatusCountRow = {
-  id: string;
-  status: string;
-};
-
-type AggregateRow = {
-  total_krw: number;
+  workspace: { name: string; is_test?: boolean | null } | null;
 };
 
 type InvoiceStatus = "draft" | "issuing" | "issued" | "paid" | "failed" | "void";
+
+type InvoiceMetricsRow = {
+  mock_count: number;
+  mock_total_krw: number;
+  mtd_total_krw: number;
+  ytd_total_krw: number;
+  overdue_count: number;
+  overdue_total_krw: number;
+  status_counts: Record<string, number> | null;
+};
 
 function todayKstDateStr(): string {
   const now = new Date();
@@ -83,7 +90,10 @@ function toInvoiceRow(row: {
   total_krw: number;
   is_mock: boolean;
   project: { title: string } | { title: string }[] | null;
-  workspace: { name: string } | { name: string }[] | null;
+  workspace:
+    | { name: string; is_test?: boolean | null }
+    | { name: string; is_test?: boolean | null }[]
+    | null;
 }): InvoiceListRow {
   return {
     id: row.id,
@@ -98,8 +108,9 @@ function toInvoiceRow(row: {
   };
 }
 
-export default async function AdminInvoicesPage({ params }: Props) {
+export default async function AdminInvoicesPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const includeTest = shouldIncludeTestData(await searchParams);
 
   const supabase = await createSupabaseServer();
 
@@ -123,141 +134,99 @@ export default async function AdminInvoicesPage({ params }: Props) {
   const today = todayKstDateStr();
   const firstOfMonth = firstOfMonthKstStr();
   const firstOfYear = firstOfYearKstStr();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workspaces.is_test typegen pending
+  const sb = supabase as any;
 
-  // Parallel queries
-  const [
-    mockAggRes,
-    mtdAggRes,
-    ytdAggRes,
-    overdueAggRes,
-    mockListRes,
-    overdueListRes,
-    statusBreakdownRes,
-  ] = await Promise.all([
-    // 1a. mock_count + sum
-    supabase
-      .from("invoices")
-      .select("total_krw", { count: "exact" })
-      .eq("is_mock", true)
-      .in("status", ["issued", "paid"]),
-
-    // 1b. MTD issued total
-    supabase
-      .from("invoices")
-      .select("total_krw")
-      .in("status", ["issued", "paid"])
-      .gte("issue_date", firstOfMonth),
-
-    // 1c. YTD issued total
-    supabase
-      .from("invoices")
-      .select("total_krw")
-      .in("status", ["issued", "paid"])
-      .gte("issue_date", firstOfYear),
-
-    // 1d. Overdue count + sum
-    supabase
-      .from("invoices")
-      .select("total_krw", { count: "exact" })
-      .eq("status", "issued")
-      .not("due_date", "is", null)
-      .lt("due_date", today),
-
-    // 2. Mock invoices list
-    supabase
-      .from("invoices")
-      .select(
-        `
-        id,
-        invoice_number,
-        status,
-        issue_date,
-        due_date,
-        total_krw,
-        is_mock,
-        project:projects(title),
-        workspace:workspaces(name)
+  let mockListQuery = sb
+    .from("invoices")
+    .select(
       `
-      )
-      .eq("is_mock", true)
-      .in("status", ["issued", "paid"])
-      .order("issue_date", { ascending: true, nullsFirst: false })
-      .limit(50),
+      id,
+      invoice_number,
+      status,
+      issue_date,
+      due_date,
+      total_krw,
+      is_mock,
+      project:projects(title),
+      workspace:workspaces!inner(name, is_test)
+    `
+    )
+    .eq("is_mock", true)
+    .in("status", ["issued", "paid"])
+    .order("issue_date", { ascending: true, nullsFirst: false });
 
-    // 3. Overdue list
-    supabase
-      .from("invoices")
-      .select(
-        `
-        id,
-        invoice_number,
-        status,
-        issue_date,
-        due_date,
-        total_krw,
-        is_mock,
-        project:projects(title),
-        workspace:workspaces(name)
+  let overdueListQuery = sb
+    .from("invoices")
+    .select(
       `
-      )
-      .eq("status", "issued")
-      .not("due_date", "is", null)
-      .lt("due_date", today)
-      .order("due_date", { ascending: true })
-      .limit(50),
+      id,
+      invoice_number,
+      status,
+      issue_date,
+      due_date,
+      total_krw,
+      is_mock,
+      project:projects(title),
+      workspace:workspaces!inner(name, is_test)
+    `
+    )
+    .eq("status", "issued")
+    .not("due_date", "is", null)
+    .lt("due_date", today)
+    .order("due_date", { ascending: true });
 
-    // 4. Status breakdown (YTD)
-    supabase
-      .from("invoices")
-      .select("id, status")
-      .gte("created_at", `${firstOfYear}T00:00:00+09:00`),
+  if (!includeTest) {
+    mockListQuery = mockListQuery.eq("workspace.is_test", false);
+    overdueListQuery = overdueListQuery.eq("workspace.is_test", false);
+  }
+
+  const [metricsRes, mockListRes, overdueListRes] = await Promise.all([
+    sb.rpc("get_admin_invoice_sandbox_metrics", {
+      p_include_test: includeTest,
+      p_today: today,
+      p_month_start: firstOfMonth,
+      p_year_start: firstOfYear,
+    }),
+    mockListQuery.limit(50),
+    overdueListQuery.limit(50),
   ]);
 
-  if (mockAggRes.error)
-    console.error("[AdminInvoicesPage] mock agg:", mockAggRes.error);
-  if (mtdAggRes.error)
-    console.error("[AdminInvoicesPage] mtd agg:", mtdAggRes.error);
-  if (ytdAggRes.error)
-    console.error("[AdminInvoicesPage] ytd agg:", ytdAggRes.error);
-  if (overdueAggRes.error)
-    console.error("[AdminInvoicesPage] overdue agg:", overdueAggRes.error);
+  if (metricsRes.error)
+    console.error("[AdminInvoicesPage] metrics:", metricsRes.error);
   if (mockListRes.error)
     console.error("[AdminInvoicesPage] mock list:", mockListRes.error);
   if (overdueListRes.error)
     console.error("[AdminInvoicesPage] overdue list:", overdueListRes.error);
-  if (statusBreakdownRes.error)
-    console.error(
-      "[AdminInvoicesPage] status breakdown:",
-      statusBreakdownRes.error
+
+  const metrics = ((metricsRes.data ?? []) as InvoiceMetricsRow[])[0] ?? {
+    mock_count: 0,
+    mock_total_krw: 0,
+    mtd_total_krw: 0,
+    ytd_total_krw: 0,
+    overdue_count: 0,
+    overdue_total_krw: 0,
+    status_counts: {},
+  };
+
+  const mockCount = Number(metrics.mock_count ?? 0);
+  const mockTotal = Number(metrics.mock_total_krw ?? 0);
+  const mtdTotal = Number(metrics.mtd_total_krw ?? 0);
+  const ytdTotal = Number(metrics.ytd_total_krw ?? 0);
+  const overdueCount = Number(metrics.overdue_count ?? 0);
+  const overdueTotal = Number(metrics.overdue_total_krw ?? 0);
+
+  const mockList: InvoiceListRow[] = (mockListRes.data ?? [])
+    .map(toInvoiceRow)
+    .filter(
+      (row: InvoiceListRow) => includeTest || isRealWorkspace(row.workspace),
+    );
+  const overdueList: InvoiceListRow[] = (overdueListRes.data ?? [])
+    .map(toInvoiceRow)
+    .filter(
+      (row: InvoiceListRow) => includeTest || isRealWorkspace(row.workspace),
     );
 
-  const mockAggRows = (mockAggRes.data ?? []) as AggregateRow[];
-  const mockCount = mockAggRes.count ?? mockAggRows.length;
-  const mockTotal = mockAggRows.reduce((acc, r) => acc + (r.total_krw ?? 0), 0);
-
-  const mtdTotal = ((mtdAggRes.data ?? []) as AggregateRow[]).reduce(
-    (acc, r) => acc + (r.total_krw ?? 0),
-    0
-  );
-  const ytdTotal = ((ytdAggRes.data ?? []) as AggregateRow[]).reduce(
-    (acc, r) => acc + (r.total_krw ?? 0),
-    0
-  );
-
-  const overdueAggRows = (overdueAggRes.data ?? []) as AggregateRow[];
-  const overdueCount = overdueAggRes.count ?? overdueAggRows.length;
-  const overdueTotal = overdueAggRows.reduce(
-    (acc, r) => acc + (r.total_krw ?? 0),
-    0
-  );
-
-  const mockList: InvoiceListRow[] = (mockListRes.data ?? []).map(toInvoiceRow);
-  const overdueList: InvoiceListRow[] = (overdueListRes.data ?? []).map(
-    toInvoiceRow
-  );
-
-  const statusBreakdownRows = (statusBreakdownRes.data ??
-    []) as StatusCountRow[];
   const statusCounts: Record<InvoiceStatus, number> = {
     draft: 0,
     issuing: 0,
@@ -266,16 +235,16 @@ export default async function AdminInvoicesPage({ params }: Props) {
     failed: 0,
     void: 0,
   };
-  for (const row of statusBreakdownRows) {
+  for (const [status, count] of Object.entries(metrics.status_counts ?? {})) {
     if (
-      row.status === "draft" ||
-      row.status === "issuing" ||
-      row.status === "issued" ||
-      row.status === "paid" ||
-      row.status === "failed" ||
-      row.status === "void"
+      status === "draft" ||
+      status === "issuing" ||
+      status === "issued" ||
+      status === "paid" ||
+      status === "failed" ||
+      status === "void"
     ) {
-      statusCounts[row.status] += 1;
+      statusCounts[status] = Number(count ?? 0);
     }
   }
 
@@ -318,6 +287,15 @@ export default async function AdminInvoicesPage({ params }: Props) {
         <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight mb-1">
           {t("title")}
         </h1>
+        <div className="mt-4">
+          <TestDataToggle
+            baseHref="/app/admin/invoices"
+            includeTest={includeTest}
+            label={t(includeTest ? "test_data_on" : "test_data_off")}
+            showLabel={t("test_data_show")}
+            hideLabel={t("test_data_hide")}
+          />
+        </div>
       </div>
 
       {/* KPI cards */}
@@ -482,7 +460,12 @@ export default async function AdminInvoicesPage({ params }: Props) {
                         {inv.project?.title ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell truncate max-w-[160px]">
-                        {inv.workspace?.name ?? "—"}
+                        <span className="inline-flex items-center gap-2">
+                          {inv.workspace?.name ?? "—"}
+                          {inv.workspace?.is_test && (
+                            <TestWorkspaceBadge label={t("test_badge")} />
+                          )}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
                         {currencyFmt.format(inv.total_krw)}
@@ -594,7 +577,12 @@ export default async function AdminInvoicesPage({ params }: Props) {
                         {inv.project?.title ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell truncate max-w-[160px]">
-                        {inv.workspace?.name ?? "—"}
+                        <span className="inline-flex items-center gap-2">
+                          {inv.workspace?.name ?? "—"}
+                          {inv.workspace?.is_test && (
+                            <TestWorkspaceBadge label={t("test_badge")} />
+                          )}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
                         {currencyFmt.format(inv.total_krw)}
