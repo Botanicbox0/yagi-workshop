@@ -27,11 +27,23 @@ const paymentSchema = z.object({
   note: z.string().trim().max(1000).optional(),
 });
 
+const invoiceSchema = z.object({
+  dealId: z.string().uuid(),
+});
+
 type AdminDealResult =
   | { ok: true }
   | {
       ok: false;
       error: "validation" | "unauthenticated" | "forbidden" | "balance" | "db";
+      message?: string;
+    };
+
+type CreateDealInvoiceResult =
+  | { ok: true; invoiceId: string }
+  | {
+      ok: false;
+      error: "validation" | "unauthenticated" | "forbidden" | "db";
       message?: string;
     };
 
@@ -155,6 +167,32 @@ export async function recordDealPaymentAction(
 
   revalidateAdminDealPaths();
   return { ok: true };
+}
+
+export async function createDealInvoiceAction(
+  input: unknown,
+): Promise<CreateDealInvoiceResult> {
+  const parsed = invoiceSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+
+  const admin = await getAdminSupabase();
+  if (!admin.ok) return admin;
+
+  const { data, error } = await admin.supabase.rpc("create_invoice_from_deal", {
+    p_deal_id: parsed.data.dealId,
+  });
+
+  if (error) {
+    console.error("[createDealInvoiceAction] rpc error:", error);
+    return { ok: false, error: "db", message: error.message };
+  }
+
+  revalidateAdminDealPaths();
+  revalidatePath("/[locale]/app/invoices", "page");
+  revalidatePath("/[locale]/app/admin/invoices", "page");
+  return { ok: true, invoiceId: data };
 }
 
 function revalidateAdminDealPaths() {

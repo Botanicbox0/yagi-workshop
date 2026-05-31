@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-import { Check, CreditCard, RotateCcw, X } from "lucide-react";
+import { Check, CreditCard, FileText, RotateCcw, X } from "lucide-react";
 import {
   cancelDealAction,
+  createDealInvoiceAction,
   offerDealAction,
   recordDealPaymentAction,
 } from "./actions";
@@ -76,6 +77,20 @@ export function AdminDealActions({ deal, compact = false }: Props) {
     });
   }
 
+  function createInvoice() {
+    setError(null);
+    startTransition(async () => {
+      const result = await createDealInvoiceAction({ dealId: deal.id });
+      if (!result.ok) {
+        setError(t(`server_error.${result.error}`));
+        return;
+      }
+      toast.success(t("success.invoice_created"));
+      router.push(`/app/invoices/${result.invoiceId}`);
+      router.refresh();
+    });
+  }
+
   function handleResult(
     result: Awaited<ReturnType<typeof offerDealAction>>,
     key: string,
@@ -90,11 +105,26 @@ export function AdminDealActions({ deal, compact = false }: Props) {
 
   const canOffer = deal.status === "submitted" || deal.status === "negotiating";
   const canCancel = ["submitted", "offered", "negotiating"].includes(deal.status);
-  const canBrandPaid = deal.status === "delivered" && deal.payment_status === "pending";
+  const canBrandPaid =
+    deal.status === "delivered" &&
+    deal.payment_status === "pending" &&
+    !deal.invoice;
   const canPaidOut =
     deal.status === "delivered" && deal.payment_status === "brand_paid";
+  const canCreateInvoice =
+    deal.status === "delivered" &&
+    deal.payment_status === "pending" &&
+    !!deal.brand_amount &&
+    !deal.invoice;
 
-  if (!canOffer && !canCancel && !canBrandPaid && !canPaidOut) {
+  if (
+    !canOffer &&
+    !canCancel &&
+    !canBrandPaid &&
+    !canPaidOut &&
+    !canCreateInvoice &&
+    !deal.invoice
+  ) {
     return null;
   }
 
@@ -188,6 +218,47 @@ export function AdminDealActions({ deal, compact = false }: Props) {
             {t("cancel_submit")}
           </Button>
         </form>
+      )}
+
+      {deal.invoice && (
+        <div className="rounded-lg border border-border/70 bg-surface-card p-4">
+          <h3 className="text-sm font-semibold text-foreground keep-all">
+            {t("invoice_title")}
+          </h3>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex h-6 items-center rounded bg-surface-card-deep px-2 text-[11px] font-medium text-muted-foreground">
+                {deal.invoice.status}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {deal.invoice.invoice_number ?? deal.invoice.id.slice(0, 8)}
+              </span>
+            </div>
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href={`/app/invoices/${deal.invoice.id}`}>
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                {t("open_invoice")}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {canCreateInvoice && (
+        <div className="rounded-lg border border-border/70 bg-surface-card p-4">
+          <h3 className="text-sm font-semibold text-foreground keep-all">
+            {t("invoice_title")}
+          </h3>
+          <Button
+            type="button"
+            disabled={isPending}
+            onClick={createInvoice}
+            className="mt-4 rounded-full bg-foreground text-background hover:bg-foreground/90"
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            {isPending ? t("submitting") : t("create_invoice")}
+          </Button>
+        </div>
       )}
 
       {(canBrandPaid || canPaidOut) && (

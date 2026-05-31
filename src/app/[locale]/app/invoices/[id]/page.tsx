@@ -25,10 +25,14 @@ function getStatusBadgeVariant(
   switch (status) {
     case "draft":
       return "secondary";
+    case "issuing":
+      return "outline";
     case "issued":
       return "default";
     case "paid":
       return "outline";
+    case "failed":
+      return "destructive";
     case "void":
       return "destructive";
     default:
@@ -66,24 +70,24 @@ export default async function InvoiceDetailPage({ params }: Props) {
     .eq("role", "yagi_admin");
   const isYagiAdmin = !!(yagiAdminRows && yagiAdminRows.length > 0);
 
-  // Load invoice with nested project + workspace.
+  // Load invoice with optional project and direct buyer workspace.
   const { data: invoiceRow } = await supabase
     .from("invoices")
     .select(
       `
       *,
-      project:projects!inner(
+      project:projects(
         id,
         title,
-        workspace_id,
-        workspace:workspaces!inner(
-          id,
-          name,
-          business_registration_number,
-          representative_name,
-          business_address,
-          tax_invoice_email
-        )
+        workspace_id
+      ),
+      workspace:workspaces!inner(
+        id,
+        name,
+        business_registration_number,
+        representative_name,
+        business_address,
+        tax_invoice_email
       )
     `
     )
@@ -100,54 +104,32 @@ export default async function InvoiceDetailPage({ params }: Props) {
         id: string;
         title: string;
         workspace_id: string;
-        workspace:
-          | {
-              id: string;
-              name: string;
-              business_registration_number: string | null;
-              representative_name: string | null;
-              business_address: string | null;
-              tax_invoice_email: string | null;
-            }
-          | {
-              id: string;
-              name: string;
-              business_registration_number: string | null;
-              representative_name: string | null;
-              business_address: string | null;
-              tax_invoice_email: string | null;
-            }[]
-          | null;
       }
     | {
         id: string;
         title: string;
         workspace_id: string;
-        workspace:
-          | {
-              id: string;
-              name: string;
-              business_registration_number: string | null;
-              representative_name: string | null;
-              business_address: string | null;
-              tax_invoice_email: string | null;
-            }
-          | {
-              id: string;
-              name: string;
-              business_registration_number: string | null;
-              representative_name: string | null;
-              business_address: string | null;
-              tax_invoice_email: string | null;
-            }[]
-          | null;
       }[]
     | null;
   const project = Array.isArray(projectRaw) ? projectRaw[0] : projectRaw;
-  if (!project) {
-    notFound();
-  }
-  const workspaceRaw = project.workspace;
+  const workspaceRaw = invoiceRow.workspace as
+    | {
+        id: string;
+        name: string;
+        business_registration_number: string | null;
+        representative_name: string | null;
+        business_address: string | null;
+        tax_invoice_email: string | null;
+      }
+    | {
+        id: string;
+        name: string;
+        business_registration_number: string | null;
+        representative_name: string | null;
+        business_address: string | null;
+        tax_invoice_email: string | null;
+      }[]
+    | null;
   const workspace = Array.isArray(workspaceRaw) ? workspaceRaw[0] : workspaceRaw;
   if (!workspace) {
     notFound();
@@ -247,7 +229,7 @@ export default async function InvoiceDetailPage({ params }: Props) {
               
             </h1>
             <p className="text-sm text-muted-foreground keep-all">
-              {project.title}
+              {project?.title ?? t("deal_invoice_title")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -258,8 +240,10 @@ export default async function InvoiceDetailPage({ params }: Props) {
               {t(
                 `status_${status}` as
                   | "status_draft"
+                  | "status_issuing"
                   | "status_issued"
                   | "status_paid"
+                  | "status_failed"
                   | "status_void"
               )}
             </Badge>
@@ -291,7 +275,7 @@ export default async function InvoiceDetailPage({ params }: Props) {
         lineItems={lineItems}
         supplier={supplier}
         buyer={buyer}
-        projectTitle={project.title}
+        projectTitle={project?.title ?? t("deal_invoice_title")}
         isYagiAdmin={isYagiAdmin}
         locale={locale}
         popbillMode={popbillMode}

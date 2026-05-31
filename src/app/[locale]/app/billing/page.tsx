@@ -145,8 +145,15 @@ export default async function BillingPage({ params }: Props) {
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/app/admin/invoices"
+                  href="/app/admin/deals"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
+                >
+                  {t("billing_operations")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/app/admin/invoices"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
                 >
                   {t("admin_invoices")}
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />

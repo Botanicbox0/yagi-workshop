@@ -681,6 +681,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          deal_id: string | null
           due_date: string | null
           filed_at: string | null
           id: string
@@ -692,7 +693,7 @@ export type Database = {
           paid_at: string | null
           popbill_mgt_key: string | null
           popbill_response: Json | null
-          project_id: string
+          project_id: string | null
           status: string
           subtotal_krw: number
           supplier_id: string
@@ -707,6 +708,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by: string
+          deal_id?: string | null
           due_date?: string | null
           filed_at?: string | null
           id?: string
@@ -718,7 +720,7 @@ export type Database = {
           paid_at?: string | null
           popbill_mgt_key?: string | null
           popbill_response?: Json | null
-          project_id: string
+          project_id?: string | null
           status?: string
           subtotal_krw?: number
           supplier_id: string
@@ -733,6 +735,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string
+          deal_id?: string | null
           due_date?: string | null
           filed_at?: string | null
           id?: string
@@ -744,7 +747,7 @@ export type Database = {
           paid_at?: string | null
           popbill_mgt_key?: string | null
           popbill_response?: Json | null
-          project_id?: string
+          project_id?: string | null
           status?: string
           subtotal_krw?: number
           supplier_id?: string
@@ -757,6 +760,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_project_id_fkey"
             columns: ["project_id"]
@@ -2874,6 +2884,10 @@ export type Database = {
         Returns: string
       }
       change_handle: { Args: { new_handle_input: string }; Returns: undefined }
+      create_invoice_from_deal: {
+        Args: { p_deal_id: string }
+        Returns: string
+      }
       convert_commission_to_project: {
         Args: { p_commission_id: string }
         Returns: Json
@@ -2909,6 +2923,7 @@ export type Database = {
       is_ws_member: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_yagi_admin: { Args: { uid: string }; Returns: boolean }
       is_yagi_internal_ws: { Args: { ws_id: string }; Returns: boolean }
+      mark_invoice_paid: { Args: { p_invoice_id: string }; Returns: undefined }
       remove_project_board_attachment: {
         Args: { p_attachment_id: string; p_board_id: string; p_kind: string }
         Returns: boolean

@@ -88,13 +88,11 @@ export function buildTaxinvoice(args: BuildArgs): BuildResult {
   }
 
   // Generate MgtKey if invoice doesn't have one yet.
-  // IMPORTANT: must be deterministic per invoice row so that concurrent issue
-  // requests produce the SAME MgtKey — popbill rejects duplicate MgtKeys, which
-  // is our idempotency guard against double-filing under a race. We key on
-  // invoice.id + invoice.created_at (stable per row).
+  // The issue action persists this before the Popbill call; this fallback keeps
+  // the payload deterministic for tests and any future call sites.
   const mgtKey =
     args.invoice.popbill_mgt_key ??
-    `INV-${args.invoice.id.slice(0, 8)}-${Buffer.from(args.invoice.created_at).toString("base64url").slice(0, 11)}`;
+    `INV-${args.invoice.created_at.slice(0, 10).replace(/-/g, "")}-${args.invoice.id.slice(0, 8).toUpperCase()}`;
 
   const taxinvoice: Taxinvoice = {
     writeDate,

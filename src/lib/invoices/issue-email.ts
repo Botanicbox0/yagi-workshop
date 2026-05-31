@@ -46,11 +46,13 @@ export async function sendInvoiceIssuedEmail(invoiceId: string): Promise<void> {
   }
 
   const [projectRes, buyerRes, supplierRes] = await Promise.all([
-    svc
-      .from("projects")
-      .select("id, title")
-      .eq("id", invoice.project_id)
-      .maybeSingle(),
+    invoice.project_id
+      ? svc
+          .from("projects")
+          .select("id, title")
+          .eq("id", invoice.project_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
     svc
       .from("workspaces")
       .select("id, name, tax_invoice_email")

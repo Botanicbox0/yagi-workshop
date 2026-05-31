@@ -17,6 +17,11 @@ export type DealRow = {
   currency: string;
   usage_types: string[];
   persona_name_snapshot: string | null;
+  invoice: {
+    id: string;
+    invoice_number: string | null;
+    status: string;
+  } | null;
   created_at: string;
   updated_at: string;
 };
@@ -44,7 +49,24 @@ export type DealPaymentEventRow = {
 };
 
 export const DEAL_SELECT =
-  "id, persona_id, artist_workspace_id, brand_workspace_id, project_id, status, payment_status, brief, proposed_budget, brand_amount, yagi_commission_amount, artist_payout_amount, commission_rate, currency, usage_types, persona_name_snapshot, created_at, updated_at";
+  "id, persona_id, artist_workspace_id, brand_workspace_id, project_id, status, payment_status, brief, proposed_budget, brand_amount, yagi_commission_amount, artist_payout_amount, commission_rate, currency, usage_types, persona_name_snapshot, created_at, updated_at, invoices(id, invoice_number, status)";
+
+function normalizeDeal(row: Record<string, unknown>): DealRow {
+  const rawInvoices = row.invoices as
+    | { id: string; invoice_number: string | null; status: string }
+    | { id: string; invoice_number: string | null; status: string }[]
+    | null
+    | undefined;
+  const invoice = Array.isArray(rawInvoices)
+    ? (rawInvoices.find((item) => item.status !== "void") ?? null)
+    : rawInvoices?.status === "void"
+      ? null
+      : (rawInvoices ?? null);
+  return {
+    ...(row as Omit<DealRow, "invoice">),
+    invoice,
+  };
+}
 
 export async function listDeals(
   supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
@@ -57,7 +79,7 @@ export async function listDeals(
     .select(DEAL_SELECT)
     .order("updated_at", { ascending: false });
 
-  return { data: (data ?? []) as DealRow[], error };
+  return { data: ((data ?? []) as Record<string, unknown>[]).map(normalizeDeal), error };
 }
 
 export async function getDeal(
@@ -73,7 +95,7 @@ export async function getDeal(
     .eq("id", dealId)
     .maybeSingle();
 
-  return { data: data as DealRow | null, error };
+  return { data: data ? normalizeDeal(data as Record<string, unknown>) : null, error };
 }
 
 export async function listDealHistory(

@@ -82,6 +82,10 @@ export type IssueArgs = {
   memo?: string;
 };
 
+export type GetInfoArgs = {
+  mgt_key: string;
+};
+
 // Phase 2.1 G4 — structured guard metadata for non-implemented Popbill paths.
 // Allows the caller's log + UI layers to differentiate "deferred, awaiting
 // SDK" from generic 팝빌 API errors without string-matching on error_code.
@@ -97,6 +101,21 @@ export type IssueResult =
       nts_approval_number: string;   // 국세청 승인번호
       popbill_mgt_key: string;
       mode: PopbillMode;
+      raw_response: Record<string, unknown>;
+    }
+  | {
+      ok: false;
+      error_code: string;
+      error_message: string;
+      mode: PopbillMode;
+      details?: PopbillErrorDetails;
+    };
+
+export type TaxInvoiceInfoResult =
+  | {
+      ok: true;
+      mode: PopbillMode;
+      nts_approval_number: string;
       raw_response: Record<string, unknown>;
     }
   | {
@@ -125,6 +144,16 @@ type PopbillIssueResponse = {
   [key: string]: unknown;
 };
 
+type PopbillTaxInvoiceInfoResponse = {
+  ntsConfirmNum?: string;
+  ntsconfirmNum?: string;
+  itemKey?: string;
+  invoiceNum?: string;
+  stateCode?: number | string;
+  stateDT?: string;
+  [key: string]: unknown;
+};
+
 type PopbillError = {
   code?: number | string;
   message?: string;
@@ -145,6 +174,14 @@ type PopbillTaxinvoiceService = {
     dealInvoiceMgtKey: string,
     userId: string,
     success: PopbillCallback<PopbillIssueResponse>,
+    error: PopbillErrorCallback,
+  ) => void;
+  getInfo: (
+    corpNum: string,
+    keyType: "SELL",
+    mgtKey: string,
+    userId: string,
+    success: PopbillCallback<PopbillTaxInvoiceInfoResponse>,
     error: PopbillErrorCallback,
   ) => void;
 };
@@ -249,6 +286,52 @@ export async function issueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
   }
 }
 
+export async function getTaxInvoiceInfo(
+  args: GetInfoArgs,
+): Promise<TaxInvoiceInfoResult> {
+  if (mode === "mock") return mockGetTaxInvoiceInfo(args);
+
+  const status = getPopbillConfigStatus();
+  if (!status.configured) {
+    return {
+      ok: false,
+      error_code: "POPBILL_CONFIG_MISSING",
+      error_message: "Popbill server environment variables are incomplete.",
+      mode,
+    };
+  }
+
+  try {
+    const result = await callPopbill<PopbillTaxInvoiceInfoResponse>((success, error) => {
+      getTaxinvoiceService().getInfo(
+        process.env.POPBILL_CORP_NUM!,
+        "SELL",
+        args.mgt_key,
+        process.env.POPBILL_USER_ID ?? "",
+        success,
+        error,
+      );
+    });
+
+    return {
+      ok: true,
+      mode,
+      nts_approval_number: String(
+        result.ntsConfirmNum ?? result.ntsconfirmNum ?? "",
+      ),
+      raw_response: normalizeTaxInvoiceInfoResponse(result),
+    };
+  } catch (error) {
+    const normalized = normalizePopbillError(error);
+    return {
+      ok: false,
+      error_code: normalized.code,
+      error_message: normalized.message,
+      mode,
+    };
+  }
+}
+
 // ─── Mock implementation ─────────────────────────────────────────────────────
 
 async function mockIssueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
@@ -263,7 +346,7 @@ async function mockIssueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
     ok: true,
     mode: "mock",
     nts_approval_number: `MOCK-${ymd}-${random}`,
-    popbill_mgt_key: `mock-${args.invoice_id}`,
+    popbill_mgt_key: args.taxinvoice.invoicerMgtKey,
     raw_response: {
       mock: true,
       issued_at: new Date().toISOString(),
@@ -275,6 +358,24 @@ async function mockIssueTaxInvoice(args: IssueArgs): Promise<IssueResult> {
         totalAmount: args.taxinvoice.totalAmount,
         lineCount: args.taxinvoice.detailList.length,
       },
+    },
+  };
+}
+
+async function mockGetTaxInvoiceInfo(
+  args: GetInfoArgs,
+): Promise<TaxInvoiceInfoResult> {
+  await new Promise((r) => setTimeout(r, 120));
+
+  return {
+    ok: true,
+    mode: "mock",
+    nts_approval_number: `MOCK-LOOKUP-${args.mgt_key.slice(-8).toUpperCase()}`,
+    raw_response: {
+      mock: true,
+      mgt_key: args.mgt_key,
+      status: "issued",
+      looked_up_at: new Date().toISOString(),
     },
   };
 }
@@ -329,6 +430,18 @@ function normalizePopbillResponse(
     code: response.code,
     message: response.message,
     ntsConfirmNum: response.ntsConfirmNum,
+  };
+}
+
+function normalizeTaxInvoiceInfoResponse(
+  response: PopbillTaxInvoiceInfoResponse,
+): Record<string, unknown> {
+  return {
+    ntsConfirmNum: response.ntsConfirmNum ?? response.ntsconfirmNum,
+    itemKey: response.itemKey,
+    invoiceNum: response.invoiceNum,
+    stateCode: response.stateCode,
+    stateDT: response.stateDT,
   };
 }
 

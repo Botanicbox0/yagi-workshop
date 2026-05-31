@@ -29,10 +29,14 @@ function getStatusBadgeVariant(
   switch (status) {
     case "draft":
       return "secondary";
+    case "issuing":
+      return "outline";
     case "issued":
       return "default";
     case "paid":
       return "outline";
+    case "failed":
+      return "destructive";
     case "void":
       return "destructive";
     default:
@@ -146,7 +150,7 @@ export default async function InvoicesPage({ params, searchParams }: Props) {
     currency: "KRW",
   });
 
-  const statuses = ["draft", "issued", "paid", "void"] as const;
+  const statuses = ["draft", "issuing", "issued", "paid", "failed", "void"] as const;
 
   // Year/month filter options: current year and previous year
   const now = new Date();
@@ -302,8 +306,10 @@ export default async function InvoicesPage({ params, searchParams }: Props) {
                         {t(
                           `status_${inv.status}` as
                             | "status_draft"
+                            | "status_issuing"
                             | "status_issued"
                             | "status_paid"
+                            | "status_failed"
                             | "status_void"
                         )}
                       </Badge>

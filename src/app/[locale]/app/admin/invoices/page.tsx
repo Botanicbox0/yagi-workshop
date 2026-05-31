@@ -30,7 +30,7 @@ type AggregateRow = {
   total_krw: number;
 };
 
-type InvoiceStatus = "draft" | "issued" | "paid" | "void";
+type InvoiceStatus = "draft" | "issuing" | "issued" | "paid" | "failed" | "void";
 
 function todayKstDateStr(): string {
   const now = new Date();
@@ -54,10 +54,14 @@ function statusBadgeClass(status: string): string {
   switch (status) {
     case "draft":
       return "border-transparent bg-muted text-muted-foreground";
+    case "issuing":
+      return "border-transparent bg-amber-100 text-amber-700";
     case "issued":
       return "border-transparent bg-blue-100 text-blue-700";
     case "paid":
       return "border-transparent bg-green-100 text-green-700";
+    case "failed":
+      return "border-transparent bg-red-100 text-red-700";
     case "void":
       return "border-transparent bg-red-100 text-red-700";
     default:
@@ -256,15 +260,19 @@ export default async function AdminInvoicesPage({ params }: Props) {
     []) as StatusCountRow[];
   const statusCounts: Record<InvoiceStatus, number> = {
     draft: 0,
+    issuing: 0,
     issued: 0,
     paid: 0,
+    failed: 0,
     void: 0,
   };
   for (const row of statusBreakdownRows) {
     if (
       row.status === "draft" ||
+      row.status === "issuing" ||
       row.status === "issued" ||
       row.status === "paid" ||
+      row.status === "failed" ||
       row.status === "void"
     ) {
       statusCounts[row.status] += 1;
@@ -294,7 +302,14 @@ export default async function AdminInvoicesPage({ params }: Props) {
     return shortDateFmt.format(d);
   }
 
-  const statusKeys: InvoiceStatus[] = ["draft", "issued", "paid", "void"];
+  const statusKeys: InvoiceStatus[] = [
+    "draft",
+    "issuing",
+    "issued",
+    "paid",
+    "failed",
+    "void",
+  ];
 
   return (
     <div className="px-10 py-12 max-w-5xl">
@@ -483,8 +498,10 @@ export default async function AdminInvoicesPage({ params }: Props) {
                             {tInvoices(
                               `status_${inv.status}` as
                                 | "status_draft"
+                                | "status_issuing"
                                 | "status_issued"
                                 | "status_paid"
+                                | "status_failed"
                                 | "status_void"
                             )}
                           </Badge>
@@ -622,8 +639,10 @@ export default async function AdminInvoicesPage({ params }: Props) {
               {tInvoices(
                 `status_${s}` as
                   | "status_draft"
+                  | "status_issuing"
                   | "status_issued"
                   | "status_paid"
+                  | "status_failed"
                   | "status_void"
               )}{" "}
               · {statusCounts[s]}

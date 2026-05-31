@@ -64,6 +64,7 @@ import {
 import {
   issueInvoice,
   markPaid,
+  recheckInvoiceIssueStatus,
   voidInvoice,
 } from "@/app/[locale]/app/invoices/[id]/actions";
 import type { SuggestedLineItem } from "@/lib/invoices/suggest-line-items";
@@ -72,7 +73,7 @@ import type { SuggestedLineItem } from "@/lib/invoices/suggest-line-items";
 
 type InvoiceRow = {
   id: string;
-  project_id: string;
+  project_id: string | null;
   workspace_id: string;
   status: string;
   invoice_number: string | null;
@@ -690,6 +691,18 @@ function ActionFooter({ invoice, buyerRegistrationMissing }: ActionFooterProps) 
     });
   }
 
+  function handleRecheck() {
+    startTransition(async () => {
+      const result = await recheckInvoiceIssueStatus(invoice.id);
+      if (!result.ok) {
+        toast.error(t("recheck_failed"), { description: result.error });
+        return;
+      }
+      toast.success(t("recheck_success"));
+      router.refresh();
+    });
+  }
+
   function handleVoid() {
     startTransition(async () => {
       const result = await voidInvoice(
@@ -714,8 +727,8 @@ function ActionFooter({ invoice, buyerRegistrationMissing }: ActionFooterProps) 
         {t("action_footer_title")}
       </div>
       <div className="flex items-center gap-2">
-        {/* Draft → Issue */}
-        {invoice.status === "draft" && (
+        {/* Draft/failed → Issue */}
+        {(invoice.status === "draft" || invoice.status === "failed") && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -751,6 +764,21 @@ function ActionFooter({ invoice, buyerRegistrationMissing }: ActionFooterProps) 
           </AlertDialog>
         )}
 
+        {(invoice.status === "issuing" || invoice.status === "failed") && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={handleRecheck}
+            className="rounded-full text-sm"
+          >
+            {isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : null}
+            {t("recheck_button")}
+          </Button>
+        )}
+
         {/* Issued → Mark paid */}
         {invoice.status === "issued" && (
           <Button
@@ -767,7 +795,7 @@ function ActionFooter({ invoice, buyerRegistrationMissing }: ActionFooterProps) 
         )}
 
         {/* Issued | Paid → Void */}
-        {(invoice.status === "issued" || invoice.status === "paid") && (
+        {invoice.status === "issued" && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
@@ -923,11 +951,13 @@ export function InvoiceEditor({
                   invoiceId={invoice.id}
                   onAdded={refreshFromServer}
                 />
-                <SuggestDialog
-                  invoiceId={invoice.id}
-                  projectId={invoice.project_id}
-                  onApplied={refreshFromServer}
-                />
+                {invoice.project_id && (
+                  <SuggestDialog
+                    invoiceId={invoice.id}
+                    projectId={invoice.project_id}
+                    onApplied={refreshFromServer}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -983,8 +1013,21 @@ export function InvoiceEditor({
           )}
 
           {/* Issued info */}
-          {(invoice.status === "issued" || invoice.status === "paid") && (
+          {(invoice.status === "issuing" ||
+            invoice.status === "issued" ||
+            invoice.status === "paid" ||
+            invoice.status === "failed") && (
             <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs space-y-1">
+              {invoice.status === "issuing" && (
+                <p className="font-medium text-muted-foreground keep-all">
+                  {t("issue_in_progress")}
+                </p>
+              )}
+              {invoice.status === "failed" && (
+                <p className="font-medium text-destructive keep-all">
+                  {t("status_failed")}
+                </p>
+              )}
               {invoice.nts_approval_number && (
                 <div className="flex items-baseline gap-2">
                   <span className="font-medium keep-all">
