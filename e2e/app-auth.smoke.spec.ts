@@ -38,14 +38,14 @@ test.describe("authenticated app shell smoke", () => {
         await expect(dialog.locator('a[href$="/app/projects"]')).toBeVisible();
         await expect(dialog.locator('a[href$="/app/campaigns"]')).toBeVisible();
         await expect(dialog.locator('a[href$="/app/billing"]')).toBeVisible();
-        await expect(dialog.locator('a[href$="/app/americano"]')).toHaveCount(0);
+        await expect(dialog.locator('a[href$="/app/americano"]')).toBeVisible();
         await expect(dialog.locator('a[href$="/app/assets"]')).toHaveCount(0);
       } else {
         const header = page.getByRole("banner");
         await expect(header.locator('a[href$="/app/projects"]')).toBeVisible();
         await expect(header.locator('a[href$="/app/campaigns"]')).toBeVisible();
         await expect(header.locator('a[href$="/app/billing"]')).toBeVisible();
-        await expect(header.locator('a[href$="/app/americano"]')).toHaveCount(0);
+        await expect(header.locator('a[href$="/app/americano"]')).toBeVisible();
         await expect(header.locator('a[href$="/app/assets"]')).toHaveCount(0);
       }
 

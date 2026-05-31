@@ -97,13 +97,13 @@ test.describe("role consistency smoke", () => {
           "/app/campaigns",
           "/app/discover",
           "/app/billing",
+          "/app/americano",
         ],
         hidden: [
           "/app/twins",
           "/app/deals",
           "/app/my-submissions",
           "/app/admin",
-          "/app/americano",
           "/app/assets",
         ],
       },
@@ -137,7 +137,7 @@ test.describe("role consistency smoke", () => {
       },
       yagi_admin: {
         start: "/ko/app/admin",
-        visible: ["/app/admin", "/app/billing"],
+        visible: ["/app/admin", "/app/billing", "/app/americano"],
         hidden: [
           "/app/explore",
           "/app/projects",
@@ -146,7 +146,6 @@ test.describe("role consistency smoke", () => {
           "/app/twins",
           "/app/deals",
           "/app/my-submissions",
-          "/app/americano",
           "/app/assets",
         ],
       },

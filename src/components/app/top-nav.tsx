@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import {
   Compass,
+  Coffee,
   CreditCard,
   ClipboardList,
   FolderOpen,
@@ -53,6 +54,7 @@ type TopNavItem = {
     | "deals"
     | "my_submissions"
     | "billing"
+    | "americano"
     | "admin";
   href: string;
   icon: LucideIcon;
@@ -67,14 +69,22 @@ const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "deals", href: "/app/deals", icon: Handshake },
   { key: "my_submissions", href: "/app/my-submissions", icon: ClipboardList },
   { key: "billing", href: "/app/billing", icon: CreditCard },
+  { key: "americano", href: "/app/americano", icon: Coffee },
   { key: "admin", href: "/app/admin", icon: ShieldCheck },
 ];
 
 const TOP_NAV_BY_ACTOR: Record<AppActorKind, TopNavItem["key"][]> = {
-  brand: ["explore", "projects", "campaigns", "discover", "billing"],
+  brand: [
+    "explore",
+    "projects",
+    "campaigns",
+    "discover",
+    "billing",
+    "americano",
+  ],
   artist: ["explore", "twins", "deals"],
   creator: ["campaigns", "my_submissions"],
-  yagi_admin: ["admin", "billing"],
+  yagi_admin: ["admin", "billing", "americano"],
 };
 
 export function TopNav({
