@@ -705,29 +705,59 @@
       "brand_steps": {
         "1": {
           "title": "Upload your material",
-          "description": "Open a campaign with one song, product, or IP."
+          "headline": {
+            "before": "Campaigns can start from ",
+            "accent": "one material",
+            "after": " you already have"
+          },
+          "description": "One song, product, or IP is enough. Start without a heavy setup."
         },
         "2": {
-          "title": "AI creators produce",
-          "description": "Multiple creators make content in their own style."
+          "title": "Multiple versions at once",
+          "headline": {
+            "before": "One campaign gathers ",
+            "accent": "many interpretations",
+            "after": " at once"
+          },
+          "description": "AI creators interpret the same campaign in their own style, so one brief becomes many pieces of content."
         },
         "3": {
-          "title": "Distribute across channels",
-          "description": "Selected content goes live across each creator's channels."
+          "title": "Spread through real channels",
+          "headline": {
+            "before": "Selected content moves ",
+            "accent": "into creator channels",
+            "after": " directly"
+          },
+          "description": "Selected content reaches followers directly through creator channels."
         }
       },
       "creator_steps": {
         "1": {
-          "title": "Find a campaign",
-          "description": "Browse campaigns you can join."
+          "title": "Find a campaign you like",
+          "headline": {
+            "before": "Choose ",
+            "accent": "the right campaign",
+            "after": " and start fast"
+          },
+          "description": "Browse campaigns you can join and pick the right one."
         },
         "2": {
-          "title": "Create your content",
-          "description": "Make AI content in your style and submit it."
+          "title": "Create in your style",
+          "headline": {
+            "before": "Give AI-made content ",
+            "accent": "your own style",
+            "after": ""
+          },
+          "description": "Make AI content with your own point of view and submit it."
         },
         "3": {
           "title": "Distribute & get paid",
-          "description": "If selected, post it on your channel and get paid."
+          "headline": {
+            "before": "Selection turns into ",
+            "accent": "distribution and rewards",
+            "after": ""
+          },
+          "description": "If selected, post it on your channel and receive your reward."
         }
       }
     },

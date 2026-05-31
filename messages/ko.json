@@ -705,29 +705,59 @@
       "brand_steps": {
         "1": {
           "title": "소재 올리기",
-          "description": "곡·제품·IP를 캠페인으로 엽니다."
+          "headline": {
+            "before": "캠페인은 ",
+            "accent": "소재 하나",
+            "after": "에서 바로 시작됩니다"
+          },
+          "description": "곡·제품·IP 하나면 충분합니다. 복잡한 준비 없이 시작하세요."
         },
         "2": {
-          "title": "AI 크리에이터가 제작",
-          "description": "여러 크리에이터가 각자 스타일로 콘텐츠를 만듭니다."
+          "title": "여러 버전이 한 번에",
+          "headline": {
+            "before": "한 캠페인 안에 ",
+            "accent": "여러 해석",
+            "after": "이 모입니다"
+          },
+          "description": "여러 AI 크리에이터가 각자의 해석으로 만들어, 한 캠페인에 다양한 콘텐츠가 모입니다."
         },
         "3": {
-          "title": "채널에 배포",
-          "description": "선정된 콘텐츠가 각자의 채널에 올라갑니다."
+          "title": "채널로 바로 확산",
+          "headline": {
+            "before": "선정된 콘텐츠가 ",
+            "accent": "채널 안으로",
+            "after": " 들어갑니다"
+          },
+          "description": "선정된 콘텐츠가 크리에이터의 채널에서 팔로워에게 직접 닿습니다."
         }
       },
       "creator_steps": {
         "1": {
-          "title": "캠페인 찾기",
-          "description": "참여할 수 있는 캠페인을 둘러봅니다."
+          "title": "마음에 드는 캠페인 찾기",
+          "headline": {
+            "before": "참여할 캠페인을 ",
+            "accent": "빠르게 고르고",
+            "after": " 시작합니다"
+          },
+          "description": "참여할 수 있는 캠페인을 둘러보고 골라요."
         },
         "2": {
-          "title": "콘텐츠 만들기",
-          "description": "내 스타일로 AI 콘텐츠를 만들어 제출합니다."
+          "title": "내 스타일로 제작",
+          "headline": {
+            "before": "AI로 만든 콘텐츠에 ",
+            "accent": "내 스타일",
+            "after": "을 담습니다"
+          },
+          "description": "AI로 내 색깔의 콘텐츠를 만들어 제출해요."
         },
         "3": {
           "title": "배포하고 보상받기",
-          "description": "선정되면 내 채널에 올리고 보상을 받습니다."
+          "headline": {
+            "before": "선정 이후에는 ",
+            "accent": "배포와 보상",
+            "after": "으로 이어집니다"
+          },
+          "description": "선정되면 내 채널에 올리고 보상을 받아요."
         }
       }
     },
