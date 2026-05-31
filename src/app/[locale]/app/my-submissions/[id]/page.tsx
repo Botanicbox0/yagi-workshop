@@ -6,8 +6,11 @@
 import { notFound, redirect } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import { getAppLandingPath, resolveAppActor } from "@/lib/app/role-routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { statusPillClass } from "@/lib/ui/status-pill";
 import { DistributionPanel } from "./distribution-panel";
 import { WorkPreview } from "./work-preview";
@@ -70,10 +73,20 @@ export default async function MySubmissionDetailPage({ params }: Props) {
   if (!user) {
     redirect(`/${locale}/signin?next=/${locale}/app/my-submissions/${id}`);
   }
+  const active = await resolveActiveWorkspace(user.id);
+  if (!active) notFound();
+  const actor = resolveAppActor(
+    active,
+    await getIsYagiAdmin(supabase, user.id),
+  );
+  if (actor !== "creator") {
+    redirect(`/${locale}${actor ? getAppLandingPath(actor) : "/onboarding"}`);
+  }
 
   const t = await getTranslations("my_submissions");
 
-  // RLS auto-scopes via campaign_submissions_select_applicant.
+  // Creator-only route. Keep applicant ownership explicit so sponsor/admin
+  // SELECT policies cannot render the creator detail UI.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- types regen pending
   const sb = supabase as any;
   const { data: submission } = await sb
@@ -89,6 +102,7 @@ export default async function MySubmissionDetailPage({ params }: Props) {
 
   if (!submission) notFound();
   const sub = submission as SubmissionRow;
+  if (sub.applicant_workspace_id !== active.id) notFound();
 
   // campaign_review_decisions RLS is yagi_admin only — fetch via service-role
   // so the applicant can see the decision targeted at them. Latest entry only.
@@ -115,7 +129,8 @@ export default async function MySubmissionDetailPage({ params }: Props) {
   const distRows = (distributions ?? []) as DistributionRow[];
 
   const showDistributionPanel =
-    sub.status === "approved_for_distribution" || sub.status === "distributed";
+    sub.applicant_workspace_id === active.id &&
+    (sub.status === "approved_for_distribution" || sub.status === "distributed");
 
   return (
     <div className="px-6 md:px-10 py-12 max-w-3xl space-y-10">

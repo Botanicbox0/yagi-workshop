@@ -1,6 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import {
+  getAppLandingPath,
+  resolveAppActor,
+} from "@/lib/app/role-routing";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { ProjectsHubHero } from "@/components/projects/projects-hub-hero";
 import { ProjectsHubWorkflowStrip } from "@/components/projects/projects-hub-workflow-strip";
@@ -55,6 +60,11 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
   const active = await resolveActiveWorkspace(user.id);
   if (!active) {
     redirect({ href: "/onboarding", locale });
+    return null;
+  }
+  const actor = resolveAppActor(active, await getIsYagiAdmin(supabase, user.id));
+  if (actor !== "brand") {
+    redirect({ href: actor ? getAppLandingPath(actor) : "/onboarding", locale });
     return null;
   }
   const activeWorkspaceId = active.id;

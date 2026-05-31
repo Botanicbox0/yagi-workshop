@@ -664,10 +664,13 @@
   "campaigns_app": {
     "eyebrow": "Campaigns",
     "title": "Request campaigns and manage progress",
+    "creator_title": "Open campaigns",
     "description": "A Distributed Campaign starts from one brief, then creators produce their own interpretations and distribute approved work through their own channels.",
+    "creator_description": "Browse campaigns that are published and still accepting submissions.",
     "new_cta": "Request campaign",
     "metrics": {
       "total": "Total",
+      "open": "Open",
       "requested": "Requested",
       "live": "Live"
     },
@@ -691,6 +694,10 @@
       "title": "No campaign requests yet",
       "description": "Share the core brief for a song, product, or IP. YAGI will review it and confirm the operating plan and submission window.",
       "cta": "Request first campaign"
+    },
+    "creator_empty": {
+      "title": "No open campaigns right now",
+      "description": "Published campaigns that are still accepting submissions will appear here."
     },
     "new": {
       "eyebrow": "Campaign Request",
@@ -3240,6 +3247,7 @@
         "workspace_create_failed": "Could not create your workspace.",
         "workspace_member_failed": "Could not register membership.",
         "submission_insert_failed": "Could not save your submission. Please try again shortly.",
+        "already_submitted": "You've already submitted to this campaign. Check the status in My submissions.",
         "presign_failed": "Could not prepare upload.",
         "content_type_not_allowed": "Only image or video files can be uploaded.",
         "filename_invalid": "Filename contains unsupported characters.",

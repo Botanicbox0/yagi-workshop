@@ -24,6 +24,11 @@ import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import {
+  getAppLandingHref,
+  resolveAppActor,
+} from "@/lib/app/role-routing";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { CountCards } from "@/components/dashboard/count-cards";
 import { RfpRowCard } from "@/components/dashboard/rfp-row-card";
@@ -76,6 +81,13 @@ export default async function DashboardPage({ params }: Props) {
   const active = await resolveActiveWorkspace(user.id);
   if (!active) {
     redirect(`/${locale}/onboarding`);
+  }
+  const actor = resolveAppActor(
+    active,
+    await getIsYagiAdmin(supabase, user.id),
+  );
+  if (actor !== "brand") {
+    redirect(getAppLandingHref(locale, actor));
   }
   const workspaceId = active!.id;
 

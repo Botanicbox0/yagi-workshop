@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowRight, CheckCircle2, CreditCard, KeyRound } from "l
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { getIsYagiAdmin } from "@/lib/app/admin";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -23,8 +23,7 @@ export default async function BillingPage({ params }: Props) {
     return null;
   }
 
-  const activeWorkspace = await resolveActiveWorkspace(user.id);
-  const showOperationsConsole = activeWorkspace?.kind === "yagi_admin";
+  const showOperationsConsole = await getIsYagiAdmin(supabase, user.id);
   const popbill = showOperationsConsole
     ? (await import("@/lib/popbill/client")).getPopbillConfigStatus()
     : null;
@@ -46,10 +45,10 @@ export default async function BillingPage({ params }: Props) {
             </p>
           </div>
           <Link
-            href="/app/invoices"
+            href={showOperationsConsole ? "/app/admin/invoices" : "/app/invoices"}
             className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
           >
-            {t("received_invoices")}
+            {showOperationsConsole ? t("admin_invoices") : t("received_invoices")}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>

@@ -53,6 +53,7 @@ const ERROR_KEYS = new Set([
   "workspace_create_failed",
   "workspace_member_failed",
   "submission_insert_failed",
+  "already_submitted",
   "presign_failed",
   "content_type_not_allowed",
   "filename_invalid",

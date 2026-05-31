@@ -85,6 +85,9 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   // submitProjectAction. Same misroute risk regardless, same fix.
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { error: "no_workspace" };
+  if (active.kind !== "brand") {
+    return { error: "db", message: "brand workspace required" };
+  }
   const membership = { workspace_id: active.id };
 
   const status = parsed.data.intent === "submit" ? "submitted" : "draft";
@@ -297,6 +300,9 @@ export async function ensureDraftProject(
   // oldest membership.
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { error: "no_workspace" };
+  if (active.kind !== "brand") {
+    return { error: "db", message: "brand workspace required" };
+  }
   const membership = { workspace_id: active.id };
 
   // 1. SELECT existing draft (intake_mode='brief'). Phase 2.8.1 migration
@@ -881,15 +887,24 @@ export async function submitProjectAction(
   // RLS already gates projects.INSERT to workspace members; this is
   // defense-in-depth that returns a clean error path and prevents silent
   // misrouting through the old fallback.
-  const { data: memRows } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- joined workspace.kind is not in generated types yet
+  const supabaseForMembership = supabase as any;
+  const { data: memRows } = await supabaseForMembership
     .from("workspace_members")
-    .select("workspace_id")
+    .select("workspace_id, workspaces!inner(kind)")
     .eq("user_id", user.id);
-  const memberSet = new Set((memRows ?? []).map((r) => r.workspace_id));
+  const brandMemberSet = new Set(
+    ((memRows ?? []) as {
+      workspace_id: string;
+      workspaces?: { kind: string } | null;
+    }[])
+      .filter((r) => r.workspaces?.kind === "brand")
+      .map((r) => r.workspace_id),
+  );
 
   let resolvedWorkspaceId: string | null = null;
 
-  if (data.workspaceId && memberSet.has(data.workspaceId)) {
+  if (data.workspaceId && brandMemberSet.has(data.workspaceId)) {
     resolvedWorkspaceId = data.workspaceId;
   }
 
@@ -899,18 +914,18 @@ export async function submitProjectAction(
       .select("workspace_id")
       .eq("id", data.draftProjectId)
       .maybeSingle();
-    if (draftRow?.workspace_id && memberSet.has(draftRow.workspace_id)) {
+    if (draftRow?.workspace_id && brandMemberSet.has(draftRow.workspace_id)) {
       resolvedWorkspaceId = draftRow.workspace_id;
     }
   }
 
   if (!resolvedWorkspaceId) {
     const active = await resolveActiveWorkspace(user.id);
-    if (active) resolvedWorkspaceId = active.id;
+    if (active?.kind === "brand") resolvedWorkspaceId = active.id;
   }
 
   if (!resolvedWorkspaceId) {
-    return { ok: false, error: "db", message: "workspace not found for user" };
+    return { ok: false, error: "db", message: "brand workspace required" };
   }
 
   // Phase 3.0 columns (budget_band, submitted_at, kind) are not in the

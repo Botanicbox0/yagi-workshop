@@ -107,6 +107,9 @@ export async function ensureBriefingDraftProject(
   if (!active) {
     return { ok: false, error: "no_workspace" };
   }
+  if (active.kind !== "brand") {
+    return { ok: false, error: "forbidden", message: "brand workspace required" };
+  }
 
   // Cast to any for newly-added draft columns awaiting generated type refresh.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- new Phase 5 columns not in generated types

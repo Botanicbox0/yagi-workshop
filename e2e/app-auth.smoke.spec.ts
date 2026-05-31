@@ -13,7 +13,7 @@ test.describe("authenticated app shell smoke", () => {
   ] as const;
 
   for (const viewport of viewports) {
-    test(`§AP top-nav and Americano render on ${viewport.name}`, async ({
+    test(`§AP brand top-nav whitelist renders on ${viewport.name}`, async ({
       page,
     }) => {
       const consoleErrors: string[] = [];
@@ -34,25 +34,25 @@ test.describe("authenticated app shell smoke", () => {
 
       if (viewport.name === "mobile") {
         await page.getByRole("button", { name: /메뉴 열기|open menu/i }).click();
-        const americanoLink = page
-          .getByRole("dialog")
-          .getByRole("link", { name: /Americano/i });
-        await expect(americanoLink).toBeVisible();
-        await americanoLink.click();
+        const dialog = page.getByRole("dialog");
+        await expect(dialog.locator('a[href$="/app/projects"]')).toBeVisible();
+        await expect(dialog.locator('a[href$="/app/campaigns"]')).toBeVisible();
+        await expect(dialog.locator('a[href$="/app/billing"]')).toBeVisible();
+        await expect(dialog.locator('a[href$="/app/americano"]')).toHaveCount(0);
+        await expect(dialog.locator('a[href$="/app/assets"]')).toHaveCount(0);
       } else {
-        await expect(page.getByRole("link", { name: /Americano/i })).toBeVisible();
-        await page.getByRole("link", { name: /Americano/i }).click();
+        const header = page.getByRole("banner");
+        await expect(header.locator('a[href$="/app/projects"]')).toBeVisible();
+        await expect(header.locator('a[href$="/app/campaigns"]')).toBeVisible();
+        await expect(header.locator('a[href$="/app/billing"]')).toBeVisible();
+        await expect(header.locator('a[href$="/app/americano"]')).toHaveCount(0);
+        await expect(header.locator('a[href$="/app/assets"]')).toHaveCount(0);
       }
 
-      await expect(page).toHaveURL(/\/ko\/app\/americano/);
-      await expect(
-        page.getByRole("heading", { name: "Americano", level: 1 }),
-      ).toBeVisible();
-      await expect(page.getByText("기능 준비 중").first()).toBeVisible();
       expect(consoleErrors).toEqual([]);
 
       await page.screenshot({
-        path: `test-results/app-americano-${viewport.name}.png`,
+        path: `test-results/app-brand-top-nav-${viewport.name}.png`,
         fullPage: true,
       });
     });

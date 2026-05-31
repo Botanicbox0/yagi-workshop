@@ -8,6 +8,11 @@ import {
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import {
+  getAppLandingPath,
+  resolveAppActor,
+} from "@/lib/app/role-routing";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { cn } from "@/lib/utils";
 
@@ -45,18 +50,33 @@ export default async function CampaignsPage({ params }: Props) {
     redirect({ href: "/onboarding", locale });
     return null;
   }
+  const actor = resolveAppActor(active, await getIsYagiAdmin(supabase, user.id));
+  if (actor !== "brand" && actor !== "creator") {
+    redirect({ href: actor ? getAppLandingPath(actor) : "/onboarding", locale });
+    return null;
+  }
 
   // campaigns generated types are intentionally bypassed until the full
   // Supabase type refresh catches up with Phase 7 tables.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- campaign tables type regen pending
   const sb = supabase as any;
-  const { data, error } = await sb
+  const nowIso = new Date().toISOString();
+  let query = sb
     .from("campaigns")
     .select(
       "id, slug, title, description, status, submission_open_at, submission_close_at, updated_at, created_at",
     )
-    .eq("sponsor_workspace_id", active.id)
     .order("updated_at", { ascending: false });
+  if (actor === "brand") {
+    query = query.eq("sponsor_workspace_id", active.id);
+  } else {
+    query = query
+      .eq("status", "published")
+      .or(`submission_open_at.is.null,submission_open_at.lte.${nowIso}`)
+      .or(`submission_close_at.is.null,submission_close_at.gt.${nowIso}`)
+      .order("submission_close_at", { ascending: true, nullsFirst: false });
+  }
+  const { data, error } = await query;
 
   if (error) {
     console.error("[CampaignsPage] Supabase error:", error);
@@ -67,6 +87,7 @@ export default async function CampaignsPage({ params }: Props) {
   const liveCount = campaigns.filter((c) =>
     ["published", "submission_closed", "distributing"].includes(c.status),
   ).length;
+  const isCreatorView = actor === "creator";
   const dateFormatter = new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
@@ -82,24 +103,30 @@ export default async function CampaignsPage({ params }: Props) {
               {t("eyebrow")}
             </p>
             <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
-              {t("title")}
+              {isCreatorView ? t("creator_title") : t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">
-              {t("description")}
+              {isCreatorView ? t("creator_description") : t("description")}
             </p>
           </div>
-          <Link
-            href="/app/campaigns/new"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90 sm:w-fit"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            {t("new_cta")}
-          </Link>
+          {!isCreatorView && (
+            <Link
+              href="/app/campaigns/new"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90 sm:w-fit"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t("new_cta")}
+            </Link>
+          )}
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <Metric label={t("metrics.total")} value={String(campaigns.length)} />
-          <Metric label={t("metrics.requested")} value={String(requestedCount)} />
+          {isCreatorView ? (
+            <Metric label={t("metrics.open")} value={String(campaigns.length)} />
+          ) : (
+            <Metric label={t("metrics.requested")} value={String(requestedCount)} />
+          )}
           <Metric label={t("metrics.live")} value={String(liveCount)} />
         </div>
       </section>
@@ -123,6 +150,7 @@ export default async function CampaignsPage({ params }: Props) {
               }
               submitLabel={t("card.submit_page")}
               detailLabel={t("card.detail_page")}
+              variant={isCreatorView ? "creator" : "sponsor"}
             />
           ))}
         </section>
@@ -133,18 +161,22 @@ export default async function CampaignsPage({ params }: Props) {
               <RadioTower className="h-5 w-5" aria-hidden="true" />
             </div>
             <h2 className="text-xl font-semibold text-foreground keep-all">
-              {t("empty.title")}
+              {isCreatorView ? t("creator_empty.title") : t("empty.title")}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground keep-all">
-              {t("empty.description")}
+              {isCreatorView
+                ? t("creator_empty.description")
+                : t("empty.description")}
             </p>
-            <Link
-              href="/app/campaigns/new"
-              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              {t("empty.cta")}
-            </Link>
+            {!isCreatorView && (
+              <Link
+                href="/app/campaigns/new"
+                className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t("empty.cta")}
+              </Link>
+            )}
           </div>
         </section>
       )}
@@ -170,6 +202,7 @@ function CampaignCard({
   closeLabel,
   submitLabel,
   detailLabel,
+  variant,
 }: {
   campaign: CampaignRow;
   dateLabel: string;
@@ -177,6 +210,7 @@ function CampaignCard({
   closeLabel: string;
   submitLabel: string;
   detailLabel: string;
+  variant: "sponsor" | "creator";
 }) {
   const isLive = ["published", "submission_closed", "distributing"].includes(
     campaign.status,
@@ -211,18 +245,23 @@ function CampaignCard({
           {closeLabel}
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={`/app/campaigns/${campaign.slug}` as `/app/campaigns/${string}`}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-foreground transition-colors hover:text-brand"
-          >
-            {detailLabel}
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </Link>
+          {variant === "sponsor" && (
+            <Link
+              href={`/app/campaigns/${campaign.slug}` as `/app/campaigns/${string}`}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-foreground transition-colors hover:text-brand"
+            >
+              {detailLabel}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          )}
           {isLive ? (
             <a
               // Public campaign routes intentionally live outside the localized app shell.
               href={`/campaigns/${campaign.slug}/submit`}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-brand"
+              className={cn(
+                "inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:text-brand",
+                variant === "creator" ? "text-foreground" : "text-muted-foreground",
+              )}
             >
               {submitLabel}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />

@@ -19,9 +19,10 @@ import {
 type Props = {
   initialUnreadCount: number;
   locale: "ko" | "en";
+  userId: string;
 };
 
-export function NotificationBell({ initialUnreadCount, locale }: Props) {
+export function NotificationBell({ initialUnreadCount, locale, userId }: Props) {
   const t = useTranslations("notifications");
   const instanceId = useId();
   const channelSuffix = useMemo(
@@ -31,30 +32,11 @@ export function NotificationBell({ initialUnreadCount, locale }: Props) {
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [events, setEvents] = useState<NotificationEvent[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
   const [fetchedOnce, setFetchedOnce] = useState(false);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
 
-  // Resolve the authenticated user id so we can scope the Realtime filter.
-  useEffect(() => {
-    let cancelled = false;
-    const supabase = createSupabaseBrowser();
-    supabase.auth
-      .getUser()
-      .then(({ data }) => {
-        if (!cancelled) setUserId(data.user?.id ?? null);
-      })
-      .catch((err) => {
-        console.error("[notif/bell] getUser failed:", err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   // Subscribe to Realtime inserts + updates on this user's notification_events.
   useEffect(() => {
-    if (!userId) return;
     const supabase = createSupabaseBrowser();
     const filter = `user_id=eq.${userId}`;
     const channel = supabase

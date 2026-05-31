@@ -372,6 +372,7 @@ export async function submitCampaignApplicationAction(
     return { ok: false, error: first?.message || "input_invalid" };
   }
   const input = parsed.data;
+  const applicantEmail = input.applicant_email.toLowerCase();
 
   const ip = await resolveIp();
 
@@ -385,7 +386,7 @@ export async function submitCampaignApplicationAction(
   const { data: campaignLookup, error: lookupErr } = await sbAny
     .from("campaigns")
     .select(
-      "id, title, status, allow_r2_upload, allow_external_url, submission_close_at",
+      "id, title, status, allow_r2_upload, allow_external_url, submission_open_at, submission_close_at",
     )
     .eq("slug", input.campaign_slug)
     .maybeSingle();
@@ -399,12 +400,13 @@ export async function submitCampaignApplicationAction(
     status: string;
     allow_r2_upload: boolean;
     allow_external_url: boolean;
+    submission_open_at: string | null;
     submission_close_at: string | null;
   };
 
   const rate = await checkSubmitLimits({
     ip,
-    email: input.applicant_email,
+    email: applicantEmail,
     campaignId: campaign.id,
   });
   if (!rate.ok) {
@@ -424,6 +426,12 @@ export async function submitCampaignApplicationAction(
   // 3. Campaign published-status + window
   if (campaign.status !== "published") {
     return { ok: false, error: "campaign_not_open" };
+  }
+  if (campaign.submission_open_at) {
+    const openMs = new Date(campaign.submission_open_at).getTime();
+    if (Date.now() < openMs) {
+      return { ok: false, error: "campaign_not_open" };
+    }
   }
   if (campaign.submission_close_at) {
     const closeMs = new Date(campaign.submission_close_at).getTime();
@@ -483,14 +491,52 @@ export async function submitCampaignApplicationAction(
     return { ok: false, error: "category_invalid" };
   }
 
+  // 6. Duplicate guard before account/workspace side effects. The database
+  // unique indexes remain the final race-condition defense.
+  const { data: emailDuplicate, error: emailDupErr } = await sbAny2
+    .from("campaign_submissions")
+    .select("id")
+    .eq("campaign_id", campaign.id)
+    .ilike("applicant_email", applicantEmail)
+    .neq("status", "withdrawn")
+    .limit(1)
+    .maybeSingle();
+  if (emailDupErr) {
+    console.error("[submit] duplicate email check error:", emailDupErr.message);
+    return { ok: false, error: "submission_insert_failed" };
+  }
+  if (emailDuplicate) {
+    return { ok: false, error: "already_submitted" };
+  }
+
   // 6. Resolve / create creator account + workspace, send magic-link
   const account = await ensureCreatorAccount(
     sbAdmin,
-    input.applicant_email,
+    applicantEmail,
     input.applicant_name,
     campaign.title,
   );
   if (!account.ok) return { ok: false, error: account.error };
+
+  // Same creator workspace cannot submit twice, even if the email differs.
+  const { data: workspaceDuplicate, error: workspaceDupErr } = await sbAny2
+    .from("campaign_submissions")
+    .select("id")
+    .eq("campaign_id", campaign.id)
+    .eq("applicant_workspace_id", account.workspaceId)
+    .neq("status", "withdrawn")
+    .limit(1)
+    .maybeSingle();
+  if (workspaceDupErr) {
+    console.error(
+      "[submit] duplicate workspace check error:",
+      workspaceDupErr.message,
+    );
+    return { ok: false, error: "submission_insert_failed" };
+  }
+  if (workspaceDuplicate) {
+    return { ok: false, error: "already_submitted" };
+  }
 
   // 7. INSERT submission (service-role bypasses RLS no-INSERT policy)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- types regen pending
@@ -501,7 +547,7 @@ export async function submitCampaignApplicationAction(
       campaign_id: campaign.id,
       category_id: category.id,
       applicant_workspace_id: account.workspaceId,
-      applicant_email: input.applicant_email,
+      applicant_email: applicantEmail,
       applicant_name: input.applicant_name,
       applicant_phone: input.applicant_phone,
       team_name: input.team_name ?? null,
@@ -516,6 +562,9 @@ export async function submitCampaignApplicationAction(
     .single();
 
   if (subErr || !submission) {
+    if ((subErr as { code?: string } | null)?.code === "23505") {
+      return { ok: false, error: "already_submitted" };
+    }
     console.error("[submit] submission insert error:", subErr?.message);
     return { ok: false, error: "submission_insert_failed" };
   }

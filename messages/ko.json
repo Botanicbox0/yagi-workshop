@@ -664,10 +664,13 @@
   "campaigns_app": {
     "eyebrow": "Campaigns",
     "title": "캠페인을 요청하고 진행 상태를 관리하세요",
+    "creator_title": "참여 가능한 캠페인",
     "description": "브랜드나 아티스트가 하나의 brief를 열면, 크리에이터가 각자의 해석으로 콘텐츠를 만들고 본인 채널에 유포하는 Distributed Campaign 흐름입니다.",
+    "creator_description": "공개 중이고 접수 중인 캠페인을 확인하고 바로 응모하세요.",
     "new_cta": "새 캠페인 요청",
     "metrics": {
       "total": "전체",
+      "open": "참여 가능",
       "requested": "요청됨",
       "live": "운영 중"
     },
@@ -691,6 +694,10 @@
       "title": "아직 요청한 캠페인이 없습니다",
       "description": "곡, 제품, IP의 핵심 brief를 남기면 야기가 검토 후 campaign 운영 방식과 접수 일정을 확정합니다.",
       "cta": "첫 캠페인 요청"
+    },
+    "creator_empty": {
+      "title": "현재 참여 가능한 캠페인이 없습니다",
+      "description": "새 캠페인이 공개되면 이 목록에 표시됩니다."
     },
     "new": {
       "eyebrow": "Campaign Request",
@@ -3305,6 +3312,7 @@
         "workspace_create_failed": "워크스페이스를 만들지 못했어요.",
         "workspace_member_failed": "멤버 등록에 실패했어요.",
         "submission_insert_failed": "응모를 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
+        "already_submitted": "이미 이 캠페인에 응모했습니다. 내 응모작에서 상태를 확인해주세요.",
         "presign_failed": "업로드 준비에 실패했어요.",
         "content_type_not_allowed": "이미지 또는 영상 파일만 업로드할 수 있어요.",
         "filename_invalid": "파일 이름에 사용할 수 없는 문자가 있어요.",

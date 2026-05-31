@@ -57,7 +57,7 @@ export async function createCampaignRequest(
 
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { ok: false, error: "no_workspace" };
-  if (!["brand", "artist", "yagi_admin"].includes(active.kind)) {
+  if (active.kind !== "brand") {
     return { ok: false, error: "unsupported_workspace" };
   }
 

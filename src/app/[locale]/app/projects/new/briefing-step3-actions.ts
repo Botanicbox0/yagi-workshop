@@ -62,6 +62,12 @@ async function assertProjectMutationAuth(projectId: string): Promise<
 
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { ok: false, error: "no_workspace" };
+  if (active.kind !== "brand") {
+    return { ok: false, error: "forbidden", message: "brand workspace required" };
+  }
+  if (active.kind !== "brand") {
+    return { ok: false, error: "forbidden", message: "brand workspace required" };
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 5 columns not in generated types
   const sb = supabase as any;

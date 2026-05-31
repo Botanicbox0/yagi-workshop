@@ -106,13 +106,20 @@ export async function presignSubmissionUpload(
   const sbAny = sbAdmin as any;
   const { data: campaign, error } = await sbAny
     .from("campaigns")
-    .select("id, status, allow_r2_upload, submission_close_at")
+    .select("id, status, allow_r2_upload, submission_open_at, submission_close_at")
     .eq("slug", input.campaign_slug)
     .maybeSingle();
 
   if (error || !campaign) return { ok: false, error: "campaign_not_found" };
   if (campaign.status !== "published") return { ok: false, error: "campaign_not_open" };
   if (!campaign.allow_r2_upload) return { ok: false, error: "r2_upload_not_allowed" };
+
+  if (campaign.submission_open_at) {
+    const openMs = new Date(campaign.submission_open_at).getTime();
+    if (Date.now() < openMs) {
+      return { ok: false, error: "campaign_not_open" };
+    }
+  }
 
   if (campaign.submission_close_at) {
     const closeMs = new Date(campaign.submission_close_at).getTime();

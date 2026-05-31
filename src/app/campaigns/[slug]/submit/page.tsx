@@ -87,6 +87,7 @@ export default async function CampaignSubmitPage({ params }: Props) {
     locale,
     namespace: "public_campaigns.submit",
   });
+  const openCampaignsHref = `/${locale}/app/campaigns`;
 
   const campaign = await getCampaignBySlug(slug);
   if (!campaign) notFound();
@@ -98,7 +99,20 @@ export default async function CampaignSubmitPage({ params }: Props) {
         title={t("closed_title")}
         body={t("closed_body")}
         ctaLabel={t("back_to_campaign")}
-        ctaHref={`/campaigns/${campaign.slug}`}
+        ctaHref={openCampaignsHref}
+      />
+    );
+  }
+  if (
+    campaign.submission_open_at &&
+    Date.now() < new Date(campaign.submission_open_at).getTime()
+  ) {
+    return (
+      <ClosedCard
+        title={t("closed_title")}
+        body={t("closed_body")}
+        ctaLabel={t("back_to_campaign")}
+        ctaHref={openCampaignsHref}
       />
     );
   }
@@ -112,7 +126,7 @@ export default async function CampaignSubmitPage({ params }: Props) {
         title={t("no_path_available_title")}
         body={t("no_path_available_body")}
         ctaLabel={t("no_path_available_cta")}
-        ctaHref={`/campaigns/${campaign.slug}`}
+        ctaHref={openCampaignsHref}
       />
     );
   }
@@ -125,7 +139,7 @@ export default async function CampaignSubmitPage({ params }: Props) {
         title={t("no_categories_title")}
         body={t("no_categories_body")}
         ctaLabel={t("back_to_campaign")}
-        ctaHref={`/campaigns/${campaign.slug}`}
+        ctaHref={openCampaignsHref}
       />
     );
   }
@@ -134,7 +148,7 @@ export default async function CampaignSubmitPage({ params }: Props) {
     <div className="max-w-2xl mx-auto px-6 md:px-8 py-12 space-y-8">
       <div className="space-y-3">
         <Link
-          href={`/campaigns/${campaign.slug}`}
+          href={openCampaignsHref}
           className="text-xs text-muted-foreground hover:underline underline-offset-2"
         >
           ← {campaign.title}

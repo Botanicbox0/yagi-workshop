@@ -1,6 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import {
+  getAppLandingPath,
+  resolveAppActor,
+} from "@/lib/app/role-routing";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { BriefingCanvas } from "./briefing-canvas";
 
@@ -29,6 +34,14 @@ export default async function NewProjectPage({ params }: Props) {
   // wizard payload reflect the workspace the user actually selected in
   // the switcher (Codex K-05 final review LOOP 1 MED-C).
   const active = await resolveActiveWorkspace(user.id);
+  const actor = resolveAppActor(
+    active,
+    await getIsYagiAdmin(supabase, user.id),
+  );
+  if (actor !== "brand") {
+    redirect({ href: actor ? getAppLandingPath(actor) : "/onboarding", locale });
+    return null;
+  }
   const workspaceId = active?.id ?? null;
 
   // Fetch brands for the workspace (empty list is fine — wizard shows "None" option)

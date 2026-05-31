@@ -5,15 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import {
-  Archive,
-  Coffee,
   Compass,
   CreditCard,
+  ClipboardList,
   FolderOpen,
   Handshake,
   Menu,
   Megaphone,
   Search,
+  ShieldCheck,
   Sparkles,
   UserRound,
   WalletCards,
@@ -37,6 +37,11 @@ import {
 } from "@/components/sidebar/workspace-switcher";
 import { cn } from "@/lib/utils";
 import type { AppContext } from "@/lib/app/context";
+import {
+  getAppLandingPath,
+  resolveAppActor,
+  type AppActorKind,
+} from "@/lib/app/role-routing";
 
 type TopNavItem = {
   key:
@@ -46,9 +51,9 @@ type TopNavItem = {
     | "discover"
     | "twins"
     | "deals"
-    | "americano"
-    | "assets"
-    | "billing";
+    | "my_submissions"
+    | "billing"
+    | "admin";
   href: string;
   icon: LucideIcon;
 };
@@ -60,10 +65,17 @@ const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "discover", href: "/app/discover", icon: Compass },
   { key: "twins", href: "/app/twins", icon: UserRound },
   { key: "deals", href: "/app/deals", icon: Handshake },
-  { key: "americano", href: "/app/americano", icon: Coffee },
-  { key: "assets", href: "/app/assets", icon: Archive },
+  { key: "my_submissions", href: "/app/my-submissions", icon: ClipboardList },
   { key: "billing", href: "/app/billing", icon: CreditCard },
+  { key: "admin", href: "/app/admin", icon: ShieldCheck },
 ];
+
+const TOP_NAV_BY_ACTOR: Record<AppActorKind, TopNavItem["key"][]> = {
+  brand: ["explore", "projects", "campaigns", "discover", "billing"],
+  artist: ["explore", "twins", "deals"],
+  creator: ["campaigns", "my_submissions"],
+  yagi_admin: ["admin", "billing"],
+};
 
 export function TopNav({
   context,
@@ -85,12 +97,14 @@ export function TopNav({
     [context.workspaces],
   );
   const isYagiAdmin = context.workspaceRoles.includes("yagi_admin");
+  const actor = resolveAppActor(activeWorkspace, isYagiAdmin);
+  const homeHref = actor ? getAppLandingPath(actor) : "/app";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="flex h-16 items-center gap-3 px-4 lg:px-6">
         <Link
-          href="/app/projects"
+          href={homeHref}
           className="flex shrink-0 items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="YAGI Workshop"
         >
@@ -117,11 +131,11 @@ export function TopNav({
         <DesktopNav
           pathname={pathname}
           t={t}
-          activeKind={activeWorkspace?.kind ?? null}
+          actor={actor}
         />
 
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
-          <CreditBalance label={t("credit_balance")} />
+          {actor === "brand" && <CreditBalance label={t("credit_balance")} />}
           <SearchStub label={t("search")} shortcut={t("search_shortcut")} />
           {activeWorkspace && (
             <div className="hidden w-[170px] xl:block">
@@ -142,6 +156,7 @@ export function TopNav({
             <NotificationBell
               initialUnreadCount={initialUnreadCount}
               locale={locale}
+              userId={context.userId}
             />
             <SidebarUserMenu
               profile={context.profile}
@@ -160,6 +175,7 @@ export function TopNav({
             initialUnreadCount={initialUnreadCount}
             locale={locale}
             pathname={pathname}
+            actor={actor}
           />
         </div>
       </div>
@@ -170,14 +186,14 @@ export function TopNav({
 function DesktopNav({
   pathname,
   t,
-  activeKind,
+  actor,
 }: {
   pathname: string;
   t: ReturnType<typeof useTranslations>;
-  activeKind: WorkspaceItem["kind"] | null;
+  actor: AppActorKind | null;
 }) {
   const items = TOP_NAV_ITEMS.filter((item) =>
-    isTopNavItemVisible(item, activeKind),
+    isTopNavItemVisible(item, actor),
   );
 
   return (
@@ -281,6 +297,7 @@ function MobileMenu({
   initialUnreadCount,
   locale,
   pathname,
+  actor,
 }: {
   context: AppContext;
   activeWorkspace: WorkspaceItem | null;
@@ -290,11 +307,12 @@ function MobileMenu({
   initialUnreadCount: number;
   locale: "ko" | "en";
   pathname: string;
+  actor: AppActorKind | null;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const items = TOP_NAV_ITEMS.filter((item) =>
-    isTopNavItemVisible(item, activeWorkspace?.kind ?? null),
+    isTopNavItemVisible(item, actor),
   );
 
   useEffect(() => {
@@ -341,7 +359,9 @@ function MobileMenu({
               {t("search_shortcut")}
             </kbd>
           </button>
-          <CreditBalance label={t("credit_balance")} className="!flex" />
+          {actor === "brand" && (
+            <CreditBalance label={t("credit_balance")} className="!flex" />
+          )}
         </div>
 
         <nav className="mt-6 flex flex-col gap-1" aria-label="Primary">
@@ -364,6 +384,7 @@ function MobileMenu({
             <NotificationBell
               initialUnreadCount={initialUnreadCount}
               locale={locale}
+              userId={context.userId}
             />
           </div>
           <SidebarUserMenu
@@ -384,16 +405,8 @@ function isActive(pathname: string, href: string): boolean {
 
 function isTopNavItemVisible(
   item: TopNavItem,
-  activeKind: WorkspaceItem["kind"] | null,
+  actor: AppActorKind | null,
 ): boolean {
-  if (item.key === "discover") {
-    return activeKind === "brand";
-  }
-  if (item.key === "twins") {
-    return activeKind === "artist";
-  }
-  if (item.key === "deals") {
-    return activeKind === "brand" || activeKind === "artist";
-  }
-  return true;
+  if (!actor) return false;
+  return TOP_NAV_BY_ACTOR[actor].includes(item.key);
 }

@@ -1,14 +1,17 @@
-// Phase 4.x task_05 — /app default landing redirect to /app/dashboard.
+// Role-aware /app landing.
 //
-// Phase 2 routed clients to /app/commission (now redirected to /app/projects)
-// and other workspace members to a Projects empty-state. Phase 4
-// flattens this: every authenticated user lands on /app/dashboard
-// (Brand workspace dashboard with count cards + recent RFPs).
-//
-// yagi_admin / creator / etc. can navigate to their persona-specific
-// surfaces (admin queue, creator console) from the sidebar.
+// yagi_admin is resolved from the global role first. Non-admin users land by
+// active workspace kind: brand -> Explore, artist -> Deals, creator -> open
+// Campaigns. Users without a resolved workspace return to onboarding.
 
 import { redirect } from "next/navigation";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import {
+  getAppLandingHref,
+  resolveAppActor,
+} from "@/lib/app/role-routing";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -16,5 +19,16 @@ type Props = {
 
 export default async function AppLandingPage({ params }: Props) {
   const { locale } = await params;
-  redirect(`/${locale}/app/dashboard`);
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(`/${locale}/signin`);
+
+  const [active, isYagiAdmin] = await Promise.all([
+    resolveActiveWorkspace(user.id),
+    getIsYagiAdmin(supabase, user.id),
+  ]);
+  const actor = resolveAppActor(active, isYagiAdmin);
+  redirect(getAppLandingHref(locale, actor));
 }

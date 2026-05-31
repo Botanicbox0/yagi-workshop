@@ -6,6 +6,8 @@
 import { notFound, redirect } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import { getAppLandingPath, resolveAppActor } from "@/lib/app/role-routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { statusPillClass } from "@/lib/ui/status-pill";
@@ -41,11 +43,18 @@ export default async function MySubmissionsPage({ params }: Props) {
 
   const active = await resolveActiveWorkspace(user.id);
   if (!active) notFound();
+  const actor = resolveAppActor(
+    active,
+    await getIsYagiAdmin(supabase, user.id),
+  );
+  if (actor !== "creator") {
+    redirect(`/${locale}${actor ? getAppLandingPath(actor) : "/onboarding"}`);
+  }
 
   const t = await getTranslations("my_submissions");
 
-  // RLS scopes via campaign_submissions_select_applicant — workspace_member
-  // of applicant_workspace_id.
+  // Creator-only route. Keep the query explicitly applicant-scoped so sponsor
+  // and admin SELECT policies cannot leak review rows into this surface.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- types regen pending
   const sb = supabase as any;
   const { data: rows } = await sb
@@ -54,6 +63,7 @@ export default async function MySubmissionsPage({ params }: Props) {
       `id, title, status, submitted_at,
        campaign:campaigns(id, title, slug)`,
     )
+    .eq("applicant_workspace_id", active.id)
     .order("submitted_at", { ascending: false })
     .limit(50);
 
@@ -83,7 +93,7 @@ export default async function MySubmissionsPage({ params }: Props) {
             {t("empty_body")}
           </p>
           <Link
-            href="/campaigns"
+            href="/app/campaigns"
             className="inline-block mt-4 text-sm text-foreground hover:underline underline-offset-2"
           >
             {t("empty_browse_cta")} →
