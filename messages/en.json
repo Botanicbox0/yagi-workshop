@@ -2468,6 +2468,29 @@
           "forbidden": "You do not have permission to review this version.",
           "generic": "Could not save the review decision."
         }
+      },
+      "annotations": {
+        "title": "Pinned feedback",
+        "subtitle": "Click the image for a pin, or drag to mark an area.",
+        "hint": "Click=pin · drag=area",
+        "draft_title": "Leave feedback here",
+        "body_placeholder": "Describe what should change in this exact spot.",
+        "save": "Save pin",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "list_empty": "No pinned feedback yet.",
+        "open": "Open",
+        "resolved": "Resolved",
+        "resolve": "Resolve",
+        "reopen": "Reopen",
+        "thread_title": "Pin thread",
+        "client_visibility": "Shared with client",
+        "internal_visibility": "YAGI internal note",
+        "errors": {
+          "validation": "Add a comment and choose a position on the image.",
+          "forbidden": "You do not have permission to save this pin.",
+          "generic": "Could not save pinned feedback."
+        }
       }
     },
     "comments": {

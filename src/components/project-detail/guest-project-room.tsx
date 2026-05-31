@@ -67,6 +67,7 @@ export async function GuestProjectRoom({
     .from("project_threads")
     .select("id")
     .eq("project_id", project.id)
+    .is("annotation_id", null)
     .limit(1)
     .maybeSingle();
 

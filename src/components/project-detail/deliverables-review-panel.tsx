@@ -18,6 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { reviewProjectDeliverableAction } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
+import {
+  AnnotatedImage,
+  AnnotationPanel,
+  type AnnotationCoords,
+  type AnnotationLabels,
+  type AnnotationShape,
+  type DeliverableAnnotation,
+} from "@/components/project-detail/deliverable-annotations";
 
 export type DeliveryReviewDeliverable = {
   id: string;
@@ -40,6 +48,7 @@ export type DeliveryReviewDeliverable = {
     title: string | null;
     thumbnailUrl: string | null;
   }>;
+  annotations: DeliverableAnnotation[];
 };
 
 type Labels = {
@@ -73,6 +82,7 @@ type Labels = {
     generic: string;
   };
   status: Record<string, string>;
+  annotations: AnnotationLabels;
 };
 
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -103,7 +113,7 @@ function getVimeoEmbedUrl(url: string): string | null {
 }
 
 function formatDate(value: string, locale: string) {
-  return new Intl.DateTimeFormat(locale === "en" ? "en" : "ko", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en" : "ko-KR", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -126,12 +136,16 @@ export function DeliverablesReviewPanel({
   projectId,
   deliverables,
   canReview,
+  currentUserId,
+  isYagiAdmin,
   locale,
   labels,
 }: {
   projectId: string;
   deliverables: DeliveryReviewDeliverable[];
   canReview: boolean;
+  currentUserId: string;
+  isYagiAdmin: boolean;
   locale: string;
   labels: Labels;
 }) {
@@ -180,6 +194,8 @@ export function DeliverablesReviewPanel({
               projectId={projectId}
               deliverable={deliverable}
               canReview={canReview}
+              currentUserId={currentUserId}
+              isYagiAdmin={isYagiAdmin}
               locale={locale}
               labels={labels}
             />
@@ -194,16 +210,26 @@ function DeliverableCard({
   projectId,
   deliverable,
   canReview,
+  currentUserId,
+  isYagiAdmin,
   locale,
   labels,
 }: {
   projectId: string;
   deliverable: DeliveryReviewDeliverable;
   canReview: boolean;
+  currentUserId: string;
+  isYagiAdmin: boolean;
   locale: string;
   labels: Labels;
 }) {
   const assets = deliverable.storageAssets.length + deliverable.externalAssets.length;
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+  const [draftAnnotation, setDraftAnnotation] = useState<{
+    assetIndex: number;
+    shape: AnnotationShape;
+    coords: AnnotationCoords;
+  } | null>(null);
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
@@ -242,8 +268,21 @@ function DeliverableCard({
 
       <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid content-start gap-3 md:grid-cols-2">
-          {deliverable.storageAssets.map((asset) => (
-            <StoragePreview key={asset.key} asset={asset} labels={labels} />
+          {deliverable.storageAssets.map((asset, index) => (
+            <StoragePreview
+              key={asset.key}
+              asset={asset}
+              assetIndex={index}
+              annotations={deliverable.annotations.filter(
+                (annotation) => annotation.assetIndex === index,
+              )}
+              selectedAnnotationId={selectedAnnotationId}
+              draftAnnotation={draftAnnotation}
+              canAnnotate={canReview}
+              onSelectAnnotation={setSelectedAnnotationId}
+              onDraftAnnotation={setDraftAnnotation}
+              labels={labels}
+            />
           ))}
           {deliverable.externalAssets.map((asset) => (
             <ExternalPreview key={asset.url} asset={asset} labels={labels} />
@@ -252,6 +291,20 @@ function DeliverableCard({
 
         <div className="space-y-3">
           <NoteBlock title={labels.versionNote} value={deliverable.note} labels={labels} />
+          {(canReview || deliverable.annotations.length > 0) ? (
+            <AnnotationPanel
+              projectId={projectId}
+              deliverableId={deliverable.id}
+              currentUserId={currentUserId}
+              isYagiAdmin={isYagiAdmin}
+              annotations={deliverable.annotations}
+              selectedId={selectedAnnotationId}
+              draft={draftAnnotation}
+              labels={labels.annotations}
+              onSelect={setSelectedAnnotationId}
+              onCancelDraft={() => setDraftAnnotation(null)}
+            />
+          ) : null}
           <div className="rounded-lg border border-border/70 bg-background/40 p-4">
             <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
               {labels.reviewNote}
@@ -395,15 +448,49 @@ function ReviewControls({
 
 function StoragePreview({
   asset,
+  assetIndex,
+  annotations,
+  selectedAnnotationId,
+  draftAnnotation,
+  canAnnotate,
+  onSelectAnnotation,
+  onDraftAnnotation,
   labels,
 }: {
   asset: DeliveryReviewDeliverable["storageAssets"][number];
+  assetIndex: number;
+  annotations: DeliverableAnnotation[];
+  selectedAnnotationId: string | null;
+  draftAnnotation: {
+    assetIndex: number;
+    shape: AnnotationShape;
+    coords: AnnotationCoords;
+  } | null;
+  canAnnotate: boolean;
+  onSelectAnnotation: (id: string) => void;
+  onDraftAnnotation: (draft: {
+    assetIndex: number;
+    shape: AnnotationShape;
+    coords: AnnotationCoords;
+  }) => void;
   labels: Labels;
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
       <div className="flex aspect-video items-center justify-center bg-surface-card">
-        {asset.kind === "image" ? (
+        {asset.kind === "image" && canAnnotate ? (
+          <AnnotatedImage
+            assetIndex={assetIndex}
+            src={asset.url}
+            alt=""
+            annotations={annotations}
+            selectedId={selectedAnnotationId}
+            draft={draftAnnotation}
+            labels={labels.annotations}
+            onSelect={onSelectAnnotation}
+            onDraft={onDraftAnnotation}
+          />
+        ) : asset.kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
           <img src={asset.url} alt="" className="h-full w-full object-cover" />
         ) : asset.kind === "video" ? (

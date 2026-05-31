@@ -2533,6 +2533,29 @@
           "forbidden": "이 버전을 검수할 권한이 없습니다.",
           "generic": "검수 결정을 저장하지 못했습니다."
         }
+      },
+      "annotations": {
+        "title": "좌표 피드백",
+        "subtitle": "이미지를 클릭하면 핀, 드래그하면 영역으로 코멘트를 남깁니다.",
+        "hint": "클릭=핀 · 드래그=영역",
+        "draft_title": "이 위치에 피드백 남기기",
+        "body_placeholder": "이 부분을 어떻게 수정하면 좋을지 적어주세요.",
+        "save": "핀 저장",
+        "saving": "저장 중...",
+        "cancel": "취소",
+        "list_empty": "아직 좌표 피드백이 없습니다.",
+        "open": "미해결",
+        "resolved": "해결됨",
+        "resolve": "해결 처리",
+        "reopen": "다시 열기",
+        "thread_title": "핀 대화",
+        "client_visibility": "클라이언트 공유",
+        "internal_visibility": "야기 내부 메모",
+        "errors": {
+          "validation": "코멘트를 입력하고 이미지 안의 위치를 선택해주세요.",
+          "forbidden": "이 핀을 저장할 권한이 없습니다.",
+          "generic": "좌표 피드백을 저장하지 못했습니다."
+        }
       }
     },
     "comments": {

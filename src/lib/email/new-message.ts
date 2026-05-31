@@ -67,6 +67,16 @@ export async function notifyNewMessage(messageId: string): Promise<void> {
     // Unwrap possible array shape (Supabase sometimes returns FK joins as arrays)
     const thread = Array.isArray(msg.thread) ? msg.thread[0] : msg.thread;
     if (!thread) return;
+    // Annotation threads may be internally scoped even when a bad caller sends
+    // a shared message. Service-role email fanout must not bypass that scope.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated DB types may lag deliverable_annotations
+    const { data: annotationScope } = await (admin as any)
+      .from("deliverable_annotations")
+      .select("visibility")
+      .eq("thread_id", thread.id)
+      .maybeSingle();
+    if (annotationScope?.visibility === "internal") return;
+
     const project = Array.isArray(thread.project)
       ? thread.project[0]
       : thread.project;
@@ -82,21 +92,15 @@ export async function notifyNewMessage(messageId: string): Promise<void> {
       .maybeSingle();
     const authorName = authorProfile?.display_name ?? "Someone";
 
-    // 3. Recipient set: workspace members + yagi admins, minus author
-    const [membersRes, yagiRes] = await Promise.all([
-      admin
-        .from("workspace_members")
-        .select("user_id")
-        .eq("workspace_id", project.workspace_id),
-      admin
-        .from("user_roles")
-        .select("user_id")
-        .is("workspace_id", null)
-        .eq("role", "yagi_admin"),
-    ]);
+    // 3. Recipient set: workspace members, minus guests and author.
+    // Project-scoped guests are not workspace-wide recipients.
+    const membersRes = await admin
+      .from("workspace_members")
+      .select("user_id, role")
+      .eq("workspace_id", project.workspace_id)
+      .neq("role", "guest");
     const recipientIds = new Set<string>();
     for (const r of membersRes.data ?? []) recipientIds.add(r.user_id);
-    for (const r of yagiRes.data ?? []) recipientIds.add(r.user_id);
     recipientIds.delete(msg.author_id);
     if (recipientIds.size === 0) return;
 

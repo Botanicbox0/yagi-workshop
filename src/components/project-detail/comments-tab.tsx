@@ -51,7 +51,8 @@ export async function CommentsTab({
     supabase
       .from("project_threads")
       .select("id, deliverable_id")
-      .eq("project_id", projectId),
+      .eq("project_id", projectId)
+      .is("annotation_id", null),
   ]);
 
   const deliverables = (deliverablesRaw ?? []) as DeliverableRow[];

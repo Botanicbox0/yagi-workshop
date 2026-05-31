@@ -139,6 +139,8 @@ type ComposerChip = {
 type Props = {
   projectId: string;
   deliverableId?: string | null;
+  annotationId?: string | null;
+  annotationVisibility?: "client" | "internal" | null;
   threadId: string | null;
   currentUserId: string;
   isYagiAdmin: boolean;
@@ -149,7 +151,11 @@ type ThreadLookupQuery = {
   select(columns: string): ThreadLookupQuery;
   eq(column: string, value: string): ThreadLookupQuery;
   maybeSingle(): Promise<{
-    data: { id: string; deliverable_id: string | null } | null;
+    data: {
+      id: string;
+      deliverable_id: string | null;
+      annotation_id: string | null;
+    } | null;
   }>;
 };
 
@@ -167,6 +173,8 @@ function formatBytes(n: number): string {
 export function ThreadPanel({
   projectId,
   deliverableId = null,
+  annotationId = null,
+  annotationVisibility = null,
   threadId: initialThreadId,
   currentUserId,
   isYagiAdmin,
@@ -176,7 +184,7 @@ export function ThreadPanel({
   const tErrors = useTranslations("errors");
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [body, setBody] = useState("");
-  const [isInternal, setIsInternal] = useState(false);
+  const [isInternal, setIsInternal] = useState(annotationVisibility === "internal");
   const [sending, setSending] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(initialThreadId);
   const [chips, setChips] = useState<ComposerChip[]>([]);
@@ -184,6 +192,10 @@ export function ThreadPanel({
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (annotationVisibility === "internal") setIsInternal(true);
+  }, [annotationVisibility]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -212,8 +224,11 @@ export function ThreadPanel({
   // Realtime subscription — subscribe to thread_messages INSERTs
   useEffect(() => {
     const supabase = createSupabaseBrowser();
+    const channelKey = annotationId
+      ? `annotation:${annotationId}`
+      : `deliverable:${deliverableId ?? "general"}`;
     const channel = supabase
-      .channel(`project:${projectId}:thread:${deliverableId ?? "general"}`)
+      .channel(`project:${projectId}:thread:${channelKey}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "thread_messages" },
@@ -236,12 +251,13 @@ export function ThreadPanel({
             const threadLookup = supabase as unknown as ThreadLookupClient;
             const { data: t } = await threadLookup
               .from("project_threads")
-              .select("id, deliverable_id")
+              .select("id, deliverable_id, annotation_id")
               .eq("id", row.thread_id)
               .eq("project_id", projectId)
               .maybeSingle();
             if (!t) return; // not our project — drop the row.
             if ((t.deliverable_id ?? null) !== (deliverableId ?? null)) return;
+            if ((t.annotation_id ?? null) !== (annotationId ?? null)) return;
             setThreadId(t.id);
             setMessages((prev) =>
               prev.some((m) => m.id === row.id) ? prev : [...prev, row]
@@ -254,7 +270,7 @@ export function ThreadPanel({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [deliverableId, projectId, threadId]);
+  }, [annotationId, deliverableId, projectId, threadId]);
 
   /** Add file(s) from picker or drop. Validates, starts upload immediately. */
   async function handleFiles(fileList: FileList | File[]) {
@@ -425,7 +441,12 @@ export function ThreadPanel({
 
     setSending(true);
 
-    const visibility = isYagiAdmin && isInternal ? "internal" : "shared";
+    const visibility =
+      annotationVisibility === "internal"
+        ? "internal"
+        : isYagiAdmin && isInternal
+          ? "internal"
+          : "shared";
 
     try {
       if (doneChips.length === 0) {
@@ -433,6 +454,7 @@ export function ThreadPanel({
         const result = await sendMessage({
           projectId,
           deliverableId,
+          annotationId,
           body: trimmed,
           visibility,
         });
@@ -464,6 +486,7 @@ export function ThreadPanel({
       const result = await sendMessageWithAttachments({
         projectId,
         deliverableId,
+        annotationId,
         body: trimmed.length > 0 ? trimmed : null,
         visibility,
         attachments,

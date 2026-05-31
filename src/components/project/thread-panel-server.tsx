@@ -24,9 +24,13 @@ type ThreadLookupClient = {
 export async function ThreadPanelServer({
   projectId,
   deliverableId = null,
+  annotationId = null,
+  annotationVisibility = null,
 }: {
   projectId: string;
   deliverableId?: string | null;
+  annotationId?: string | null;
+  annotationVisibility?: "client" | "internal" | null;
 }) {
   const supabase = await createSupabaseServer();
   const {
@@ -41,9 +45,14 @@ export async function ThreadPanelServer({
     .select("id")
     .eq("project_id", projectId)
     .limit(1);
-  threadQuery = deliverableId
-    ? threadQuery.eq("deliverable_id", deliverableId)
-    : threadQuery.is("deliverable_id", null);
+  if (annotationId) {
+    threadQuery = threadQuery.eq("annotation_id", annotationId);
+  } else {
+    threadQuery = threadQuery.is("annotation_id", null);
+    threadQuery = deliverableId
+      ? threadQuery.eq("deliverable_id", deliverableId)
+      : threadQuery.is("deliverable_id", null);
+  }
   const { data: thread } = await threadQuery.maybeSingle();
 
   // Fetch initial messages (empty array if no thread yet).
@@ -198,6 +207,8 @@ export async function ThreadPanelServer({
     <ThreadPanel
       projectId={projectId}
       deliverableId={deliverableId}
+      annotationId={annotationId}
+      annotationVisibility={annotationVisibility}
       threadId={thread?.id ?? null}
       currentUserId={user.id}
       isYagiAdmin={isYagiAdmin}

@@ -10,6 +10,7 @@ import { notifyNewMessage } from "@/lib/email/new-message";
 const sendSchema = z.object({
   projectId: z.string().uuid(),
   deliverableId: z.string().uuid().nullable().optional(),
+  annotationId: z.string().uuid().nullable().optional(),
   body: z.string().trim().min(1).max(10_000),
   visibility: z.enum(["shared", "internal"]).default("shared"),
 });
@@ -18,14 +19,36 @@ async function findOrCreateDefaultThread({
   supabase,
   projectId,
   deliverableId,
+  annotationId,
   userId,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_threads types lag generated DB schema
   supabase: any;
   projectId: string;
   deliverableId?: string | null;
+  annotationId?: string | null;
   userId: string;
-}): Promise<{ ok: true; threadId: string } | { ok: false; message?: string }> {
+}): Promise<
+  | { ok: true; threadId: string; annotationVisibility?: "client" | "internal" }
+  | { ok: false; message?: string }
+> {
+  if (annotationId) {
+    const { data: annotation } = await supabase
+      .from("deliverable_annotations")
+      .select("id, thread_id, visibility")
+      .eq("id", annotationId)
+      .eq("project_id", projectId)
+      .maybeSingle();
+    if (!annotation?.thread_id) {
+      return { ok: false, message: "annotation_not_found" };
+    }
+    return {
+      ok: true,
+      threadId: annotation.thread_id,
+      annotationVisibility: annotation.visibility,
+    };
+  }
+
   if (deliverableId) {
     const { data: deliverable } = await supabase
       .from("project_deliverables")
@@ -42,6 +65,7 @@ async function findOrCreateDefaultThread({
     .from("project_threads")
     .select("id")
     .eq("project_id", projectId)
+    .is("annotation_id", null)
     .limit(1);
   existingQuery = deliverableId
     ? existingQuery.eq("deliverable_id", deliverableId)
@@ -124,9 +148,26 @@ export async function sendMessage(input: unknown) {
     supabase,
     projectId: parsed.data.projectId,
     deliverableId: parsed.data.deliverableId ?? null,
+    annotationId: parsed.data.annotationId ?? null,
     userId: user.id,
   });
   if (!thread.ok) return { error: "db" as const, message: thread.message };
+  const effectiveVisibility =
+    thread.annotationVisibility === "internal"
+      ? "internal"
+      : parsed.data.visibility;
+
+  if (effectiveVisibility === "internal") {
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .is("workspace_id", null)
+      .eq("role", "yagi_admin");
+    if (!roles || roles.length === 0) {
+      return { error: "forbidden" as const };
+    }
+  }
 
   const { data: inserted, error } = await supabase
     .from("thread_messages")
@@ -134,7 +175,7 @@ export async function sendMessage(input: unknown) {
       thread_id: thread.threadId,
       author_id: user.id,
       body: parsed.data.body,
-      visibility: parsed.data.visibility,
+      visibility: effectiveVisibility,
     })
     .select("id")
     .single();
@@ -144,13 +185,13 @@ export async function sendMessage(input: unknown) {
 
   // Fire-and-forget email notification. Never await — user-perceived send latency
   // must stay low, and notifyNewMessage handles all errors internally.
-  if (parsed.data.visibility === "shared") {
+  if (effectiveVisibility === "shared") {
     void notifyNewMessage(inserted.id);
   }
 
   // Phase 1.8 — emit thread_message_new to all thread participants except the
   // author. Fire-and-forget; emit failures never fail the parent action.
-  if (parsed.data.visibility === "shared") {
+  if (effectiveVisibility === "shared") {
     void _emitThreadMessageNotifications({
       actorUserId: user.id,
       projectId: parsed.data.projectId,
@@ -192,6 +233,7 @@ const sendWithAttachmentsSchema = z
   .object({
     projectId: z.string().uuid(),
     deliverableId: z.string().uuid().nullable().optional(),
+    annotationId: z.string().uuid().nullable().optional(),
     body: z.string().max(10_000).nullable().optional(),
     visibility: z.enum(["shared", "internal"]).default("shared"),
     attachments: z.array(attachmentSchema).max(5).default([]),
@@ -259,9 +301,24 @@ export async function sendMessageWithAttachments(input: unknown) {
     supabase,
     projectId: d.projectId,
     deliverableId: d.deliverableId ?? null,
+    annotationId: d.annotationId ?? null,
     userId: user.id,
   });
   if (!thread.ok) return { error: "db" as const, message: thread.message };
+  const effectiveVisibility =
+    thread.annotationVisibility === "internal" ? "internal" : d.visibility;
+
+  if (effectiveVisibility === "internal") {
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .is("workspace_id", null)
+      .eq("role", "yagi_admin");
+    if (!roles || roles.length === 0) {
+      return { error: "forbidden" as const };
+    }
+  }
 
   // Normalize body — null when empty (attachments-only case).
   const bodyTrim = (d.body ?? "").trim();
@@ -274,7 +331,7 @@ export async function sendMessageWithAttachments(input: unknown) {
       thread_id: thread.threadId,
       author_id: user.id,
       body: bodyValue,
-      visibility: d.visibility,
+      visibility: effectiveVisibility,
     })
     .select("id")
     .single();
@@ -310,12 +367,12 @@ export async function sendMessageWithAttachments(input: unknown) {
 
   revalidatePath(`/[locale]/app/projects/${d.projectId}`, "page");
 
-  if (d.visibility === "shared") {
+  if (effectiveVisibility === "shared") {
     void notifyNewMessage(inserted.id);
   }
 
   // Phase 1.8 — emit thread_message_new (shared-visibility only).
-  if (d.visibility === "shared") {
+  if (effectiveVisibility === "shared") {
     void _emitThreadMessageNotifications({
       actorUserId: user.id,
       projectId: d.projectId,
@@ -362,8 +419,9 @@ async function _emitThreadMessageNotifications(args: {
   const [{ data: members }, { data: actorProfile }] = await Promise.all([
     svc
       .from("workspace_members")
-      .select("user_id")
-      .eq("workspace_id", project.workspace_id),
+      .select("user_id, role")
+      .eq("workspace_id", project.workspace_id)
+      .neq("role", "guest"),
     svc
       .from("profiles")
       .select("display_name")
@@ -432,8 +490,9 @@ async function _emitMentionNotifications(args: {
   // Members of this workspace (project participants set).
   const { data: members } = await svc
     .from("workspace_members")
-    .select("user_id")
-    .eq("workspace_id", project.workspace_id);
+    .select("user_id, role")
+    .eq("workspace_id", project.workspace_id)
+    .neq("role", "guest");
   const memberIds = (members ?? [])
     .map((m) => m.user_id)
     .filter((id): id is string => !!id && id !== args.actorUserId);

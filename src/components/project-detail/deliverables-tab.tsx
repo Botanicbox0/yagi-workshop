@@ -6,6 +6,18 @@ import {
   DeliverablesReviewPanel,
   type DeliveryReviewDeliverable,
 } from "@/components/project-detail/deliverables-review-panel";
+import type {
+  AnnotationCoords,
+  AnnotationShape,
+  AnnotationStatus,
+  AnnotationVisibility,
+  DeliverableAnnotation,
+} from "@/components/project-detail/deliverable-annotations";
+import type {
+  ThreadAttachment,
+  ThreadAuthorRole,
+  ThreadMessage,
+} from "@/components/project/thread-panel";
 
 type Props = {
   projectId: string;
@@ -28,6 +40,43 @@ type DeliverableRow = {
     | { display_name: string | null; handle: string | null }
     | Array<{ display_name: string | null; handle: string | null }>
     | null;
+};
+
+type AnnotationRow = {
+  id: string;
+  project_id: string;
+  deliverable_id: string;
+  asset_index: number;
+  seq: number;
+  shape: string;
+  coords: unknown;
+  visibility: string;
+  status: string;
+  thread_id: string;
+  created_by: string;
+  created_at: string;
+};
+
+type MessageRow = {
+  id: string;
+  thread_id: string;
+  author_id: string;
+  body: string | null;
+  visibility: string;
+  created_at: string;
+};
+
+type ProfileRow = {
+  id: string;
+  handle: string;
+  display_name: string;
+  avatar_url: string | null;
+};
+
+type RoleRow = {
+  user_id: string;
+  role: string;
+  workspace_id: string | null;
 };
 
 function detectStorageKind(key: string): "image" | "video" | "file" {
@@ -74,6 +123,15 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag review fields shape in nested selects
   const supabase = (await createSupabaseServer()) as any;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
+    uid: user.id,
+  });
+
   const { data: rowsRaw } = (await supabase
     .from("project_deliverables")
     .select(
@@ -114,6 +172,127 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
     }
   }
 
+  const deliverableIds = (rowsRaw ?? []).map((row) => row.id);
+  const annotationsByDeliverable = new Map<string, DeliverableAnnotation[]>();
+  if (deliverableIds.length > 0) {
+    const { data: annotationRowsRaw } = (await supabase
+      .from("deliverable_annotations")
+      .select(
+        "id, project_id, deliverable_id, asset_index, seq, shape, coords, visibility, status, thread_id, created_by, created_at",
+      )
+      .eq("project_id", projectId)
+      .in("deliverable_id", deliverableIds)
+      .order("asset_index", { ascending: true })
+      .order("seq", { ascending: true })) as {
+      data: AnnotationRow[] | null;
+    };
+
+    const annotationRows = annotationRowsRaw ?? [];
+    const threadIds = annotationRows.map((annotation) => annotation.thread_id);
+    const messagesByThread = new Map<string, ThreadMessage[]>();
+    if (threadIds.length > 0) {
+      const { data: messageRowsRaw } = (await supabase
+        .from("thread_messages")
+        .select("id, thread_id, author_id, body, visibility, created_at")
+        .in("thread_id", threadIds)
+        .order("created_at", { ascending: true })) as {
+        data: MessageRow[] | null;
+      };
+      const messageRows = messageRowsRaw ?? [];
+      const authorIds = [...new Set(messageRows.map((message) => message.author_id))];
+      const [{ data: profilesRaw }, { data: roleRowsRaw }, { data: projectRow }] =
+        await Promise.all([
+          authorIds.length > 0
+            ? supabase
+                .from("profiles")
+                .select("id, handle, display_name, avatar_url")
+                .in("id", authorIds)
+            : Promise.resolve({ data: [] as ProfileRow[] }),
+          authorIds.length > 0
+            ? supabase
+                .from("user_roles")
+                .select("user_id, role, workspace_id")
+                .in("user_id", authorIds)
+            : Promise.resolve({ data: [] as RoleRow[] }),
+          supabase
+            .from("projects")
+            .select("workspace_id")
+            .eq("id", projectId)
+            .maybeSingle(),
+        ]);
+
+      const profileMap = new Map(
+        ((profilesRaw ?? []) as ProfileRow[]).map((profile) => [profile.id, profile]),
+      );
+      const projectWorkspaceId = projectRow?.workspace_id ?? null;
+      const roleMap = new Map<string, ThreadAuthorRole>();
+      for (const id of authorIds) roleMap.set(id, "member");
+      const priority: Record<ThreadAuthorRole, number> = {
+        yagi: 3,
+        admin: 2,
+        client: 1,
+        member: 0,
+      };
+      for (const role of (roleRowsRaw ?? []) as RoleRow[]) {
+        const scoped =
+          role.workspace_id === null || role.workspace_id === projectWorkspaceId;
+        if (!scoped) continue;
+        const current = roleMap.get(role.user_id) ?? "member";
+        const next: ThreadAuthorRole | null =
+          role.role === "yagi_admin"
+            ? "yagi"
+            : role.role === "workspace_admin"
+              ? "admin"
+              : role.role === "workspace_member"
+                ? "client"
+                : null;
+        if (next && priority[next] > priority[current]) {
+          roleMap.set(role.user_id, next);
+        }
+      }
+
+      for (const message of messageRows) {
+        const profile = profileMap.get(message.author_id);
+        const threadMessages = messagesByThread.get(message.thread_id) ?? [];
+        threadMessages.push({
+          ...message,
+          author: profile
+            ? {
+                ...profile,
+                role: roleMap.get(message.author_id) ?? "member",
+              }
+            : null,
+          attachments: [] as ThreadAttachment[],
+        });
+        messagesByThread.set(message.thread_id, threadMessages);
+      }
+    }
+
+    for (const row of annotationRows) {
+      const messages = messagesByThread.get(row.thread_id) ?? [];
+      const annotation: DeliverableAnnotation = {
+        id: row.id,
+        projectId: row.project_id,
+        deliverableId: row.deliverable_id,
+        assetIndex: row.asset_index,
+        seq: row.seq,
+        shape: row.shape as AnnotationShape,
+        coords: row.coords as AnnotationCoords,
+        visibility: row.visibility as AnnotationVisibility,
+        status: row.status as AnnotationStatus,
+        threadId: row.thread_id,
+        createdAt: row.created_at,
+        createdBy: row.created_by,
+        preview: messages.find((message) => message.body)?.body ?? null,
+        messageCount: messages.length,
+        messages,
+      };
+      const list = annotationsByDeliverable.get(row.deliverable_id) ?? [];
+      list.push(annotation);
+      annotationsByDeliverable.set(row.deliverable_id, list);
+    }
+  }
+
   const deliverables: DeliveryReviewDeliverable[] = await Promise.all(
     (rowsRaw ?? []).map(async (row) => {
       const externalAssets = await Promise.all(
@@ -145,6 +324,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
           kind: detectStorageKind(key),
         })),
         externalAssets,
+        annotations: annotationsByDeliverable.get(row.id) ?? [],
       };
     }),
   );
@@ -154,6 +334,8 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
       projectId={projectId}
       deliverables={deliverables}
       canReview={canReview}
+      currentUserId={user.id}
+      isYagiAdmin={isYagiAdmin === true}
       locale={locale}
       labels={{
         title: t("title"),
@@ -189,6 +371,29 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
           submitted: t("status.submitted"),
           changes_requested: t("status.changes_requested"),
           approved: t("status.approved"),
+        },
+        annotations: {
+          title: t("annotations.title"),
+          subtitle: t("annotations.subtitle"),
+          hint: t("annotations.hint"),
+          draftTitle: t("annotations.draft_title"),
+          bodyPlaceholder: t("annotations.body_placeholder"),
+          save: t("annotations.save"),
+          saving: t("annotations.saving"),
+          cancel: t("annotations.cancel"),
+          listEmpty: t("annotations.list_empty"),
+          open: t("annotations.open"),
+          resolved: t("annotations.resolved"),
+          resolve: t("annotations.resolve"),
+          reopen: t("annotations.reopen"),
+          threadTitle: t("annotations.thread_title"),
+          clientVisibility: t("annotations.client_visibility"),
+          internalVisibility: t("annotations.internal_visibility"),
+          errors: {
+            validation: t("annotations.errors.validation"),
+            forbidden: t("annotations.errors.forbidden"),
+            generic: t("annotations.errors.generic"),
+          },
         },
       }}
     />
