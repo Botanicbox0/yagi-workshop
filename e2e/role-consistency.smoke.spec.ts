@@ -183,6 +183,8 @@ test.describe("role consistency smoke", () => {
     await signInAs(page, "brand");
     await page.goto("/ko/app/my-submissions", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/ko\/app\/explore$/);
+    await page.goto("/ko/app/notifications", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/ko\/app\/settings\/notifications$/);
 
     await signInAs(page, "yagi_admin");
     await page.goto("/ko/app/my-submissions", { waitUntil: "domcontentloaded" });
