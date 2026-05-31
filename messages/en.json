@@ -700,6 +700,37 @@
       "title": "No open campaigns right now",
       "description": "Published campaigns that are still accepting submissions will appear here."
     },
+    "how_it_works": {
+      "title": "How it works",
+      "brand_steps": {
+        "1": {
+          "title": "Upload your material",
+          "description": "Open a campaign with one song, product, or IP."
+        },
+        "2": {
+          "title": "AI creators produce",
+          "description": "Multiple creators make content in their own style."
+        },
+        "3": {
+          "title": "Distribute across channels",
+          "description": "Selected content goes live across each creator's channels."
+        }
+      },
+      "creator_steps": {
+        "1": {
+          "title": "Find a campaign",
+          "description": "Browse campaigns you can join."
+        },
+        "2": {
+          "title": "Create your content",
+          "description": "Make AI content in your style and submit it."
+        },
+        "3": {
+          "title": "Distribute & get paid",
+          "description": "If selected, post it on your channel and get paid."
+        }
+      }
+    },
     "new": {
       "eyebrow": "Campaign Request",
       "title": "What campaign do you want to open?",

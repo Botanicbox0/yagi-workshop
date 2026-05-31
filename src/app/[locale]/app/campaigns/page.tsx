@@ -8,6 +8,7 @@ import {
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { CampaignHowItWorks } from "@/components/campaign/how-it-works";
 import { getIsYagiAdmin } from "@/lib/app/admin";
 import {
   getAppLandingPath,
@@ -129,6 +130,7 @@ export default async function CampaignsPage({ params }: Props) {
           )}
           <Metric label={t("metrics.live")} value={String(liveCount)} />
         </div>
+        <CampaignHowItWorks variant={isCreatorView ? "creator" : "brand"} />
       </section>
 
       {campaigns.length > 0 ? (
@@ -168,16 +170,16 @@ export default async function CampaignsPage({ params }: Props) {
                 ? t("creator_empty.description")
                 : t("empty.description")}
             </p>
-            {!isCreatorView && (
-              <Link
-                href="/app/campaigns/new"
-                className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                {t("empty.cta")}
-              </Link>
-            )}
           </div>
+          {!isCreatorView && (
+            <Link
+              href="/app/campaigns/new"
+              className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t("empty.cta")}
+            </Link>
+          )}
         </section>
       )}
     </main>

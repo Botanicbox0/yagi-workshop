@@ -700,6 +700,37 @@
       "title": "현재 참여 가능한 캠페인이 없습니다",
       "description": "새 캠페인이 공개되면 이 목록에 표시됩니다."
     },
+    "how_it_works": {
+      "title": "이렇게 진행돼요",
+      "brand_steps": {
+        "1": {
+          "title": "소재 올리기",
+          "description": "곡·제품·IP를 캠페인으로 엽니다."
+        },
+        "2": {
+          "title": "AI 크리에이터가 제작",
+          "description": "여러 크리에이터가 각자 스타일로 콘텐츠를 만듭니다."
+        },
+        "3": {
+          "title": "채널에 배포",
+          "description": "선정된 콘텐츠가 각자의 채널에 올라갑니다."
+        }
+      },
+      "creator_steps": {
+        "1": {
+          "title": "캠페인 찾기",
+          "description": "참여할 수 있는 캠페인을 둘러봅니다."
+        },
+        "2": {
+          "title": "콘텐츠 만들기",
+          "description": "내 스타일로 AI 콘텐츠를 만들어 제출합니다."
+        },
+        "3": {
+          "title": "배포하고 보상받기",
+          "description": "선정되면 내 채널에 올리고 보상을 받습니다."
+        }
+      }
+    },
     "new": {
       "eyebrow": "Campaign Request",
       "title": "어떤 캠페인을 열고 싶으세요?",
