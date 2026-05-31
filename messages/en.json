@@ -113,7 +113,7 @@
         "video_campaign": "Video Campaign",
         "lookbook": "Lookbook",
         "product": "Product shots",
-        "digital_twin": "Digital Twin"
+        "digital_twin": "AI Twin"
       },
       "descriptions": {
         "video_campaign": "Brand films completed without a set",
@@ -202,7 +202,7 @@
     "brand": {
       "helper": {
         "placeholder": "You can add a brand logo later",
-        "twin": "If you primarily plan to use Twin, you can skip this step and start now"
+        "twin": "If AI twin production is your main goal, you can skip this step and start now"
       }
     },
     "invite_title": "Invite your team",
@@ -221,12 +221,12 @@
       "operations": "Operations"
     },
     "new_project_cta": "Start a project",
-    "dashboard": "Dashboard",
+    "dashboard": "Home",
     "explore": "Explore",
     "projects": "Projects",
     "campaigns": "Campaigns",
-    "discover": "Digital Twins",
-    "twins": "Digital Twins",
+    "discover": "AI Twins",
+    "twins": "AI Twins",
     "deals": "Deals",
     "americano": "Americano",
     "assets": "Assets",
@@ -263,17 +263,17 @@
     "explore": {
       "eyebrow": "Explore",
       "title": "Explore references and starting points",
-      "description": "A discovery surface connecting brand campaigns, music videos, and the Americano module. This opens the entry point for the §AP horizontal nav transition."
+      "description": "A space to manage projects and campaigns in one view."
     },
     "campaigns": {
       "eyebrow": "Campaigns",
       "title": "Campaign operations",
-      "description": "A home for distributed campaign requests, progress, and creator-channel operations. Detailed workflows will connect in the Campaigns phase."
+      "description": "A space for campaign requests, progress, and participant-channel operations."
     },
     "americano": {
       "eyebrow": "Americano",
       "title": "Americano",
-      "description": "The future home for Dana's fashion lookbook SaaS inside the YAGI platform, connecting model selection, lookbook automation, and campaign assets in one workspace.",
+      "description": "A space reserved for AI content creation tools.",
       "status": "Feature placeholder",
       "cards": {
         "model": {
@@ -314,40 +314,40 @@
     "brand_film": "Brand film"
   },
   "discover": {
-    "eyebrow": "Digital Twins",
-    "title": "Find the right twin for your campaign",
-    "description": "Browse active artist twins and send a campaign proposal from your Brand workspace.",
+    "eyebrow": "AI Twins",
+    "title": "Find the right AI twin for your campaign",
+    "description": "Browse public AI twins (AI-generated digital personas) and send a campaign proposal to the twin you like.",
     "card": {
       "no_cover": "No cover visual",
-      "default_type": "Twin",
-      "untitled": "Untitled twin",
+      "default_type": "AI twin",
+      "untitled": "AI twin",
       "no_description": "No description yet.",
       "from": "From {amount}",
       "negotiable": "Price by discussion",
       "cta": "View detail"
     },
     "empty": {
-      "title": "No discoverable twins yet",
-      "description": "Active artist twins will appear here when they are available."
+      "title": "No public AI twins yet",
+      "description": "Public AI twins will appear here when they are available."
     },
     "detail": {
       "back": "Back to list",
       "no_cover": "No cover visual",
-      "default_type": "Twin",
-      "untitled": "Untitled twin",
+      "default_type": "AI twin",
+      "untitled": "AI twin",
       "no_description": "No description yet.",
       "fee_label": "Minimum fee",
       "fee_from": "From {amount}",
       "fee_negotiable": "Price by discussion",
       "status_label": "Status",
       "status_active": "Available",
-      "proposal_eyebrow": "Deal Proposal",
+      "proposal_eyebrow": "Send proposal",
       "proposal_title": "Collaboration proposal",
-      "proposal_description": "Send the usage type and brief. YAGI will review terms and route the offer to the artist."
+      "proposal_description": "Send the campaign type and details. YAGI will review the terms and route the offer to this twin."
     },
     "proposal": {
       "usage_label": "Campaign usage",
-      "brief_label": "Brief",
+      "brief_label": "Campaign details",
       "brief_placeholder": "Share the goal, channels, deliverables, and timeline in 1000 characters or fewer.",
       "budget_label": "Proposed budget",
       "budget_placeholder": "e.g. 3000000",
@@ -369,12 +369,12 @@
     "eyebrow": "Deals",
     "title_brand": "Sent proposals",
     "title_artist": "Incoming proposals",
-    "description_brand": "Track Digital Twin collaboration proposals sent from this Brand workspace.",
+    "description_brand": "Review your sent AI twin collaboration proposals in one place.",
     "description_artist": "Review offers sent to your twins and accept, decline, or request negotiation.",
     "updated": "Updated {date}",
     "empty": {
       "title": "No deals yet",
-      "description_brand": "Choose a twin in Digital Twins and send your first collaboration proposal.",
+      "description_brand": "Choose a twin from AI Twins and send your first collaboration proposal.",
       "description_artist": "Brand proposals will appear here when they arrive."
     },
     "status": {
@@ -398,12 +398,12 @@
     },
     "detail": {
       "back": "Deals",
-      "untitled": "Digital Twin",
+      "untitled": "AI twin",
       "brand_amount": "Brand amount",
       "artist_amount": "Artist payout",
       "amount_pending": "Terms pending",
-      "brief": "Brief",
-      "no_brief": "No brief provided.",
+      "brief": "Proposal details",
+      "no_brief": "No proposal details provided.",
       "amounts": "Amounts",
       "proposed_budget": "Proposed budget",
       "commission": "YAGI commission",
@@ -498,9 +498,9 @@
     }
   },
   "twins": {
-    "eyebrow": "Digital Twin",
+    "eyebrow": "AI Twin",
     "title": "My Twins",
-    "description": "Manage the Digital Twin personas owned by this Artist workspace. Most artists start with one self twin, then add separate personas only when needed.",
+    "description": "Manage your AI twin (your AI-generated digital persona). Most artists start with one self twin, then add separate personas only when needed.",
     "empty": {
       "title": "No twins yet",
       "description": "Start with a self twin, then add separate personas such as anime, younger-era, actor, or influencer versions when needed."
@@ -599,14 +599,14 @@
   "explore_dashboard": {
     "eyebrow": "Explore",
     "title": "See today's workspace at a glance",
-    "description": "A dashboard hub for projects, campaigns, credits, and the Americano entry point. Jump straight into the next surface; empty areas show the next useful action.",
+    "description": "Manage projects, campaigns, and credits in one view. See active work and what to do next at a glance.",
     "actions": {
       "new_project": "Start a project",
       "americano": "Open Americano"
     },
     "credit": {
       "title": "Credit balance",
-      "description": "This is the future home for recharge, payment, tax invoice, and transaction flows. Billing carries the next step.",
+      "description": "Credit top-ups and transaction history are available from Billing.",
       "cta": "Top up / billing"
     },
     "recent_projects": {
@@ -620,7 +620,7 @@
       "title": "Active campaigns",
       "view_all": "View campaigns",
       "empty_title": "No active campaigns",
-      "empty_description": "Campaign requests and progress will appear here as the workflow opens.",
+      "empty_description": "Campaigns you request or run will appear here.",
       "empty_cta": "Open campaigns",
       "closes": "Closes {date}"
     },
@@ -639,7 +639,7 @@
       "new_project_title": "Start a project",
       "new_project_description": "Open a new music video, campaign visual, or AI VFX request.",
       "americano_title": "Americano",
-      "americano_description": "Go to the future lookbook surface for Dana's fashion SaaS module."
+      "americano_description": "Open the AI content creation tools."
     },
     "references": {
       "title": "Recommended references",
@@ -666,7 +666,7 @@
     "eyebrow": "Campaigns",
     "title": "Request campaigns and manage progress",
     "creator_title": "Open campaigns",
-    "description": "A Distributed Campaign starts from one brief, then creators produce their own interpretations and distribute approved work through their own channels.",
+    "description": "Open a campaign with one song, product, or IP, and multiple AI creators make their own content and spread it across their channels. No shoot, no casting.",
     "creator_description": "Browse campaigns that are published and still accepting submissions.",
     "new_cta": "Request campaign",
     "metrics": {
@@ -693,7 +693,7 @@
     },
     "empty": {
       "title": "No campaign requests yet",
-      "description": "Share the core brief for a song, product, or IP. YAGI will review it and confirm the operating plan and submission window.",
+      "description": "Tell us what campaign you want to open. YAGI will review it, then set the plan and schedule with you.",
       "cta": "Request first campaign"
     },
     "creator_empty": {
@@ -702,15 +702,15 @@
     },
     "new": {
       "eyebrow": "Campaign Request",
-      "title": "Share the campaign brief creators will interpret",
-      "description": "This first step creates a sponsor request. YAGI reviews it before confirming categories, submission windows, file policy, and publish timing.",
+      "title": "What campaign do you want to open?",
+      "description": "Send a request and YAGI will review it, then set the category, submission period, and operating plan.",
       "back": "Back to campaigns",
       "field_title": "Campaign title",
       "field_title_placeholder": "e.g. New release AI video campaign",
       "field_description": "Short description",
       "field_description_placeholder": "Summarize the campaign goal and tone.",
-      "field_brief": "Creative brief",
-      "field_brief_placeholder": "Describe the song/product/IP, desired mood, deliverables, restrictions, and reference channels.",
+      "field_brief": "Campaign details",
+      "field_brief_placeholder": "Describe the song, product, or IP, desired mood, deliverables, expressions to avoid, and reference channels.",
       "field_contact_name": "Contact name",
       "field_contact_name_placeholder": "Jane Kim",
       "field_contact_email": "Contact email",
@@ -720,7 +720,7 @@
       "field_references": "References / asset notes",
       "field_references_placeholder": "Add video links, audio references, brand guides, drive links, or notes.",
       "error_title": "Enter at least 2 characters.",
-      "error_brief": "Enter at least 10 characters for the brief.",
+      "error_brief": "Enter at least 10 characters for the campaign details.",
       "error_contact_name": "Enter a contact name.",
       "error_contact_email": "Check the email format.",
       "error_contact_phone": "Enter a contact phone number.",
@@ -740,34 +740,34 @@
       "eyebrow": "Mass Campaign Request",
       "description_empty": "No campaign description has been entered yet.",
       "updated": "Updated {date}",
-      "sponsor_kind": "Sponsor",
+      "sponsor_kind": "Requester",
       "workspace_kind": {
-        "brand": "BRAND sponsor",
-        "artist": "ARTIST sponsor",
+        "brand": "BRAND requester",
+        "artist": "ARTIST requester",
         "agency": "AGENCY workspace",
         "creator": "CREATOR workspace",
         "yagi_admin": "YAGI admin"
       },
       "submission_window": "Submission window",
-      "public_entry": "Public entry",
+      "public_entry": "Submission page",
       "not_confirmed": "YAGI will confirm",
       "public_ready": "Submission page ready",
       "public_pending": "Pending review",
-      "lifecycle_title": "Mass Campaign lifecycle",
+      "lifecycle_title": "Campaign lifecycle",
       "status_description": {
-        "requested": "A BRAND or ARTIST sponsor has submitted the campaign brief.",
-        "in_review": "YAGI reviews the campaign purpose, IP or music assets, categories, and file policy.",
+        "requested": "Your campaign request has been received. YAGI will review it shortly.",
+        "in_review": "YAGI is reviewing your request.",
         "declined": "This request is currently declined or paused. Terms need to be adjusted with YAGI.",
-        "draft": "YAGI configures categories, submission windows, compensation, and distribution policy before publishing.",
-        "published": "Creators can view the campaign brief and submit AI content.",
-        "submission_closed": "Submissions are closed while YAGI reviews entries and approves distribution.",
-        "distributing": "Approved creators are distributing content through their own channels.",
-        "archived": "The campaign has ended and distribution records are preserved."
+        "draft": "Preparing to publish. YAGI is setting the categories, timeline, and reward structure.",
+        "published": "Open for submissions. AI creators are making and sending content.",
+        "submission_closed": "Submissions are closed. YAGI is reviewing the entries.",
+        "distributing": "Distribution is in progress. Selected content is going live across channels.",
+        "archived": "This campaign has ended. Results are kept for reference."
       },
-      "brief_title": "Campaign brief",
-      "brief_label": "Creative brief",
+      "brief_title": "Campaign details",
+      "brief_label": "Campaign details",
       "references_label": "References / asset notes",
-      "decision_label": "YAGI decision note",
+      "decision_label": "YAGI review note",
       "decision_pending": "No review note yet.",
       "empty_value": "No value entered",
       "request_title": "Request contact",
@@ -778,25 +778,25 @@
       "mass_campaign_title": "Not a Project workflow",
       "mass_campaign": {
         "sponsor": {
-          "title": "1 sponsor brief",
-          "description": "A BRAND or ARTIST opens one song, product, IP, or MV asset as a campaign brief."
+          "title": "1. Upload the material",
+          "description": "Open one song, product, IP, or MV as a campaign."
         },
         "creator": {
-          "title": "N creator interpretations",
-          "description": "Creators are not delivery vendors; they submit their own AI content interpretations."
+          "title": "2. AI creators make content",
+          "description": "Multiple creators make content in their own style."
         },
         "distribution": {
-          "title": "N channel distribution",
-          "description": "Approved work is distributed through creator-owned channels, with metrics recorded separately."
+          "title": "3. Content goes live",
+          "description": "Selected content is posted across each creator's channels."
         }
       },
-      "publish_title": "Public campaign readiness",
+      "publish_title": "Submission page readiness",
       "file_policy": "File policy",
       "file_upload": "File upload",
       "external_url": "External URL",
       "distribution_start": "Distribution start",
       "open_public": "Open submission page",
-      "public_locked": "This is not public yet. YAGI will confirm submission windows and the public entry page after review."
+      "public_locked": "This is not public yet. YAGI will open the submission period and application page after review."
     }
   },
   "commission": {
@@ -813,7 +813,7 @@
     "field_budget": "Budget range",
     "field_deadline": "Preferred deadline",
     "field_references": "Reference videos (optional)",
-    "field_brief": "Brief",
+    "field_brief": "Request details",
     "field_brief_ph": "Describe the project intent, mood, desired visual tone. 50+ characters.",
     "field_brief_help": "Up to 10,000 characters",
     "field_timestamps": "Timestamp notes (optional)",
@@ -886,7 +886,7 @@
     "empty_sub": "Start your first project",
     "new_project": "Request a project",
     "direct_tab": "Request a project",
-    "contest_tab": "Contest brief",
+    "contest_tab": "Campaign request",
     "coming_soon": "Coming in next phase"
   },
   "workspace": {
@@ -1016,16 +1016,16 @@
   "projects": {
     "list_title": "Create a project",
     "direct_tab": "Request a project",
-    "contest_tab": "Contest brief",
+    "contest_tab": "Campaign request",
     "new": "Request a project",
     "empty_direct": "No projects yet",
     "empty_direct_sub": "Start your first project",
     "empty_contest": "No contests yet",
-    "brief_step": "Project brief",
+    "brief_step": "Project summary",
     "tab_overview": "Overview",
-    "tab_brief": "Brief board",
-    "refs_step": "Brief board",
-    "refs_step_placeholder_title": "Brief board — coming soon",
+    "tab_brief": "Planning board",
+    "refs_step": "Planning board",
+    "refs_step_placeholder_title": "Planning board — coming soon",
     "refs_step_placeholder_sub": "Soon you'll be able to combine text, images, video, and files in one collaborative space. For now, please skip this step.",
     "review_step": "Review",
     "title_label": "Project name",
@@ -1133,13 +1133,13 @@
         "title": "Final review",
         "sub": "Fill in the remaining project details.",
         "twin_intent": {
-          "label": "Would you like to use a Digital Twin?",
-          "tooltip": "Digital Twin is an AI asset based on real persons (artists, actors, singers). YAGI can propose Twins of licensed talents for ads or content production. You can also produce without Twins, using only virtual characters or VFX.",
-          "tooltip_aria": "Digital Twin info",
+          "label": "Would you like to use an AI twin?",
+          "tooltip": "An AI twin is an AI-generated digital persona based on a real person. YAGI can propose licensed twins for ads or content production. You can also produce without AI twins, using only virtual characters or VFX.",
+          "tooltip_aria": "AI twin info",
           "option": {
-            "undecided": "Open to using a Twin",
+            "undecided": "Open to using an AI twin",
             "specific": "I have a specific person in mind",
-            "no_twin": "No Twin (virtual character / VFX only)"
+            "no_twin": "No AI twin (virtual character / VFX only)"
           }
         }
       },
@@ -1189,13 +1189,13 @@
           "help": "Select a date and time if you'd like a meeting."
         },
         "twin_intent": {
-          "label": "Would you like to use a Digital Twin?",
-          "tooltip": "Digital Twin is an AI asset based on real persons (artists, actors, singers). YAGI can propose Twins of licensed talents for ads or content production. You can also produce without Twins, using only virtual characters or VFX.",
-          "tooltip_aria": "Digital Twin info",
+          "label": "Would you like to use an AI twin?",
+          "tooltip": "An AI twin is an AI-generated digital persona based on a real person. YAGI can propose licensed twins for ads or content production. You can also produce without AI twins, using only virtual characters or VFX.",
+          "tooltip_aria": "AI twin info",
           "option": {
-            "undecided": "Open to using a Twin",
+            "undecided": "Open to using an AI twin",
             "specific": "I have a specific person in mind",
-            "no_twin": "No Twin (virtual character / VFX only)"
+            "no_twin": "No AI twin (virtual character / VFX only)"
           }
         }
       },
@@ -1223,7 +1223,7 @@
       },
       "errors": {
         "name_required": "Project name is required.",
-        "description_required": "Please briefly describe what you'd like to create.",
+        "description_required": "Please describe what you'd like to create.",
         "description_too_short": "Please enter a description.",
         "budget_required": "Please select a budget.",
         "deliverable_required": "Please select at least one deliverable type.",
@@ -1306,7 +1306,7 @@
         "sections": {
           "brief": {
             "title": "Your materials",
-            "helper": "Any briefs or materials you'd like to share?",
+            "helper": "Any request details or materials you'd like to share?",
             "upload_cta": "Upload file",
             "divider": "or",
             "link_cta": "Add link",
@@ -1446,10 +1446,10 @@
             "placeholder": "e.g., June 10, 2026 14:30"
           },
           "twin": {
-            "label": "🪞 Interested in Digital Twin",
-            "helper": "We'll suggest a Twin or approach that fits after reviewing your brief.",
-            "tooltip_aria": "Digital Twin info",
-            "tooltip": "Digital Twin is an AI asset based on real people (artists, actors, singers, etc.). YAGI can use Twins of licensed individuals in ads and content production.\n\nDigital Twin is optional — projects can run with virtual humans / VFX only."
+            "label": "🪞 Interested in an AI twin",
+            "helper": "We'll suggest an AI twin or approach that fits after reviewing your request.",
+            "tooltip_aria": "AI twin info",
+            "tooltip": "An AI twin is an AI-generated digital persona based on a real person. YAGI can use licensed twins in ads and content production.\n\nAI twins are optional — projects can run with virtual humans / VFX only."
           }
         },
         "notes": {
@@ -1486,7 +1486,7 @@
           "back": "← Back to Step 2"
         },
         "external_brand_toggle": "This work involves an external advertiser",
-        "external_brand_helper": "(Attach the contract or brief if available)"
+        "external_brand_helper": "(Attach the contract or proposal materials if available)"
       }
     },
     "status": {
@@ -1502,15 +1502,15 @@
         "archived": "Archived"
       },
       "helper": {
-        "draft": "Complete and submit your brief.",
+        "draft": "Complete and submit your request.",
         "submitted": "Waiting for YAGI to start review",
-        "in_review": "The YAGI team is reviewing your brief.",
+        "in_review": "The YAGI team is reviewing your request.",
         "in_progress": "The YAGI team is working on your project.",
         "in_revision": "Revision work is in progress.",
         "delivered": "Your draft has arrived. Please review and approve or request a revision.",
         "approved": "The project has been approved.",
-        "cancelled": "This brief was cancelled.",
-        "archived": "This brief has been archived."
+        "cancelled": "This request was cancelled.",
+        "archived": "This request has been archived."
       }
     }
   },
@@ -2126,7 +2126,7 @@
         "body": "{actor} mentioned you in #{channel_name}: {excerpt}"
       },
       "thread_mention": {
-        "title": "You were mentioned in a brief board",
+        "title": "You were mentioned in a planning board",
         "body": "{actor}: {excerpt}"
       },
       "meeting_requested": {
@@ -2332,9 +2332,9 @@
       "negotiable": "To be discussed"
     },
     "twin_intent": {
-      "undecided": "Open to using a Twin",
+      "undecided": "Open to using an AI twin",
       "specific_in_mind": "Has a specific person",
-      "no_twin": "No Twin"
+      "no_twin": "No AI twin"
     }
   },
   "project_detail": {
@@ -2354,7 +2354,7 @@
       "budget": "Budget",
       "delivery": "Delivery",
       "delivery_negotiable": "To be discussed",
-      "twin_intent": "Twin intent",
+      "twin_intent": "AI twin interest",
       "meeting": "Preferred meeting",
       "meeting_none": "Not set",
       "not_set": "Not entered"
@@ -2366,9 +2366,9 @@
       "negotiable": "To be discussed"
     },
     "twin_intent": {
-      "undecided": "Open to using a Twin",
+      "undecided": "Open to using an AI twin",
       "specific_in_mind": "Has a specific person",
-      "no_twin": "No Twin"
+      "no_twin": "No AI twin"
     },
     "tabs": {
       "board": "Versions",
@@ -2378,7 +2378,7 @@
     },
     "tab": {
       "status": "Status",
-      "brief": "Brief",
+      "brief": "Planning",
       "board": "Versions",
       "comments": "Comments",
       "deliverables": "Deliverables"
@@ -2386,7 +2386,7 @@
     "duplicate_project": {
       "trigger": "Start from these settings",
       "title": "Duplicate project settings",
-      "description": "Only the settings skeleton is copied. Brief content, versions, feedback, and guests start empty.",
+      "description": "Only the settings skeleton is copied. Planning content, versions, feedback, and guests start empty.",
       "title_label": "New project name",
       "title_placeholder": "New project name",
       "default_title": "{title} (Copy)",
@@ -2516,41 +2516,41 @@
       "count": "{count}"
     },
     "banner": {
-      "cancelled": "This brief was cancelled. To start a new one,",
-      "cancelled_link_text": "start a new brief",
-      "archived": "This brief has been archived."
+      "cancelled": "This request was cancelled. To start a new one,",
+      "cancelled_link_text": "start a new request",
+      "archived": "This request has been archived."
     },
     "wc_scaffold": {
       "status_tab": {
         "section": {
           "timeline": "Status timeline",
           "cta": "Next action",
-          "brief": "Brief summary",
+          "brief": "Request summary",
           "attachments": "Attachments",
           "comments": "YAGI comments"
         },
         "placeholder": {
           "timeline": "Wave C.2 lands the 9-state timeline here.",
           "cta": "Wave C.3 lands the status-specific next-action CTA here.",
-          "brief": "Wave C.3 lands the brief summary card here.",
+          "brief": "Wave C.3 lands the request summary card here.",
           "attachments": "Wave C.3 lands the top-3 attachment thumbnail strip here.",
           "comments": "YAGI team comments will appear here. (Phase 5+)"
         }
       },
       "brief_tab": {
-        "title": "Brief summary",
+        "title": "Request summary",
         "description": "Wave C.4 lands the Stage 1/2/3 read-only view here."
       }
     },
     "brief_tab": {
-      "banner_draft": "This brief is still in progress. Complete it to send your request to the YAGI team.",
-      "cta_complete": "Complete brief →",
+      "banner_draft": "This request is still in progress. Complete it to send your request to the YAGI team.",
+      "cta_complete": "Complete request →",
       "section_stage1": "Intent",
       "section_stage2": "Conditions",
       "section_stage3": "Submission info",
       "field_project_name": "Project name",
       "field_deliverable_types": "Content type",
-      "field_description": "Brief",
+      "field_description": "Request details",
       "field_mood_keywords": "Mood / keywords",
       "field_channels": "Channels",
       "field_target_audience": "Target audience",
@@ -2638,7 +2638,7 @@
     },
     "status": {
       "cta": {
-        "draft": "Complete brief →",
+        "draft": "Complete request →",
         "submitted": "",
         "in_review": "Add materials",
         "in_progress": "Add comment",
@@ -2647,16 +2647,16 @@
         "approved": "Rate project"
       },
       "banner": {
-        "cancelled": "This brief was cancelled.",
-        "archived": "This brief has been archived."
+        "cancelled": "This request was cancelled.",
+        "archived": "This request has been archived."
       },
       "empty_state": {
         "submitted": "Waiting for YAGI to start review"
       },
       "card": {
         "submitted": {
-          "title": "Brief submitted",
-          "body": "YAGI is reviewing your brief."
+          "title": "Request submitted",
+          "body": "YAGI is reviewing your request."
         },
         "meta": {
           "expected_response": {
@@ -2673,20 +2673,20 @@
           }
         },
         "cta": {
-          "view_full_brief": "View full brief →"
+          "view_full_brief": "View full request →"
         },
         "dropdown": {
           "trigger_label": "More options",
           "recall": "Recall to edit",
-          "delete": "Delete brief",
+          "delete": "Delete request",
           "delete_confirm": {
-            "title": "Delete this brief?",
+            "title": "Delete this request?",
             "description": "This action can't be undone. Start a new project to re-submit.",
             "cancel": "Cancel",
             "submit": "Delete"
           },
-          "delete_success_toast": "Brief deleted",
-          "delete_error_toast": "Could not delete brief. Try again shortly."
+          "delete_success_toast": "Request deleted",
+          "delete_error_toast": "Could not delete request. Try again shortly."
         }
       }
     },
@@ -2728,10 +2728,10 @@
     },
     "summary_card": {
       "deliverable_types": "Content types",
-      "description": "Core brief",
-      "view_all": "View full brief →",
+      "description": "Core request",
+      "view_all": "View full request →",
       "cta": {
-        "brief": "View full brief →",
+        "brief": "View full request →",
         "attachments": "View attachments →",
         "comments": "View comments →"
       }
@@ -2816,8 +2816,8 @@
       "created": "Created",
       "target_delivery": "Target delivery",
       "unset": "Not set",
-      "brief_title": "Brief",
-      "brief_empty": "No brief yet.",
+      "brief_title": "Request details",
+      "brief_empty": "No request details yet.",
       "collaborators_title": "Accepted creators",
       "collaborators_empty": "No creators have accepted yet.",
       "pending_title": "Pending invitations",
@@ -2828,9 +2828,9 @@
     "material_append": {
       "trigger": "Add materials",
       "title": "Add materials?",
-      "description": "You can attach more materials during review. Classify each as brief or reference.",
+      "description": "You can attach more materials during review. Classify each as request details or reference.",
       "kind_label": "Type",
-      "kind_brief": "Brief",
+      "kind_brief": "Request details",
       "kind_reference": "Reference",
       "source_label": "Source",
       "source_upload": "Upload file",
@@ -2847,7 +2847,7 @@
     }
   },
   "brief_board": {
-    "title": "Brief board",
+    "title": "Planning board",
     "toolbar_idle": "No changes",
     "toolbar_saving": "Auto-saving...",
     "toolbar_saved": "Saved",
@@ -2858,7 +2858,7 @@
     "save_validation": "Content does not match the expected format",
     "save_too_large": "Board exceeds the 2MB size limit",
     "save_db_error": "Save error. Please try again",
-    "empty_title": "Start your brief however you like",
+    "empty_title": "Start your planning notes however you like",
     "empty_hint": "Type text or press / to insert a block.",
     "dragdrop_overlay": "Drop images here",
     "toolbar_image": "Image",
@@ -2931,7 +2931,7 @@
     "yagi_request_timeline_label": "Preferred timeline",
     "yagi_request_submit": "Send request",
     "yagi_request_sent": "Request sent. YAGI responds within 1-2 business days",
-    "lock_button": "Lock brief",
+    "lock_button": "Lock planning board",
     "lock_success": "Board locked",
     "unlock_button": "Unlock",
     "unlock_success": "Board unlocked",
@@ -2997,7 +2997,7 @@
   "admin_campaigns": {
     "admin_eyebrow": "Campaign Operations",
     "admin_title": "Mass AI Campaign Operations",
-    "admin_description": "Review submissions, register creator distribution URLs, log manual metrics, and archive campaigns from one console.",
+    "admin_description": "Review submissions, register participant distribution URLs, log performance, and archive campaigns from one console.",
     "console_eyebrow": "Campaign Console",
     "back_to_admin": "← Campaign operations",
     "window": "Submission {open} - {close}",
@@ -3007,7 +3007,7 @@
     "metric_total": "Total",
     "metric_submitted": "Pending review",
     "metric_approved": "Approved",
-    "metric_distributed": "Distributed",
+    "metric_distributed": "Posted",
     "test_data_off": "Live data only",
     "test_data_on": "Including test",
     "test_data_show": "Include test",
@@ -3055,7 +3055,7 @@
     "decision_label": "Decision",
     "comment_label": "Comment",
     "save_review": "Save review",
-    "distribution_title": "Distribution / metrics",
+    "distribution_title": "Distribution / performance",
     "distribution_empty": "No distribution URLs registered.",
     "distribution_locked": "Distribution URLs can be registered after approval.",
     "channel_label": "Channel",
@@ -3066,12 +3066,12 @@
     "views": "Views",
     "likes": "Likes",
     "comments": "Comments",
-    "metric_notes_placeholder": "Metric notes",
-    "save_metric": "Save metrics",
+    "metric_notes_placeholder": "Performance notes",
+    "save_metric": "Save performance",
     "saving": "Saving",
     "toast_review_saved": "Review saved.",
     "toast_distribution_saved": "Distribution URL saved.",
-    "toast_metric_saved": "Metrics saved.",
+    "toast_metric_saved": "Performance saved.",
     "toast_status_saved": "Campaign status updated.",
     "error": {
       "validation": "Check the input values.",
@@ -3086,8 +3086,8 @@
   },
   "admin_artists": {
     "eyebrow": "Artist Sponsors",
-    "title": "ARTIST campaign sponsor accounts",
-    "description": "ARTIST workspaces can open Mass AI Campaigns with music, MV, or IP assets. Admins create the artist workspace and send the account invite by email.",
+    "title": "ARTIST campaign requester accounts",
+    "description": "ARTIST workspaces can open AI campaigns with music, MV, or IP assets. Admins create the artist workspace and send the account invite by email.",
     "invite_cta": "Invite ARTIST",
     "table_heading": "Artist list",
     "test_data_off": "Live data only",
@@ -3105,14 +3105,14 @@
     "status_onboarding": "Onboarding",
     "status_active": "Active",
     "form_email": "Email",
-    "form_helper": "When the ARTIST activates the account from the invite email, the artist workspace is connected and the flow lands on Campaign request.",
+    "form_helper": "When the ARTIST activates the account from the invite email, the artist workspace is connected and the flow lands on campaign request.",
     "form_display_name": "Artist name",
     "form_display_name_ph": "e.g. Jane Kim",
     "form_short_bio": "Short bio",
     "form_short_bio_ph": "A short introduction (optional)",
     "form_submit": "Send invite",
     "optional": "optional",
-    "invite_success": "ARTIST invite email sent. The artist can request Campaigns after signing in.",
+    "invite_success": "ARTIST invite email sent. The artist can request campaigns after signing in.",
     "invite_error_validation": "Please check your input.",
     "invite_error_unauthenticated": "Please sign in.",
     "invite_error_forbidden": "You don't have permission.",
@@ -3121,11 +3121,11 @@
   },
   "admin_agencies": {
     "eyebrow": "Agency Roster",
-    "title": "AGENCY accounts and artist roster",
-    "description": "Invite entertainment agencies, then connect them to invited ARTIST workspaces as a roster relationship. Deal delegation and approval authority are handled later.",
+    "title": "AGENCY accounts and artist affiliation",
+    "description": "Invite entertainment agencies, then connect them to invited ARTIST workspaces as an affiliation relationship. Deal delegation and approval authority are handled later.",
     "invite_cta": "Invite AGENCY",
     "invite_title": "Invite agency",
-    "invite_helper": "The agency receives a magic-link invite and lands in an agency workspace.",
+    "invite_helper": "The agency receives a sign-in link and lands in an agency workspace.",
     "table_heading": "Agency list",
     "table_empty": "No agencies invited yet.",
     "column_agency": "Agency",
@@ -3140,18 +3140,18 @@
     "form_submit": "Send invite",
     "form_submitting": "Sending...",
     "optional": "optional",
-    "roster_link_title": "Connect artist roster",
-    "roster_link_helper": "Create the minimal AGENCY to ARTIST roster link. This does not grant deal approval delegation yet.",
+    "roster_link_title": "Connect artist affiliation",
+    "roster_link_helper": "Create the minimal AGENCY to ARTIST affiliation link. This does not grant deal approval delegation yet.",
     "select_agency": "Select agency",
     "select_artist": "Select artist",
-    "link_cta": "Connect roster",
+    "link_cta": "Connect affiliation",
     "linking": "Connecting...",
     "unlink": "Unlink",
-    "roster_heading": "Roster links",
-    "roster_empty": "No roster links yet.",
+    "roster_heading": "Affiliation links",
+    "roster_empty": "No affiliation links yet.",
     "invite_success": "AGENCY invite email sent.",
-    "link_success": "Roster link saved.",
-    "unlink_success": "Roster link removed.",
+    "link_success": "Affiliation link saved.",
+    "unlink_success": "Affiliation link removed.",
     "error_validation": "Please check your input.",
     "error_forbidden": "You don't have permission.",
     "error_invite": "Failed to send invite email.",
