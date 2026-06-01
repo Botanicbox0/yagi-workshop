@@ -235,6 +235,28 @@
     "test_workspace": "TEST 워크스페이스",
     "search": "검색",
     "search_shortcut": "Ctrl K",
+    "workspace_search": {
+      "trigger": "워크스페이스 검색",
+      "placeholder": "워크스페이스 이름을 입력하세요",
+      "group": "워크스페이스",
+      "loading": "워크스페이스를 불러오는 중",
+      "empty": "일치하는 워크스페이스가 없어요",
+      "test_badge": "TEST",
+      "kind": {
+        "brand": "브랜드",
+        "agency": "에이전시",
+        "artist": "아티스트",
+        "creator": "크리에이터",
+        "yagi_admin": "YAGI"
+      },
+      "errors": {
+        "unauthenticated": "로그인이 필요합니다.",
+        "forbidden": "관리자만 워크스페이스를 검색할 수 있습니다.",
+        "db": "워크스페이스를 불러오지 못했습니다.",
+        "not_a_member": "이 워크스페이스로 전환할 수 없습니다.",
+        "invalid": "워크스페이스 정보가 올바르지 않습니다."
+      }
+    },
     "open_menu": "메뉴 열기",
     "campaign_request": "콘테스트 요청",
     "my_submissions": "내 응모작",

@@ -128,14 +128,41 @@ export async function resolveActiveWorkspace(
   userId: string,
 ): Promise<ActiveWorkspaceMembership | null> {
   const memberships = await listOwnWorkspaces(userId);
-  if (memberships.length === 0) return null;
-
   const cookieStore = await cookies();
   const cookieValue = cookieStore.get(ACTIVE_WORKSPACE_COOKIE)?.value;
 
   if (cookieValue && UUID_RE.test(cookieValue)) {
     const match = memberships.find((m) => m.id === cookieValue);
     if (match) return match;
+
+    const supabase = await createSupabaseServer();
+    const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
+      uid: userId,
+    });
+    if (isAdmin) {
+      // Global admin workspace jump: the cookie may point at a workspace
+      // the admin is not a member of. The server re-checks yagi_admin here
+      // before honoring that cookie.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workspaces.kind type regen pending
+      const sb = supabase as any;
+      const { data: workspace } = (await sb
+        .from("workspaces")
+        .select("id, name, kind, is_test")
+        .eq("id", cookieValue)
+        .maybeSingle()) as {
+        data:
+          | { id: string; name: string; kind?: string; is_test?: boolean }
+          | null;
+      };
+      if (workspace) {
+        return {
+          id: workspace.id,
+          name: workspace.name,
+          kind: narrowKind(workspace.kind),
+          isTest: workspace.is_test === true,
+        };
+      }
+    }
     // Fall through to default selection. We deliberately do NOT attempt
     // to clear the cookie here -- this resolver is read-only (cookies()
     // in next/headers is read in server components). The
@@ -143,6 +170,8 @@ export async function resolveActiveWorkspace(
     // cookie keeps arriving here, the resolver silently falls back
     // without leaking which workspace_id the user does NOT belong to.
   }
+
+  if (memberships.length === 0) return null;
 
   // YAGI admins should default to the internal admin workspace. Test
   // Brand/Creator/Artist switching is opt-in via the workspace selector.

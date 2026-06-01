@@ -235,6 +235,28 @@
     "test_workspace": "TEST workspace",
     "search": "Search",
     "search_shortcut": "Ctrl K",
+    "workspace_search": {
+      "trigger": "Search workspaces",
+      "placeholder": "Search by workspace name",
+      "group": "Workspaces",
+      "loading": "Loading workspaces",
+      "empty": "No matching workspace",
+      "test_badge": "TEST",
+      "kind": {
+        "brand": "Brand",
+        "agency": "Agency",
+        "artist": "Artist",
+        "creator": "Creator",
+        "yagi_admin": "YAGI"
+      },
+      "errors": {
+        "unauthenticated": "Sign in is required.",
+        "forbidden": "Only admins can search workspaces.",
+        "db": "Could not load workspaces.",
+        "not_a_member": "You cannot switch to this workspace.",
+        "invalid": "Workspace information is invalid."
+      }
+    },
     "open_menu": "Open menu",
     "campaign_request": "Request a contest",
     "my_submissions": "My submissions",

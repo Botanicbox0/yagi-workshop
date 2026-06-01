@@ -13,7 +13,6 @@ import {
   Handshake,
   Menu,
   Megaphone,
-  Search,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -32,6 +31,11 @@ import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { PageHelpLink } from "@/components/app/page-help-link";
 import { SidebarUserMenu } from "@/components/app/sidebar-user-menu";
+import {
+  MobileWorkspaceSearchTrigger,
+  WorkspaceSearchDialog,
+  WorkspaceSearchTrigger,
+} from "@/components/app/workspace-search";
 import {
   WorkspaceSwitcher,
   type WorkspaceItem,
@@ -109,9 +113,16 @@ export function TopNav({
   const isYagiAdmin = context.workspaceRoles.includes("yagi_admin");
   const actor = resolveAppActor(activeWorkspace, isYagiAdmin);
   const homeHref = actor ? getAppLandingPath(actor) : "/app";
+  const [workspaceSearchOpen, setWorkspaceSearchOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      {isYagiAdmin && (
+        <WorkspaceSearchDialog
+          open={workspaceSearchOpen}
+          onOpenChange={setWorkspaceSearchOpen}
+        />
+      )}
       <div className="flex h-16 items-center gap-3 px-4 lg:px-6">
         <Link
           href={homeHref}
@@ -152,7 +163,13 @@ export function TopNav({
 
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
           {actor === "brand" && <CreditBalance label={t("credit_balance")} />}
-          <SearchStub label={t("search")} shortcut={t("search_shortcut")} />
+          {isYagiAdmin && (
+            <WorkspaceSearchTrigger
+              label={t("workspace_search.trigger")}
+              shortcut={t("search_shortcut")}
+              onOpen={() => setWorkspaceSearchOpen(true)}
+            />
+          )}
           {activeWorkspace && (
             <div className="hidden w-[170px] xl:block">
               <WorkspaceSwitcher
@@ -192,6 +209,7 @@ export function TopNav({
             locale={locale}
             pathname={pathname}
             actor={actor}
+            onWorkspaceSearchOpen={() => setWorkspaceSearchOpen(true)}
           />
         </div>
       </div>
@@ -214,7 +232,10 @@ function DesktopNav({
 
   return (
     <nav
-      className="hidden min-w-0 flex-1 items-center justify-center gap-1 px-2 lg:flex"
+      className={cn(
+        "hidden min-w-0 flex-1 items-center gap-1 px-2 lg:flex",
+        actor === "yagi_admin" ? "justify-start" : "justify-center",
+      )}
       aria-label="Primary"
     >
       {items.map((item) => (
@@ -282,28 +303,6 @@ function CreditBalance({
   );
 }
 
-function SearchStub({
-  label,
-  shortcut,
-}: {
-  label: string;
-  shortcut: string;
-}) {
-  return (
-    <button
-      type="button"
-      className="hidden h-9 min-w-[128px] items-center gap-2 rounded-full border border-border/70 bg-surface-raised px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground md:flex"
-      aria-label={label}
-    >
-      <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <span className="flex-1 truncate">{label}</span>
-      <kbd className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-        {shortcut}
-      </kbd>
-    </button>
-  );
-}
-
 function MobileMenu({
   context,
   activeWorkspace,
@@ -314,6 +313,7 @@ function MobileMenu({
   locale,
   pathname,
   actor,
+  onWorkspaceSearchOpen,
 }: {
   context: AppContext;
   activeWorkspace: WorkspaceItem | null;
@@ -324,6 +324,7 @@ function MobileMenu({
   locale: "ko" | "en";
   pathname: string;
   actor: AppActorKind | null;
+  onWorkspaceSearchOpen: () => void;
 }) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -369,17 +370,16 @@ function MobileMenu({
               {t("test_workspace")}
             </div>
           )}
-          <button
-            type="button"
-            className="flex h-11 w-full items-center gap-2 rounded-xl border border-border/70 bg-surface-raised px-3 text-left text-sm text-muted-foreground"
-            aria-label={t("search")}
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-            <span className="flex-1">{t("search")}</span>
-            <kbd className="rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px]">
-              {t("search_shortcut")}
-            </kbd>
-          </button>
+          {isYagiAdmin && (
+            <MobileWorkspaceSearchTrigger
+              label={t("workspace_search.trigger")}
+              shortcut={t("search_shortcut")}
+              onOpen={() => {
+                setOpen(false);
+                onWorkspaceSearchOpen();
+              }}
+            />
+          )}
           {actor === "brand" && (
             <CreditBalance label={t("credit_balance")} className="!flex" />
           )}

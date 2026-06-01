@@ -37,9 +37,9 @@ export async function setActiveWorkspaceAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "unauthenticated" };
 
-  // Membership check: the workspaces RLS already scopes by member, but
-  // we're explicit so the failure mode is a clean error rather than an
-  // RLS-empty-result silent miss.
+  // Membership check: normal users can only switch to workspaces they
+  // belong to. Global yagi_admin users may jump into any visible
+  // workspace for operations triage; non-admin callers still fail here.
   const { data: row } = await supabase
     .from("workspace_members")
     .select("workspace_id")
@@ -47,7 +47,19 @@ export async function setActiveWorkspaceAction(
     .eq("workspace_id", workspaceId)
     .maybeSingle();
 
-  if (!row) return { ok: false, error: "not_a_member" };
+  if (!row) {
+    const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
+      uid: user.id,
+    });
+    if (!isAdmin) return { ok: false, error: "not_a_member" };
+
+    const { data: workspace } = await supabase
+      .from("workspaces")
+      .select("id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (!workspace) return { ok: false, error: "not_a_member" };
+  }
 
   const cookieStore = await cookies();
   cookieStore.set(ACTIVE_WORKSPACE_COOKIE, workspaceId, {

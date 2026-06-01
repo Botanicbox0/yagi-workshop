@@ -67,10 +67,9 @@ export default async function AppLayout({
   // Phase 6 Wave A.3 — Artist onboarding gate.
   // If the active workspace is kind='artist' and instagram_handle IS NULL,
   // redirect to the 1-step onboarding page before the Artist reaches /app/*.
-  const onboardingRedirect = await checkArtistOnboardingGate(
-    activeWorkspace,
-    locale
-  );
+  const onboardingRedirect = ctx.workspaceRoles.includes("yagi_admin")
+    ? null
+    : await checkArtistOnboardingGate(activeWorkspace, locale);
   if (onboardingRedirect) {
     redirect({ href: "/onboarding/artist", locale });
     return null;
