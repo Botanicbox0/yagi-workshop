@@ -17,6 +17,8 @@ type FieldErrors = Partial<
     | "title"
     | "description"
     | "brief"
+    | "desiredPrize"
+    | "desiredRecruit"
     | "contactName"
     | "contactEmail"
     | "contactPhone"
@@ -38,10 +40,16 @@ export function CampaignRequestForm() {
 
   function submit(formData: FormData) {
     setErrors({});
+    const desiredPrizeRaw = String(formData.get("desiredPrize") ?? "").trim();
+    const desiredRecruitRaw = String(formData.get("desiredRecruit") ?? "").trim();
     const payload = {
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? ""),
       brief: String(formData.get("brief") ?? ""),
+      desiredPrize:
+        desiredPrizeRaw.length > 0 ? Number(desiredPrizeRaw) : undefined,
+      desiredRecruit:
+        desiredRecruitRaw.length > 0 ? Number(desiredRecruitRaw) : undefined,
       contactName: String(formData.get("contactName") ?? ""),
       contactEmail: String(formData.get("contactEmail") ?? ""),
       contactPhone: String(formData.get("contactPhone") ?? ""),
@@ -51,6 +59,18 @@ export function CampaignRequestForm() {
     const nextErrors: FieldErrors = {};
     if (payload.title.trim().length < 2) nextErrors.title = t("error_title");
     if (payload.brief.trim().length < 10) nextErrors.brief = t("error_brief");
+    if (
+      payload.desiredPrize !== undefined &&
+      (!Number.isInteger(payload.desiredPrize) || payload.desiredPrize < 0)
+    ) {
+      nextErrors.desiredPrize = t("error_desired_prize");
+    }
+    if (
+      payload.desiredRecruit !== undefined &&
+      (!Number.isInteger(payload.desiredRecruit) || payload.desiredRecruit < 0)
+    ) {
+      nextErrors.desiredRecruit = t("error_desired_recruit");
+    }
     if (payload.contactName.trim().length < 1) {
       nextErrors.contactName = t("error_contact_name");
     }
@@ -120,6 +140,42 @@ export function CampaignRequestForm() {
                 maxLength={5000}
               />
             </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                error={errors.desiredPrize}
+                helper={t("field_desired_helper")}
+                htmlFor="campaign-desired-prize"
+                label={t("field_desired_prize")}
+              >
+                <Input
+                  id="campaign-desired-prize"
+                  name="desiredPrize"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  placeholder={t("field_desired_prize_placeholder")}
+                  className="h-11 bg-surface-card"
+                />
+              </Field>
+              <Field
+                error={errors.desiredRecruit}
+                helper={t("field_desired_helper")}
+                htmlFor="campaign-desired-recruit"
+                label={t("field_desired_recruit")}
+              >
+                <Input
+                  id="campaign-desired-recruit"
+                  name="desiredRecruit"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  placeholder={t("field_desired_recruit_placeholder")}
+                  className="h-11 bg-surface-card"
+                />
+              </Field>
+            </div>
           </div>
         </div>
 
@@ -212,11 +268,13 @@ export function CampaignRequestForm() {
 function Field({
   label,
   error,
+  helper,
   htmlFor,
   children,
 }: {
   label: string;
   error?: string;
+  helper?: string;
   htmlFor: string;
   children: ReactNode;
 }) {
@@ -229,6 +287,11 @@ function Field({
         {label}
       </Label>
       {children}
+      {helper && (
+        <p className="text-xs leading-5 text-muted-foreground keep-all">
+          {helper}
+        </p>
+      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );

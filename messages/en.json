@@ -224,7 +224,7 @@
     "dashboard": "Home",
     "explore": "Explore",
     "projects": "Projects",
-    "campaigns": "Campaigns",
+    "campaigns": "Contests",
     "discover": "AI Twins",
     "twins": "AI Twins",
     "deals": "Deals",
@@ -236,7 +236,7 @@
     "search": "Search",
     "search_shortcut": "Ctrl K",
     "open_menu": "Open menu",
-    "campaign_request": "Request a campaign",
+    "campaign_request": "Request a contest",
     "my_submissions": "My submissions",
     "recommended_artist": "Recommended artists",
     "showcases": "Showcases",
@@ -263,12 +263,12 @@
     "explore": {
       "eyebrow": "Explore",
       "title": "Explore references and starting points",
-      "description": "A space to manage projects and campaigns in one view."
+      "description": "A space to manage projects and contests in one view."
     },
     "campaigns": {
-      "eyebrow": "Campaigns",
-      "title": "Campaign operations",
-      "description": "A space for campaign requests, progress, and participant-channel operations."
+      "eyebrow": "Contests",
+      "title": "Contest operations",
+      "description": "A space for contest requests, progress, and participant-channel operations."
     },
     "americano": {
       "eyebrow": "Americano",
@@ -289,8 +289,8 @@
           "description": "Shape lookbook layouts that can extend to web, PDF, and social cards."
         },
         "campaign": {
-          "title": "Campaign Asset",
-          "description": "Connect lookbook outputs to campaign assets and the Asset Library."
+          "title": "Contest Asset",
+          "description": "Connect lookbook outputs to contest assets and the Asset Library."
         }
       }
     },
@@ -315,8 +315,8 @@
   },
   "discover": {
     "eyebrow": "AI Twins",
-    "title": "Find the right AI twin for your campaign",
-    "description": "Browse public AI twins (AI-generated digital personas) and send a campaign proposal to the twin you like.",
+    "title": "Find the right AI twin for your contest",
+    "description": "Browse public AI twins (AI-generated digital personas) and send a contest proposal to the twin you like.",
     "card": {
       "no_cover": "No cover visual",
       "default_type": "AI twin",
@@ -343,18 +343,18 @@
       "status_active": "Available",
       "proposal_eyebrow": "Send proposal",
       "proposal_title": "Collaboration proposal",
-      "proposal_description": "Send the campaign type and details. YAGI will review the terms and route the offer to this twin."
+      "proposal_description": "Send the contest type and details. YAGI will review the terms and route the offer to this twin."
     },
     "proposal": {
-      "usage_label": "Campaign usage",
-      "brief_label": "Campaign details",
+      "usage_label": "Contest usage",
+      "brief_label": "Contest details",
       "brief_placeholder": "Share the goal, channels, deliverables, and timeline in 1000 characters or fewer.",
       "budget_label": "Proposed budget",
       "budget_placeholder": "e.g. 3000000",
       "submit": "Send proposal",
       "submitting": "Sending",
       "success": "Proposal sent.",
-      "error_usage": "Select at least one campaign usage.",
+      "error_usage": "Select at least one contest usage.",
       "error_budget": "Proposed budget must be a non-negative integer.",
       "server_error": {
         "validation": "Check the input values.",
@@ -599,7 +599,7 @@
   "explore_dashboard": {
     "eyebrow": "Explore",
     "title": "See today's workspace at a glance",
-    "description": "Manage projects, campaigns, and credits in one view. See active work and what to do next at a glance.",
+    "description": "Manage projects, contests, and credits in one view. See active work and what to do next at a glance.",
     "actions": {
       "new_project": "Start a project",
       "americano": "Open Americano"
@@ -617,11 +617,11 @@
       "empty_cta": "Start a project"
     },
     "campaigns": {
-      "title": "Active campaigns",
-      "view_all": "View campaigns",
-      "empty_title": "No active campaigns",
-      "empty_description": "Campaigns you request or run will appear here.",
-      "empty_cta": "Open campaigns",
+      "title": "Active contests",
+      "view_all": "View contests",
+      "empty_title": "No active contests",
+      "empty_description": "Contests you request or run will appear here.",
+      "empty_cta": "Open contests",
       "closes": "Closes {date}"
     },
     "campaign_status": {
@@ -637,7 +637,7 @@
     "quick_actions": {
       "title": "Quick actions",
       "new_project_title": "Start a project",
-      "new_project_description": "Open a new music video, campaign visual, or AI VFX request.",
+      "new_project_description": "Open a new music video, contest visual, or AI VFX request.",
       "americano_title": "Americano",
       "americano_description": "Open the AI content creation tools."
     },
@@ -650,8 +650,8 @@
           "description": "Reference space for connecting artist identity and scene tone."
         },
         "campaign_visual": {
-          "tag": "Campaign",
-          "title": "Release campaign assets",
+          "tag": "Contest",
+          "title": "Release contest assets",
           "description": "Prepare platform-specific stills and short-form asset flows."
         },
         "fashion_lookbook": {
@@ -663,12 +663,12 @@
     }
   },
   "campaigns_app": {
-    "eyebrow": "Campaigns",
-    "title": "Request campaigns and manage progress",
-    "creator_title": "Open campaigns",
-    "description": "Open a campaign with one song, product, or IP, and multiple AI creators make their own content and spread it across their channels. No shoot, no casting.",
-    "creator_description": "Browse campaigns that are published and still accepting submissions.",
-    "new_cta": "Request campaign",
+    "eyebrow": "Contests",
+    "title": "Request contests and manage progress",
+    "creator_title": "Open contests",
+    "description": "Open a contest around one product, brand, or IP, and multiple AI creators make their own content and spread it across their channels. No shoot, no casting.",
+    "creator_description": "Browse contests that are published and still accepting submissions.",
+    "new_cta": "Request contest",
     "metrics": {
       "total": "Total",
       "open": "Open",
@@ -689,89 +689,119 @@
       "closes": "Closes {date}",
       "no_window": "YAGI will confirm the submission window",
       "submit_page": "Submission page",
-      "detail_page": "View detail"
+      "detail_page": "View detail",
+      "prize": "Prize {amount}"
     },
     "empty": {
-      "title": "No campaign requests yet",
-      "description": "Tell us what campaign you want to open. YAGI will review it, then set the plan and schedule with you.",
-      "cta": "Request first campaign"
+      "title": "No contest requests yet",
+      "description": "Tell us what contest you want to open. YAGI will review it, then set the plan and schedule with you.",
+      "cta": "Request first contest"
     },
     "creator_empty": {
-      "title": "No open campaigns right now",
-      "description": "Published campaigns that are still accepting submissions will appear here."
+      "title": "No open contests right now",
+      "description": "Published contests that are still accepting submissions will appear here."
     },
     "how_it_works": {
       "title": "How it works",
       "brand_steps": {
         "1": {
-          "title": "Upload your material",
+          "title": "Open this kind of contest",
           "headline": {
-            "before": "Campaigns can start from ",
-            "accent": "one material",
-            "after": " you already have"
+            "before": "Set the concept and ",
+            "accent": "prize",
+            "after": " up front"
           },
-          "description": "One song, product, or IP is enough. Start without a heavy setup."
+          "description": "Open a contest like \"AI-generated creators wearing [your brand] products\" — set the concept and prize."
         },
         "2": {
-          "title": "Multiple versions at once",
+          "title": "Creators make the work",
           "headline": {
-            "before": "One campaign gathers ",
-            "accent": "many interpretations",
-            "after": " at once"
+            "before": "Multiple AI creators turn your brand into ",
+            "accent": "their own content",
+            "after": ""
           },
-          "description": "AI creators interpret the same campaign in their own style, so one brief becomes many pieces of content."
+          "description": "Multiple AI creators interpret your brand through their own content."
         },
         "3": {
-          "title": "Spread through real channels",
+          "title": "It spreads across channels",
           "headline": {
-            "before": "Selected content moves ",
-            "accent": "into creator channels",
-            "after": " directly"
+            "before": "Strong entries travel through ",
+            "accent": "creator channels",
+            "after": ""
           },
-          "description": "Selected content reaches followers directly through creator channels."
+          "description": "The strongest content spreads naturally through creator channels."
         }
       },
       "creator_steps": {
         "1": {
-          "title": "Find a campaign you like",
+          "title": "Pick a contest that pulls you in",
           "headline": {
-            "before": "Choose ",
-            "accent": "the right campaign",
-            "after": " and start fast"
+            "before": "Choose by ",
+            "accent": "prize and theme",
+            "after": ""
           },
-          "description": "Browse campaigns you can join and pick the right one."
+          "description": "Review the prize and theme, then choose the contest you want to make for."
         },
         "2": {
-          "title": "Create in your style",
+          "title": "Make it in your style",
           "headline": {
-            "before": "Give AI-made content ",
-            "accent": "your own style",
+            "before": "Use AI to make content with ",
+            "accent": "your own taste",
             "after": ""
           },
-          "description": "Make AI content with your own point of view and submit it."
+          "description": "Use AI to create content with your own style and submit it."
         },
         "3": {
-          "title": "Distribute & get paid",
+          "title": "Get rewarded if selected",
           "headline": {
-            "before": "Selection turns into ",
-            "accent": "distribution and rewards",
+            "before": "Selected work turns into ",
+            "accent": "posting and prize payout",
             "after": ""
           },
-          "description": "If selected, post it on your channel and receive your reward."
+          "description": "If selected, post it on your channel and receive the prize."
+        }
+      },
+      "artist_steps": {
+        "1": {
+          "title": "Open this kind of contest",
+          "headline": {
+            "before": "Turn your song or IP into ",
+            "accent": "a creative prompt",
+            "after": ""
+          },
+          "description": "Open a contest like \"an AI music video for my new single\" or \"fan-made AI work using my image\" — set the concept and prize."
+        },
+        "2": {
+          "title": "Creators reinterpret it",
+          "headline": {
+            "before": "AI creators rebuild your song or IP in ",
+            "accent": "their own style",
+            "after": ""
+          },
+          "description": "Multiple AI creators reinterpret your song or IP in their own way."
+        },
+        "3": {
+          "title": "It reaches more fans",
+          "headline": {
+            "before": "Strong fan-made work spreads across ",
+            "accent": "multiple channels",
+            "after": ""
+          },
+          "description": "Strong derivative work travels across channels and reaches more people."
         }
       }
     },
     "new": {
-      "eyebrow": "Campaign Request",
-      "title": "What campaign do you want to open?",
+      "eyebrow": "Contest Request",
+      "title": "What contest do you want to open?",
       "description": "Send a request and YAGI will review it, then set the category, submission period, and operating plan.",
-      "back": "Back to campaigns",
-      "field_title": "Campaign title",
-      "field_title_placeholder": "e.g. New release AI video campaign",
+      "back": "Back to contests",
+      "field_title": "Contest title",
+      "field_title_placeholder": "e.g. New product AI creator contest",
       "field_description": "Short description",
-      "field_description_placeholder": "Summarize the campaign goal and tone.",
-      "field_brief": "Campaign details",
-      "field_brief_placeholder": "Describe the song, product, or IP, desired mood, deliverables, expressions to avoid, and reference channels.",
+      "field_description_placeholder": "Summarize the contest goal and tone.",
+      "field_brief": "Contest details",
+      "field_brief_placeholder": "Describe the product, brand, or IP, desired mood, deliverables, expressions to avoid, and reference channels.",
       "field_contact_name": "Contact name",
       "field_contact_name_placeholder": "Jane Kim",
       "field_contact_email": "Contact email",
@@ -781,25 +811,32 @@
       "field_references": "References / asset notes",
       "field_references_placeholder": "Add video links, audio references, brand guides, drive links, or notes.",
       "error_title": "Enter at least 2 characters.",
-      "error_brief": "Enter at least 10 characters for the campaign details.",
+      "error_brief": "Enter at least 10 characters for the contest details.",
       "error_contact_name": "Enter a contact name.",
       "error_contact_email": "Check the email format.",
       "error_contact_phone": "Enter a contact phone number.",
-      "submit": "Request campaign",
+      "submit": "Request contest",
       "submitting": "Requesting",
-      "success": "Campaign request created.",
+      "success": "Contest request created.",
       "server_error": {
         "validation": "Check the entered fields.",
         "unauthenticated": "Sign in is required.",
         "no_workspace": "Create a workspace first.",
-        "unsupported_workspace": "This workspace cannot request campaigns.",
-        "db": "Failed to create the campaign request."
-      }
+        "unsupported_workspace": "This workspace cannot request contests.",
+        "db": "Failed to create the contest request."
+      },
+      "field_desired_prize": "Desired prize",
+      "field_desired_prize_placeholder": "e.g. 500000",
+      "field_desired_recruit": "Desired recruit count",
+      "field_desired_recruit_placeholder": "e.g. 50",
+      "field_desired_helper": "YAGI will confirm the final terms with you.",
+      "error_desired_prize": "Enter a whole number of 0 or more for the desired prize.",
+      "error_desired_recruit": "Enter a whole number of 0 or more for the desired recruit count."
     },
     "detail": {
-      "back": "Back to campaigns",
-      "eyebrow": "Mass Campaign Request",
-      "description_empty": "No campaign description has been entered yet.",
+      "back": "Back to contests",
+      "eyebrow": "Contest Request",
+      "description_empty": "No contest description has been entered yet.",
       "updated": "Updated {date}",
       "sponsor_kind": "Requester",
       "workspace_kind": {
@@ -814,19 +851,19 @@
       "not_confirmed": "YAGI will confirm",
       "public_ready": "Submission page ready",
       "public_pending": "Pending review",
-      "lifecycle_title": "Campaign lifecycle",
+      "lifecycle_title": "Contest lifecycle",
       "status_description": {
-        "requested": "Your campaign request has been received. YAGI will review it shortly.",
+        "requested": "Your contest request has been received. YAGI will review it shortly.",
         "in_review": "YAGI is reviewing your request.",
         "declined": "This request is currently declined or paused. Terms need to be adjusted with YAGI.",
         "draft": "Preparing to publish. YAGI is setting the categories, timeline, and reward structure.",
         "published": "Open for submissions. AI creators are making and sending content.",
         "submission_closed": "Submissions are closed. YAGI is reviewing the entries.",
         "distributing": "Distribution is in progress. Selected content is going live across channels.",
-        "archived": "This campaign has ended. Results are kept for reference."
+        "archived": "This contest has ended. Results are kept for reference."
       },
-      "brief_title": "Campaign details",
-      "brief_label": "Campaign details",
+      "brief_title": "Contest details",
+      "brief_label": "Contest details",
       "references_label": "References / asset notes",
       "decision_label": "YAGI review note",
       "decision_pending": "No review note yet.",
@@ -840,7 +877,7 @@
       "mass_campaign": {
         "sponsor": {
           "title": "1. Upload the material",
-          "description": "Open one song, product, IP, or MV as a campaign."
+          "description": "Open one song, product, IP, or MV as a contest."
         },
         "creator": {
           "title": "2. AI creators make content",
@@ -857,7 +894,16 @@
       "external_url": "External URL",
       "distribution_start": "Distribution start",
       "open_public": "Open submission page",
-      "public_locked": "This is not public yet. YAGI will open the submission period and application page after review."
+      "public_locked": "This is not public yet. YAGI will open the submission period and application page after review.",
+      "prize_title": "Prize and recruiting",
+      "prize_pool": "Prize pool",
+      "prize_tiers": "Prize tiers",
+      "prize_rank": "Rank {rank}",
+      "recruit_target": "Recruit target",
+      "recruit_count": "{count} people",
+      "desired_prize": "Desired prize",
+      "desired_recruit": "Desired recruit count",
+      "prize_notice": "Rewards are guided individually after selection."
     }
   },
   "commission": {
@@ -3229,9 +3275,9 @@
     "title": "My submissions",
     "intro": "Submissions you've sent from this workspace and their review outcomes.",
     "workspace_label": "Workspace",
-    "campaign_unknown": "Unknown campaign",
-    "empty_body": "No submissions yet. Browse the open campaigns to find one that fits.",
-    "empty_browse_cta": "Browse campaigns",
+    "campaign_unknown": "Unknown contest",
+    "empty_body": "No submissions yet. Browse the open contests to find one that fits.",
+    "empty_browse_cta": "Browse contests",
     "status": {
       "submitted": "Awaiting review",
       "approved_for_distribution": "Approved",
@@ -3293,13 +3339,13 @@
     "submit": {
       "page_title": "Apply",
       "page_intro": "Tell us about your work and submit. First-time applicants get an account auto-created and a sign-in link sent to the email below.",
-      "back_to_campaign": "← Back to campaign",
+      "back_to_campaign": "← Back to contest",
       "closed_title": "Submissions are closed",
-      "closed_body": "This campaign isn't currently accepting submissions. Check the other open campaigns.",
-      "no_path_available_title": "This campaign is not accepting submissions",
-      "no_path_available_body": "No submission channels are currently open. Check the campaign page for updates.",
-      "no_path_available_cta": "Back to campaign",
-      "no_categories_title": "Campaign coming soon",
+      "closed_body": "This contest isn't currently accepting submissions. Check the other open contests.",
+      "no_path_available_title": "This contest is not accepting submissions",
+      "no_path_available_body": "No submission channels are currently open. Check the contest page for updates.",
+      "no_path_available_cta": "Back to contest",
+      "no_categories_title": "Contest coming soon",
       "no_categories_body": "Categories haven't been set up yet. Please check back shortly.",
       "category_label": "Category",
       "category_placeholder": "Select a category",
@@ -3326,11 +3372,11 @@
       "captcha_intro": "Please complete the security check.",
       "submit_cta": "Send submission",
       "submitting": "Sending...",
-      "submit_legal": "Submitting indicates agreement with the YAGI campaign terms.",
+      "submit_legal": "Submitting indicates agreement with the YAGI contest terms.",
       "toast_submitted": "Submission received!",
       "success_eyebrow": "Submitted",
       "success_title": "Got it!",
-      "success_email_sent": "We sent a sign-in link to {email}. Open the link to track your \"{campaign}\" submission and review outcome.",
+      "success_email_sent": "We sent a sign-in link to {email}. Open the link to track your \"{contest}\" submission and review outcome.",
       "success_email_failed": "Your submission was received, but we couldn't auto-send a sign-in link to {email}. Please sign in directly.",
       "success_login_fallback_cta": "Go to sign-in",
       "success_next_steps": "We'll email you the result once review is complete — usually within 1-2 weeks.",
@@ -3344,17 +3390,17 @@
         "rate_limited": "Too many requests. Please try again shortly.",
         "rate_limited_with_retry": "Too many requests. Please try again in {seconds} seconds.",
         "input_invalid": "Some inputs need attention.",
-        "campaign_not_found": "Campaign not found.",
-        "campaign_not_open": "This campaign is not currently open.",
+        "campaign_not_found": "Contest not found.",
+        "campaign_not_open": "This contest is not currently open.",
         "campaign_closed": "Submissions are closed.",
-        "r2_upload_not_allowed": "This campaign isn't accepting file uploads.",
-        "external_url_not_allowed": "This campaign isn't accepting external URLs.",
+        "r2_upload_not_allowed": "This contest isn't accepting file uploads.",
+        "external_url_not_allowed": "This contest isn't accepting external URLs.",
         "category_invalid": "Selected category is invalid.",
         "invite_failed": "Could not create your account. Please try again shortly.",
         "workspace_create_failed": "Could not create your workspace.",
         "workspace_member_failed": "Could not register membership.",
         "submission_insert_failed": "Could not save your submission. Please try again shortly.",
-        "already_submitted": "You've already submitted to this campaign. Check the status in My submissions.",
+        "already_submitted": "You've already submitted to this contest. Check the status in My submissions.",
         "presign_failed": "Could not prepare upload.",
         "content_type_not_allowed": "Only image or video files can be uploaded.",
         "filename_invalid": "Filename contains unsupported characters.",
@@ -3363,13 +3409,78 @@
         "token_bad_signature": "Upload token signature mismatch. Please refresh and try again.",
         "token_expired": "Upload token expired. Please re-upload the file.",
         "token_ip_mismatch": "Network changed since upload. Please refresh and try again.",
-        "token_campaign_mismatch": "Upload token belongs to a different campaign. Please refresh and try again.",
+        "token_campaign_mismatch": "Upload token belongs to a different contest. Please refresh and try again.",
         "key_mismatch": "Uploaded file mismatched. Please try again.",
         "object_not_found": "Uploaded file not found. Please re-upload.",
         "file_too_large": "File exceeds the 200MB limit.",
         "head_check_failed": "File verification failed. Please try again.",
         "submit_failed": "Could not process your submission. Please try again shortly."
       }
+    }
+  },
+  "challenges": {
+    "list": {
+      "headline": "Featured AI challenges right now",
+      "sections": {
+        "open": "Open now",
+        "announced": "Results announced",
+        "archived": "Past challenges"
+      },
+      "expand_cta": "View more",
+      "empty_all": "No challenges yet"
+    },
+    "detail": {
+      "status_banner": {
+        "open_normal": "Open now · {daysHours} left",
+        "open_h24": "⏰ {hoursMinutes} left",
+        "open_h1": "⚠️ Closing soon — upload your work now",
+        "closed_judging": "Judging in progress · Results expected: {announceAt}",
+        "closed_announced": "Results announced — see the featured works",
+        "archived": "Past challenge"
+      },
+      "primary_cta": {
+        "submit": "Upload work",
+        "upgrade": "Join as creator",
+        "signin": "Start participating",
+        "view_gallery": "View works",
+        "view_winners": "View winners"
+      },
+      "secondary_cta": {
+        "view_works": "View works",
+        "share": "Share"
+      },
+      "empty": {
+        "no_open": "No submitted works yet",
+        "no_open_sub": "Waiting for the first work\nBe the first featured creator in this challenge",
+        "no_closed": "No submitted works yet"
+      },
+      "share_copied": "Link copied",
+      "timeline": {
+        "start": "Start",
+        "close": "Close",
+        "announce": "Announcement"
+      }
+    },
+    "gallery": {
+      "winners_title": "Featured works in this challenge",
+      "winners_subtitle": "Where creators and support meet",
+      "submitted_ago": "Submitted {days} days ago",
+      "vote": {
+        "default": "Cheer",
+        "voted": "Cheered"
+      },
+      "toast": {
+        "auth_required": "Only participants can cheer",
+        "auth_action": "Start participating",
+        "already_voted": "Already cheered",
+        "vote_closed": "This challenge is closed"
+      }
+    },
+    "header_cta": {
+      "no_auth": "Start participating",
+      "creator_studio": "Upload work",
+      "observer": "Join as creator",
+      "admin": "New challenge"
     }
   }
 }

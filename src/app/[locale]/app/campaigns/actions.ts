@@ -16,6 +16,16 @@ const createCampaignSchema = z.object({
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(600).optional(),
   brief: z.string().trim().min(10).max(5000),
+  desiredPrize: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional(),
+  desiredRecruit: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional(),
   contactName: z.string().trim().min(1).max(80),
   contactEmail: z.string().trim().email().max(254),
   contactPhone: z.string().trim().min(6).max(40),
@@ -85,6 +95,8 @@ export async function createCampaignRequest(
         contact_name: data.contactName,
         contact_email: data.contactEmail,
         contact_phone: data.contactPhone,
+        desired_prize_krw: data.desiredPrize ?? null,
+        desired_recruit_target: data.desiredRecruit ?? null,
         source: "app_campaigns_new",
       },
       created_by: user.id,

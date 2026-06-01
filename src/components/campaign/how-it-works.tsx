@@ -7,17 +7,19 @@ import {
   ImageIcon,
   Link2,
   MessageCircle,
+  Music,
   Search,
   Send,
   Share2,
   Sparkles,
   TrendingUp,
   Upload,
+  Users,
   Wand2,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-type HowItWorksVariant = "brand" | "creator";
+type HowItWorksVariant = "brand" | "artist" | "creator";
 type MockupComponent = ComponentType;
 
 type StepVisual = {
@@ -60,6 +62,35 @@ const STEP_VISUALS = {
       Mockup: BrandFeedMock,
     },
   ],
+  artist: [
+    {
+      eyebrow: "OPEN",
+      headline: {
+        beforeKey: "before",
+        accentKey: "accent",
+        afterKey: "after",
+      },
+      Mockup: ArtistMusicMock,
+    },
+    {
+      eyebrow: "REMIX",
+      headline: {
+        beforeKey: "before",
+        accentKey: "accent",
+        afterKey: "after",
+      },
+      Mockup: ArtistRemixMock,
+    },
+    {
+      eyebrow: "FANDOM",
+      headline: {
+        beforeKey: "before",
+        accentKey: "accent",
+        afterKey: "after",
+      },
+      Mockup: ArtistReachMock,
+    },
+  ],
   creator: [
     {
       eyebrow: "DISCOVER",
@@ -97,7 +128,12 @@ export async function CampaignHowItWorks({
   variant: HowItWorksVariant;
 }) {
   const t = await getTranslations("campaigns_app.how_it_works");
-  const stepKey = variant === "creator" ? "creator_steps" : "brand_steps";
+  const stepKey =
+    variant === "creator"
+      ? "creator_steps"
+      : variant === "artist"
+        ? "artist_steps"
+        : "brand_steps";
 
   const steps = STEP_VISUALS[variant].map((visual, index) => ({
     ...visual,
@@ -280,6 +316,75 @@ function BrandFeedMock() {
         <div className="mt-3 space-y-1.5">
           <SkeletonBar className="w-4/5" />
           <SkeletonBar className="w-2/3" />
+        </div>
+      </div>
+    </MockShell>
+  );
+}
+
+function ArtistMusicMock() {
+  return (
+    <MockShell label="Artist brief">
+      <div className="rounded-lg border border-dashed border-gold/35 bg-gold/5 p-5 text-center">
+        <Music className="mx-auto h-6 w-6 text-gold" aria-hidden="true" />
+        <p className="mt-3 text-sm font-medium text-foreground">신곡 / IP</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          콘셉트와 상금을 함께 설정
+        </p>
+      </div>
+      <div className="mt-4 space-y-2">
+        <MockRow icon={Music} label="new-single.wav" value="ready" />
+        <MockRow icon={Wand2} label="visual direction" value="set" />
+      </div>
+    </MockShell>
+  );
+}
+
+function ArtistRemixMock() {
+  const versions = ["MV cut", "fan edit", "character loop", "shorts"];
+
+  return (
+    <MockShell label="Creator reinterpretations">
+      <div className="grid grid-cols-2 gap-3">
+        {versions.map((version) => (
+          <div
+            key={version}
+            className="rounded-lg border border-border/70 bg-surface-raised p-3"
+          >
+            <Wand2 className="h-4 w-4 text-gold" aria-hidden="true" />
+            <p className="mt-3 text-sm font-medium text-foreground">{version}</p>
+            <SkeletonBar className="mt-2 w-3/4" />
+          </div>
+        ))}
+      </div>
+    </MockShell>
+  );
+}
+
+function ArtistReachMock() {
+  return (
+    <MockShell label="Fan reach">
+      <div className="rounded-xl border border-border/70 bg-surface-raised p-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold-soft text-gold">
+            <Users className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              여러 채널로 확산
+            </p>
+            <p className="text-xs text-muted-foreground">팬 콘텐츠 흐름 생성</p>
+          </div>
+        </div>
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          {["TikTok", "Shorts", "IG"].map((channel) => (
+            <span
+              key={channel}
+              className="rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-center text-[11px] text-gold"
+            >
+              {channel}
+            </span>
+          ))}
         </div>
       </div>
     </MockShell>

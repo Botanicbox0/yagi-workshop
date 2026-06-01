@@ -224,7 +224,7 @@
     "dashboard": "홈",
     "explore": "Explore",
     "projects": "프로젝트",
-    "campaigns": "캠페인",
+    "campaigns": "콘테스트",
     "discover": "AI 트윈",
     "twins": "AI 트윈",
     "deals": "딜",
@@ -236,7 +236,7 @@
     "search": "검색",
     "search_shortcut": "Ctrl K",
     "open_menu": "메뉴 열기",
-    "campaign_request": "캠페인 요청",
+    "campaign_request": "콘테스트 요청",
     "my_submissions": "내 응모작",
     "recommended_artist": "추천 Artist",
     "showcases": "쇼케이스",
@@ -263,12 +263,12 @@
     "explore": {
       "eyebrow": "Explore",
       "title": "레퍼런스와 기획 출발점을 탐색하세요",
-      "description": "프로젝트와 캠페인을 한 화면에서 관리하는 공간입니다."
+      "description": "프로젝트와 콘테스트를 한 화면에서 관리하는 공간입니다."
     },
     "campaigns": {
       "eyebrow": "Campaigns",
-      "title": "캠페인 운영 화면",
-      "description": "캠페인 요청과 진행 현황, 참여 채널 운영을 묶는 화면입니다."
+      "title": "콘테스트 운영 화면",
+      "description": "콘테스트 요청과 진행 현황, 참여 채널 운영을 묶는 화면입니다."
     },
     "americano": {
       "eyebrow": "Americano",
@@ -290,7 +290,7 @@
         },
         "campaign": {
           "title": "Campaign Asset",
-          "description": "룩북 결과물을 캠페인 소재와 Asset Library로 연결합니다."
+          "description": "룩북 결과물을 콘테스트 소재와 Asset Library로 연결합니다."
         }
       }
     },
@@ -315,8 +315,8 @@
   },
   "discover": {
     "eyebrow": "AI 트윈",
-    "title": "캠페인에 맞는 AI 트윈을 찾으세요",
-    "description": "공개된 AI 트윈(AI로 만든 디지털 분신)을 둘러보고, 마음에 드는 트윈에게 캠페인 제안을 보내보세요.",
+    "title": "콘테스트에 맞는 AI 트윈을 찾으세요",
+    "description": "공개된 AI 트윈(AI로 만든 디지털 분신)을 둘러보고, 마음에 드는 트윈에게 콘테스트 제안을 보내보세요.",
     "card": {
       "no_cover": "대표 비주얼 없음",
       "default_type": "AI 트윈",
@@ -343,18 +343,18 @@
       "status_active": "제안 가능",
       "proposal_eyebrow": "제안 보내기",
       "proposal_title": "협업 제안",
-      "proposal_description": "캠페인 유형과 내용을 보내면, 야기가 조건을 검토해 해당 트윈에게 전달합니다."
+      "proposal_description": "콘테스트 유형과 내용을 보내면, 야기가 조건을 검토해 해당 트윈에게 전달합니다."
     },
     "proposal": {
-      "usage_label": "캠페인 유형",
-      "brief_label": "캠페인 내용",
+      "usage_label": "콘테스트 유형",
+      "brief_label": "콘테스트 내용",
       "brief_placeholder": "목표, 노출 채널, 제작물 형태, 일정 등을 1000자 이내로 적어주세요.",
       "budget_label": "제시예산",
       "budget_placeholder": "예: 3000000",
       "submit": "협업 제안",
       "submitting": "제안 중",
       "success": "제안을 보냈습니다.",
-      "error_usage": "캠페인 유형을 최소 1개 선택해주세요.",
+      "error_usage": "콘테스트 유형을 최소 1개 선택해주세요.",
       "error_budget": "제시예산은 0 이상의 정수로 입력해주세요.",
       "server_error": {
         "validation": "입력값을 확인해주세요.",
@@ -599,7 +599,7 @@
   "explore_dashboard": {
     "eyebrow": "Explore",
     "title": "오늘 진행할 작업을 한 화면에서 확인하세요",
-    "description": "프로젝트와 캠페인, 크레딧을 한 화면에서 관리하세요. 진행 중인 작업과 다음에 할 일을 바로 확인할 수 있습니다.",
+    "description": "프로젝트와 콘테스트, 크레딧을 한 화면에서 관리하세요. 진행 중인 작업과 다음에 할 일을 바로 확인할 수 있습니다.",
     "actions": {
       "new_project": "새 프로젝트 의뢰",
       "americano": "Americano 바로가기"
@@ -617,11 +617,11 @@
       "empty_cta": "프로젝트 시작"
     },
     "campaigns": {
-      "title": "진행 중 캠페인",
-      "view_all": "캠페인 보기",
-      "empty_title": "진행 중인 캠페인이 없습니다",
-      "empty_description": "요청하거나 진행 중인 캠페인이 여기에 표시됩니다.",
-      "empty_cta": "캠페인 화면 열기",
+      "title": "진행 중 콘테스트",
+      "view_all": "콘테스트 보기",
+      "empty_title": "진행 중인 콘테스트가 없습니다",
+      "empty_description": "요청하거나 진행 중인 콘테스트가 여기에 표시됩니다.",
+      "empty_cta": "콘테스트 화면 열기",
       "closes": "{date} 마감"
     },
     "campaign_status": {
@@ -637,7 +637,7 @@
     "quick_actions": {
       "title": "빠른 액션",
       "new_project_title": "새 프로젝트 의뢰",
-      "new_project_description": "뮤직비디오, 캠페인 비주얼, AI VFX 작업을 바로 시작합니다.",
+      "new_project_description": "뮤직비디오, 콘테스트 비주얼, AI VFX 작업을 바로 시작합니다.",
       "americano_title": "Americano",
       "americano_description": "AI 콘텐츠 생성 도구로 이동합니다."
     },
@@ -651,7 +651,7 @@
         },
         "campaign_visual": {
           "tag": "Campaign",
-          "title": "릴리즈 캠페인 소재",
+          "title": "릴리즈 콘테스트 소재",
           "description": "채널별 이미지와 숏폼 소재 흐름을 준비합니다."
         },
         "fashion_lookbook": {
@@ -663,12 +663,12 @@
     }
   },
   "campaigns_app": {
-    "eyebrow": "Campaigns",
-    "title": "캠페인을 요청하고 진행 상태를 관리하세요",
-    "creator_title": "참여 가능한 캠페인",
-    "description": "곡·제품·IP 하나로 캠페인을 열면, 여러 AI 크리에이터가 각자의 콘텐츠로 만들어 자기 채널에 퍼뜨립니다. 촬영도, 섭외도 없이.",
-    "creator_description": "공개 중이고 접수 중인 캠페인을 확인하고 바로 응모하세요.",
-    "new_cta": "새 캠페인 요청",
+    "eyebrow": "Contests",
+    "title": "콘테스트를 요청하고 진행 상태를 관리하세요",
+    "creator_title": "참여 가능한 콘테스트",
+    "description": "제품·브랜드·IP 하나로 콘테스트를 열면, 여러 AI 크리에이터가 각자의 콘텐츠로 만들어 자기 채널에 퍼뜨립니다. 촬영도, 섭외도 없이.",
+    "creator_description": "공개 중이고 접수 중인 콘테스트를 확인하고 바로 응모하세요.",
+    "new_cta": "새 콘테스트 요청",
     "metrics": {
       "total": "전체",
       "open": "참여 가능",
@@ -689,89 +689,119 @@
       "closes": "{date} 마감",
       "no_window": "관리자가 접수 일정을 확정합니다",
       "submit_page": "응모 페이지",
-      "detail_page": "상세 보기"
+      "detail_page": "상세 보기",
+      "prize": "상금 {amount}"
     },
     "empty": {
-      "title": "아직 요청한 캠페인이 없습니다",
-      "description": "만들고 싶은 캠페인을 알려주세요. 야기가 검토 후, 진행 방식과 일정을 함께 정해 캠페인을 열어드립니다.",
-      "cta": "첫 캠페인 요청"
+      "title": "아직 요청한 콘테스트가 없습니다",
+      "description": "만들고 싶은 콘테스트를 알려주세요. 야기가 검토 후, 진행 방식과 일정을 함께 정해 콘테스트를 열어드립니다.",
+      "cta": "첫 콘테스트 요청"
     },
     "creator_empty": {
-      "title": "현재 참여 가능한 캠페인이 없습니다",
-      "description": "새 캠페인이 공개되면 이 목록에 표시됩니다."
+      "title": "현재 참여 가능한 콘테스트가 없습니다",
+      "description": "새 콘테스트가 공개되면 이 목록에 표시됩니다."
     },
     "how_it_works": {
       "title": "이렇게 진행돼요",
       "brand_steps": {
         "1": {
-          "title": "소재 올리기",
+          "title": "이런 콘테스트를 열어요",
           "headline": {
-            "before": "캠페인은 ",
-            "accent": "소재 하나",
-            "after": "에서 바로 시작됩니다"
+            "before": "원하는 콘셉트와 ",
+            "accent": "상금",
+            "after": "을 정합니다"
           },
-          "description": "곡·제품·IP 하나면 충분합니다. 복잡한 준비 없이 시작하세요."
+          "description": "\"AI로 구현된 [우리 브랜드] 제품을 착용한 크리에이터 콘텐츠\"처럼, 원하는 콘셉트와 상금을 정해 콘테스트를 엽니다."
         },
         "2": {
-          "title": "여러 버전이 한 번에",
+          "title": "크리에이터들이 만들어요",
           "headline": {
-            "before": "한 캠페인 안에 ",
-            "accent": "여러 해석",
-            "after": "이 모입니다"
+            "before": "여러 크리에이터가 ",
+            "accent": "브랜드를 각자 풀어내고",
+            "after": ""
           },
-          "description": "여러 AI 크리에이터가 각자의 해석으로 만들어, 한 캠페인에 다양한 콘텐츠가 모입니다."
+          "description": "여러 AI 크리에이터가 각자의 콘텐츠로 우리 브랜드를 풀어냅니다."
         },
         "3": {
-          "title": "채널로 바로 확산",
+          "title": "여러 채널로 퍼져요",
           "headline": {
-            "before": "선정된 콘텐츠가 ",
-            "accent": "채널 안으로",
-            "after": " 들어갑니다"
+            "before": "잘 나온 콘텐츠가 ",
+            "accent": "크리에이터 채널",
+            "after": "로 퍼집니다"
           },
-          "description": "선정된 콘텐츠가 크리에이터의 채널에서 팔로워에게 직접 닿습니다."
+          "description": "잘 나온 콘텐츠가 크리에이터 채널을 타고 자연스럽게 알려집니다."
         }
       },
       "creator_steps": {
         "1": {
-          "title": "마음에 드는 캠페인 찾기",
+          "title": "끌리는 콘테스트를 골라요",
           "headline": {
-            "before": "참여할 캠페인을 ",
-            "accent": "빠르게 고르고",
-            "after": " 시작합니다"
+            "before": "상금과 주제를 보고 ",
+            "accent": "만들고 싶은 콘테스트",
+            "after": "를 고릅니다"
           },
-          "description": "참여할 수 있는 캠페인을 둘러보고 골라요."
+          "description": "상금과 주제를 보고 만들고 싶은 콘테스트를 고릅니다."
         },
         "2": {
-          "title": "내 스타일로 제작",
+          "title": "내 스타일로 만들어요",
           "headline": {
-            "before": "AI로 만든 콘텐츠에 ",
-            "accent": "내 스타일",
+            "before": "AI 콘텐츠에 ",
+            "accent": "내 색깔",
             "after": "을 담습니다"
           },
-          "description": "AI로 내 색깔의 콘텐츠를 만들어 제출해요."
+          "description": "AI로 내 색깔을 담은 콘텐츠를 만들어 제출합니다."
         },
         "3": {
-          "title": "배포하고 보상받기",
+          "title": "뽑히면 보상받아요",
           "headline": {
-            "before": "선정 이후에는 ",
-            "accent": "배포와 보상",
+            "before": "선정되면 ",
+            "accent": "채널 게시와 상금",
             "after": "으로 이어집니다"
           },
-          "description": "선정되면 내 채널에 올리고 보상을 받아요."
+          "description": "선정되면 내 채널에 올리고 상금을 받습니다."
+        }
+      },
+      "artist_steps": {
+        "1": {
+          "title": "이런 콘테스트를 열어요",
+          "headline": {
+            "before": "내 곡과 IP를 ",
+            "accent": "새 콘셉트",
+            "after": "로 엽니다"
+          },
+          "description": "\"내 신곡에 맞춘 AI 뮤직비디오\"나 \"내 이미지로 만든 2차 창작\"처럼, 콘셉트와 상금을 정해 콘테스트를 엽니다."
+        },
+        "2": {
+          "title": "크리에이터들이 재해석해요",
+          "headline": {
+            "before": "여러 크리에이터가 ",
+            "accent": "각자의 방식",
+            "after": "으로 다시 만듭니다"
+          },
+          "description": "여러 AI 크리에이터가 내 곡·IP를 각자의 방식으로 다시 만듭니다."
+        },
+        "3": {
+          "title": "팬들에게 더 넓게 닿아요",
+          "headline": {
+            "before": "잘 나온 2차 창작이 ",
+            "accent": "여러 채널",
+            "after": "로 퍼집니다"
+          },
+          "description": "잘 나온 2차 창작이 여러 채널로 퍼져 더 많은 사람에게 닿습니다."
         }
       }
     },
     "new": {
-      "eyebrow": "Campaign Request",
-      "title": "어떤 캠페인을 열고 싶으세요?",
-      "description": "요청을 보내주시면 야기가 검토 후, 분야·모집 기간·진행 방식을 정해 캠페인을 열어드립니다.",
-      "back": "캠페인으로 돌아가기",
-      "field_title": "캠페인 제목",
-      "field_title_placeholder": "예: 신곡 발매 AI 영상 캠페인",
+      "eyebrow": "Contest Request",
+      "title": "어떤 콘테스트를 열고 싶으세요?",
+      "description": "요청을 보내주시면 야기가 검토 후, 분야·모집 기간·진행 방식을 정해 콘테스트를 열어드립니다.",
+      "back": "콘테스트로 돌아가기",
+      "field_title": "콘테스트 제목",
+      "field_title_placeholder": "예: 신제품 AI 착용 콘텐츠 콘테스트",
       "field_description": "한 줄 설명",
-      "field_description_placeholder": "캠페인의 목적과 분위기를 짧게 적어주세요.",
-      "field_brief": "캠페인 내용",
-      "field_brief_placeholder": "소개하고 싶은 곡·제품·IP, 원하는 무드, 필요한 결과물, 피했으면 하는 표현, 참고할 채널을 적어주세요.",
+      "field_description_placeholder": "콘테스트의 목적과 분위기를 짧게 적어주세요.",
+      "field_brief": "콘테스트 내용",
+      "field_brief_placeholder": "소개하고 싶은 제품·브랜드·IP, 원하는 무드, 필요한 결과물, 피했으면 하는 표현, 참고할 채널을 적어주세요.",
       "field_contact_name": "담당자 이름",
       "field_contact_name_placeholder": "홍길동",
       "field_contact_email": "담당자 이메일",
@@ -781,25 +811,32 @@
       "field_references": "레퍼런스 / 자료 메모",
       "field_references_placeholder": "참고 영상, 음원, 브랜드 가이드, 드라이브 링크 등을 적어주세요.",
       "error_title": "제목은 2자 이상 입력해주세요.",
-      "error_brief": "캠페인 내용은 10자 이상 입력해주세요.",
+      "error_brief": "콘테스트 내용은 10자 이상 입력해주세요.",
       "error_contact_name": "담당자 이름을 입력해주세요.",
       "error_contact_email": "이메일 형식을 확인해주세요.",
       "error_contact_phone": "연락처를 입력해주세요.",
-      "submit": "캠페인 요청",
+      "submit": "콘테스트 요청",
       "submitting": "요청 중",
-      "success": "캠페인 요청을 생성했습니다.",
+      "success": "콘테스트 요청을 생성했습니다.",
       "server_error": {
         "validation": "입력값을 확인해주세요.",
         "unauthenticated": "로그인이 필요합니다.",
         "no_workspace": "워크스페이스를 먼저 생성해주세요.",
-        "unsupported_workspace": "이 워크스페이스에서는 캠페인을 요청할 수 없습니다.",
-        "db": "캠페인 요청 생성에 실패했습니다."
-      }
+        "unsupported_workspace": "이 워크스페이스에서는 콘테스트를 요청할 수 없습니다.",
+        "db": "콘테스트 요청 생성에 실패했습니다."
+      },
+      "field_desired_prize": "희망 상금",
+      "field_desired_prize_placeholder": "예: 500000",
+      "field_desired_recruit": "희망 모집 인원",
+      "field_desired_recruit_placeholder": "예: 50",
+      "field_desired_helper": "야기와 협의해 최종 확정됩니다",
+      "error_desired_prize": "희망 상금은 0 이상의 정수로 입력해주세요.",
+      "error_desired_recruit": "희망 모집 인원은 0 이상의 정수로 입력해주세요."
     },
     "detail": {
-      "back": "캠페인으로 돌아가기",
-      "eyebrow": "Mass Campaign Request",
-      "description_empty": "캠페인 설명이 아직 입력되지 않았습니다.",
+      "back": "콘테스트로 돌아가기",
+      "eyebrow": "Contest Request",
+      "description_empty": "콘테스트 설명이 아직 입력되지 않았습니다.",
       "updated": "{date} 업데이트",
       "sponsor_kind": "의뢰자",
       "workspace_kind": {
@@ -814,19 +851,19 @@
       "not_confirmed": "야기가 확정 예정",
       "public_ready": "응모 페이지 공개 가능",
       "public_pending": "검토 후 공개",
-      "lifecycle_title": "캠페인 진행 단계",
+      "lifecycle_title": "콘테스트 진행 단계",
       "status_description": {
-        "requested": "캠페인 요청이 접수됐어요. 야기가 곧 확인합니다.",
+        "requested": "콘테스트 요청이 접수됐어요. 야기가 곧 확인합니다.",
         "in_review": "야기가 요청 내용을 검토하고 있어요.",
         "declined": "이번 요청은 보류 또는 거절된 상태입니다. 야기와 조건을 다시 조정해야 합니다.",
         "draft": "공개 준비 중이에요. 모집 분야·기간·보상 방식을 정하고 있습니다.",
         "published": "모집 중이에요. AI 크리에이터들이 콘텐츠를 만들어 보내고 있어요.",
         "submission_closed": "모집이 마감됐어요. 야기가 제출작을 검토하고 있습니다.",
         "distributing": "배포 중이에요. 선정된 콘텐츠가 각 채널에 올라가고 있어요.",
-        "archived": "종료된 캠페인이에요. 결과를 보관하고 있습니다."
+        "archived": "종료된 콘테스트예요. 결과를 보관하고 있습니다."
       },
-      "brief_title": "캠페인 내용",
-      "brief_label": "캠페인 내용",
+      "brief_title": "콘테스트 내용",
+      "brief_label": "콘테스트 내용",
       "references_label": "레퍼런스 / 자료 메모",
       "decision_label": "YAGI 검토 메모",
       "decision_pending": "아직 검토 메모가 없습니다.",
@@ -840,7 +877,7 @@
       "mass_campaign": {
         "sponsor": {
           "title": "① 소재 올리기",
-          "description": "곡·제품·IP·MV 하나를 캠페인으로 엽니다."
+          "description": "곡·제품·IP·MV 하나를 콘테스트로 엽니다."
         },
         "creator": {
           "title": "② AI 크리에이터가 제작",
@@ -857,7 +894,16 @@
       "external_url": "외부 URL",
       "distribution_start": "배포 시작",
       "open_public": "응모 페이지 열기",
-      "public_locked": "아직 공개 전이에요. 야기가 검토 후 모집 기간과 신청 페이지를 열어드립니다."
+      "public_locked": "아직 공개 전이에요. 야기가 검토 후 모집 기간과 신청 페이지를 열어드립니다.",
+      "prize_title": "상금과 모집",
+      "prize_pool": "총 상금 풀",
+      "prize_tiers": "상금 티어",
+      "prize_rank": "{rank}위",
+      "recruit_target": "모집 인원",
+      "recruit_count": "{count}명",
+      "desired_prize": "희망 상금",
+      "desired_recruit": "희망 모집 인원",
+      "prize_notice": "보상은 선정 후 개별 안내됩니다."
     }
   },
   "commission": {
@@ -3294,9 +3340,9 @@
     "title": "내 응모작",
     "intro": "현재 워크스페이스에서 보낸 응모작과 검수 결과를 확인할 수 있어요.",
     "workspace_label": "워크스페이스",
-    "campaign_unknown": "캠페인 정보 없음",
-    "empty_body": "아직 보낸 응모작이 없어요. 진행 중인 캠페인을 살펴보세요.",
-    "empty_browse_cta": "캠페인 둘러보기",
+    "campaign_unknown": "콘테스트 정보 없음",
+    "empty_body": "아직 보낸 응모작이 없어요. 진행 중인 콘테스트를 살펴보세요.",
+    "empty_browse_cta": "콘테스트 둘러보기",
     "status": {
       "submitted": "검토 대기",
       "approved_for_distribution": "유포 승인",
@@ -3358,14 +3404,14 @@
     "submit": {
       "page_title": "응모하기",
       "page_intro": "응모 정보를 입력하고 작품을 제출해주세요. 처음 이용하시는 경우 자동으로 계정이 생성되고, 입력한 이메일로 로그인 링크가 발송됩니다.",
-      "back_to_campaign": "← 캠페인으로 돌아가기",
+      "back_to_campaign": "← 콘테스트로 돌아가기",
       "closed_title": "응모 기간이 아니에요",
-      "closed_body": "이 캠페인은 현재 응모를 받지 않아요. 다른 진행 중인 캠페인을 확인해주세요.",
-      "no_path_available_title": "이 캠페인은 응모 마감되었습니다",
-      "no_path_available_body": "현재 응모 채널이 닫혀 있습니다. 캠페인 페이지에서 다음 일정을 확인해주세요.",
-      "no_path_available_cta": "캠페인 페이지로",
-      "no_categories_title": "준비 중인 캠페인이에요",
-      "no_categories_body": "캠페인 부문이 아직 정해지지 않았어요. 곧 다시 확인해주세요.",
+      "closed_body": "이 콘테스트는 현재 응모를 받지 않아요. 다른 진행 중인 콘테스트를 확인해주세요.",
+      "no_path_available_title": "이 콘테스트는 응모 마감되었습니다",
+      "no_path_available_body": "현재 응모 채널이 닫혀 있습니다. 콘테스트 페이지에서 다음 일정을 확인해주세요.",
+      "no_path_available_cta": "콘테스트 페이지로",
+      "no_categories_title": "준비 중인 콘테스트예요",
+      "no_categories_body": "콘테스트 부문이 아직 정해지지 않았어요. 곧 다시 확인해주세요.",
       "category_label": "참여 부문",
       "category_placeholder": "부문을 선택해주세요",
       "email_label": "이메일",
@@ -3391,11 +3437,11 @@
       "captcha_intro": "보안 확인을 완료해주세요.",
       "submit_cta": "응모 보내기",
       "submitting": "전송 중...",
-      "submit_legal": "응모 시 야기 캠페인 약관에 동의하는 것으로 간주합니다.",
+      "submit_legal": "응모 시 야기 콘테스트 약관에 동의하는 것으로 간주합니다.",
       "toast_submitted": "응모가 완료되었어요!",
       "success_eyebrow": "응모 완료",
       "success_title": "잘 받았어요!",
-      "success_email_sent": "{email}로 로그인 링크를 발송했어요. \"{campaign}\" 캠페인 응모 상태와 검수 결과를 확인하실 수 있어요.",
+      "success_email_sent": "{email}로 로그인 링크를 발송했어요. \"{campaign}\" 콘테스트 응모 상태와 검수 결과를 확인하실 수 있어요.",
       "success_email_failed": "응모는 정상 접수되었지만 {email}로 로그인 링크를 자동 발송하지 못했어요. 아래 링크로 직접 로그인해주세요.",
       "success_login_fallback_cta": "로그인 페이지로 이동",
       "success_next_steps": "검수가 완료되면 이메일로 결과를 알려드려요. 일반적으로 1-2주 안에 회신드립니다.",
@@ -3409,17 +3455,17 @@
         "rate_limited": "요청이 너무 많아요. 잠시 후 다시 시도해주세요.",
         "rate_limited_with_retry": "요청이 너무 많아요. {seconds}초 후 다시 시도해주세요.",
         "input_invalid": "입력값에 문제가 있어요.",
-        "campaign_not_found": "캠페인을 찾을 수 없어요.",
-        "campaign_not_open": "이 캠페인은 응모 기간이 아니에요.",
+        "campaign_not_found": "콘테스트를 찾을 수 없어요.",
+        "campaign_not_open": "이 콘테스트는 응모 기간이 아니에요.",
         "campaign_closed": "응모 기간이 마감되었어요.",
-        "r2_upload_not_allowed": "이 캠페인은 파일 업로드를 받지 않아요.",
-        "external_url_not_allowed": "이 캠페인은 외부 URL 응모를 받지 않아요.",
+        "r2_upload_not_allowed": "이 콘테스트는 파일 업로드를 받지 않아요.",
+        "external_url_not_allowed": "이 콘테스트는 외부 URL 응모를 받지 않아요.",
         "category_invalid": "선택한 부문이 유효하지 않아요.",
         "invite_failed": "계정을 만들지 못했어요. 잠시 후 다시 시도해주세요.",
         "workspace_create_failed": "워크스페이스를 만들지 못했어요.",
         "workspace_member_failed": "멤버 등록에 실패했어요.",
         "submission_insert_failed": "응모를 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
-        "already_submitted": "이미 이 캠페인에 응모했습니다. 내 응모작에서 상태를 확인해주세요.",
+        "already_submitted": "이미 이 콘테스트에 응모했습니다. 내 응모작에서 상태를 확인해주세요.",
         "presign_failed": "업로드 준비에 실패했어요.",
         "content_type_not_allowed": "이미지 또는 영상 파일만 업로드할 수 있어요.",
         "filename_invalid": "파일 이름에 사용할 수 없는 문자가 있어요.",
@@ -3428,7 +3474,7 @@
         "token_bad_signature": "업로드 토큰 서명이 일치하지 않아요. 페이지를 새로고침 후 다시 시도해주세요.",
         "token_expired": "업로드 토큰이 만료되었어요. 파일을 다시 업로드해주세요.",
         "token_ip_mismatch": "네트워크가 변경되었어요. 페이지를 새로고침 후 다시 시도해주세요.",
-        "token_campaign_mismatch": "다른 캠페인의 업로드 토큰이에요. 페이지를 새로고침 후 다시 시도해주세요.",
+        "token_campaign_mismatch": "다른 콘테스트의 업로드 토큰이에요. 페이지를 새로고침 후 다시 시도해주세요.",
         "key_mismatch": "업로드된 파일 정보가 일치하지 않아요. 다시 시도해주세요.",
         "object_not_found": "업로드된 파일을 찾을 수 없어요. 다시 업로드해주세요.",
         "file_too_large": "파일 크기가 200MB를 초과했어요.",

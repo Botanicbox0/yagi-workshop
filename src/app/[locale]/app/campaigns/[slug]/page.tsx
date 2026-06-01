@@ -46,6 +46,9 @@ type CampaignDetailRow = {
   allow_r2_upload: boolean;
   allow_external_url: boolean;
   compensation_model: string | null;
+  prize_pool_krw: number | null;
+  prize_tiers: unknown;
+  recruit_target: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -76,6 +79,23 @@ function asText(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : null;
+}
+
+function asNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function asPrizeTiers(value: unknown): Array<{ rank: number; amount: number }> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const record = item as Record<string, unknown>;
+      const rank = asNumber(record.rank);
+      const amount = asNumber(record.amount);
+      return rank !== null && amount !== null ? { rank, amount } : null;
+    })
+    .filter((tier): tier is { rank: number; amount: number } => tier !== null);
 }
 
 function statusIndex(status: CampaignStatus) {
@@ -125,6 +145,9 @@ export default async function CampaignDetailPage({ params }: Props) {
         "allow_r2_upload",
         "allow_external_url",
         "compensation_model",
+        "prize_pool_krw",
+        "prize_tiers",
+        "recruit_target",
         "created_at",
         "updated_at",
       ].join(", "),
@@ -142,6 +165,9 @@ export default async function CampaignDetailPage({ params }: Props) {
   const request = asRecord(campaign.request_metadata);
   const references = asRecord(campaign.reference_assets);
   const decision = asRecord(campaign.decision_metadata);
+  const desiredPrize = asNumber(request.desired_prize_krw);
+  const desiredRecruit = asNumber(request.desired_recruit_target);
+  const prizeTiers = asPrizeTiers(campaign.prize_tiers);
   const currentIndex = statusIndex(campaign.status);
   const dateFormatter = new Intl.DateTimeFormat(locale, {
     year: "numeric",
@@ -186,7 +212,7 @@ export default async function CampaignDetailPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryTile
             icon={<Users className="h-4 w-4" aria-hidden="true" />}
             label={t("detail.sponsor_kind")}
@@ -206,6 +232,15 @@ export default async function CampaignDetailPage({ params }: Props) {
             icon={<RadioTower className="h-4 w-4" aria-hidden="true" />}
             label={t("detail.public_entry")}
             value={isLive ? t("detail.public_ready") : t("detail.public_pending")}
+          />
+          <SummaryTile
+            icon={<Users className="h-4 w-4" aria-hidden="true" />}
+            label={t("detail.recruit_target")}
+            value={
+              campaign.recruit_target !== null
+                ? t("detail.recruit_count", { count: campaign.recruit_target })
+                : t("detail.not_confirmed")
+            }
           />
         </div>
       </section>
@@ -304,7 +339,75 @@ export default async function CampaignDetailPage({ params }: Props) {
                 label={t("detail.created")}
                 value={dateFormatter.format(new Date(campaign.created_at))}
               />
+              <MetaRow
+                label={t("detail.desired_prize")}
+                value={
+                  desiredPrize !== null
+                    ? formatKrwPrize(locale, desiredPrize)
+                    : t("detail.empty_value")
+                }
+              />
+              <MetaRow
+                label={t("detail.desired_recruit")}
+                value={
+                  desiredRecruit !== null
+                    ? t("detail.recruit_count", {
+                        count: desiredRecruit,
+                      })
+                    : t("detail.empty_value")
+                }
+              />
             </dl>
+          </Panel>
+
+          <Panel title={t("detail.prize_title")}>
+            <div className="space-y-4">
+              <MetaRow
+                label={t("detail.prize_pool")}
+                value={
+                  campaign.prize_pool_krw !== null
+                    ? formatKrwPrize(locale, campaign.prize_pool_krw)
+                    : t("detail.not_confirmed")
+                }
+              />
+              <MetaRow
+                label={t("detail.recruit_target")}
+                value={
+                  campaign.recruit_target !== null
+                    ? t("detail.recruit_count", { count: campaign.recruit_target })
+                    : t("detail.not_confirmed")
+                }
+              />
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-label text-muted-foreground">
+                  {t("detail.prize_tiers")}
+                </p>
+                {prizeTiers.length > 0 ? (
+                  <ul className="mt-2 space-y-2">
+                    {prizeTiers.map((tier) => (
+                      <li
+                        key={`${tier.rank}-${tier.amount}`}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-surface-card px-3 py-2 text-sm"
+                      >
+                        <span className="font-medium text-foreground">
+                          {t("detail.prize_rank", { rank: tier.rank })}
+                        </span>
+                        <span className="font-semibold text-gold">
+                          {formatKrwPrize(locale, tier.amount)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-sm leading-6 text-foreground keep-all">
+                    {t("detail.not_confirmed")}
+                  </p>
+                )}
+              </div>
+              <p className="rounded-lg border border-gold/25 bg-gold/10 p-3 text-sm leading-6 text-muted-foreground keep-all">
+                {t("detail.prize_notice")}
+              </p>
+            </div>
           </Panel>
 
           <Panel title={t("detail.mass_campaign_title")}>
@@ -458,4 +561,15 @@ function formatWindow(
   }
   if (openAt) return formatter.format(new Date(openAt));
   return formatter.format(new Date(closeAt!));
+}
+
+function formatKrwPrize(locale: string, amount: number) {
+  if (locale === "ko" && amount % 10_000 === 0) {
+    return `${new Intl.NumberFormat("ko-KR").format(amount / 10_000)}만원`;
+  }
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "KRW",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }

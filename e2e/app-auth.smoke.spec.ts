@@ -80,7 +80,7 @@ test.describe("authenticated app shell smoke", () => {
         }),
       ).toBeVisible();
       await expect(page.getByRole("heading", { name: "최근 프로젝트" })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "진행 중 캠페인" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "진행 중 콘테스트" })).toBeVisible();
       await expect(page.getByText("크레딧 잔액")).toBeVisible();
       await expect(page.getByRole("heading", { name: "빠른 액션" })).toBeVisible();
       await expect(page.getByRole("heading", { name: "추천 레퍼런스" })).toBeVisible();
@@ -138,12 +138,12 @@ test.describe("authenticated app shell smoke", () => {
       await expect(page).toHaveURL(/\/ko\/app\/campaigns/);
       await expect(
         page.getByRole("heading", {
-          name: "캠페인을 요청하고 진행 상태를 관리하세요",
+          name: "콘테스트를 요청하고 진행 상태를 관리하세요",
           level: 1,
         }),
       ).toBeVisible();
       await expect(
-        page.getByRole("link", { name: "새 캠페인 요청" }),
+        page.getByRole("link", { name: "새 콘테스트 요청" }),
       ).toBeVisible();
 
       if ((await page.getByRole("link", { name: "상세 보기" }).count()) === 0) {
@@ -152,17 +152,17 @@ test.describe("authenticated app shell smoke", () => {
         });
         await expect(page.locator("form[data-ready='true']")).toBeVisible();
         const suffix = `${viewport.name}-${Date.now()}`;
-        await page.getByLabel("캠페인 제목").fill(`E2E Mass Campaign ${suffix}`);
+        await page.getByLabel("콘테스트 제목").fill(`E2E Contest ${suffix}`);
         await page
           .getByLabel("한 줄 설명")
-          .fill("E2E 검증용 Mass AI Campaign request");
+          .fill("E2E 검증용 AI contest request");
         await page
-          .getByLabel("Creative brief")
-          .fill("아티스트 음악과 뮤직비디오 소스를 여러 크리에이터가 해석하는 E2E 캠페인입니다.");
+          .getByLabel("콘테스트 내용")
+          .fill("브랜드 제품을 여러 크리에이터가 해석하는 E2E 콘테스트입니다.");
         await page.getByLabel("담당자 이름").fill("YAGI E2E");
         await page.getByLabel("담당자 이메일").fill("test-e2e@example.com");
         await page.getByLabel("담당자 연락처").fill("010-0000-0000");
-        await page.getByRole("button", { name: "캠페인 요청" }).click();
+        await page.getByRole("button", { name: "콘테스트 요청" }).click();
         await expect(page).toHaveURL(/\/ko\/app\/campaigns/);
       }
 
@@ -173,13 +173,15 @@ test.describe("authenticated app shell smoke", () => {
       await expect(page).toHaveURL(/\/ko\/app\/campaigns\/new/);
       await expect(
         page.getByRole("heading", {
-          name: "크리에이터가 해석할 campaign brief를 남겨주세요",
+          name: "어떤 콘테스트를 열고 싶으세요?",
           level: 1,
         }),
       ).toBeVisible();
-      await expect(page.getByLabel("캠페인 제목")).toBeVisible();
-      await expect(page.getByLabel("Creative brief")).toBeVisible();
-      await expect(page.getByRole("button", { name: "캠페인 요청" })).toBeVisible();
+      await expect(page.getByLabel("콘테스트 제목")).toBeVisible();
+      await expect(page.getByLabel("콘테스트 내용")).toBeVisible();
+      await expect(page.getByLabel("희망 상금")).toBeVisible();
+      await expect(page.getByLabel("희망 모집 인원")).toBeVisible();
+      await expect(page.getByRole("button", { name: "콘테스트 요청" })).toBeVisible();
       expect(consoleErrors).toEqual([]);
 
       await page.screenshot({
@@ -196,10 +198,10 @@ test.describe("authenticated app shell smoke", () => {
       await page.goto(detailHref!);
       await expect(page).toHaveURL(/\/ko\/app\/campaigns\/[^/]+$/);
       await expect(
-        page.getByRole("heading", { name: "Mass Campaign lifecycle" }),
+        page.getByRole("heading", { name: "콘테스트 진행 단계" }),
       ).toBeVisible();
       await expect(page.getByText("Projects와 다른 점")).toBeVisible();
-      await expect(page.getByText("BRAND sponsor").first()).toBeVisible();
+      await expect(page.getByText("BRAND 의뢰자").first()).toBeVisible();
       expect(consoleErrors).toEqual([]);
 
       await page.screenshot({

@@ -29,6 +29,7 @@ type CampaignRow = {
   status: string;
   submission_open_at: string | null;
   submission_close_at: string | null;
+  prize_pool_krw: number | null;
   updated_at: string;
   created_at: string;
 };
@@ -65,7 +66,7 @@ export default async function CampaignsPage({ params }: Props) {
   let query = sb
     .from("campaigns")
     .select(
-      "id, slug, title, description, status, submission_open_at, submission_close_at, updated_at, created_at",
+      "id, slug, title, description, status, submission_open_at, submission_close_at, prize_pool_krw, updated_at, created_at",
     )
     .order("updated_at", { ascending: false });
   if (actor === "brand") {
@@ -150,6 +151,13 @@ export default async function CampaignsPage({ params }: Props) {
                     })
                   : t("card.no_window")
               }
+              prizeLabel={
+                campaign.prize_pool_krw !== null
+                  ? t("card.prize", {
+                      amount: formatKrwPrize(locale, campaign.prize_pool_krw),
+                    })
+                  : null
+              }
               submitLabel={t("card.submit_page")}
               detailLabel={t("card.detail_page")}
               variant={isCreatorView ? "creator" : "sponsor"}
@@ -202,6 +210,7 @@ function CampaignCard({
   dateLabel,
   statusLabel,
   closeLabel,
+  prizeLabel,
   submitLabel,
   detailLabel,
   variant,
@@ -210,6 +219,7 @@ function CampaignCard({
   dateLabel: string;
   statusLabel: string;
   closeLabel: string;
+  prizeLabel: string | null;
   submitLabel: string;
   detailLabel: string;
   variant: "sponsor" | "creator";
@@ -242,10 +252,17 @@ function CampaignCard({
         {campaign.description}
       </p>
       <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-          <CalendarClock className="h-4 w-4 text-gold" aria-hidden="true" />
-          {closeLabel}
-        </p>
+        <div className="flex flex-col gap-2">
+          {prizeLabel ? (
+            <p className="inline-flex items-center gap-2 text-xs font-semibold text-gold">
+              {prizeLabel}
+            </p>
+          ) : null}
+          <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+            <CalendarClock className="h-4 w-4 text-gold" aria-hidden="true" />
+            {closeLabel}
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           {variant === "sponsor" && (
             <Link
@@ -273,4 +290,15 @@ function CampaignCard({
       </div>
     </article>
   );
+}
+
+function formatKrwPrize(locale: string, amount: number) {
+  if (locale === "ko" && amount % 10_000 === 0) {
+    return `${new Intl.NumberFormat("ko-KR").format(amount / 10_000)}만원`;
+  }
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "KRW",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
