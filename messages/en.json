@@ -705,13 +705,13 @@
       "title": "How it works",
       "brand_steps": {
         "1": {
-          "title": "Open this kind of contest",
+          "title": "Set the concept and prize",
           "headline": {
             "before": "Set the concept and ",
             "accent": "prize",
             "after": " up front"
           },
-          "description": "Open a contest like \"AI-generated creators wearing [your brand] products\" — set the concept and prize."
+          "description": "For example, AI creators wearing {brand} products — set the concept and prize, then open the contest."
         },
         "2": {
           "title": "Creators make the work",
@@ -720,16 +720,16 @@
             "accent": "their own content",
             "after": ""
           },
-          "description": "Multiple AI creators interpret your brand through their own content."
+          "description": "AI creators express your brand through their own content, and brand value spreads across SNS."
         },
         "3": {
-          "title": "It spreads across channels",
+          "title": "Select strong work and reuse it",
           "headline": {
             "before": "Strong entries travel through ",
             "accent": "creator channels",
             "after": ""
           },
-          "description": "The strongest content spreads naturally through creator channels."
+          "description": "Select the best works and reuse them across ads and content."
         }
       },
       "creator_steps": {
@@ -763,13 +763,13 @@
       },
       "artist_steps": {
         "1": {
-          "title": "Open this kind of contest",
+          "title": "Set the concept and prize",
           "headline": {
             "before": "Turn your song or IP into ",
             "accent": "a creative prompt",
             "after": ""
           },
-          "description": "Open a contest like \"an AI music video for my new single\" or \"fan-made AI work using my image\" — set the concept and prize."
+          "description": "For example, an AI music video for {brand}'s new single — set the concept and prize, then open the contest."
         },
         "2": {
           "title": "Creators reinterpret it",
@@ -778,16 +778,16 @@
             "accent": "their own style",
             "after": ""
           },
-          "description": "Multiple AI creators reinterpret your song or IP in their own way."
+          "description": "Multiple AI creators reinterpret your song or IP in their own way, then spread it wider across SNS."
         },
         "3": {
-          "title": "It reaches more fans",
+          "title": "Select strong work and reuse it",
           "headline": {
             "before": "Strong fan-made work spreads across ",
             "accent": "multiple channels",
             "after": ""
           },
-          "description": "Strong derivative work travels across channels and reaches more people."
+          "description": "Select the best works and reuse them across fan content and promotion."
         }
       }
     },

@@ -131,7 +131,10 @@ export default async function CampaignsPage({ params }: Props) {
           )}
           <Metric label={t("metrics.live")} value={String(liveCount)} />
         </div>
-        <CampaignHowItWorks variant={isCreatorView ? "creator" : "brand"} />
+        <CampaignHowItWorks
+          variant={isCreatorView ? "creator" : "brand"}
+          workspaceName={active.name}
+        />
       </section>
 
       {campaigns.length > 0 ? (

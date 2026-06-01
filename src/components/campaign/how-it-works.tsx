@@ -124,8 +124,10 @@ const STEP_VISUALS = {
 
 export async function CampaignHowItWorks({
   variant,
+  workspaceName,
 }: {
   variant: HowItWorksVariant;
+  workspaceName?: string;
 }) {
   const t = await getTranslations("campaigns_app.how_it_works");
   const stepKey =
@@ -134,6 +136,13 @@ export async function CampaignHowItWorks({
       : variant === "artist"
         ? "artist_steps"
         : "brand_steps";
+  const trimmedWorkspaceName = workspaceName?.trim();
+  const brandLabel =
+    trimmedWorkspaceName && trimmedWorkspaceName.length > 0
+      ? trimmedWorkspaceName
+      : variant === "artist"
+        ? "내 곡·IP"
+        : "우리 브랜드";
 
   const steps = STEP_VISUALS[variant].map((visual, index) => ({
     ...visual,
@@ -144,7 +153,9 @@ export async function CampaignHowItWorks({
       accent: t(`${stepKey}.${index + 1}.headline.${visual.headline.accentKey}`),
       after: t(`${stepKey}.${index + 1}.headline.${visual.headline.afterKey}`),
     },
-    description: t(`${stepKey}.${index + 1}.description`),
+    description: t(`${stepKey}.${index + 1}.description`, {
+      brand: brandLabel,
+    }),
   }));
 
   return (
