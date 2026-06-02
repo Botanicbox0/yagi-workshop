@@ -39,10 +39,33 @@ const sharedFields = {
     .max(10)
     .default([]),
   estimated_budget_range: z.string().max(100).optional().nullable(),
+  budget_band: z
+    .enum(["under_1m", "1m_to_5m", "5m_to_10m", "negotiable"])
+    .optional()
+    .nullable(),
   target_delivery_at: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .nullable()
+    .optional(),
+  meeting_preferred_at: z.string().datetime().nullable().optional(),
+  twin_intent: z
+    .enum(["undecided", "specific_in_mind", "no_twin"])
+    .optional()
+    .default("undecided"),
+  interested_in_twin: z.boolean().optional().default(false),
+  brief_content_json: z
+    .record(z.string(), z.unknown())
+    .refine(
+      (doc) => {
+        try {
+          return JSON.stringify(doc).length <= 200_000;
+        } catch {
+          return false;
+        }
+      },
+      { message: "brief_content_json exceeds 200KB or is not serializable" },
+    )
     .optional(),
   intent: z.enum(["draft", "submit"]).default("draft"),
 };
@@ -85,8 +108,8 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   // submitProjectAction. Same misroute risk regardless, same fix.
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { error: "no_workspace" };
-  if (active.kind !== "brand") {
-    return { error: "db", message: "brand workspace required" };
+  if (!["brand", "artist", "yagi_admin"].includes(active.kind)) {
+    return { error: "db", message: "supported workspace required" };
   }
   const membership = { workspace_id: active.id };
 
@@ -128,7 +151,13 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     brand_id: data.brand_id ?? null,
     deliverable_types: data.deliverable_types,
     estimated_budget_range: data.estimated_budget_range ?? null,
+    budget_band: data.budget_band ?? null,
     target_delivery_at: data.target_delivery_at ?? null,
+    meeting_preferred_at: data.meeting_preferred_at ?? null,
+    twin_intent: data.twin_intent,
+    interested_in_twin: data.interested_in_twin,
+    submitted_at: status === "submitted" ? new Date().toISOString() : null,
+    kind: "direct" as const,
     intake_mode: data.intake_mode,
   };
 
@@ -158,6 +187,9 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     .from("project_briefs")
     .insert({
       project_id: project.id,
+      ...(data.brief_content_json
+        ? { content_json: data.brief_content_json as Json }
+        : {}),
       // status / current_version / tiptap_schema_version use column defaults
       // (editing / 0 / 1) — required by validate_project_brief_change for
       // non-yagi_admin INSERT.
@@ -551,6 +583,9 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/svg+xml",
   "image/avif",
   "application/pdf",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
   "audio/mpeg",
   "audio/wav",
   "audio/x-wav",
@@ -567,6 +602,9 @@ const EXT_FOR_CONTENT_TYPE: Record<string, string> = {
   "image/svg+xml": "svg",
   "image/avif": "avif",
   "application/pdf": "pdf",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
   "audio/mpeg": "mp3",
   "audio/wav": "wav",
   "audio/x-wav": "wav",

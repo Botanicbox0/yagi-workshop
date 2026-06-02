@@ -690,21 +690,136 @@
     "back": "Back to Explore",
     "eyebrow": "Artist Request",
     "title": "Artist project request",
-    "description": "A dedicated flow for music-led requests, including music videos, live visuals, and contest assets built from audio and references.",
-    "status": "Wizard coming soon",
-    "steps": {
-      "audio": {
-        "title": "Audio upload",
-        "description": "Infrastructure is ready for MP3, WAV, M4A, AAC, and FLAC uploads through a safe R2 path."
+    "description": "Choose the visual type first, then shape the request around the track or ad brief.",
+    "steps_nav": {
+      "1": "Choose type",
+      "2": "Core info",
+      "3": "References",
+      "4": "Confirm"
+    },
+    "types": {
+      "music_video": {
+        "title": "Music video (AI VFX)",
+        "description": "Turn the track into an AI VFX visual."
       },
-      "brief": {
-        "title": "Creative direction",
-        "description": "Song mood, usage, and references will connect in the next implementation step."
+      "live_visual": {
+        "title": "Visual Content for Live Shows",
+        "description": "Prepare visuals for festivals, DJ sets, and live stages."
       },
-      "upload": {
-        "title": "Dedicated artist flow",
-        "description": "This starts from a route separated from the brand project wizard."
+      "ad_visual": {
+        "title": "Ad visual (AI VFX)",
+        "description": "Turn an artist ad brief into an AI VFX visual."
       }
+    },
+    "step1": {
+      "eyebrow": "Step 1",
+      "title": "What are we making?",
+      "description": "Pick the service first. The next questions adapt to that type."
+    },
+    "step2": {
+      "eyebrow": "Step 2",
+      "title": "Add the core details",
+      "description": "We collect the essentials for the selected request type.",
+      "music_video": {
+        "title": "How should the song become visual?",
+        "description": "The track comes first. Upload the audio and describe the mood."
+      },
+      "live_visual": {
+        "title": "What stage is this for?",
+        "description": "Audio and mood are the base. For now, add the screening setup in one line."
+      },
+      "ad_visual": {
+        "title": "What ad should become AI VFX?",
+        "description": "Start with the advertiser, product, and concept."
+      }
+    },
+    "step3": {
+      "eyebrow": "Step 3",
+      "title": "Add references",
+      "description": "Images, video, PDFs, and URLs are optional. Add only what clarifies the direction."
+    },
+    "step4": {
+      "eyebrow": "Step 4",
+      "title": "Confirm the terms",
+      "description": "Add budget and timing so the YAGI team can review this as a project."
+    },
+    "fields": {
+      "song_title": "Song title",
+      "mood": "Genre and mood",
+      "live_environment": "Screening setup",
+      "audio": "Audio upload",
+      "ad_brand": "Advertiser or brand",
+      "ad_product": "Product",
+      "ad_concept": "Ad concept",
+      "guide": "Existing ad guide upload",
+      "references": "Reference upload",
+      "reference_url": "Reference URL",
+      "budget": "Budget range",
+      "delivery_date": "Target delivery",
+      "meeting": "Preferred meeting time",
+      "twin_intent": "Twin usage intent"
+    },
+    "placeholders": {
+      "song_title": "e.g. Midnight Drive",
+      "mood": "e.g. dreamy synth-pop, cold city mood, explosive ending",
+      "live_environment": "e.g. club LED wall, festival main stage, 16:9 loop",
+      "ad_brand": "e.g. Nike Korea",
+      "ad_product": "e.g. New running shoe",
+      "ad_concept": "Describe the goal, tone, and any must-keep scenes.",
+      "reference_url": "https://..."
+    },
+    "helpers": {
+      "audio": "MP3, WAV, M4A, AAC, FLAC / up to 100MB",
+      "guide": "Upload ad guidelines, storyboards, product shots, or existing video if available.",
+      "references": "Accepts image, PDF, MP4, MOV, and WEBM files."
+    },
+    "budget": {
+      "under_1m": "Under KRW 1M",
+      "1m_to_5m": "KRW 1M-5M",
+      "5m_to_10m": "KRW 5M-10M",
+      "negotiable": "Needs discussion"
+    },
+    "twin_intent": {
+      "undecided": "Not decided yet",
+      "specific_in_mind": "I want to use a specific twin",
+      "no_twin": "No twin for this project"
+    },
+    "actions": {
+      "back": "Back",
+      "next": "Next",
+      "submit": "Submit project",
+      "add_url": "Add URL",
+      "choose_file": "Choose file",
+      "remove": "Remove"
+    },
+    "upload": {
+      "success": "Uploaded.",
+      "uploading": "Uploading"
+    },
+    "errors": {
+      "type_required": "Select a request type.",
+      "song_title_required": "Enter the song title.",
+      "mood_required": "Enter the genre and mood.",
+      "audio_required": "Upload the audio file.",
+      "ad_required": "Enter the advertiser, product, and concept.",
+      "budget_required": "Select a budget range.",
+      "audio_mime": "This audio format is not supported.",
+      "audio_size": "Audio must be 100MB or smaller.",
+      "video_mime": "This video format is not supported.",
+      "video_size": "Video must be 500MB or smaller.",
+      "upload_failed": "Upload failed.",
+      "url_invalid": "Enter a valid URL."
+    },
+    "review": {
+      "eyebrow": "Review",
+      "untitled": "No title yet",
+      "no_type": "No type selected",
+      "no_budget": "No budget selected",
+      "type": "Request type"
+    },
+    "submit": {
+      "success": "Project submitted.",
+      "error": "Project submission failed."
     }
   },
   "campaigns_app": {
