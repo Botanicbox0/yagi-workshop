@@ -129,7 +129,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
         </h1>
         <Link
           href="/app/projects/new"
-          className="rounded-full uppercase tracking-[0.12em] px-5 py-2 bg-foreground text-background hover:bg-foreground/90 text-sm font-medium transition-colors"
+          className="rounded-full uppercase tracking-[0.12em] px-5 py-2 bg-brand text-brand-on hover:bg-brand/90 text-sm font-semibold transition-colors"
         >
           {t("new")}
         </Link>

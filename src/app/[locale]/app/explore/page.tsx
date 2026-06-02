@@ -374,7 +374,7 @@ function EmptyState({
       </p>
       <Link
         href={href}
-        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-ink"
+        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         {cta}
         <ArrowRight className="h-4 w-4" aria-hidden="true" />

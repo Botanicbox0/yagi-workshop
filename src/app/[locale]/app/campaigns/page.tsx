@@ -190,7 +190,7 @@ export default async function CampaignsPage({ params }: Props) {
           {!isCreatorView && (
             <Link
               href="/app/campaigns/new"
-              className="mt-6 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
+              className="mt-6 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("empty.cta")}

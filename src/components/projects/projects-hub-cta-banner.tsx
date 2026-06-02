@@ -24,7 +24,7 @@ export async function ProjectsHubCtaBanner({ locale }: Props) {
         </p>
         <Link
           href="/app/projects/new"
-          className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full bg-brand text-brand-on text-[15px] font-semibold whitespace-nowrap hover:bg-brand/90 transition-colors"
+          className="inline-flex items-center gap-3 px-7 py-3.5 rounded-full border border-border/70 bg-surface-card text-foreground text-[15px] font-semibold whitespace-nowrap hover:bg-accent/60 transition-colors"
         >
           {t("hero_cta")}
           <ArrowUpRight className="w-4 h-4" />
