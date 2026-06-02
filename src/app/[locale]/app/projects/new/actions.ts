@@ -113,7 +113,12 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   }
   const membership = { workspace_id: active.id };
 
-  const status = parsed.data.intent === "submit" ? "submitted" : "draft";
+  // FIX-1 (L-015 parity): artist 마법사가 submit에 createProject를 재사용한다.
+  // projects.status 컬럼 계약상 client submit은 submitted→in_review 자동전이(system)를
+  // 완성해야 한다(brand submitProjectAction과 동일). "submitted"에 머물면 admin 큐가
+  // 설계상 이 status를 안 담아 영영 안 보이고 status_history seed도 빠진다.
+  const isSubmit = parsed.data.intent === "submit";
+  const status = isSubmit ? "in_review" : "draft";
 
   // Column mapping notes:
   // - spec field `description` → DB column `brief` (no standalone `description` col)
@@ -156,7 +161,7 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     meeting_preferred_at: data.meeting_preferred_at ?? null,
     twin_intent: data.twin_intent,
     interested_in_twin: data.interested_in_twin,
-    submitted_at: status === "submitted" ? new Date().toISOString() : null,
+    submitted_at: isSubmit ? new Date().toISOString() : null,
     kind: "direct" as const,
     intake_mode: data.intake_mode,
   };
@@ -219,6 +224,107 @@ export async function createProject(input: unknown): Promise<ActionResult> {
       error: "db",
       message: `brief insert failed: ${briefErr.message}`,
     };
+  }
+
+  // FIX-1: submitted→in_review 자동전이의 status_history seed.
+  // submitProjectAction step 2와 동일. service-role 클라이언트로 psh_insert_deny RLS 우회.
+  // brief INSERT 성공(롤백 안 됨) 이후에만 기록. history 실패는 non-fatal(brand 정책과 동일).
+  if (isSubmit) {
+    const service = createSupabaseService();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_status_history not in generated types
+    const serviceAny = service as any;
+    const { error: histErr } = await serviceAny
+      .from("project_status_history")
+      .insert({
+        project_id: project.id,
+        from_status: "submitted",
+        to_status: "in_review",
+        actor_id: user.id,
+        actor_role: "system",
+        comment: null,
+    });
+    if (histErr) {
+      console.error(
+        "[createProject] status_history INSERT failed (non-fatal):",
+        histErr,
+      );
+    }
+
+    try {
+      await emitNotification({
+        user_id: user.id,
+        kind: "project_submitted",
+        project_id: project.id,
+        workspace_id: membership.workspace_id,
+        payload: { project_name: data.title },
+        url_path: `/app/projects/${project.id}`,
+      });
+    } catch (e) {
+      console.error("[createProject] in-app notification failed", e);
+    }
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ?? "https://studio.yagiworkshop.xyz";
+    const adminQueueUrl = `${baseUrl}/app/admin/projects`;
+    const projectUrl = `${baseUrl}/app/projects/${project.id}`;
+
+    let clientEmail: string | null = null;
+    let clientLocale: "ko" | "en" = "ko";
+    let clientName = "Client";
+    let workspaceName = "Workspace";
+    try {
+      const [emailRes, profileRes, workspaceRes] = await Promise.all([
+        service.auth.admin.getUserById(user.id),
+        service
+          .from("profiles")
+          .select("display_name, locale")
+          .eq("id", user.id)
+          .maybeSingle(),
+        service
+          .from("workspaces")
+          .select("name")
+          .eq("id", membership.workspace_id)
+          .maybeSingle(),
+      ]);
+      clientEmail = emailRes.data?.user?.email ?? null;
+      const profile = profileRes.data;
+      if (profile?.locale === "en") clientLocale = "en";
+      clientName = profile?.display_name ?? "Client";
+      workspaceName = workspaceRes.data?.name ?? "Workspace";
+    } catch (e) {
+      console.error("[createProject] profile/email lookup failed", e);
+    }
+
+    const adminEmail = process.env.YAGI_ADMIN_EMAIL ?? "yagi@yagiworkshop.xyz";
+    try {
+      await sendProjectSubmittedAdmin({
+        to: adminEmail,
+        projectName: data.title,
+        projectId: project.id,
+        locale: clientLocale,
+        dashboardUrl: adminQueueUrl,
+        clientName,
+        workspaceName,
+        budgetBand: data.budget_band ?? undefined,
+        deliveryDate: data.target_delivery_at ?? undefined,
+      });
+    } catch (e) {
+      console.error("[createProject] admin email send failed", e);
+    }
+
+    if (clientEmail) {
+      try {
+        await sendProjectSubmittedClient({
+          to: clientEmail,
+          projectName: data.title,
+          projectId: project.id,
+          locale: clientLocale,
+          dashboardUrl: projectUrl,
+        });
+      } catch (e) {
+        console.error("[createProject] client email send failed", e);
+      }
+    }
   }
 
   revalidatePath("/[locale]/app/projects", "page");
