@@ -1735,6 +1735,22 @@
   "admin": {
     "label": "관리",
     "title": "관리자 대시보드",
+    "context_switch": {
+      "eyebrow": "시점 전환",
+      "title": "YAGI Internal로 전환하세요",
+      "description": "지금은 {current} 워크스페이스 시점입니다. 관리자 기능은 YAGI Internal 워크스페이스에서만 이용할 수 있어요.",
+      "unknown_workspace": "현재",
+      "target": "전환 대상: {workspace}",
+      "hint": "전환하면 관리자 대시보드와 운영 메뉴가 다시 표시됩니다.",
+      "missing_target": "YAGI Internal 워크스페이스를 찾을 수 없습니다.",
+      "missing_hint": "워크스페이스 멤버십을 확인한 뒤 다시 시도하세요.",
+      "cta": "YAGI Internal로 전환",
+      "errors": {
+        "unauthenticated": "로그인이 필요합니다.",
+        "not_a_member": "YAGI Internal로 전환할 수 없습니다.",
+        "invalid": "워크스페이스 정보가 올바르지 않습니다."
+      }
+    },
     "projects_tab": "프로젝트",
     "workspaces_tab": "워크스페이스",
     "cross_workspace_projects": "전체 프로젝트",

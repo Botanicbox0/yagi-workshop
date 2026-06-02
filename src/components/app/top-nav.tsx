@@ -83,7 +83,6 @@ const TOP_NAV_BY_ACTOR: Record<AppActorKind, TopNavItem["key"][]> = {
     "projects",
     "campaigns",
     "discover",
-    "billing",
     "americano",
   ],
   artist: ["explore", "twins", "deals"],
@@ -112,12 +111,13 @@ export function TopNav({
   );
   const isYagiAdmin = context.workspaceRoles.includes("yagi_admin");
   const actor = resolveAppActor(activeWorkspace, isYagiAdmin);
+  const isYagiAdminActor = actor === "yagi_admin";
   const homeHref = actor ? getAppLandingPath(actor) : "/app";
   const [workspaceSearchOpen, setWorkspaceSearchOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      {isYagiAdmin && (
+      {isYagiAdminActor && (
         <WorkspaceSearchDialog
           open={workspaceSearchOpen}
           onOpenChange={setWorkspaceSearchOpen}
@@ -163,7 +163,7 @@ export function TopNav({
 
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2">
           {actor === "brand" && <CreditBalance label={t("credit_balance")} />}
-          {isYagiAdmin && (
+          {isYagiAdminActor && (
             <WorkspaceSearchTrigger
               label={t("workspace_search.trigger")}
               shortcut={t("search_shortcut")}
@@ -175,7 +175,7 @@ export function TopNav({
               <WorkspaceSwitcher
                 current={activeWorkspace}
                 workspaces={workspaces}
-                isYagiAdmin={isYagiAdmin}
+                isYagiAdmin={isYagiAdminActor}
               />
             </div>
           )}
@@ -203,7 +203,7 @@ export function TopNav({
             context={context}
             activeWorkspace={activeWorkspace}
             workspaces={workspaces}
-            isYagiAdmin={isYagiAdmin}
+            isYagiAdminActor={isYagiAdminActor}
             isYagiInternalMember={isYagiInternalMember}
             initialUnreadCount={initialUnreadCount}
             locale={locale}
@@ -307,7 +307,7 @@ function MobileMenu({
   context,
   activeWorkspace,
   workspaces,
-  isYagiAdmin,
+  isYagiAdminActor,
   isYagiInternalMember,
   initialUnreadCount,
   locale,
@@ -318,7 +318,7 @@ function MobileMenu({
   context: AppContext;
   activeWorkspace: WorkspaceItem | null;
   workspaces: WorkspaceItem[];
-  isYagiAdmin: boolean;
+  isYagiAdminActor: boolean;
   isYagiInternalMember: boolean;
   initialUnreadCount: number;
   locale: "ko" | "en";
@@ -362,7 +362,7 @@ function MobileMenu({
             <WorkspaceSwitcher
               current={activeWorkspace}
               workspaces={workspaces}
-              isYagiAdmin={isYagiAdmin}
+              isYagiAdmin={isYagiAdminActor}
             />
           )}
           {activeWorkspace?.isTest && (
@@ -370,7 +370,7 @@ function MobileMenu({
               {t("test_workspace")}
             </div>
           )}
-          {isYagiAdmin && (
+          {isYagiAdminActor && (
             <MobileWorkspaceSearchTrigger
               label={t("workspace_search.trigger")}
               shortcut={t("search_shortcut")}

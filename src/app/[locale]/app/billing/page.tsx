@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getIsYagiAdmin } from "@/lib/app/admin";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -23,7 +24,12 @@ export default async function BillingPage({ params }: Props) {
     return null;
   }
 
-  const showOperationsConsole = await getIsYagiAdmin(supabase, user.id);
+  const [isYagiAdmin, activeWorkspace] = await Promise.all([
+    getIsYagiAdmin(supabase, user.id),
+    resolveActiveWorkspace(user.id),
+  ]);
+  const showOperationsConsole =
+    isYagiAdmin && activeWorkspace?.kind === "yagi_admin";
   const popbill = showOperationsConsole
     ? (await import("@/lib/popbill/client")).getPopbillConfigStatus()
     : null;

@@ -42,6 +42,16 @@ test.describe("test workspace sandbox smoke", () => {
     await expect(page.getByText("TEST").first()).toBeVisible();
     await expectHeaderLink(page, "/app/projects", true);
     await expectHeaderLink(page, "/app/admin", false);
+    await expectHeaderLink(page, "/app/billing", false);
+    await page.goto("/ko/app/admin", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "YAGI Internal로 전환하세요" })).toBeVisible();
+    const switchButton = page.getByRole("button", { name: "YAGI Internal로 전환" });
+    await expect(switchButton).toBeEnabled();
+    await switchButton.click();
+    await expect(page).toHaveURL(/\/ko\/app\/admin$/);
+    await expect(page.getByRole("heading", { name: "관리자 대시보드" })).toBeVisible();
+
+    await selectWorkspace(page, "Test Brand");
     await page.goto("/ko/app", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/ko\/app\/explore$/);
 
@@ -142,7 +152,10 @@ async function signInAsSandboxAdmin(page: Page) {
 }
 
 async function selectWorkspace(page: Page, name: string) {
-  await page.getByRole("button", { name: /YAGI Internal|Test Brand|Test Creator|Test Artist/ }).click();
+  await page
+    .getByRole("banner")
+    .getByRole("button", { name: /YAGI Internal|Test Brand|Test Creator|Test Artist/ })
+    .click();
   await page.getByRole("menuitem", { name: new RegExp(name) }).click();
   await page.keyboard.press("Escape");
   await page.waitForLoadState("networkidle");

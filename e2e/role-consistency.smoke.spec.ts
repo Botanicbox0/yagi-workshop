@@ -13,13 +13,15 @@ type Actor = "brand" | "artist" | "creator" | "yagi_admin";
 type FixtureUser = {
   actor: Actor;
   email: string;
-  workspaceKind: "brand" | "artist" | "creator";
+  workspaceKind: "brand" | "artist" | "creator" | "yagi_admin";
   workspaceSlug: string;
   workspaceName: string;
 };
 
 type FixtureState = {
   users: Record<Actor, FixtureUser & { userId: string; workspaceId: string }>;
+  adminBrandWorkspaceId: string;
+  adminBrandWorkspaceName: string;
   campaignSlug: string;
   campaignId: string;
   categoryId: string;
@@ -50,9 +52,9 @@ const fixtures: FixtureUser[] = [
   {
     actor: "yagi_admin",
     email: "e2e-role-admin@yagiworkshop.xyz",
-    workspaceKind: "brand",
-    workspaceSlug: "e2e-role-admin-brand",
-    workspaceName: "E2E Admin Active Brand",
+    workspaceKind: "yagi_admin",
+    workspaceSlug: "e2e-role-yagi-internal",
+    workspaceName: "E2E YAGI Internal",
   },
 ];
 
@@ -96,13 +98,13 @@ test.describe("role consistency smoke", () => {
           "/app/projects",
           "/app/campaigns",
           "/app/discover",
-          "/app/billing",
           "/app/americano",
         ],
         hidden: [
           "/app/twins",
           "/app/deals",
           "/app/my-submissions",
+          "/app/billing",
           "/app/admin",
           "/app/assets",
         ],
@@ -183,6 +185,8 @@ test.describe("role consistency smoke", () => {
     await signInAs(page, "brand");
     await page.goto("/ko/app/my-submissions", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/ko\/app\/explore$/);
+    await page.goto("/ko/app/admin", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/ko\/app\/explore$/);
     await page.goto("/ko/app/notifications", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/ko\/app\/settings\/notifications$/);
 
@@ -200,9 +204,9 @@ test.describe("role consistency smoke", () => {
     await signInAs(page, "creator");
     await page.goto("/ko/app/campaigns", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByRole("heading", { name: "참여 가능한 캠페인" }),
+      page.getByRole("heading", { name: "참여 가능한 콘테스트" }),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "새 캠페인 요청" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "콘테스트 열기" })).toHaveCount(0);
 
     const submitLink = page.locator(`a[href="/campaigns/${s.campaignSlug}/submit"]`);
     await expect(submitLink).toBeVisible();
@@ -214,11 +218,40 @@ test.describe("role consistency smoke", () => {
     expect(consoleErrors).toEqual([]);
   });
 
-  test("admin billing uses global admin role even with a brand active workspace", async ({
+  test("global admin in a brand workspace sees switch guidance instead of admin surfaces", async ({
     page,
   }) => {
     const consoleErrors = collectConsoleErrors(page);
+    const s = requireState();
     await signInAs(page, "yagi_admin");
+    await setActiveWorkspaceCookie(page, s.adminBrandWorkspaceId);
+
+    await page.goto("/ko/app/explore", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("button", { name: new RegExp(s.adminBrandWorkspaceName) })).toBeVisible();
+    await expectHeaderLinks(
+      page,
+      ["/app/explore", "/app/projects", "/app/campaigns", "/app/discover", "/app/americano"],
+      ["/app/admin", "/app/billing", "/app/twins", "/app/deals", "/app/my-submissions"],
+    );
+    await expect(page.getByRole("banner").getByText("워크스페이스 검색")).toHaveCount(0);
+
+    await page.goto("/ko/app/admin", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "YAGI Internal로 전환하세요" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "관리자 대시보드" })).toHaveCount(0);
+    await page.getByRole("button", { name: "YAGI Internal로 전환" }).click();
+    await expect(page).toHaveURL(/\/ko\/app\/admin$/);
+    await expect(page.getByRole("heading", { name: "관리자 대시보드" })).toBeVisible();
+
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test("admin billing operations are visible only from the internal actor", async ({
+    page,
+  }) => {
+    const consoleErrors = collectConsoleErrors(page);
+    const s = requireState();
+    await signInAs(page, "yagi_admin");
+
     await page.goto("/ko/app/billing", { waitUntil: "domcontentloaded" });
     await expect(page.getByText("Popbill 서버 연동")).toBeVisible();
     await expect(page.getByRole("link", { name: "청구 작업 콘솔" })).toBeVisible();
@@ -227,6 +260,13 @@ test.describe("role consistency smoke", () => {
     ).toBeVisible();
     await expect(page.getByText("정산 내역 준비 중")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "받은 송장" })).toHaveCount(0);
+
+    await setActiveWorkspaceCookie(page, s.adminBrandWorkspaceId);
+    await page.goto("/ko/app/billing", { waitUntil: "domcontentloaded" });
+    await expect(page.getByText("정산 내역 준비 중")).toBeVisible();
+    await expect(page.getByText("Popbill 서버 연동")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "청구 작업 콘솔" })).toHaveCount(0);
+
     expect(consoleErrors).toEqual([]);
   });
 
@@ -278,6 +318,12 @@ async function signInAs(page: Page, actor: Actor) {
   await page.waitForURL((url) => !url.pathname.includes("/signin"), {
     timeout: 20_000,
   });
+}
+
+async function setActiveWorkspaceCookie(page: Page, workspaceId: string) {
+  await page.evaluate((id) => {
+    document.cookie = `yagi_active_workspace=${id}; path=/; max-age=7776000; SameSite=Lax`;
+  }, workspaceId);
 }
 
 async function expectHeaderLinks(
@@ -333,13 +379,28 @@ async function ensureFixtures(): Promise<FixtureState> {
   }
 
   const campaign = await ensureOpenCampaign(admin, users.brand);
+  const adminBrandWorkspaceName = "E2E Admin Active Brand";
+  const adminBrandWorkspaceId = await ensureWorkspace(admin, {
+    actor: "yagi_admin",
+    email: fixtures.find((fixture) => fixture.actor === "yagi_admin")!.email,
+    workspaceKind: "brand",
+    workspaceSlug: "e2e-role-admin-brand",
+    workspaceName: adminBrandWorkspaceName,
+  });
+  await ensureMembership(admin, users.yagi_admin.userId, adminBrandWorkspaceId);
+
   await admin
     .from("campaign_submissions")
     .delete()
     .eq("campaign_id", campaign.campaignId)
     .eq("applicant_workspace_id", users.creator.workspaceId);
 
-  return { users, ...campaign };
+  return {
+    users,
+    adminBrandWorkspaceId,
+    adminBrandWorkspaceName,
+    ...campaign,
+  };
 }
 
 async function ensureAuthUser(
@@ -410,6 +471,7 @@ async function ensureWorkspace(
       .update({
         name: fixture.workspaceName,
         kind: fixture.workspaceKind,
+        is_test: false,
       })
       .eq("id", existing.id);
     if (error) throw error;
@@ -423,6 +485,7 @@ async function ensureWorkspace(
       slug: fixture.workspaceSlug,
       kind: fixture.workspaceKind,
       brand_guide: {},
+      is_test: false,
     })
     .select("id")
     .single();
@@ -468,18 +531,45 @@ async function ensureRoles(
   workspaceId: string,
   actor: Actor,
 ) {
+  if (actor === "yagi_admin") {
+    const { error: deleteError } = await admin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId)
+      .neq("role", "yagi_admin");
+    if (deleteError) throw deleteError;
+
+    const { data: existing, error: lookupError } = await admin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "yagi_admin")
+      .is("workspace_id", null)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+
+    if (!existing) {
+      const { error } = await admin.from("user_roles").insert({
+        user_id: userId,
+        role: "yagi_admin",
+        workspace_id: null,
+      });
+      if (error) throw error;
+    }
+    return;
+  }
+
   const { error: deleteError } = await admin
     .from("user_roles")
     .delete()
     .eq("user_id", userId);
   if (deleteError) throw deleteError;
 
-  const rows =
-    actor === "yagi_admin"
-      ? [{ user_id: userId, role: "yagi_admin", workspace_id: null }]
-      : [{ user_id: userId, role: "workspace_admin", workspace_id: workspaceId }];
-
-  const { error } = await admin.from("user_roles").insert(rows);
+  const { error } = await admin.from("user_roles").insert({
+    user_id: userId,
+    role: "workspace_admin",
+    workspace_id: workspaceId,
+  });
   if (error) throw error;
 }
 

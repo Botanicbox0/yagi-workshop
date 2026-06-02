@@ -1735,6 +1735,22 @@
   "admin": {
     "label": "Admin",
     "title": "Admin dashboard",
+    "context_switch": {
+      "eyebrow": "Context switch",
+      "title": "Switch to YAGI Internal",
+      "description": "You are currently acting from {current}. Admin features are available only from the YAGI Internal workspace.",
+      "unknown_workspace": "the current workspace",
+      "target": "Target workspace: {workspace}",
+      "hint": "After switching, the admin dashboard and operations menus will be shown again.",
+      "missing_target": "YAGI Internal workspace was not found.",
+      "missing_hint": "Check your workspace membership, then try again.",
+      "cta": "Switch to YAGI Internal",
+      "errors": {
+        "unauthenticated": "Sign in is required.",
+        "not_a_member": "You cannot switch to YAGI Internal.",
+        "invalid": "Workspace information is invalid."
+      }
+    },
     "projects_tab": "Projects",
     "workspaces_tab": "Workspaces",
     "cross_workspace_projects": "All projects",
