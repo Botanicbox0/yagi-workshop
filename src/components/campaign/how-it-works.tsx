@@ -17,7 +17,7 @@ import {
   Users,
   Wand2,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 type HowItWorksVariant = "brand" | "artist" | "creator";
 type MockupComponent = ComponentType;
@@ -130,6 +130,7 @@ export async function CampaignHowItWorks({
   workspaceName?: string;
 }) {
   const t = await getTranslations("campaigns_app.how_it_works");
+  const locale = await getLocale();
   const stepKey =
     variant === "creator"
       ? "creator_steps"
@@ -137,12 +138,18 @@ export async function CampaignHowItWorks({
         ? "artist_steps"
         : "brand_steps";
   const trimmedWorkspaceName = workspaceName?.trim();
+  const fallbackBrandLabel =
+    locale === "ko"
+      ? variant === "artist"
+        ? "내 곡·IP"
+        : "우리 브랜드"
+      : variant === "artist"
+        ? "my song or IP"
+        : "our brand";
   const brandLabel =
     trimmedWorkspaceName && trimmedWorkspaceName.length > 0
       ? trimmedWorkspaceName
-      : variant === "artist"
-        ? "내 곡·IP"
-        : "우리 브랜드";
+      : fallbackBrandLabel;
 
   const steps = STEP_VISUALS[variant].map((visual, index) => ({
     ...visual,
