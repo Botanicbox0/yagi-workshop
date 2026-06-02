@@ -114,7 +114,7 @@ export default async function CampaignsPage({ params }: Props) {
           {!isCreatorView && (
             <Link
               href="/app/campaigns/new"
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90 sm:w-fit"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90 sm:w-fit"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("new_cta")}
@@ -122,15 +122,20 @@ export default async function CampaignsPage({ params }: Props) {
           )}
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Metric label={t("metrics.total")} value={String(campaigns.length)} />
-          {isCreatorView ? (
-            <Metric label={t("metrics.open")} value={String(campaigns.length)} />
-          ) : (
-            <Metric label={t("metrics.requested")} value={String(requestedCount)} />
-          )}
-          <Metric label={t("metrics.live")} value={String(liveCount)} />
-        </div>
+        {campaigns.length > 0 && (
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <Metric label={t("metrics.total")} value={String(campaigns.length)} />
+            {isCreatorView ? (
+              <Metric label={t("metrics.open")} value={String(campaigns.length)} />
+            ) : (
+              <Metric
+                label={t("metrics.requested")}
+                value={String(requestedCount)}
+              />
+            )}
+            <Metric label={t("metrics.live")} value={String(liveCount)} />
+          </div>
+        )}
         <CampaignHowItWorks
           variant={isCreatorView ? "creator" : "brand"}
           workspaceName={active.name}
@@ -185,7 +190,7 @@ export default async function CampaignsPage({ params }: Props) {
           {!isCreatorView && (
             <Link
               href="/app/campaigns/new"
-              className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
+              className="mt-6 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("empty.cta")}

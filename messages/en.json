@@ -686,11 +686,11 @@
   },
   "campaigns_app": {
     "eyebrow": "Contests",
-    "title": "Request contests and manage progress",
+    "title": "Not one creator — dozens.",
     "creator_title": "Open contests",
-    "description": "Open a contest around one product, brand, or IP, and multiple AI creators make their own content and spread it across their channels. No shoot, no casting.",
+    "description": "Open a contest and AI creators each interpret your brand in their own way. No shoot, no casting.",
     "creator_description": "Browse contests that are published and still accepting submissions.",
-    "new_cta": "Request contest",
+    "new_cta": "Open a contest",
     "metrics": {
       "total": "Total",
       "open": "Open",
@@ -717,7 +717,7 @@
     "empty": {
       "title": "No contest requests yet",
       "description": "Tell us what contest you want to open. YAGI will review it, then set the plan and schedule with you.",
-      "cta": "Request first contest"
+      "cta": "Open a contest"
     },
     "creator_empty": {
       "title": "No open contests right now",
