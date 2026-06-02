@@ -67,7 +67,7 @@ export async function createCampaignRequest(
 
   const active = await resolveActiveWorkspace(user.id);
   if (!active) return { ok: false, error: "no_workspace" };
-  if (active.kind !== "brand") {
+  if (active.kind !== "brand" && active.kind !== "artist") {
     return { ok: false, error: "unsupported_workspace" };
   }
 
@@ -97,6 +97,7 @@ export async function createCampaignRequest(
         contact_phone: data.contactPhone,
         desired_prize_krw: data.desiredPrize ?? null,
         desired_recruit_target: data.desiredRecruit ?? null,
+        sponsor_workspace_kind: active.kind,
         source: "app_campaigns_new",
       },
       created_by: user.id,

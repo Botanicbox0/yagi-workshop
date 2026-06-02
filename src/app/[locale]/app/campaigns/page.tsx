@@ -52,7 +52,7 @@ export default async function CampaignsPage({ params }: Props) {
     return null;
   }
   const actor = resolveAppActor(active, await getIsYagiAdmin(supabase, user.id));
-  if (actor !== "brand" && actor !== "creator") {
+  if (actor !== "brand" && actor !== "artist" && actor !== "creator") {
     redirect({ href: actor ? getAppLandingPath(actor) : "/onboarding", locale });
     return null;
   }
@@ -68,7 +68,9 @@ export default async function CampaignsPage({ params }: Props) {
       "id, slug, title, description, status, submission_open_at, submission_close_at, prize_pool_krw, updated_at, created_at",
     )
     .order("updated_at", { ascending: false });
-  if (actor === "brand") {
+  const isCreatorView = actor === "creator";
+  const isArtistView = actor === "artist";
+  if (!isCreatorView) {
     query = query.eq("sponsor_workspace_id", active.id);
   } else {
     query = query
@@ -88,7 +90,6 @@ export default async function CampaignsPage({ params }: Props) {
   const liveCount = campaigns.filter((c) =>
     ["published", "submission_closed", "distributing"].includes(c.status),
   ).length;
-  const isCreatorView = actor === "creator";
   const dateFormatter = new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
@@ -104,10 +105,18 @@ export default async function CampaignsPage({ params }: Props) {
               {t("eyebrow")}
             </p>
             <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
-              {isCreatorView ? t("creator_title") : t("title")}
+              {isCreatorView
+                ? t("creator_title")
+                : isArtistView
+                  ? t("artist_title")
+                  : t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">
-              {isCreatorView ? t("creator_description") : t("description")}
+              {isCreatorView
+                ? t("creator_description")
+                : isArtistView
+                  ? t("artist_description")
+                  : t("description")}
             </p>
           </div>
           {!isCreatorView && campaigns.length > 0 && (
@@ -136,13 +145,17 @@ export default async function CampaignsPage({ params }: Props) {
           </div>
         )}
         <CampaignHowItWorks
-          variant={isCreatorView ? "creator" : "brand"}
+          variant={isCreatorView ? "creator" : isArtistView ? "artist" : "brand"}
           workspaceName={active.name}
         />
         {campaigns.length === 0 && (
           <div className="mt-6 flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm leading-6 text-muted-foreground keep-all">
-              {isCreatorView ? t("creator_empty.title") : t("empty.title")}
+              {isCreatorView
+                ? t("creator_empty.title")
+                : isArtistView
+                  ? t("artist_empty.title")
+                  : t("empty.title")}
             </p>
             {!isCreatorView && (
               <Link

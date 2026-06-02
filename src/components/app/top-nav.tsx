@@ -8,6 +8,7 @@ import {
   Compass,
   Coffee,
   CreditCard,
+  Clapperboard,
   ClipboardList,
   FolderOpen,
   Handshake,
@@ -52,6 +53,7 @@ type TopNavItem = {
   key:
     | "explore"
     | "projects"
+    | "studio"
     | "campaigns"
     | "discover"
     | "twins"
@@ -67,6 +69,7 @@ type TopNavItem = {
 const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "explore", href: "/app/explore", icon: Sparkles },
   { key: "projects", href: "/app/projects", icon: FolderOpen },
+  { key: "studio", href: "/app/studio/new", icon: Clapperboard },
   { key: "campaigns", href: "/app/campaigns", icon: Megaphone },
   { key: "discover", href: "/app/discover", icon: Compass },
   { key: "twins", href: "/app/twins", icon: UserRound },
@@ -85,7 +88,7 @@ const TOP_NAV_BY_ACTOR: Record<AppActorKind, TopNavItem["key"][]> = {
     "discover",
     "americano",
   ],
-  artist: ["explore", "twins", "deals"],
+  artist: ["explore", "studio", "campaigns", "twins", "deals"],
   creator: ["campaigns", "my_submissions"],
   yagi_admin: ["admin", "billing", "americano"],
 };

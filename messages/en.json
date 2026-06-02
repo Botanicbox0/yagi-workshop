@@ -224,6 +224,7 @@
     "dashboard": "Home",
     "explore": "Explore",
     "projects": "Projects",
+    "studio": "Request",
     "campaigns": "Contests",
     "discover": "AI Twins",
     "twins": "AI Twins",
@@ -835,8 +836,10 @@
     "eyebrow": "Contests",
     "title": "Not one creator — dozens.",
     "creator_title": "Open contests",
+    "artist_title": "Open a contest from your track",
     "description": "Open a contest and AI creators each interpret your brand in their own way. No shoot, no casting.",
     "creator_description": "Browse contests that are published and still accepting submissions.",
+    "artist_description": "Open a contest so multiple AI creators can reinterpret your song, music video, or IP in their own way.",
     "new_cta": "Open a contest",
     "metrics": {
       "total": "Total",
@@ -869,6 +872,10 @@
     "creator_empty": {
       "title": "No open contests right now",
       "description": "Published contests that are still accepting submissions will appear here."
+    },
+    "artist_empty": {
+      "title": "No contests opened yet",
+      "description": "Request a contest from your track and references, and it will appear here."
     },
     "how_it_works": {
       "title": "How it works",
@@ -962,15 +969,21 @@
     },
     "new": {
       "eyebrow": "Contest Request",
+      "artist_eyebrow": "Artist Contest Request",
       "title": "What contest do you want to open?",
+      "artist_title": "What contest should your track become?",
       "description": "Send a request and YAGI will review it, then set the category, submission period, and operating plan.",
+      "artist_description": "Share the song, music video, IP, and visual direction. YAGI will review it and shape the creator recruitment plan with you.",
       "back": "Back to contests",
       "field_title": "Contest title",
       "field_title_placeholder": "e.g. New product AI creator contest",
+      "artist_field_title_placeholder": "e.g. New single AI music video contest",
       "field_description": "Short description",
       "field_description_placeholder": "Summarize the contest goal and tone.",
+      "artist_field_description_placeholder": "Summarize the track mood and visual direction.",
       "field_brief": "Contest details",
       "field_brief_placeholder": "Describe the product, brand, or IP, desired mood, deliverables, expressions to avoid, and reference channels.",
+      "artist_field_brief_placeholder": "Describe the song, music video, or IP, desired mood, deliverables, expressions to avoid, and reference channels.",
       "field_contact_name": "Contact name",
       "field_contact_name_placeholder": "Jane Kim",
       "field_contact_email": "Contact email",
@@ -979,6 +992,7 @@
       "field_contact_phone_placeholder": "+82 10 0000 0000",
       "field_references": "References / asset notes",
       "field_references_placeholder": "Add video links, audio references, brand guides, drive links, or notes.",
+      "artist_field_references_placeholder": "Add track links, demos, music videos, choreography clips, moodboards, drive links, or notes.",
       "error_title": "Enter at least 2 characters.",
       "error_brief": "Enter at least 10 characters for the contest details.",
       "error_contact_name": "Enter a contact name.",

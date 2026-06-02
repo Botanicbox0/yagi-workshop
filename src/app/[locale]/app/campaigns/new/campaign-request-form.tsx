@@ -27,7 +27,11 @@ type FieldErrors = Partial<
   >
 >;
 
-export function CampaignRequestForm() {
+export function CampaignRequestForm({
+  variant = "brand",
+}: {
+  variant?: "brand" | "artist";
+}) {
   const t = useTranslations("campaigns_app.new");
   const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
@@ -95,6 +99,9 @@ export function CampaignRequestForm() {
       router.push("/app/campaigns");
     });
   }
+  const isArtist = variant === "artist";
+  const copy = (key: string, artistKey: string) =>
+    t(isArtist ? artistKey : key);
 
   return (
     <form action={submit} className="space-y-6" data-ready={hydrated}>
@@ -109,7 +116,10 @@ export function CampaignRequestForm() {
               <Input
                 id="campaign-title"
                 name="title"
-                placeholder={t("field_title_placeholder")}
+                placeholder={copy(
+                  "field_title_placeholder",
+                  "artist_field_title_placeholder",
+                )}
                 className="h-11 bg-surface-card"
                 maxLength={120}
               />
@@ -122,7 +132,10 @@ export function CampaignRequestForm() {
               <Textarea
                 id="campaign-description"
                 name="description"
-                placeholder={t("field_description_placeholder")}
+                placeholder={copy(
+                  "field_description_placeholder",
+                  "artist_field_description_placeholder",
+                )}
                 className="min-h-24 resize-none bg-surface-card"
                 maxLength={600}
               />
@@ -135,7 +148,10 @@ export function CampaignRequestForm() {
               <Textarea
                 id="campaign-brief"
                 name="brief"
-                placeholder={t("field_brief_placeholder")}
+                placeholder={copy(
+                  "field_brief_placeholder",
+                  "artist_field_brief_placeholder",
+                )}
                 className="min-h-56 resize-y bg-surface-card"
                 maxLength={5000}
               />
@@ -229,7 +245,10 @@ export function CampaignRequestForm() {
               <Textarea
                 id="campaign-reference-notes"
                 name="referenceNotes"
-                placeholder={t("field_references_placeholder")}
+                placeholder={copy(
+                  "field_references_placeholder",
+                  "artist_field_references_placeholder",
+                )}
                 className="min-h-32 resize-none bg-surface-card"
                 maxLength={2000}
               />

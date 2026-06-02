@@ -33,10 +33,11 @@ export default async function NewCampaignPage({ params }: Props) {
     active,
     await getIsYagiAdmin(supabase, user.id),
   );
-  if (actor !== "brand") {
+  if (actor !== "brand" && actor !== "artist") {
     redirect({ href: actor ? getAppLandingPath(actor) : "/onboarding", locale });
     return null;
   }
+  const isArtist = actor === "artist";
 
   return (
     <main className="mx-auto flex w-full max-w-content flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
@@ -50,16 +51,16 @@ export default async function NewCampaignPage({ params }: Props) {
       <header className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6 lg:p-8">
         <p className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-label text-brand">
           <Megaphone className="h-4 w-4" aria-hidden="true" />
-          {t("eyebrow")}
+          {t(isArtist ? "artist_eyebrow" : "eyebrow")}
         </p>
         <h1 className="max-w-3xl font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">
-          {t("title")}
+          {t(isArtist ? "artist_title" : "title")}
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">
-          {t("description")}
+          {t(isArtist ? "artist_description" : "description")}
         </p>
       </header>
-      <CampaignRequestForm />
+      <CampaignRequestForm variant={isArtist ? "artist" : "brand"} />
     </main>
   );
 }

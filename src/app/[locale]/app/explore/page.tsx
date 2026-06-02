@@ -204,8 +204,8 @@ export default async function ExplorePage({ params }: Props) {
 
         <DashboardSection
           title={t("campaigns.title")}
-          href={isArtist ? undefined : "/app/campaigns"}
-          cta={isArtist ? undefined : t("campaigns.view_all")}
+          href="/app/campaigns"
+          cta={t("campaigns.view_all")}
           icon={<Megaphone className="h-4 w-4" aria-hidden="true" />}
         >
           {campaigns.length > 0 ? (
@@ -214,7 +214,6 @@ export default async function ExplorePage({ params }: Props) {
                 <DashboardItem
                   key={campaign.id}
                   href="/app/campaigns"
-                  disabled={isArtist}
                   className="group rounded-lg border border-border/70 bg-surface-card p-4 transition-colors hover:bg-accent/60"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -241,8 +240,8 @@ export default async function ExplorePage({ params }: Props) {
             <EmptyState
               title={t("campaigns.empty_title")}
               description={t("campaigns.empty_description")}
-              href={isArtist ? projectRequestHref : "/app/campaigns"}
-              cta={isArtist ? t("actions.new_project") : t("campaigns.empty_cta")}
+              href="/app/campaigns"
+              cta={t("campaigns.empty_cta")}
             />
           )}
         </DashboardSection>

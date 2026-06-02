@@ -111,10 +111,15 @@ test.describe("role consistency smoke", () => {
       },
       artist: {
         start: "/ko/app/explore",
-        visible: ["/app/explore", "/app/twins", "/app/deals"],
+        visible: [
+          "/app/explore",
+          "/app/studio/new",
+          "/app/campaigns",
+          "/app/twins",
+          "/app/deals",
+        ],
         hidden: [
           "/app/projects",
-          "/app/campaigns",
           "/app/my-submissions",
           "/app/billing",
           "/app/admin",
