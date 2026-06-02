@@ -726,7 +726,7 @@
       },
       "live_visual": {
         "title": "What stage is this for?",
-        "description": "Audio and mood are the base. For now, add the screening setup in one line."
+        "description": "Keep it light: audio, performance type, and screening setup. We'll refine the output details together in the meeting."
       },
       "ad_visual": {
         "title": "What ad should become AI VFX?",
@@ -746,6 +746,7 @@
     "fields": {
       "song_title": "Song title",
       "mood": "Genre and mood",
+      "performance_type": "Performance type",
       "live_environment": "Screening setup",
       "audio": "Audio upload",
       "ad_brand": "Advertiser or brand",
@@ -762,7 +763,7 @@
     "placeholders": {
       "song_title": "e.g. Midnight Drive",
       "mood": "e.g. dreamy synth-pop, cold city mood, explosive ending",
-      "live_environment": "e.g. club LED wall, festival main stage, 16:9 loop",
+      "live_environment": "e.g. club LED wall / vertical 9:16 / 60-minute loop",
       "ad_brand": "e.g. Nike Korea",
       "ad_product": "e.g. New running shoe",
       "ad_concept": "Describe the goal, tone, and any must-keep scenes.",
@@ -770,8 +771,15 @@
     },
     "helpers": {
       "audio": "MP3, WAV, M4A, AAC, FLAC / up to 100MB",
+      "live_environment": "Add the playback medium (LED, projection, screen), screen shape (horizontal, vertical, wide), and length or loop needs. We'll refine the details together in the meeting.",
       "guide": "Upload ad guidelines, storyboards, product shots, or existing video if available.",
       "references": "Accepts image, PDF, MP4, MOV, and WEBM files."
+    },
+    "performance_type": {
+      "festival": "Festival",
+      "club_dj": "Club / DJ",
+      "concert": "Concert",
+      "exhibition": "Exhibition / other"
     },
     "budget": {
       "under_1m": "Under KRW 1M",
@@ -800,6 +808,7 @@
       "type_required": "Select a request type.",
       "song_title_required": "Enter the song title.",
       "mood_required": "Enter the genre and mood.",
+      "performance_type_required": "Select a performance type.",
       "audio_required": "Upload the audio file.",
       "ad_required": "Enter the advertiser, product, and concept.",
       "budget_required": "Select a budget range.",

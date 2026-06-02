@@ -38,6 +38,7 @@ type RequestType = "music_video" | "live_visual" | "ad_visual";
 type Step = 1 | 2 | 3 | 4;
 type BudgetBand = "under_1m" | "1m_to_5m" | "5m_to_10m" | "negotiable";
 type TwinIntent = "undecided" | "specific_in_mind" | "no_twin";
+type PerformanceType = "festival" | "club_dj" | "concert" | "exhibition";
 
 type UploadedAsset = {
   id: string;
@@ -73,6 +74,12 @@ const TWIN_INTENTS: TwinIntent[] = [
   "specific_in_mind",
   "no_twin",
 ];
+const PERFORMANCE_TYPES: PerformanceType[] = [
+  "festival",
+  "club_dj",
+  "concert",
+  "exhibition",
+];
 
 export function ArtistRequestWizard({ backHref }: Props) {
   const t = useTranslations("studio_request");
@@ -90,6 +97,7 @@ export function ArtistRequestWizard({ backHref }: Props) {
     songTitle: "",
     mood: "",
     liveEnvironment: "",
+    performanceType: "" as PerformanceType | "",
     adBrand: "",
     adProduct: "",
     adConcept: "",
@@ -129,6 +137,10 @@ export function ArtistRequestWizard({ backHref }: Props) {
         }
         if (!form.mood.trim()) {
           toast.error(t("errors.mood_required"));
+          return false;
+        }
+        if (requestType === "live_visual" && !form.performanceType) {
+          toast.error(t("errors.performance_type_required"));
           return false;
         }
         if (!audioAsset) {
@@ -420,18 +432,39 @@ export function ArtistRequestWizard({ backHref }: Props) {
                     }
                   />
                   {requestType === "live_visual" && (
-                    <FieldBlock
-                      label={t("fields.live_environment")}
-                      input={
-                        <Input
-                          value={form.liveEnvironment}
-                          onChange={(event) =>
-                            updateField("liveEnvironment", event.target.value)
-                          }
-                          placeholder={t("placeholders.live_environment")}
-                        />
-                      }
-                    />
+                    <>
+                      <div>
+                        <Label>{t("fields.performance_type")}</Label>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {PERFORMANCE_TYPES.map((type) => (
+                            <ChoiceButton
+                              key={type}
+                              selected={form.performanceType === type}
+                              onClick={() => updateField("performanceType", type)}
+                            >
+                              {t(`performance_type.${type}`)}
+                            </ChoiceButton>
+                          ))}
+                        </div>
+                      </div>
+                      <FieldBlock
+                        label={t("fields.live_environment")}
+                        input={
+                          <div>
+                            <Input
+                              value={form.liveEnvironment}
+                              onChange={(event) =>
+                                updateField("liveEnvironment", event.target.value)
+                              }
+                              placeholder={t("placeholders.live_environment")}
+                            />
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground keep-all">
+                              {t("helpers.live_environment")}
+                            </p>
+                          </div>
+                        }
+                      />
+                    </>
                   )}
                   <UploadField
                     label={t("fields.audio")}
@@ -900,6 +933,7 @@ function buildDescription({
     songTitle: string;
     mood: string;
     liveEnvironment: string;
+    performanceType: PerformanceType | "";
     adBrand: string;
     adProduct: string;
     adConcept: string;
@@ -919,6 +953,13 @@ function buildDescription({
   if (requestType === "music_video" || requestType === "live_visual") {
     lines.push(`${t("fields.song_title")}: ${form.songTitle.trim()}`);
     lines.push(`${t("fields.mood")}: ${form.mood.trim()}`);
+    if (requestType === "live_visual" && form.performanceType) {
+      lines.push(
+        `${t("fields.performance_type")}: ${t(
+          `performance_type.${form.performanceType}`,
+        )}`,
+      );
+    }
     if (form.liveEnvironment.trim()) {
       lines.push(`${t("fields.live_environment")}: ${form.liveEnvironment.trim()}`);
     }
