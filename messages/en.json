@@ -337,8 +337,8 @@
   },
   "discover": {
     "eyebrow": "AI Twins",
-    "title": "Find the right AI twin for your contest",
-    "description": "Browse public AI twins (AI-generated digital personas) and send a contest proposal to the twin you like.",
+    "title": "Find an AI twin to collaborate with",
+    "description": "Browse public AI twins (AI-generated digital personas) and send a collaboration proposal to a twin you like.",
     "card": {
       "no_cover": "No cover visual",
       "default_type": "AI twin",
@@ -365,18 +365,18 @@
       "status_active": "Available",
       "proposal_eyebrow": "Send proposal",
       "proposal_title": "Collaboration proposal",
-      "proposal_description": "Send the contest type and details. YAGI will review the terms and route the offer to this twin."
+      "proposal_description": "Send your intended usage type and details. YAGI will review the terms and route the offer to this twin."
     },
     "proposal": {
-      "usage_label": "Contest usage",
-      "brief_label": "Contest details",
+      "usage_label": "Usage type",
+      "brief_label": "Proposal details",
       "brief_placeholder": "Share the goal, channels, deliverables, and timeline in 1000 characters or fewer.",
       "budget_label": "Proposed budget",
       "budget_placeholder": "e.g. 3000000",
       "submit": "Send proposal",
       "submitting": "Sending",
       "success": "Proposal sent.",
-      "error_usage": "Select at least one contest usage.",
+      "error_usage": "Select at least one usage type.",
       "error_budget": "Proposed budget must be a non-negative integer.",
       "server_error": {
         "validation": "Check the input values.",

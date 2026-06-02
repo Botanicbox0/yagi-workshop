@@ -337,8 +337,8 @@
   },
   "discover": {
     "eyebrow": "AI 트윈",
-    "title": "콘테스트에 맞는 AI 트윈을 찾으세요",
-    "description": "공개된 AI 트윈(AI로 만든 디지털 분신)을 둘러보고, 마음에 드는 트윈에게 콘테스트 제안을 보내보세요.",
+    "title": "협업할 AI 트윈을 찾으세요",
+    "description": "공개된 AI 트윈(AI로 만든 디지털 분신)을 둘러보고, 마음에 드는 트윈에게 협업을 제안해보세요.",
     "card": {
       "no_cover": "대표 비주얼 없음",
       "default_type": "AI 트윈",
@@ -365,18 +365,18 @@
       "status_active": "제안 가능",
       "proposal_eyebrow": "제안 보내기",
       "proposal_title": "협업 제안",
-      "proposal_description": "콘테스트 유형과 내용을 보내면, 야기가 조건을 검토해 해당 트윈에게 전달합니다."
+      "proposal_description": "원하는 활용 유형과 내용을 보내면, 야기가 조건을 검토해 해당 트윈에게 전달합니다."
     },
     "proposal": {
-      "usage_label": "콘테스트 유형",
-      "brief_label": "콘테스트 내용",
+      "usage_label": "활용 유형",
+      "brief_label": "제안 내용",
       "brief_placeholder": "목표, 노출 채널, 제작물 형태, 일정 등을 1000자 이내로 적어주세요.",
       "budget_label": "제시예산",
       "budget_placeholder": "예: 3000000",
       "submit": "협업 제안",
       "submitting": "제안 중",
       "success": "제안을 보냈습니다.",
-      "error_usage": "콘테스트 유형을 최소 1개 선택해주세요.",
+      "error_usage": "활용 유형을 최소 1개 선택해주세요.",
       "error_budget": "제시예산은 0 이상의 정수로 입력해주세요.",
       "server_error": {
         "validation": "입력값을 확인해주세요.",
