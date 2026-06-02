@@ -2938,22 +2938,22 @@
       "twin_not_interested": "관심 없음 / Not interested",
       "twin_not_answered": "미응답 / Not answered",
       "production_spec": {
-        "eyebrow": "Production Spec",
-        "title": "프로젝트 사양",
-        "description": "제작 단계에서 필요한 분위기, 화면 비율, 활용 채널을 구조화해 정리합니다.",
+        "eyebrow": "제작 방향",
+        "title": "함께 만들 제작 방향",
+        "description": "분위기·화면 비율·활용 채널을 미리 적어두면 미팅이 빨라지고 수정이 줄어요. 지금 모르는 항목은 비워두셔도 괜찮아요 — 인테이크 미팅에서 함께 확정합니다.",
         "summary_label": "현재 사양",
         "not_set": "미입력",
         "mood_label": "분위기 / 키워드",
-        "mood_helper": "결과물의 정서와 톤을 선택하세요.",
+        "mood_helper": "결과물의 정서와 톤을 골라주세요. 예: 고급스러운 · 트렌디한 · 따뜻한",
         "mood_free_placeholder": "직접 입력",
         "ratio_label": "화면 비율",
-        "ratio_custom_placeholder": "예: 3:2, 21:9",
+        "ratio_custom_placeholder": "예: 3:2, 21:9 (필요한 규격을 모두 적어주세요)",
         "channels_label": "활용 채널",
-        "channels_helper": "결과물이 사용될 채널을 선택하세요.",
-        "save": "사양 저장",
+        "channels_helper": "결과물이 게재될 채널을 골라주세요.",
+        "save": "제작 방향 저장",
         "saving": "저장 중...",
-        "saved": "프로젝트 사양을 저장했습니다.",
-        "save_error": "프로젝트 사양 저장에 실패했습니다.",
+        "saved": "제작 방향을 저장했어요.",
+        "save_error": "저장에 실패했어요. 잠시 후 다시 시도해주세요.",
         "read_only": "읽기 전용"
       },
       "mood": {
@@ -3012,8 +3012,8 @@
         "draft": "브리프 완성하기 →",
         "submitted": "",
         "in_review": "자료 추가하기",
-        "in_progress": "코멘트 작성",
-        "in_revision": "수정 의견 코멘트",
+        "in_progress": "제작이 진행 중이에요. 시안이 준비되면 알려드릴게요.",
+        "in_revision": "피드백을 반영해 수정 중이에요.",
         "delivered": "시안 보기 →",
         "approved": "프로젝트 평가하기"
       },
@@ -3022,7 +3022,8 @@
         "archived": "이 의뢰는 보관 처리되었어요."
       },
       "empty_state": {
-        "submitted": "야기 팀 검토 시작 대기 중"
+        "submitted": "야기 팀 검토 시작 대기 중",
+        "in_review": "요청을 접수했어요. YAGI가 검토한 뒤, 인테이크 미팅에서 제작 방향과 견적을 함께 확정하고 제작을 시작합니다. 그동안 아래에서 참고자료를 더하거나 제작 방향을 채워주세요 — 자세할수록 미팅이 빨라져요."
       },
       "card": {
         "submitted": {

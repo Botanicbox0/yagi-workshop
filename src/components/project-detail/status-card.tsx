@@ -81,6 +81,7 @@ type StatusCardProps = {
     cta_delivered: string;
     cta_approved: string;
     empty_state_submitted: string;
+    empty_state_in_review: string;
     delivered_placeholder: string;
     modal: MaterialAppendModalLabels;
   };
@@ -282,14 +283,16 @@ export function StatusCard({
   // ── in_review (dropdown alongside NextActionCTA's material-append CTA) ────
   if (status === "in_review" && isOwner) {
     return (
-      <div className="flex items-center justify-between gap-3">
-        <NextActionCTA
-          projectId={projectId}
-          status={status}
-          isOwner={isOwner}
-          locale={locale}
-          labels={ctaLabels}
-        />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <NextActionCTA
+            projectId={projectId}
+            status={status}
+            isOwner={isOwner}
+            locale={locale}
+            labels={ctaLabels}
+          />
+        </div>
         <MoreActionsDropdown projectId={projectId} />
       </div>
     );

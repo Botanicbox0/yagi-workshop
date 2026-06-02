@@ -7,8 +7,8 @@
 //   draft         → primary [브리프 완성하기 →] (Link to /projects/new?project=...)
 //   submitted     → 0 CTA, helper text only
 //   in_review     → [자료 추가하기]  → opens MaterialAppendModal (kind selector)
-//   in_progress   → disabled placeholder [코멘트 작성]    (FU-Phase5-10)
-//   in_revision   → disabled placeholder [수정 의견 코멘트] (FU-Phase5-10)
+//   in_progress   → helper text only
+//   in_revision   → helper text only
 //   delivered     → primary [시안 보기 →] → "준비 중" placeholder modal (FU-Phase5-15)
 //   approved      → disabled placeholder [프로젝트 평가하기] (FU-Phase5-15)
 //   cancelled / archived → no CTA (banner above the page handles those)
@@ -40,6 +40,7 @@ type Props = {
     cta_delivered: string;
     cta_approved: string;
     empty_state_submitted: string;
+    empty_state_in_review: string;
     delivered_placeholder: string;
     // MaterialAppendModal labels (passed-through)
     modal: MaterialAppendModalLabels;
@@ -106,22 +107,31 @@ export function NextActionCTA({
 
   if (status === "in_review") {
     return (
-      <MaterialAppendModal
-        projectId={projectId}
-        labels={labels.modal}
-      />
+      <>
+        <p className="mb-4 text-sm text-muted-foreground keep-all leading-relaxed">
+          {labels.empty_state_in_review}
+        </p>
+        <MaterialAppendModal
+          projectId={projectId}
+          labels={labels.modal}
+        />
+      </>
     );
   }
 
   if (status === "in_progress") {
     return (
-      <DisabledCta label={labels.cta_in_progress} hint="Phase 5+" />
+      <p className="text-sm text-muted-foreground keep-all leading-relaxed">
+        {labels.cta_in_progress}
+      </p>
     );
   }
 
   if (status === "in_revision") {
     return (
-      <DisabledCta label={labels.cta_in_revision} hint="Phase 5+" />
+      <p className="text-sm text-muted-foreground keep-all leading-relaxed">
+        {labels.cta_in_revision}
+      </p>
     );
   }
 

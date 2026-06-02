@@ -612,6 +612,7 @@ export default async function ProjectDetailPage({
                 cta_delivered: tDetail("status.cta.delivered"),
                 cta_approved: tDetail("status.cta.approved"),
                 empty_state_submitted: tDetail("status.empty_state.submitted"),
+                empty_state_in_review: tDetail("status.empty_state.in_review"),
                 delivered_placeholder: tDetail("delivered_placeholder"),
                 modal: {
                   trigger: tDetail("material_append.trigger"),

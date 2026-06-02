@@ -89,6 +89,7 @@ type Props = {
       cta_delivered: string;
       cta_approved: string;
       empty_state_submitted: string;
+      empty_state_in_review: string;
       delivered_placeholder: string;
       modal: MaterialAppendModalLabels;
     };

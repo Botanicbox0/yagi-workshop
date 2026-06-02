@@ -2873,22 +2873,22 @@
       "twin_not_interested": "관심 없음 / Not interested",
       "twin_not_answered": "미응답 / Not answered",
       "production_spec": {
-        "eyebrow": "Production Spec",
-        "title": "Project spec",
-        "description": "Keep the production-stage mood, aspect ratio, and channel requirements as structured fields.",
+        "eyebrow": "Creative direction",
+        "title": "Direction we'll shape together",
+        "description": "Note the mood, aspect ratio, and channels if you know them — it makes the kickoff faster and cuts revisions. Leave anything blank; we'll lock it in together during the intake meeting.",
         "summary_label": "Current spec",
         "not_set": "Not set",
         "mood_label": "Mood / keywords",
-        "mood_helper": "Choose the emotional direction and tone for the output.",
+        "mood_helper": "Pick the emotional direction and tone. e.g. sophisticated · trendy · warm",
         "mood_free_placeholder": "Add custom keywords",
         "ratio_label": "Aspect ratio",
-        "ratio_custom_placeholder": "e.g. 3:2, 21:9",
+        "ratio_custom_placeholder": "e.g. 3:2, 21:9 (list every ratio you'll need)",
         "channels_label": "Channels",
-        "channels_helper": "Choose where the final work will be used.",
-        "save": "Save spec",
+        "channels_helper": "Pick where the final work will run.",
+        "save": "Save direction",
         "saving": "Saving...",
-        "saved": "Project spec saved.",
-        "save_error": "Failed to save project spec.",
+        "saved": "Direction saved.",
+        "save_error": "Couldn't save. Please try again in a moment.",
         "read_only": "Read only"
       },
       "mood": {
@@ -2947,8 +2947,8 @@
         "draft": "Complete request →",
         "submitted": "",
         "in_review": "Add materials",
-        "in_progress": "Add comment",
-        "in_revision": "Comment on revision",
+        "in_progress": "Production is underway. We'll let you know when a draft is ready.",
+        "in_revision": "We're revising based on your feedback.",
         "delivered": "View draft →",
         "approved": "Rate project"
       },
@@ -2957,7 +2957,8 @@
         "archived": "This request has been archived."
       },
       "empty_state": {
-        "submitted": "Waiting for YAGI to start review"
+        "submitted": "Waiting for YAGI to start review",
+        "in_review": "We've received your request. After review, we'll lock the direction and quote together in the intake meeting, then start production. Meanwhile, add references or fill in the creative direction — the more detail, the faster the meeting."
       },
       "card": {
         "submitted": {
