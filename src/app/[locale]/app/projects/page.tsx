@@ -124,7 +124,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           tighter tracking. Reads as a real section title rather than a
           tab label. CTA pairing with "프로젝트 의뢰하기" preserved. */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-sans text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xs font-semibold uppercase tracking-label text-muted-foreground">
           {t("list_title")}
         </h1>
         <Link

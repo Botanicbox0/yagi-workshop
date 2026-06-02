@@ -3,7 +3,6 @@ import {
   CalendarClock,
   Megaphone,
   Plus,
-  RadioTower,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/routing";
@@ -111,7 +110,7 @@ export default async function CampaignsPage({ params }: Props) {
               {isCreatorView ? t("creator_description") : t("description")}
             </p>
           </div>
-          {!isCreatorView && (
+          {!isCreatorView && campaigns.length > 0 && (
             <Link
               href="/app/campaigns/new"
               className="inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90 sm:w-fit"
@@ -140,6 +139,22 @@ export default async function CampaignsPage({ params }: Props) {
           variant={isCreatorView ? "creator" : "brand"}
           workspaceName={active.name}
         />
+        {campaigns.length === 0 && (
+          <div className="mt-6 flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm leading-6 text-muted-foreground keep-all">
+              {isCreatorView ? t("creator_empty.title") : t("empty.title")}
+            </p>
+            {!isCreatorView && (
+              <Link
+                href="/app/campaigns/new"
+                className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90 sm:w-fit"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t("empty.cta")}
+              </Link>
+            )}
+          </div>
+        )}
       </section>
 
       {campaigns.length > 0 ? (
@@ -172,32 +187,7 @@ export default async function CampaignsPage({ params }: Props) {
             />
           ))}
         </section>
-      ) : (
-        <section className="rounded-lg border border-dashed border-border/70 bg-surface-card-deep p-6 sm:p-8">
-          <div className="max-w-xl">
-            <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand">
-              <RadioTower className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <h2 className="text-xl font-semibold text-foreground keep-all">
-              {isCreatorView ? t("creator_empty.title") : t("empty.title")}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground keep-all">
-              {isCreatorView
-                ? t("creator_empty.description")
-                : t("empty.description")}
-            </p>
-          </div>
-          {!isCreatorView && (
-            <Link
-              href="/app/campaigns/new"
-              className="mt-6 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              {t("empty.cta")}
-            </Link>
-          )}
-        </section>
-      )}
+      ) : null}
     </main>
   );
 }

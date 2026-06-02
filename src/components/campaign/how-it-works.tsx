@@ -325,7 +325,38 @@ function BrandFeedMock() {
             <p className="text-[11px] text-muted-foreground">new campaign post</p>
           </div>
         </div>
-        <div className="mt-3 aspect-square rounded-lg bg-gradient-to-br from-surface-card-deep via-muted-foreground/10 to-gold/20" />
+        <div className="relative mt-3 aspect-square overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-surface-card-deep via-muted-foreground/10 to-gold/20">
+          <div
+            className="absolute inset-0 bg-[radial-gradient(circle_at_25%_18%,rgba(250,210,4,0.22),transparent_28%),linear-gradient(135deg,rgba(240,240,240,0.14),transparent_42%)]"
+            aria-hidden="true"
+          />
+          <div className="absolute left-4 top-4 flex h-12 w-12 items-center justify-center rounded-full border border-border/70 bg-surface-card">
+            <Sparkles className="h-5 w-5 text-gold" aria-hidden="true" />
+          </div>
+          <div className="absolute bottom-4 left-4 right-4 rounded-lg border border-border/70 bg-surface-raised p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-foreground">
+                  42K views
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  creator channel reach
+                </p>
+              </div>
+              <span className="rounded-full bg-gold-soft px-2 py-1 text-[11px] font-semibold text-gold">
+                LIVE
+              </span>
+            </div>
+            <div className="mt-3 flex gap-1.5">
+              <SkeletonBar className="w-1/2" />
+              <SkeletonBar className="w-1/3" />
+            </div>
+          </div>
+          <div
+            className="absolute right-5 top-8 h-24 w-16 rotate-6 rounded-md border border-border/60 bg-surface-card"
+            aria-hidden="true"
+          />
+        </div>
         <div className="mt-3 flex items-center gap-3 text-muted-foreground">
           <Heart className="h-4 w-4" aria-hidden="true" />
           <MessageCircle className="h-4 w-4" aria-hidden="true" />

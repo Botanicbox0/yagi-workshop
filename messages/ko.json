@@ -295,8 +295,8 @@
     "americano": {
       "eyebrow": "Americano",
       "title": "Americano",
-      "description": "AI 콘텐츠 생성 도구가 들어올 자리입니다.",
-      "status": "기능 준비 중",
+      "description": "AI 콘텐츠 생성 도구를 곧 이곳에서 제공합니다.",
+      "status": "곧 제공됩니다",
       "cards": {
         "model": {
           "title": "Model Casting",
@@ -1143,7 +1143,7 @@
     "status_rescheduled": "일정 재조정 중"
   },
   "projects": {
-    "list_title": "프로젝트 생성",
+    "list_title": "PROJECT",
     "direct_tab": "프로젝트 의뢰하기",
     "contest_tab": "챌린지 개설",
     "new": "프로젝트 의뢰하기",

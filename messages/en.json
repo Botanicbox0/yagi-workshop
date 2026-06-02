@@ -295,8 +295,8 @@
     "americano": {
       "eyebrow": "Americano",
       "title": "Americano",
-      "description": "A space reserved for AI content creation tools.",
-      "status": "Feature placeholder",
+      "description": "AI content creation tools are coming soon here.",
+      "status": "Coming soon",
       "cards": {
         "model": {
           "title": "Model Casting",
@@ -1143,7 +1143,7 @@
     "status_rescheduled": "Rescheduling"
   },
   "projects": {
-    "list_title": "Create a project",
+    "list_title": "PROJECT",
     "direct_tab": "Request a project",
     "contest_tab": "Campaign request",
     "new": "Request a project",
