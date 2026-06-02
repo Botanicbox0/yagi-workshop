@@ -622,6 +622,8 @@
     "eyebrow": "Explore",
     "title": "See today's workspace at a glance",
     "description": "Manage projects, contests, and credits in one view. See active work and what to do next at a glance.",
+    "artist_title": "Start audio-led production work",
+    "artist_description": "Prepare music, music video, live visual, and contest asset requests from one place. The dedicated artist wizard lands in the next step.",
     "actions": {
       "new_project": "Start a project",
       "americano": "Open Americano"
@@ -681,6 +683,27 @@
           "title": "Fashion lookbook automation",
           "description": "A placeholder for model, product shot, and editorial layout flows."
         }
+      }
+    }
+  },
+  "studio_request": {
+    "back": "Back to Explore",
+    "eyebrow": "Artist Request",
+    "title": "Artist project request",
+    "description": "A dedicated flow for music-led requests, including music videos, live visuals, and contest assets built from audio and references.",
+    "status": "Wizard coming soon",
+    "steps": {
+      "audio": {
+        "title": "Audio upload",
+        "description": "Infrastructure is ready for MP3, WAV, M4A, AAC, and FLAC uploads through a safe R2 path."
+      },
+      "brief": {
+        "title": "Creative direction",
+        "description": "Song mood, usage, and references will connect in the next implementation step."
+      },
+      "upload": {
+        "title": "Dedicated artist flow",
+        "description": "This starts from a route separated from the brand project wizard."
       }
     }
   },

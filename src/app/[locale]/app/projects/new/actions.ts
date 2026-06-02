@@ -551,6 +551,12 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/svg+xml",
   "image/avif",
   "application/pdf",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/mp4",
+  "audio/aac",
+  "audio/flac",
 ]);
 
 const EXT_FOR_CONTENT_TYPE: Record<string, string> = {
@@ -561,6 +567,12 @@ const EXT_FOR_CONTENT_TYPE: Record<string, string> = {
   "image/svg+xml": "svg",
   "image/avif": "avif",
   "application/pdf": "pdf",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
+  "audio/mp4": "m4a",
+  "audio/aac": "aac",
+  "audio/flac": "flac",
 };
 
 // Phase 3.0/legacy schema — accepts a client-supplied key but now restricts
@@ -577,6 +589,7 @@ const wizardAssetPutUrlSchema = z.object({
       (k) =>
         k.startsWith("board-assets/") ||
         k.startsWith("wizard-references/") ||
+        k.startsWith("brief-audio/") ||
         k.startsWith("project-briefs/"),
       { message: "storageKey prefix not allowed" }
     )
@@ -620,6 +633,7 @@ export async function getWizardAssetPutUrlAction(
   const allowedPrefixes = [
     `board-assets/${user.id}/`,
     `wizard-references/${user.id}/`,
+    `brief-audio/${user.id}/`,
     `project-briefs/${user.id}/`,
   ];
   if (!allowedPrefixes.some((p) => parsed.data.storageKey.startsWith(p))) {
@@ -670,7 +684,10 @@ export async function getBoardAssetPutUrlAction(
   // Server-generated key: UUID + safe extension. NO client filename trust.
   const ext = EXT_FOR_CONTENT_TYPE[parsed.data.contentType] ?? "bin";
   const uuid = crypto.randomUUID();
-  const storageKey = `board-assets/${user.id}/${uuid}.${ext}`;
+  const storagePrefix = parsed.data.contentType.startsWith("audio/")
+    ? "brief-audio"
+    : "board-assets";
+  const storageKey = `${storagePrefix}/${user.id}/${uuid}.${ext}`;
 
   try {
     const putUrl = await createBriefAssetPutUrl(

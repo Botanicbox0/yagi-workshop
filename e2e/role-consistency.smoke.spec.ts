@@ -72,7 +72,7 @@ test.describe("role consistency smoke", () => {
     const consoleErrors = collectConsoleErrors(page);
     const expected: Record<Actor, RegExp> = {
       brand: /\/ko\/app\/explore$/,
-      artist: /\/ko\/app\/deals$/,
+      artist: /\/ko\/app\/explore$/,
       creator: /\/ko\/app\/campaigns$/,
       yagi_admin: /\/ko\/app\/admin$/,
     };
@@ -110,7 +110,7 @@ test.describe("role consistency smoke", () => {
         ],
       },
       artist: {
-        start: "/ko/app/deals",
+        start: "/ko/app/explore",
         visible: ["/app/explore", "/app/twins", "/app/deals"],
         hidden: [
           "/app/projects",

@@ -622,6 +622,8 @@
     "eyebrow": "Explore",
     "title": "오늘 진행할 작업을 한 화면에서 확인하세요",
     "description": "프로젝트와 콘테스트, 크레딧을 한 화면에서 관리하세요. 진행 중인 작업과 다음에 할 일을 바로 확인할 수 있습니다.",
+    "artist_title": "음원 기반 작업을 시작하세요",
+    "artist_description": "음원, 뮤직비디오, 콘테스트 비주얼 의뢰를 한 곳에서 준비합니다. 다음 단계에서 전용 마법사가 연결됩니다.",
     "actions": {
       "new_project": "새 프로젝트 의뢰",
       "americano": "Americano 바로가기"
@@ -681,6 +683,27 @@
           "title": "패션 룩북 자동화",
           "description": "모델, 상품 컷, editorial layout을 연결하는 자리입니다."
         }
+      }
+    }
+  },
+  "studio_request": {
+    "back": "Explore로 돌아가기",
+    "eyebrow": "Artist Request",
+    "title": "아티스트 프로젝트 의뢰",
+    "description": "음원과 레퍼런스를 바탕으로 뮤직비디오, 라이브 비주얼, 콘테스트용 소재 의뢰를 준비하는 전용 흐름입니다.",
+    "status": "마법사 준비 중",
+    "steps": {
+      "audio": {
+        "title": "음원 업로드",
+        "description": "MP3, WAV, M4A, AAC, FLAC 파일을 안전한 R2 경로로 받을 수 있도록 인프라를 준비했습니다."
+      },
+      "brief": {
+        "title": "작업 방향 정리",
+        "description": "곡의 분위기, 활용처, 레퍼런스를 입력하는 단계가 다음 작업에서 연결됩니다."
+      },
+      "upload": {
+        "title": "전용 의뢰 흐름",
+        "description": "브랜드 프로젝트 마법사와 분리된 artist 전용 라우트에서 시작합니다."
       }
     }
   },

@@ -14,6 +14,11 @@ import type { ReactNode } from "react";
 import { Link, redirect } from "@/i18n/routing";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { getIsYagiAdmin } from "@/lib/app/admin";
+import {
+  getAppLandingPath,
+  resolveAppActor,
+} from "@/lib/app/role-routing";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -66,6 +71,13 @@ export default async function ExplorePage({ params }: Props) {
     redirect({ href: "/onboarding", locale });
     return null;
   }
+  const actor = resolveAppActor(active, await getIsYagiAdmin(supabase, user.id));
+  if (actor !== "brand" && actor !== "artist") {
+    redirect({ href: actor ? getAppLandingPath(actor) : "/onboarding", locale });
+    return null;
+  }
+  const isArtist = actor === "artist";
+  const projectRequestHref = isArtist ? "/app/studio/new" : "/app/projects/new";
 
   const [projectsResult, campaignsResult] = await Promise.all([
     supabase
@@ -102,7 +114,12 @@ export default async function ExplorePage({ params }: Props) {
 
   return (
     <main className="mx-auto flex w-full max-w-content flex-col gap-8 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
-      <section className="grid gap-4 lg:grid-cols-[1.45fr_0.55fr]">
+      <section
+        className={cn(
+          "grid gap-4",
+          isArtist ? "lg:grid-cols-1" : "lg:grid-cols-[1.45fr_0.55fr]",
+        )}
+      >
         <div className="rounded-lg border border-border/70 bg-surface-raised p-5 sm:p-6 lg:p-8">
           <p className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-label text-brand">
             <Compass className="h-4 w-4" aria-hidden="true" />
@@ -110,43 +127,47 @@ export default async function ExplorePage({ params }: Props) {
           </p>
           <div className="max-w-3xl">
             <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl">
-              {t("title")}
+              {isArtist ? t("artist_title") : t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base keep-all">
-              {t("description")}
+              {isArtist ? t("artist_description") : t("description")}
             </p>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/app/projects/new"
+              href={projectRequestHref}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-brand-on transition-colors hover:bg-brand/90"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               {t("actions.new_project")}
             </Link>
-            <Link
-              href="/app/americano"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
-            >
-              <Coffee className="h-4 w-4 text-gold" aria-hidden="true" />
-              {t("actions.americano")}
-            </Link>
+            {!isArtist && (
+              <Link
+                href="/app/americano"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
+              >
+                <Coffee className="h-4 w-4 text-gold" aria-hidden="true" />
+                {t("actions.americano")}
+              </Link>
+            )}
           </div>
         </div>
 
-        <CreditPanel
-          title={t("credit.title")}
-          balance={navT("credit_balance")}
-          description={t("credit.description")}
-          cta={t("credit.cta")}
-        />
+        {!isArtist && (
+          <CreditPanel
+            title={t("credit.title")}
+            balance={navT("credit_balance")}
+            description={t("credit.description")}
+            cta={t("credit.cta")}
+          />
+        )}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <DashboardSection
           title={t("recent_projects.title")}
-          href="/app/projects"
-          cta={t("recent_projects.view_all")}
+          href={isArtist ? undefined : "/app/projects"}
+          cta={isArtist ? undefined : t("recent_projects.view_all")}
           icon={<FolderOpen className="h-4 w-4" aria-hidden="true" />}
         >
           {projects.length > 0 ? (
@@ -175,7 +196,7 @@ export default async function ExplorePage({ params }: Props) {
             <EmptyState
               title={t("recent_projects.empty_title")}
               description={t("recent_projects.empty_description")}
-              href="/app/projects/new"
+              href={projectRequestHref}
               cta={t("recent_projects.empty_cta")}
             />
           )}
@@ -183,16 +204,17 @@ export default async function ExplorePage({ params }: Props) {
 
         <DashboardSection
           title={t("campaigns.title")}
-          href="/app/campaigns"
-          cta={t("campaigns.view_all")}
+          href={isArtist ? undefined : "/app/campaigns"}
+          cta={isArtist ? undefined : t("campaigns.view_all")}
           icon={<Megaphone className="h-4 w-4" aria-hidden="true" />}
         >
           {campaigns.length > 0 ? (
             <div className="grid gap-3">
               {campaigns.map((campaign) => (
-                <Link
+                <DashboardItem
                   key={campaign.id}
                   href="/app/campaigns"
+                  disabled={isArtist}
                   className="group rounded-lg border border-border/70 bg-surface-card p-4 transition-colors hover:bg-accent/60"
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -212,15 +234,15 @@ export default async function ExplorePage({ params }: Props) {
                     </div>
                     <StatusPill label={campaignStatusLabel(campaign.status, t)} />
                   </div>
-                </Link>
+                </DashboardItem>
               ))}
             </div>
           ) : (
             <EmptyState
               title={t("campaigns.empty_title")}
               description={t("campaigns.empty_description")}
-              href="/app/campaigns"
-              cta={t("campaigns.empty_cta")}
+              href={isArtist ? projectRequestHref : "/app/campaigns"}
+              cta={isArtist ? t("actions.new_project") : t("campaigns.empty_cta")}
             />
           )}
         </DashboardSection>
@@ -233,19 +255,21 @@ export default async function ExplorePage({ params }: Props) {
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <QuickAction
-              href="/app/projects/new"
+              href={projectRequestHref}
               icon={<Plus className="h-4 w-4" aria-hidden="true" />}
               title={t("quick_actions.new_project_title")}
               description={t("quick_actions.new_project_description")}
               accent="brand"
             />
-            <QuickAction
-              href="/app/americano"
-              icon={<Coffee className="h-4 w-4" aria-hidden="true" />}
-              title={t("quick_actions.americano_title")}
-              description={t("quick_actions.americano_description")}
-              accent="gold"
-            />
+            {!isArtist && (
+              <QuickAction
+                href="/app/americano"
+                icon={<Coffee className="h-4 w-4" aria-hidden="true" />}
+                title={t("quick_actions.americano_title")}
+                description={t("quick_actions.americano_description")}
+                accent="gold"
+              />
+            )}
           </div>
         </DashboardSection>
 
@@ -314,6 +338,27 @@ function DashboardSection({
       </div>
       {children}
     </section>
+  );
+}
+
+function DashboardItem({
+  href,
+  disabled = false,
+  className,
+  children,
+}: {
+  href: string;
+  disabled?: boolean;
+  className: string;
+  children: ReactNode;
+}) {
+  if (disabled) {
+    return <div className={className}>{children}</div>;
+  }
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
   );
 }
 

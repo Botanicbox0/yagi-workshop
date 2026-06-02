@@ -32,7 +32,7 @@ function landingForKind(kind: WorkspaceKind) {
     case "brand":
       return "/app/explore";
     case "artist":
-      return "/app/deals";
+      return "/app/explore";
     case "creator":
       return "/app/campaigns";
     case "agency":
