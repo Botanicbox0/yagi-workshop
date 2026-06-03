@@ -71,6 +71,7 @@ type ProjectDetail = {
   visual_ratio: string | null;
   visual_ratio_custom: string | null;
   channels: string[];
+  revision_rounds_limit: number;
   target_audience: string | null;
   additional_notes: string | null;
   interested_in_twin: boolean | null;
@@ -237,7 +238,7 @@ export default async function ProjectDetailPage({
       meeting_preferred_at, twin_intent, created_at,
       deliverable_types, mood_keywords, mood_keywords_free,
       visual_ratio, visual_ratio_custom,
-      channels, target_audience, additional_notes,
+      channels, revision_rounds_limit, target_audience, additional_notes,
       interested_in_twin, submitted_at,
       has_external_brand_party,
       brand:brands(id, name),
@@ -291,6 +292,8 @@ export default async function ProjectDetailPage({
     visual_ratio_custom:
       (projectRaw.visual_ratio_custom as string | undefined | null) ?? null,
     channels: (projectRaw.channels as string[] | null) ?? [],
+    revision_rounds_limit:
+      (projectRaw.revision_rounds_limit as number | undefined | null) ?? 2,
     target_audience:
       (projectRaw.target_audience as string | undefined | null) ?? null,
     additional_notes:
@@ -311,6 +314,53 @@ export default async function ProjectDetailPage({
   const localeNarrow: "ko" | "en" = locale === "en" ? "en" : "ko";
   const workspaceName = project.workspace?.name ?? "—";
   const brandName = project.brand?.name ?? null;
+  const scopeDeliverableTypeOptions = {
+    image: tDetail("brief_tab.deliverable_type.image"),
+    ad_video_short: tDetail("brief_tab.deliverable_type.ad_video_short"),
+    ad_video_long: tDetail("brief_tab.deliverable_type.ad_video_long"),
+    ai_vfx_mv: tDetail("brief_tab.deliverable_type.ai_vfx_mv"),
+    branding_video: tDetail("brief_tab.deliverable_type.branding_video"),
+    ad_video: tDetail("brief_tab.deliverable_type.ad_video"),
+    ai_human: tDetail("brief_tab.deliverable_type.ai_human"),
+    motion_graphics: tDetail("brief_tab.deliverable_type.motion_graphics"),
+    vfx: tDetail("brief_tab.deliverable_type.vfx"),
+    branding: tDetail("brief_tab.deliverable_type.branding"),
+    illustration: tDetail("brief_tab.deliverable_type.illustration"),
+    other: tDetail("brief_tab.deliverable_type.other"),
+  } as Record<string, string>;
+  const scopeChannelOptions = {
+    instagram: tDetail("brief_tab.channel.instagram"),
+    youtube: tDetail("brief_tab.channel.youtube"),
+    tiktok: tDetail("brief_tab.channel.tiktok"),
+    facebook: tDetail("brief_tab.channel.facebook"),
+    website: tDetail("brief_tab.channel.website"),
+    offline: tDetail("brief_tab.channel.offline"),
+    other: tDetail("brief_tab.channel.other"),
+  } as Record<string, string>;
+  const scopeVisualRatioOptions = {
+    "1_1": tDetail("brief_tab.visual_ratio.1_1"),
+    "16_9": tDetail("brief_tab.visual_ratio.16_9"),
+    "9_16": tDetail("brief_tab.visual_ratio.9_16"),
+    "4_5": tDetail("brief_tab.visual_ratio.4_5"),
+    "239_1": tDetail("brief_tab.visual_ratio.239_1"),
+    custom: tDetail("brief_tab.visual_ratio.custom"),
+  } as Record<string, string>;
+  const scopeRatioFormat = project.visual_ratio
+    ? project.visual_ratio === "custom"
+      ? project.visual_ratio_custom
+        ? `${scopeVisualRatioOptions.custom} (${project.visual_ratio_custom})`
+        : scopeVisualRatioOptions.custom
+      : (scopeVisualRatioOptions[project.visual_ratio] ?? project.visual_ratio)
+    : null;
+  const deliverablesScopeSummary = {
+    deliverableTypes: project.deliverable_types.map(
+      (kind) => scopeDeliverableTypeOptions[kind] ?? kind,
+    ),
+    channels: project.channels.map(
+      (channel) => scopeChannelOptions[channel] ?? channel,
+    ),
+    ratioFormat: scopeRatioFormat,
+  };
 
   if (project.project_type === "curated" && viewerRole === "admin") {
     const sbAdmin = createSupabaseService();
@@ -834,6 +884,7 @@ export default async function ProjectDetailPage({
         {activeTab === "board" && (
           <BoardTab
             projectId={project.id}
+            revisionRoundsLimit={project.revision_rounds_limit}
             isYagiAdmin={isYagiAdmin}
             locale={localeNarrow}
           />
@@ -848,6 +899,8 @@ export default async function ProjectDetailPage({
         {activeTab === "deliverables" && (
           <DeliverablesTab
             projectId={project.id}
+            revisionRoundsLimit={project.revision_rounds_limit}
+            scopeSummary={deliverablesScopeSummary}
             canReview={canReviewDeliverables}
             locale={localeNarrow}
           />

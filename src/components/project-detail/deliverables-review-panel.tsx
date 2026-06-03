@@ -19,9 +19,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import {
   releaseDeliverableToClientAction,
   revertDeliverablePublicReviewAction,
   reviewProjectDeliverableAction,
+  setProjectRevisionRoundsLimitAction,
 } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import {
   AnnotatedImage,
@@ -32,9 +44,14 @@ import {
   type DeliverableAnnotation,
 } from "@/components/project-detail/deliverable-annotations";
 import {
+  describeReleasedRound,
   getDeliverableTurnState,
-  INCLUDED_REVISION_ROUNDS,
 } from "@/lib/project-deliverables/release-state";
+import {
+  formatReleasedRoundLabel,
+  formatRevisionUsageLabel,
+  formatScopeIncludedRevisionsLabel,
+} from "@/components/project-detail/revision-round-labels";
 import {
   TimedVideoPlayer,
   type TimedVideoLabels,
@@ -66,6 +83,12 @@ export type DeliveryReviewDeliverable = {
   annotations: DeliverableAnnotation[];
 };
 
+export type DeliverablesScopeSummary = {
+  deliverableTypes: string[];
+  channels: string[];
+  ratioFormat: string | null;
+};
+
 type Labels = {
   title: string;
   subtitle: string;
@@ -79,7 +102,23 @@ type Labels = {
   releasing: string;
   releaseSuccess: string;
   releasedAt: string;
-  round: string;
+  initialDelivery: string;
+  revisionRound: string;
+  revisionUsage: string;
+  scopeIncludedRevisions: string;
+  scopeControlLabel: string;
+  scopeControlSave: string;
+  scopeControlSaving: string;
+  scopeControlSaved: string;
+  scopeControlError: string;
+  extendScopeTitle: string;
+  extendScopeBody: string;
+  extendScopeConfirm: string;
+  extendScopeCancel: string;
+  agreedScope: string;
+  scopeDeliverableTypes: string;
+  scopeChannels: string;
+  scopeRatioFormat: string;
   roundOverage: string;
   turn: Record<string, string>;
   submittedBy: string;
@@ -161,6 +200,9 @@ function statusClass(status: string) {
 export function DeliverablesReviewPanel({
   projectId,
   deliverables,
+  revisionRoundsLimit,
+  releasedCount,
+  scopeSummary,
   canReview,
   currentUserId,
   isYagiAdmin,
@@ -169,6 +211,9 @@ export function DeliverablesReviewPanel({
 }: {
   projectId: string;
   deliverables: DeliveryReviewDeliverable[];
+  revisionRoundsLimit: number;
+  releasedCount: number;
+  scopeSummary: DeliverablesScopeSummary;
   canReview: boolean;
   currentUserId: string;
   isYagiAdmin: boolean;
@@ -182,6 +227,10 @@ export function DeliverablesReviewPanel({
   const finalCount = sortedDeliverables.filter(
     (deliverable) => deliverable.status === "approved",
   ).length;
+  const usageLabel = formatRevisionUsageLabel(
+    { releasedCount, revisionRoundsLimit },
+    labels.revisionUsage,
+  );
 
   return (
     <section className="space-y-5">
@@ -195,11 +244,31 @@ export function DeliverablesReviewPanel({
               {labels.subtitle}
             </p>
           </div>
-          <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium text-gold">
-            <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            {labels.finalCount.replace("{count}", String(finalCount))}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium text-gold">
+              <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              {labels.finalCount.replace("{count}", String(finalCount))}
+            </div>
+            <div className="inline-flex w-fit items-center rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              {usageLabel}
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <AgreedScopeSummary
+          revisionRoundsLimit={revisionRoundsLimit}
+          summary={scopeSummary}
+          labels={labels}
+        />
+        {isYagiAdmin ? (
+          <RevisionScopeControl
+            projectId={projectId}
+            revisionRoundsLimit={revisionRoundsLimit}
+            labels={labels}
+          />
+        ) : null}
       </div>
 
       {sortedDeliverables.length === 0 ? (
@@ -219,6 +288,8 @@ export function DeliverablesReviewPanel({
               key={deliverable.id}
               projectId={projectId}
               deliverable={deliverable}
+              revisionRoundsLimit={revisionRoundsLimit}
+              releasedCount={releasedCount}
               canReview={canReview}
               currentUserId={currentUserId}
               isYagiAdmin={isYagiAdmin}
@@ -235,6 +306,8 @@ export function DeliverablesReviewPanel({
 function DeliverableCard({
   projectId,
   deliverable,
+  revisionRoundsLimit,
+  releasedCount,
   canReview,
   currentUserId,
   isYagiAdmin,
@@ -243,6 +316,8 @@ function DeliverableCard({
 }: {
   projectId: string;
   deliverable: DeliveryReviewDeliverable;
+  revisionRoundsLimit: number;
+  releasedCount: number;
   canReview: boolean;
   currentUserId: string;
   isYagiAdmin: boolean;
@@ -261,13 +336,16 @@ function DeliverableCard({
     releasedAt: deliverable.releasedAt,
     status: deliverable.status,
   });
-  const turnText = labels.turn[turnState].replace(
-    "{round}",
-    String(deliverable.releasedRound ?? "-"),
+  const roundLabel = formatReleasedRoundLabel(deliverable.releasedRound, labels);
+  const usageLabel = formatRevisionUsageLabel(
+    { releasedCount, revisionRoundsLimit },
+    labels.revisionUsage,
   );
+  const turnText = labels.turn[turnState].replace("{round}", roundLabel);
+  const releasedRoundDescription = describeReleasedRound(deliverable.releasedRound);
   const isOverIncludedRounds =
-    deliverable.releasedRound != null &&
-    deliverable.releasedRound > INCLUDED_REVISION_ROUNDS;
+    releasedRoundDescription.kind === "revision" &&
+    (releasedRoundDescription.revisionNumber ?? 0) > revisionRoundsLimit;
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
@@ -295,9 +373,12 @@ function DeliverableCard({
               </span>
             ) : deliverable.releasedRound ? (
               <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-foreground">
-                {labels.round
-                  .replace("{round}", String(deliverable.releasedRound))
-                  .replace("{included}", String(INCLUDED_REVISION_ROUNDS))}
+                {roundLabel}
+              </span>
+            ) : null}
+            {deliverable.releasedAt ? (
+              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                {usageLabel}
               </span>
             ) : null}
           </div>
@@ -331,6 +412,7 @@ function DeliverableCard({
             <ReleaseDeliverableButton
               projectId={projectId}
               deliverableId={deliverable.id}
+              revisionRoundsLimit={revisionRoundsLimit}
               labels={labels}
             />
           ) : null}
@@ -415,22 +497,40 @@ function DeliverableCard({
 function ReleaseDeliverableButton({
   projectId,
   deliverableId,
+  revisionRoundsLimit,
   labels,
 }: {
   projectId: string;
   deliverableId: string;
+  revisionRoundsLimit: number;
   labels: Labels;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmScope, setConfirmScope] = useState({
+    limit: revisionRoundsLimit,
+    limitPlusOne: revisionRoundsLimit + 1,
+  });
 
-  function release() {
+  function release(extendScope = false) {
     startTransition(async () => {
       const result = await releaseDeliverableToClientAction({
         projectId,
         deliverableId,
+        extendScope,
       });
       if (!result.ok) {
+        if (result.error === "round_limit") {
+          const resultLimit = result.revisionsLimit ?? revisionRoundsLimit;
+          const resultReleasedCount = (result.revisionsUsed ?? resultLimit) + 1;
+          setConfirmScope({
+            limit: resultLimit,
+            limitPlusOne: Math.max(resultLimit + 1, resultReleasedCount),
+          });
+          setConfirmOpen(true);
+          return;
+        }
         toast.error(
           result.error === "forbidden"
             ? labels.errors.forbidden
@@ -444,21 +544,175 @@ function ReleaseDeliverableButton({
   }
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      disabled={isPending}
-      onClick={release}
-      className="h-8 gap-1.5"
-    >
-      {isPending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-      ) : (
-        <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-      )}
-      {isPending ? labels.releasing : labels.release}
-    </Button>
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={isPending}
+        onClick={() => release(false)}
+        className="h-8 gap-1.5"
+      >
+        {isPending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        ) : (
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+        {isPending ? labels.releasing : labels.release}
+      </Button>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{labels.extendScopeTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="keep-all leading-relaxed">
+              {labels.extendScopeBody
+                .replace("{limit}", String(confirmScope.limit))
+                .replace("{limitPlusOne}", String(confirmScope.limitPlusOne))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>
+              {labels.extendScopeCancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                release(true);
+                setConfirmOpen(false);
+              }}
+              className="bg-brand text-brand-on hover:bg-brand/90"
+            >
+              {labels.extendScopeConfirm}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+function AgreedScopeSummary({
+  revisionRoundsLimit,
+  summary,
+  labels,
+}: {
+  revisionRoundsLimit: number;
+  summary: DeliverablesScopeSummary;
+  labels: Labels;
+}) {
+  const rows = [
+    summary.deliverableTypes.length > 0
+      ? {
+          label: labels.scopeDeliverableTypes,
+          value: summary.deliverableTypes.join(", "),
+        }
+      : null,
+    summary.channels.length > 0
+      ? { label: labels.scopeChannels, value: summary.channels.join(", ") }
+      : null,
+    summary.ratioFormat
+      ? { label: labels.scopeRatioFormat, value: summary.ratioFormat }
+      : null,
+    {
+      label: labels.scopeControlLabel,
+      value: formatScopeIncludedRevisionsLabel(
+        revisionRoundsLimit,
+        labels.scopeIncludedRevisions,
+      ),
+    },
+  ].filter((row): row is { label: string; value: string } => Boolean(row));
+
+  return (
+    <section className="rounded-lg border border-border/70 bg-surface-card p-5">
+      <p className="text-sm font-semibold text-foreground">{labels.agreedScope}</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {rows.map((row) => (
+          <div key={row.label} className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
+              {row.label}
+            </p>
+            <p className="text-sm leading-6 text-foreground keep-all">{row.value}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RevisionScopeControl({
+  projectId,
+  revisionRoundsLimit,
+  labels,
+}: {
+  projectId: string;
+  revisionRoundsLimit: number;
+  labels: Labels;
+}) {
+  const router = useRouter();
+  const [limit, setLimit] = useState(String(revisionRoundsLimit));
+  const [message, setMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function save() {
+    const parsed = Number(limit);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 50) {
+      setMessage(labels.scopeControlError);
+      return;
+    }
+
+    startTransition(async () => {
+      setMessage(null);
+      const result = await setProjectRevisionRoundsLimitAction({
+        projectId,
+        limit: parsed,
+      });
+      if (!result.ok) {
+        setMessage(
+          result.error === "forbidden"
+            ? labels.errors.forbidden
+            : labels.scopeControlError,
+        );
+        return;
+      }
+      setMessage(labels.scopeControlSaved);
+      router.refresh();
+    });
+  }
+
+  return (
+    <section className="rounded-lg border border-border/70 bg-surface-card p-5">
+      <div className="space-y-2">
+        <Label htmlFor="revision-rounds-limit">{labels.scopeControlLabel}</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="revision-rounds-limit"
+            type="number"
+            min={0}
+            max={50}
+            step={1}
+            value={limit}
+            onChange={(event) => setLimit(event.target.value)}
+            disabled={isPending}
+            className="h-9"
+          />
+          <Button
+            type="button"
+            size="sm"
+            onClick={save}
+            disabled={isPending}
+            className="h-9 shrink-0 bg-brand text-brand-on hover:bg-brand/90"
+          >
+            {isPending ? labels.scopeControlSaving : labels.scopeControlSave}
+          </Button>
+        </div>
+      </div>
+      {message ? (
+        <p className="mt-3 text-xs leading-5 text-muted-foreground keep-all">
+          {message}
+        </p>
+      ) : null}
+    </section>
   );
 }
 

@@ -58,7 +58,13 @@ export type DeliverableShareData = {
     title: string;
     status: string;
     targetDeliveryAt: string | null;
+    revisionRoundsLimit: number;
+    deliverableTypes: string[];
+    channels: string[];
+    visualRatio: string | null;
+    visualRatioCustom: string | null;
   };
+  releasedCount: number;
   deliverables: DeliverableShareItem[];
 };
 
@@ -67,6 +73,11 @@ type ProjectRow = {
   title: string;
   status: string;
   target_delivery_at: string | null;
+  revision_rounds_limit: number;
+  deliverable_types: string[] | null;
+  channels: string[] | null;
+  visual_ratio: string | null;
+  visual_ratio_custom: string | null;
 };
 
 type DeliverableRow = {
@@ -150,7 +161,9 @@ export async function loadDeliverableShareData(
 
   const { data: project } = (await service
     .from("projects")
-    .select("id, title, status, target_delivery_at")
+    .select(
+      "id, title, status, target_delivery_at, revision_rounds_limit, deliverable_types, channels, visual_ratio, visual_ratio_custom",
+    )
     .eq("deliverable_share_token", token)
     .eq("deliverable_share_enabled", true)
     .is("deleted_at", null)
@@ -284,7 +297,13 @@ export async function loadDeliverableShareData(
       title: project.title,
       status: project.status,
       targetDeliveryAt: project.target_delivery_at,
+      revisionRoundsLimit: project.revision_rounds_limit ?? 2,
+      deliverableTypes: project.deliverable_types ?? [],
+      channels: project.channels ?? [],
+      visualRatio: project.visual_ratio,
+      visualRatioCustom: project.visual_ratio_custom,
     },
+    releasedCount: deliverableRows.length,
     deliverables,
   };
 }

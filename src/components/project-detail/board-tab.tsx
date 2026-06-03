@@ -16,6 +16,7 @@ import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state"
 
 type Props = {
   projectId: string;
+  revisionRoundsLimit: number;
   isYagiAdmin: boolean;
   /** locale forwarded to translations */
   locale: "ko" | "en";
@@ -74,7 +75,12 @@ function profileName(row: DeliverableRow) {
   return profile?.display_name ?? profile?.handle ?? null;
 }
 
-export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
+export async function BoardTab({
+  projectId,
+  revisionRoundsLimit,
+  isYagiAdmin,
+  locale,
+}: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag schema
   const supabase = (await createSupabaseServer()) as any;
   const t = await getTranslations({
@@ -130,6 +136,7 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
       releasedAt: row.released_at,
     })),
   );
+  const releasedCount = releasedRoundById.size;
   const deliverableIds = rows.map((row) => row.id);
   const feedbackCountByDeliverable = new Map<string, number>();
   if (deliverableIds.length > 0) {
@@ -202,6 +209,8 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
     <VersionStackTab
       projectId={projectId}
       deliverables={deliverables}
+      revisionRoundsLimit={revisionRoundsLimit}
+      releasedCount={releasedCount}
       canUpload={isYagiAdmin || isProjectGuest}
       isYagiAdmin={isYagiAdmin}
       locale={locale}
@@ -236,7 +245,19 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         releasing: t("releasing"),
         releaseSuccess: t("release_success"),
         releasedAt: t("released_at"),
-        round: t("round", { round: "{round}", included: "{included}" }),
+        initialDelivery: t("initialDelivery"),
+        revisionRound: t("revisionRound", { n: "{n}" }),
+        revisionUsage: t("revisionUsage", {
+          used: "{used}",
+          limit: "{limit}",
+        }),
+        extendScopeTitle: t("extendScopeTitle"),
+        extendScopeBody: t("extendScopeBody", {
+          limit: "{limit}",
+          limitPlusOne: "{limitPlusOne}",
+        }),
+        extendScopeConfirm: t("extendScopeConfirm"),
+        extendScopeCancel: t("extendScopeCancel"),
         roundOverage: t("round_overage"),
         turn: {
           internal: t("turn.internal"),

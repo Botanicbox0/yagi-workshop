@@ -305,13 +305,22 @@ export async function reviewProjectDeliverableAction(
 const releaseDeliverableSchema = z.object({
   projectId: z.string().uuid(),
   deliverableId: z.string().uuid(),
+  extendScope: z.boolean().optional().default(false),
 });
 
 export type ReleaseDeliverableToClientResult =
   | { ok: true; releasedAt: string }
   | {
       ok: false;
-      error: "validation" | "unauthenticated" | "forbidden" | "not_found" | "db";
+      error:
+        | "validation"
+        | "unauthenticated"
+        | "forbidden"
+        | "not_found"
+        | "round_limit"
+        | "db";
+      revisionsUsed?: number;
+      revisionsLimit?: number;
       message?: string;
     };
 
@@ -323,7 +332,7 @@ export async function releaseDeliverableToClientAction(
     return { ok: false, error: "validation", message: parsed.error.message };
   }
 
-  const { projectId, deliverableId } = parsed.data;
+  const { projectId, deliverableId, extendScope } = parsed.data;
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -353,6 +362,70 @@ export async function releaseDeliverableToClientAction(
     return { ok: true, releasedAt: existing.released_at as string };
   }
 
+  const { count: releasedCountRaw, error: countError } = await sb
+    .from("project_deliverables")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", projectId)
+    .not("released_at", "is", null);
+
+  if (countError) {
+    console.error("[releaseDeliverableToClientAction] count error:", countError);
+    return { ok: false, error: "db", message: countError.message };
+  }
+
+  const { data: projectScope, error: scopeError } = await sb
+    .from("projects")
+    .select("revision_rounds_limit")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (scopeError) {
+    console.error("[releaseDeliverableToClientAction] scope lookup error:", scopeError);
+    return { ok: false, error: "db", message: scopeError.message };
+  }
+  if (!projectScope) return { ok: false, error: "not_found" };
+
+  const releasedCount = releasedCountRaw ?? 0;
+  const revisionRoundsLimit =
+    typeof projectScope.revision_rounds_limit === "number"
+      ? projectScope.revision_rounds_limit
+      : 2;
+  const allowedReleaseCount = 1 + revisionRoundsLimit;
+
+  if (releasedCount >= allowedReleaseCount) {
+    if (!extendScope) {
+      return {
+        ok: false,
+        error: "round_limit",
+        revisionsUsed: Math.max(0, releasedCount - 1),
+        revisionsLimit: revisionRoundsLimit,
+      };
+    }
+
+    const { error: extendError } = await sb.rpc(
+      "set_project_revision_rounds_limit",
+      {
+        p_project_id: projectId,
+        // Model B override: add exactly one included revision so this release
+        // is admitted and any later over-scope release prompts again.
+        p_limit: releasedCount,
+      },
+    );
+
+    if (extendError) {
+      console.error("[releaseDeliverableToClientAction] extend scope error:", extendError);
+      return {
+        ok: false,
+        error: extendError.code === "42501" ? "forbidden" : "db",
+        message: extendError.message,
+      };
+    }
+  }
+
+  // R4 intentionally leaves the count -> guarded update window unlocked under
+  // the current trusted single-admin release model. If release moves to
+  // concurrent admins or external automation, migrate count+scope+release into
+  // one transactional RPC with row locking.
   const releasedAt = new Date().toISOString();
   const { data: updated, error: updateError } = await sb
     .from("project_deliverables")
@@ -374,6 +447,60 @@ export async function releaseDeliverableToClientAction(
     ok: true,
     releasedAt: (updated?.released_at as string | undefined) ?? releasedAt,
   };
+}
+
+const setRevisionRoundsLimitSchema = z.object({
+  projectId: z.string().uuid(),
+  limit: z.number().int().min(0).max(50),
+});
+
+export type SetProjectRevisionRoundsLimitResult =
+  | { ok: true }
+  | {
+      ok: false;
+      error: "validation" | "unauthenticated" | "forbidden" | "db";
+      message?: string;
+    };
+
+export async function setProjectRevisionRoundsLimitAction(
+  input: unknown,
+): Promise<SetProjectRevisionRoundsLimitResult> {
+  const parsed = setRevisionRoundsLimitSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+
+  const { projectId, limit } = parsed.data;
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
+    uid: user.id,
+  });
+  if (isYagiAdmin !== true) return { ok: false, error: "forbidden" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC added in R4, generated types lag
+  const sb = supabase as any;
+  const { error } = await sb.rpc("set_project_revision_rounds_limit", {
+    p_project_id: projectId,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("[setProjectRevisionRoundsLimitAction] rpc error:", error);
+    return {
+      ok: false,
+      error: error.code === "42501" ? "forbidden" : "db",
+      message: error.message,
+    };
+  }
+
+  revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
+  revalidatePath(`/[locale]/app/admin/projects/${projectId}`, "page");
+  return { ok: true };
 }
 
 export async function revertDeliverablePublicReviewAction(

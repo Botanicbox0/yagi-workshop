@@ -5,6 +5,7 @@ import { fetchVideoMetadata } from "@/lib/oembed";
 import {
   DeliverablesReviewPanel,
   type DeliveryReviewDeliverable,
+  type DeliverablesScopeSummary,
 } from "@/components/project-detail/deliverables-review-panel";
 import { DeliverableShareControls } from "@/components/project-detail/deliverable-share-controls";
 import type {
@@ -23,6 +24,8 @@ import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state"
 
 type Props = {
   projectId: string;
+  revisionRoundsLimit: number;
+  scopeSummary: DeliverablesScopeSummary;
   canReview: boolean;
   locale: "ko" | "en";
 };
@@ -123,7 +126,13 @@ function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003";
 }
 
-export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
+export async function DeliverablesTab({
+  projectId,
+  revisionRoundsLimit,
+  scopeSummary,
+  canReview,
+  locale,
+}: Props) {
   const t = await getTranslations({
     locale,
     namespace: "project_detail.deliverables",
@@ -188,6 +197,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
       releasedAt: row.released_at,
     })),
   );
+  const releasedCount = releasedRoundById.size;
   const reviewerIds = [
     ...new Set((rowsRaw ?? []).map((row) => row.reviewed_by).filter(Boolean)),
   ] as string[];
@@ -398,6 +408,9 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
       <DeliverablesReviewPanel
         projectId={projectId}
         deliverables={deliverables}
+        revisionRoundsLimit={revisionRoundsLimit}
+        releasedCount={releasedCount}
+        scopeSummary={scopeSummary}
         canReview={canReview}
         currentUserId={user.id}
         isYagiAdmin={isYagiAdmin === true}
@@ -415,7 +428,29 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
         releasing: t("releasing"),
         releaseSuccess: t("release_success"),
         releasedAt: t("released_at"),
-        round: t("round", { round: "{round}", included: "{included}" }),
+        initialDelivery: t("initialDelivery"),
+        revisionRound: t("revisionRound", { n: "{n}" }),
+        revisionUsage: t("revisionUsage", {
+          used: "{used}",
+          limit: "{limit}",
+        }),
+        scopeIncludedRevisions: t("scopeIncludedRevisions", { n: "{n}" }),
+        scopeControlLabel: t("scopeControlLabel"),
+        scopeControlSave: t("scopeControlSave"),
+        scopeControlSaving: t("scopeControlSaving"),
+        scopeControlSaved: t("scopeControlSaved"),
+        scopeControlError: t("scopeControlError"),
+        extendScopeTitle: t("extendScopeTitle"),
+        extendScopeBody: t("extendScopeBody", {
+          limit: "{limit}",
+          limitPlusOne: "{limitPlusOne}",
+        }),
+        extendScopeConfirm: t("extendScopeConfirm"),
+        extendScopeCancel: t("extendScopeCancel"),
+        agreedScope: t("agreedScope"),
+        scopeDeliverableTypes: t("scopeDeliverableTypes"),
+        scopeChannels: t("scopeChannels"),
+        scopeRatioFormat: t("scopeRatioFormat"),
         roundOverage: t("round_overage"),
         turn: {
           internal: t("turn.internal"),

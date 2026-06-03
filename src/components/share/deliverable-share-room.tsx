@@ -17,7 +17,12 @@ import type {
   DeliverableShareData,
   DeliverableShareItem,
 } from "@/lib/share/deliverable-share-data";
-import { INCLUDED_REVISION_ROUNDS } from "@/lib/project-deliverables/release-state";
+import { describeReleasedRound } from "@/lib/project-deliverables/release-state";
+import {
+  formatReleasedRoundLabel,
+  formatRevisionUsageLabel,
+  formatScopeIncludedRevisionsLabel,
+} from "@/components/project-detail/revision-round-labels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,8 +42,19 @@ type Labels = {
   subtitle: string;
   targetDelivery: string;
   unset: string;
-  round: string;
+  initialDelivery: string;
+  revisionRound: string;
+  revisionUsage: string;
+  scopeIncludedRevisions: string;
+  scopeControlLabel: string;
+  agreedScope: string;
+  scopeDeliverableTypes: string;
+  scopeChannels: string;
+  scopeRatioFormat: string;
   roundOverage: string;
+  deliverableTypeOptions: Record<string, string>;
+  channelOptions: Record<string, string>;
+  visualRatioOptions: Record<string, string>;
   status: Record<string, string>;
   turn: Record<string, string>;
   note: string;
@@ -101,6 +117,47 @@ export function DeliverableShareRoom({
     () => [...data.deliverables].sort((a, b) => b.releasedRound - a.releasedRound),
     [data.deliverables],
   );
+  const usageLabel = formatRevisionUsageLabel(
+    {
+      releasedCount: data.releasedCount,
+      revisionRoundsLimit: data.project.revisionRoundsLimit,
+    },
+    labels.revisionUsage,
+  );
+  const ratioFormat = data.project.visualRatio
+    ? data.project.visualRatio === "custom"
+      ? data.project.visualRatioCustom
+        ? `${labels.visualRatioOptions.custom} (${data.project.visualRatioCustom})`
+        : labels.visualRatioOptions.custom
+      : (labels.visualRatioOptions[data.project.visualRatio] ??
+        data.project.visualRatio)
+    : null;
+  const scopeRows = [
+    data.project.deliverableTypes.length > 0
+      ? {
+          label: labels.scopeDeliverableTypes,
+          value: data.project.deliverableTypes
+            .map((kind) => labels.deliverableTypeOptions[kind] ?? kind)
+            .join(", "),
+        }
+      : null,
+    data.project.channels.length > 0
+      ? {
+          label: labels.scopeChannels,
+          value: data.project.channels
+            .map((channel) => labels.channelOptions[channel] ?? channel)
+            .join(", "),
+        }
+      : null,
+    ratioFormat ? { label: labels.scopeRatioFormat, value: ratioFormat } : null,
+    {
+      label: labels.scopeControlLabel,
+      value: formatScopeIncludedRevisionsLabel(
+        data.project.revisionRoundsLimit,
+        labels.scopeIncludedRevisions,
+      ),
+    },
+  ].filter((row): row is { label: string; value: string } => Boolean(row));
 
   return (
     <main className="min-h-screen bg-background px-5 py-8 text-foreground sm:px-8 lg:px-10">
@@ -129,12 +186,35 @@ export function DeliverableShareRoom({
           </div>
         </header>
 
+        <section className="rounded-lg border border-border bg-surface-raised p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <p className="text-sm font-semibold text-foreground">{labels.agreedScope}</p>
+            <span className="inline-flex w-fit rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              {usageLabel}
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {scopeRows.map((row) => (
+              <div key={row.label} className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
+                  {row.label}
+                </p>
+                <p className="text-sm leading-6 text-foreground keep-all">
+                  {row.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <div className="space-y-5">
           {deliverables.map((deliverable) => (
             <DeliverableCard
               key={deliverable.id}
               token={data.token}
               deliverable={deliverable}
+              releasedCount={data.releasedCount}
+              revisionRoundsLimit={data.project.revisionRoundsLimit}
               locale={locale}
               labels={labels}
             />
@@ -148,11 +228,15 @@ export function DeliverableShareRoom({
 function DeliverableCard({
   token,
   deliverable,
+  releasedCount,
+  revisionRoundsLimit,
   locale,
   labels,
 }: {
   token: string;
   deliverable: DeliverableShareItem;
+  releasedCount: number;
+  revisionRoundsLimit: number;
   locale: "ko" | "en";
   labels: Labels;
 }) {
@@ -165,10 +249,18 @@ function DeliverableCard({
   const [reviewNote, setReviewNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const overage = deliverable.releasedRound > INCLUDED_REVISION_ROUNDS;
+  const roundLabel = formatReleasedRoundLabel(deliverable.releasedRound, labels);
+  const usageLabel = formatRevisionUsageLabel(
+    { releasedCount, revisionRoundsLimit },
+    labels.revisionUsage,
+  );
+  const releasedRoundDescription = describeReleasedRound(deliverable.releasedRound);
+  const overage =
+    releasedRoundDescription.kind === "revision" &&
+    (releasedRoundDescription.revisionNumber ?? 0) > revisionRoundsLimit;
   const turn = labels.turn[turnKey(deliverable.status)].replace(
     "{round}",
-    String(deliverable.releasedRound),
+    roundLabel,
   );
 
   function canSubmit(text: string) {
@@ -243,9 +335,10 @@ function DeliverableCard({
                 {labels.status[deliverable.status] ?? deliverable.status}
               </span>
               <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-foreground">
-                {labels.round
-                  .replace("{round}", String(deliverable.releasedRound))
-                  .replace("{included}", String(INCLUDED_REVISION_ROUNDS))}
+                {roundLabel}
+              </span>
+              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                {usageLabel}
               </span>
             </div>
             <p className="text-sm leading-6 text-muted-foreground keep-all">

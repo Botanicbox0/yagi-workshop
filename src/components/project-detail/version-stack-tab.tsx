@@ -17,6 +17,16 @@ import {
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,9 +37,13 @@ import {
   releaseDeliverableToClientAction,
 } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import {
+  describeReleasedRound,
   getDeliverableTurnState,
-  INCLUDED_REVISION_ROUNDS,
 } from "@/lib/project-deliverables/release-state";
+import {
+  formatReleasedRoundLabel,
+  formatRevisionUsageLabel,
+} from "@/components/project-detail/revision-round-labels";
 
 export type VersionStackDeliverable = {
   id: string;
@@ -85,7 +99,13 @@ type Labels = {
   releasing: string;
   releaseSuccess: string;
   releasedAt: string;
-  round: string;
+  initialDelivery: string;
+  revisionRound: string;
+  revisionUsage: string;
+  extendScopeTitle: string;
+  extendScopeBody: string;
+  extendScopeConfirm: string;
+  extendScopeCancel: string;
   roundOverage: string;
   turn: Record<string, string>;
   errors: {
@@ -162,6 +182,8 @@ function statusClass(status: string) {
 export function VersionStackTab({
   projectId,
   deliverables,
+  revisionRoundsLimit,
+  releasedCount,
   canUpload,
   isYagiAdmin,
   locale,
@@ -169,6 +191,8 @@ export function VersionStackTab({
 }: {
   projectId: string;
   deliverables: VersionStackDeliverable[];
+  revisionRoundsLimit: number;
+  releasedCount: number;
   canUpload: boolean;
   isYagiAdmin: boolean;
   locale: string;
@@ -183,6 +207,10 @@ export function VersionStackTab({
   const sortedDeliverables = useMemo(
     () => [...deliverables].sort((a, b) => b.version - a.version),
     [deliverables],
+  );
+  const usageLabel = formatRevisionUsageLabel(
+    { releasedCount, revisionRoundsLimit },
+    labels.revisionUsage,
   );
 
   function resetForm() {
@@ -267,11 +295,16 @@ export function VersionStackTab({
               {labels.subtitle}
             </p>
           </div>
-          <div className="rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            {labels.versionsCount.replace(
-              "{count}",
-              String(sortedDeliverables.length),
-            )}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              {labels.versionsCount.replace(
+                "{count}",
+                String(sortedDeliverables.length),
+              )}
+            </div>
+            <div className="rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              {usageLabel}
+            </div>
           </div>
         </div>
       </div>
@@ -352,6 +385,8 @@ export function VersionStackTab({
               key={deliverable.id}
               deliverable={deliverable}
               projectId={projectId}
+              revisionRoundsLimit={revisionRoundsLimit}
+              releasedCount={releasedCount}
               isYagiAdmin={isYagiAdmin}
               locale={locale}
               labels={labels}
@@ -366,12 +401,16 @@ export function VersionStackTab({
 function VersionCard({
   projectId,
   deliverable,
+  revisionRoundsLimit,
+  releasedCount,
   isYagiAdmin,
   locale,
   labels,
 }: {
   projectId: string;
   deliverable: VersionStackDeliverable;
+  revisionRoundsLimit: number;
+  releasedCount: number;
   isYagiAdmin: boolean;
   locale: string;
   labels: Labels;
@@ -381,13 +420,16 @@ function VersionCard({
     releasedAt: deliverable.releasedAt,
     status: deliverable.status,
   });
-  const turnText = labels.turn[turnState].replace(
-    "{round}",
-    String(deliverable.releasedRound ?? "-"),
+  const roundLabel = formatReleasedRoundLabel(deliverable.releasedRound, labels);
+  const usageLabel = formatRevisionUsageLabel(
+    { releasedCount, revisionRoundsLimit },
+    labels.revisionUsage,
   );
+  const turnText = labels.turn[turnState].replace("{round}", roundLabel);
+  const releasedRoundDescription = describeReleasedRound(deliverable.releasedRound);
   const isOverIncludedRounds =
-    deliverable.releasedRound != null &&
-    deliverable.releasedRound > INCLUDED_REVISION_ROUNDS;
+    releasedRoundDescription.kind === "revision" &&
+    (releasedRoundDescription.revisionNumber ?? 0) > revisionRoundsLimit;
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
@@ -410,9 +452,12 @@ function VersionCard({
               </span>
             ) : deliverable.releasedRound ? (
               <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-foreground">
-                {labels.round
-                  .replace("{round}", String(deliverable.releasedRound))
-                  .replace("{included}", String(INCLUDED_REVISION_ROUNDS))}
+                {roundLabel}
+              </span>
+            ) : null}
+            {deliverable.releasedAt ? (
+              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                {usageLabel}
               </span>
             ) : null}
           </div>
@@ -446,6 +491,7 @@ function VersionCard({
             <ReleaseDeliverableButton
               projectId={projectId}
               deliverableId={deliverable.id}
+              revisionRoundsLimit={revisionRoundsLimit}
               labels={labels}
             />
           ) : null}
@@ -501,22 +547,40 @@ function VersionCard({
 function ReleaseDeliverableButton({
   projectId,
   deliverableId,
+  revisionRoundsLimit,
   labels,
 }: {
   projectId: string;
   deliverableId: string;
+  revisionRoundsLimit: number;
   labels: Labels;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmScope, setConfirmScope] = useState({
+    limit: revisionRoundsLimit,
+    limitPlusOne: revisionRoundsLimit + 1,
+  });
 
-  function release() {
+  function release(extendScope = false) {
     startTransition(async () => {
       const result = await releaseDeliverableToClientAction({
         projectId,
         deliverableId,
+        extendScope,
       });
       if (!result.ok) {
+        if (result.error === "round_limit") {
+          const resultLimit = result.revisionsLimit ?? revisionRoundsLimit;
+          const resultReleasedCount = (result.revisionsUsed ?? resultLimit) + 1;
+          setConfirmScope({
+            limit: resultLimit,
+            limitPlusOne: Math.max(resultLimit + 1, resultReleasedCount),
+          });
+          setConfirmOpen(true);
+          return;
+        }
         toast.error(
           result.error === "forbidden"
             ? labels.errors.forbidden
@@ -530,21 +594,51 @@ function ReleaseDeliverableButton({
   }
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      disabled={isPending}
-      onClick={release}
-      className="h-8 gap-1.5"
-    >
-      {isPending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-      ) : (
-        <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-      )}
-      {isPending ? labels.releasing : labels.release}
-    </Button>
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={isPending}
+        onClick={() => release(false)}
+        className="h-8 gap-1.5"
+      >
+        {isPending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+        ) : (
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+        {isPending ? labels.releasing : labels.release}
+      </Button>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{labels.extendScopeTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="keep-all leading-relaxed">
+              {labels.extendScopeBody
+                .replace("{limit}", String(confirmScope.limit))
+                .replace("{limitPlusOne}", String(confirmScope.limitPlusOne))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>
+              {labels.extendScopeCancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                release(true);
+                setConfirmOpen(false);
+              }}
+              className="bg-brand text-brand-on hover:bg-brand/90"
+            >
+              {labels.extendScopeConfirm}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

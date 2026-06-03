@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { loadDeliverableShareData } from "@/lib/share/deliverable-share-data";
 import { DeliverableShareRoom } from "@/components/share/deliverable-share-room";
 
@@ -18,7 +19,6 @@ const COPY = {
     subtitle: "로그인 없이 릴리즈된 결과물만 확인하고 코멘트 또는 승인 결정을 남길 수 있습니다.",
     targetDelivery: "희망 납기",
     unset: "미정",
-    round: "Round {round} / {included}",
     roundOverage: "포함 수정 라운드를 넘었습니다. 추가 범위는 YAGI와 확인해주세요.",
     status: {
       submitted: "검토 대기",
@@ -26,8 +26,8 @@ const COPY = {
       approved: "승인됨",
     },
     turn: {
-      client_review: "클라 검토 대기 · Round {round}",
-      yagi_revision: "YAGI 수정 중 · Round {round}",
+      client_review: "클라 검토 대기 · {round}",
+      yagi_revision: "YAGI 수정 중 · {round}",
       approved: "승인 완료",
     },
     note: "버전 노트",
@@ -67,7 +67,6 @@ const COPY = {
     subtitle: "Review released deliverables without logging in, then leave comments or an approval decision.",
     targetDelivery: "Target delivery",
     unset: "Unset",
-    round: "Round {round} / {included}",
     roundOverage: "This is beyond the included revision rounds. Confirm additional scope with YAGI.",
     status: {
       submitted: "Pending review",
@@ -75,8 +74,8 @@ const COPY = {
       approved: "Approved",
     },
     turn: {
-      client_review: "Client review pending · Round {round}",
-      yagi_revision: "YAGI revising · Round {round}",
+      client_review: "Client review pending · {round}",
+      yagi_revision: "YAGI revising · {round}",
       approved: "Approved",
     },
     note: "Version note",
@@ -144,8 +143,69 @@ function NoLongerShared({
 export default async function DeliverableSharePage({ params }: Props) {
   const { token } = await params;
   const locale = detectLocale(await headers());
+  const tDeliverables = await getTranslations({
+    locale,
+    namespace: "project_detail.deliverables",
+  });
+  const tDetail = await getTranslations({
+    locale,
+    namespace: "project_detail",
+  });
   const data = await loadDeliverableShareData(token);
   if (!data) return <NoLongerShared locale={locale} />;
 
-  return <DeliverableShareRoom data={data} locale={locale} labels={COPY[locale]} />;
+  return (
+    <DeliverableShareRoom
+      data={data}
+      locale={locale}
+      labels={{
+        ...COPY[locale],
+        initialDelivery: tDeliverables("initialDelivery"),
+        revisionRound: tDeliverables("revisionRound", { n: "{n}" }),
+        revisionUsage: tDeliverables("revisionUsage", {
+          used: "{used}",
+          limit: "{limit}",
+        }),
+        scopeIncludedRevisions: tDeliverables("scopeIncludedRevisions", {
+          n: "{n}",
+        }),
+        scopeControlLabel: tDeliverables("scopeControlLabel"),
+        agreedScope: tDeliverables("agreedScope"),
+        scopeDeliverableTypes: tDeliverables("scopeDeliverableTypes"),
+        scopeChannels: tDeliverables("scopeChannels"),
+        scopeRatioFormat: tDeliverables("scopeRatioFormat"),
+        deliverableTypeOptions: {
+          image: tDetail("brief_tab.deliverable_type.image"),
+          ad_video_short: tDetail("brief_tab.deliverable_type.ad_video_short"),
+          ad_video_long: tDetail("brief_tab.deliverable_type.ad_video_long"),
+          ai_vfx_mv: tDetail("brief_tab.deliverable_type.ai_vfx_mv"),
+          branding_video: tDetail("brief_tab.deliverable_type.branding_video"),
+          ad_video: tDetail("brief_tab.deliverable_type.ad_video"),
+          ai_human: tDetail("brief_tab.deliverable_type.ai_human"),
+          motion_graphics: tDetail("brief_tab.deliverable_type.motion_graphics"),
+          vfx: tDetail("brief_tab.deliverable_type.vfx"),
+          branding: tDetail("brief_tab.deliverable_type.branding"),
+          illustration: tDetail("brief_tab.deliverable_type.illustration"),
+          other: tDetail("brief_tab.deliverable_type.other"),
+        },
+        channelOptions: {
+          instagram: tDetail("brief_tab.channel.instagram"),
+          youtube: tDetail("brief_tab.channel.youtube"),
+          tiktok: tDetail("brief_tab.channel.tiktok"),
+          facebook: tDetail("brief_tab.channel.facebook"),
+          website: tDetail("brief_tab.channel.website"),
+          offline: tDetail("brief_tab.channel.offline"),
+          other: tDetail("brief_tab.channel.other"),
+        },
+        visualRatioOptions: {
+          "1_1": tDetail("brief_tab.visual_ratio.1_1"),
+          "16_9": tDetail("brief_tab.visual_ratio.16_9"),
+          "9_16": tDetail("brief_tab.visual_ratio.9_16"),
+          "4_5": tDetail("brief_tab.visual_ratio.4_5"),
+          "239_1": tDetail("brief_tab.visual_ratio.239_1"),
+          custom: tDetail("brief_tab.visual_ratio.custom"),
+        },
+      }}
+    />
+  );
 }

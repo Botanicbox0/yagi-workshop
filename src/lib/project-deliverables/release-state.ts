@@ -1,5 +1,3 @@
-export const INCLUDED_REVISION_ROUNDS = 2;
-
 export type DeliverableTurnState =
   | "internal"
   | "client_review"
@@ -26,6 +24,33 @@ export function buildReleasedRoundMap<T extends ReleasedRoundSource>(
       })
       .map((deliverable, index) => [deliverable.id, index + 1]),
   );
+}
+
+export function describeReleasedRound(
+  index: number | null,
+): { kind: "initial" | "revision"; revisionNumber: number | null } {
+  if (index == null) return { kind: "initial", revisionNumber: null };
+  if (index <= 1) return { kind: "initial", revisionNumber: null };
+  return { kind: "revision", revisionNumber: index - 1 };
+}
+
+export function getRevisionUsage(input: {
+  releasedCount: number;
+  revisionRoundsLimit: number;
+}): {
+  revisionsUsed: number;
+  revisionsLimit: number;
+  atCap: boolean;
+  overCap: boolean;
+} {
+  const revisionsUsed = Math.max(0, input.releasedCount - 1);
+  const allowed = 1 + input.revisionRoundsLimit;
+  return {
+    revisionsUsed,
+    revisionsLimit: input.revisionRoundsLimit,
+    atCap: input.releasedCount >= allowed,
+    overCap: input.releasedCount > allowed,
+  };
 }
 
 export function getDeliverableTurnState(input: {
