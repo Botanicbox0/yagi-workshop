@@ -308,6 +308,52 @@ const releaseDeliverableSchema = z.object({
   extendScope: z.boolean().optional().default(false),
 });
 
+const markDeliverableSeenSchema = z.object({
+  deliverableId: z.string().uuid(),
+});
+
+export type MarkDeliverableSeenResult =
+  | { ok: true }
+  | { ok: false; error: "validation" | "unauthenticated" | "db" };
+
+export async function markDeliverableSeenAction(
+  input: unknown,
+): Promise<MarkDeliverableSeenResult> {
+  const parsed = markDeliverableSeenSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "validation" };
+
+  try {
+    const supabase = await createSupabaseServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "unauthenticated" };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- R5 table is applied in prod; generated types lag
+    const sb = supabase as any;
+    const { error } = await sb.from("deliverable_views").upsert(
+      {
+        deliverable_id: parsed.data.deliverableId,
+        viewer_id: user.id,
+      },
+      {
+        onConflict: "deliverable_id,viewer_id",
+        ignoreDuplicates: true,
+      },
+    );
+
+    if (error) {
+      console.error("[markDeliverableSeenAction] upsert error:", error);
+      return { ok: false, error: "db" };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error("[markDeliverableSeenAction] unexpected error:", error);
+    return { ok: false, error: "db" };
+  }
+}
+
 export type ReleaseDeliverableToClientResult =
   | { ok: true; releasedAt: string }
   | {

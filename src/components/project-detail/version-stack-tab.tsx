@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Download,
+  CheckCircle2,
   ExternalLink,
   FileVideo,
   ImageIcon,
@@ -34,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createProjectDeliverableVersionAction,
   getDeliverableUploadPutUrlAction,
+  markDeliverableSeenAction,
   releaseDeliverableToClientAction,
 } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import {
@@ -52,6 +54,8 @@ export type VersionStackDeliverable = {
   note: string | null;
   releasedAt: string | null;
   releasedRound: number | null;
+  seenByClient?: boolean;
+  seenByYagi?: boolean;
   feedbackCount: number;
   createdAt: string;
   submittedBy: string | null;
@@ -102,6 +106,8 @@ type Labels = {
   initialDelivery: string;
   revisionRound: string;
   revisionUsage: string;
+  seenByClient: string;
+  seenByYagi: string;
   extendScopeTitle: string;
   extendScopeBody: string;
   extendScopeConfirm: string;
@@ -426,10 +432,25 @@ function VersionCard({
     labels.revisionUsage,
   );
   const turnText = labels.turn[turnState].replace("{round}", roundLabel);
+  const hasMarkedSeenRef = useRef(false);
   const releasedRoundDescription = describeReleasedRound(deliverable.releasedRound);
   const isOverIncludedRounds =
     releasedRoundDescription.kind === "revision" &&
     (releasedRoundDescription.revisionNumber ?? 0) > revisionRoundsLimit;
+  const seenLabel =
+    deliverable.releasedAt && isYagiAdmin && deliverable.seenByClient === true
+      ? labels.seenByClient
+      : deliverable.releasedAt && !isYagiAdmin && deliverable.seenByYagi === true
+        ? labels.seenByYagi
+        : null;
+
+  useEffect(() => {
+    if (!deliverable.releasedAt || hasMarkedSeenRef.current) return;
+    hasMarkedSeenRef.current = true;
+    void markDeliverableSeenAction({ deliverableId: deliverable.id }).catch(() => {
+      // Read receipts are a non-critical signal; render must never depend on them.
+    });
+  }, [deliverable.id, deliverable.releasedAt]);
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
@@ -458,6 +479,12 @@ function VersionCard({
             {deliverable.releasedAt ? (
               <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
                 {usageLabel}
+              </span>
+            ) : null}
+            {seenLabel ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                {seenLabel}
               </span>
             ) : null}
           </div>

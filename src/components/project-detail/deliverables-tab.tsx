@@ -198,6 +198,27 @@ export async function DeliverablesTab({
     })),
   );
   const releasedCount = releasedRoundById.size;
+  const seenFlagsByDeliverable = new Map<
+    string,
+    { seenByClient?: boolean; seenByYagi?: boolean }
+  >();
+  const releasedDeliverableIds = Array.from(releasedRoundById.keys());
+  if (releasedDeliverableIds.length > 0) {
+    const rpcName =
+      isYagiAdmin === true ? "deliverable_seen_by_client" : "deliverable_seen_by_yagi";
+    await Promise.all(
+      releasedDeliverableIds.map(async (deliverableId) => {
+        const { data, error } = await supabase.rpc(rpcName, {
+          p_deliverable_id: deliverableId,
+        });
+        if (error || data !== true) return;
+        seenFlagsByDeliverable.set(
+          deliverableId,
+          isYagiAdmin === true ? { seenByClient: true } : { seenByYagi: true },
+        );
+      }),
+    );
+  }
   const reviewerIds = [
     ...new Set((rowsRaw ?? []).map((row) => row.reviewed_by).filter(Boolean)),
   ] as string[];
@@ -363,6 +384,8 @@ export async function DeliverablesTab({
         note: row.note,
         releasedAt: row.released_at,
         releasedRound: releasedRoundById.get(row.id) ?? null,
+        seenByClient: seenFlagsByDeliverable.get(row.id)?.seenByClient,
+        seenByYagi: seenFlagsByDeliverable.get(row.id)?.seenByYagi,
         reviewNote: row.review_note,
         reviewedAt: row.reviewed_at,
         reviewedBy: row.reviewed_by ? reviewerMap.get(row.reviewed_by) ?? null : null,
@@ -434,6 +457,8 @@ export async function DeliverablesTab({
           used: "{used}",
           limit: "{limit}",
         }),
+        seenByClient: t("seenByClient"),
+        seenByYagi: t("seenByYagi"),
         scopeIncludedRevisions: t("scopeIncludedRevisions", { n: "{n}" }),
         scopeControlLabel: t("scopeControlLabel"),
         scopeControlSave: t("scopeControlSave"),

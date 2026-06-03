@@ -137,6 +137,27 @@ export async function BoardTab({
     })),
   );
   const releasedCount = releasedRoundById.size;
+  const seenFlagsByDeliverable = new Map<
+    string,
+    { seenByClient?: boolean; seenByYagi?: boolean }
+  >();
+  const releasedDeliverableIds = Array.from(releasedRoundById.keys());
+  if (releasedDeliverableIds.length > 0) {
+    const rpcName =
+      isYagiAdmin === true ? "deliverable_seen_by_client" : "deliverable_seen_by_yagi";
+    await Promise.all(
+      releasedDeliverableIds.map(async (deliverableId) => {
+        const { data, error } = await supabase.rpc(rpcName, {
+          p_deliverable_id: deliverableId,
+        });
+        if (error || data !== true) return;
+        seenFlagsByDeliverable.set(
+          deliverableId,
+          isYagiAdmin === true ? { seenByClient: true } : { seenByYagi: true },
+        );
+      }),
+    );
+  }
   const deliverableIds = rows.map((row) => row.id);
   const feedbackCountByDeliverable = new Map<string, number>();
   if (deliverableIds.length > 0) {
@@ -192,6 +213,8 @@ export async function BoardTab({
         note: row.note,
         releasedAt: row.released_at,
         releasedRound: releasedRoundById.get(row.id) ?? null,
+        seenByClient: seenFlagsByDeliverable.get(row.id)?.seenByClient,
+        seenByYagi: seenFlagsByDeliverable.get(row.id)?.seenByYagi,
         feedbackCount: feedbackCountByDeliverable.get(row.id) ?? 0,
         createdAt: row.created_at,
         submittedBy: profileName(row),
@@ -251,6 +274,8 @@ export async function BoardTab({
           used: "{used}",
           limit: "{limit}",
         }),
+        seenByClient: t("seenByClient"),
+        seenByYagi: t("seenByYagi"),
         extendScopeTitle: t("extendScopeTitle"),
         extendScopeBody: t("extendScopeBody", {
           limit: "{limit}",
