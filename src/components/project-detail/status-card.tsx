@@ -3,9 +3,9 @@
 // =============================================================================
 // Phase 5 Wave C Hotfix-2 HF2_2 — Status card + ••• dropdown menu
 //
-// For submitted status: rich content card with title, body, 3 meta rows,
-// and a CTA row:
-//   [브리프 전체 보기 →] (primary sage)  ...  [⋯] (ghost icon dropdown)
+// For submitted status: rich content card with title, Model B helper copy,
+// 3 meta rows, and a CTA row:
+//   [브리프 전체 보기 →] [자료 추가하기] ... [⋯] (ghost icon dropdown)
 //
 // For in_review status: wraps NextActionCTA's material-append CTA with an
 // additional [⋯] dropdown trigger at the end of the CTA row.
@@ -61,6 +61,7 @@ import {
   NextActionCTA,
   type MaterialAppendModalLabels,
 } from "./next-action-cta";
+import { MaterialAppendModal } from "./material-append-modal";
 
 type MetaRow = {
   label: string;
@@ -245,7 +246,7 @@ export function StatusCard({
             {t("submitted.title")}
           </h3>
           <p className="text-sm text-muted-foreground keep-all leading-relaxed">
-            {t("submitted.body")}
+            {ctaLabels.empty_state_submitted}
           </p>
         </div>
 
@@ -261,15 +262,21 @@ export function StatusCard({
           ))}
         </dl>
 
-        {/* CTA row: primary [브리프 전체 보기 →] + (•••) dropdown */}
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <Button
-            type="button"
-            onClick={handleViewBrief}
-            className="rounded-full bg-brand text-brand-on hover:bg-brand/90 hover:brightness-105 transition-all duration-[400ms] px-6 py-2.5 text-sm font-medium border-0 shadow-none"
-          >
-            {t("cta.view_full_brief")}
-          </Button>
+        {/* CTA row: primary [브리프 전체 보기 →] + material append + (•••) dropdown */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              onClick={handleViewBrief}
+              className="rounded-full bg-brand text-brand-on hover:bg-brand/90 hover:brightness-105 transition-all duration-[400ms] px-6 py-2.5 text-sm font-medium border-0 shadow-none"
+            >
+              {t("cta.view_full_brief")}
+            </Button>
+            <MaterialAppendModal
+              projectId={projectId}
+              labels={ctaLabels.modal}
+            />
+          </div>
 
           {/* ••• dropdown trigger (submitted + owner only) */}
           {showDropdown && (

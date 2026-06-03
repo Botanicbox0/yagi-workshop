@@ -18,13 +18,13 @@
 // ERRCODE='22023'); the action layer also pre-validates so the user sees
 // an inline error before round-tripping to Postgres.
 //
-// in_review 의 [자료 추가하기] modal calls the existing
+// submitted/in_review 의 [자료 추가하기] modal calls the existing
 // addBriefingDocumentAction from briefing-step2-actions.ts (Wave B sub_5).
 // We do NOT duplicate that action here — the SPEC's "appendBriefingDocumentAction"
 // shorthand maps to that pre-existing surface. NOTE: the briefing_documents
 // INSERT RLS policy (Wave A sub_5 fix F2) currently requires parent
-// status='draft'. An in_review caller will hit RLS denial and surface a
-// 'forbidden' return; loosening RLS to allow ('draft','in_review') is
+// status='draft'. A submitted/in_review caller will hit RLS denial and surface a
+// 'forbidden' return; loosening RLS to allow ('draft','submitted','in_review') is
 // FU-Phase5-16 (registered in Wave C result doc).
 // =============================================================================
 

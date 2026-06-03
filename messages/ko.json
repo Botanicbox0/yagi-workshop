@@ -1981,12 +1981,14 @@
         "empty": "현재 프로젝트가 없습니다",
         "waiting": "대기 중",
         "processing": "처리 중...",
+        "action_accept": "수락 · 검토 시작",
         "action_start": "진행 시작",
         "action_deliver": "납품 완료",
         "action_restart": "재시작",
         "action_archive": "아카이브",
         "references": "참고: {count}",
         "tabs": {
+          "submitted": "새 의뢰",
           "draft": "초안",
           "in_review": "검토 중",
           "in_progress": "진행 중",
@@ -2457,7 +2459,11 @@
       },
       "project_submitted": {
         "title": "의뢰가 접수되었습니다",
-        "body": "\"{project_name}\" 의뢰가 검토 중입니다. 1 영업일 이내에 회신드립니다."
+        "body": "\"{project_name}\" 의뢰가 YAGI 검토 인박스에 접수되었습니다. 1 영업일 이내에 확인합니다."
+      },
+      "project_accepted": {
+        "title": "YAGI가 의뢰를 수락했어요",
+        "body": "\"{project_name}\" 의뢰를 검토 중입니다. 인테이크 미팅에서 방향과 견적을 함께 확정합니다."
       }
     }
   },
@@ -3022,13 +3028,13 @@
         "archived": "이 의뢰는 보관 처리되었어요."
       },
       "empty_state": {
-        "submitted": "야기 팀 검토 시작 대기 중",
-        "in_review": "요청을 접수했어요. YAGI가 검토한 뒤, 인테이크 미팅에서 제작 방향과 견적을 함께 확정하고 제작을 시작합니다. 그동안 아래에서 참고자료를 더하거나 제작 방향을 채워주세요 — 자세할수록 미팅이 빨라져요."
+        "submitted": "요청을 접수했어요. YAGI가 곧 검토하고, 인테이크 미팅에서 제작 방향과 견적을 함께 확정합니다. 그동안 아래에서 참고자료를 더하거나 제작 방향을 채워주세요 — 자세할수록 미팅이 빨라져요.",
+        "in_review": "YAGI가 의뢰를 수락하고 검토 중이에요. 인테이크 미팅에서 방향·견적을 확정하고 제작을 시작합니다."
       },
       "card": {
         "submitted": {
           "title": "의뢰가 접수되었습니다",
-          "body": "YAGI 팀이 브리프를 검토 중입니다."
+          "body": "YAGI 팀이 곧 브리프를 확인합니다."
         },
         "meta": {
           "expected_response": {
@@ -3037,7 +3043,7 @@
           },
           "next_step": {
             "label": "다음 단계",
-            "submitted": "검토 완료 후 코멘트 또는 미팅 일정 안내"
+            "submitted": "YAGI 수락 후 방향·견적 확정"
           },
           "team": {
             "label": "담당 팀",

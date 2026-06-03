@@ -113,12 +113,10 @@ export async function createProject(input: unknown): Promise<ActionResult> {
   }
   const membership = { workspace_id: active.id };
 
-  // FIX-1 (L-015 parity): artist 마법사가 submit에 createProject를 재사용한다.
-  // projects.status 컬럼 계약상 client submit은 submitted→in_review 자동전이(system)를
-  // 완성해야 한다(brand submitProjectAction과 동일). "submitted"에 머물면 admin 큐가
-  // 설계상 이 status를 안 담아 영영 안 보이고 status_history seed도 빠진다.
+  // FIX-2 Model B: all client submissions land in `submitted`, the YAGI
+  // intake inbox. YAGI explicitly accepts submitted projects into in_review.
   const isSubmit = parsed.data.intent === "submit";
-  const status = isSubmit ? "in_review" : "draft";
+  const status = isSubmit ? "submitted" : "draft";
 
   // Column mapping notes:
   // - spec field `description` → DB column `brief` (no standalone `description` col)
@@ -226,7 +224,7 @@ export async function createProject(input: unknown): Promise<ActionResult> {
     };
   }
 
-  // FIX-1: submitted→in_review 자동전이의 status_history seed.
+  // FIX-2: client submit status_history seed (draft -> submitted).
   // submitProjectAction step 2와 동일. service-role 클라이언트로 psh_insert_deny RLS 우회.
   // brief INSERT 성공(롤백 안 됨) 이후에만 기록. history 실패는 non-fatal(brand 정책과 동일).
   if (isSubmit) {
@@ -237,12 +235,12 @@ export async function createProject(input: unknown): Promise<ActionResult> {
       .from("project_status_history")
       .insert({
         project_id: project.id,
-        from_status: "submitted",
-        to_status: "in_review",
+        from_status: "draft",
+        to_status: "submitted",
         actor_id: user.id,
-        actor_role: "system",
+        actor_role: "client",
         comment: null,
-    });
+      });
     if (histErr) {
       console.error(
         "[createProject] status_history INSERT failed (non-fatal):",
@@ -871,20 +869,20 @@ export async function fetchVideoMetadataAction(
 // =============================================================================
 // Phase 3.0 task_04 — submitProjectAction (Phase 3.1 task_04 update)
 // =============================================================================
-// Atomically submits the wizard's draft as a new project with status='in_review'
-// (the L-015 auto-transition shortcut — never writes 'submitted' to projects).
+// Atomically submits the wizard's draft as a new project with status='submitted'
+// (FIX-2 Model B — YAGI explicitly accepts into in_review).
 //
 // Sequence (Phase 3.1):
-//   1. INSERT projects with status='in_review' (user-scoped client; RLS
+//   1. INSERT projects with status='submitted' (user-scoped client; RLS
 //      INSERT policy allows it since we own the workspace)
-//   2. INSERT project_status_history with actor_role='system' — MUST bypass
+//   2. INSERT project_status_history with actor_role='client' — MUST bypass
 //      RLS which denies INSERT on this table for all authenticated callers.
 //      Resolution: Option A — service-role client scoped to this single INSERT.
 //      Service-role usage is strictly scoped; other reads/writes stay on user
 //      client.
 //   3. RPC seed_project_board_from_wizard(project_id, board_document) —
 //      Phase 3.1 replaces the project_references INSERT path.
-//      The RPC is SECURITY DEFINER + asserts project.status='in_review'.
+//      The RPC is SECURITY DEFINER + asserts project.status IN ('submitted','in_review').
 //   4. DELETE wizard_drafts row (user-scoped client)
 //   5. Send Resend admin + client emails (best-effort, not blocking)
 //   6. Emit in-app notification to the submitting user (best-effort, not
@@ -1095,10 +1093,8 @@ export async function submitProjectAction(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.0 columns not in generated types
   const supabaseAny = supabase as any;
 
-  // 1. INSERT projects with status='in_review' (L-015 auto-transition; INSERT
-  //    is allowed by projects_insert RLS policy for authenticated callers who
-  //    are workspace members. Direct UPDATE to status is forbidden by trigger
-  //    guard but INSERT with the target status is the allowed L-015 path.)
+  // 1. INSERT projects with status='submitted' (FIX-2 Model B). Submitted is
+  //    the YAGI intake inbox; yagi_admin explicitly accepts into in_review.
   const { data: project, error: projErr } = await supabaseAny
     .from("projects")
     .insert({
@@ -1121,7 +1117,7 @@ export async function submitProjectAction(
       interested_in_twin: data.interested_in_twin,
       workspace_id: resolvedWorkspaceId,
       created_by: user.id,
-      status: "in_review",
+      status: "submitted",
       submitted_at: new Date().toISOString(),
       kind: "direct",
       // project_type stays as 'direct_commission' for backward compat
@@ -1140,7 +1136,7 @@ export async function submitProjectAction(
     };
   }
 
-  // 2. INSERT project_status_history with actor_role='system'.
+  // 2. INSERT project_status_history with actor_role='client'.
   //    Option A: service-role client for this single statement only (bypasses
   //    the psh_insert_deny RLS policy which blocks all authenticated users).
   //    The service-role client is NOT used for any other read/write in this action.
@@ -1152,10 +1148,10 @@ export async function submitProjectAction(
     .from("project_status_history")
     .insert({
       project_id: project.id,
-      from_status: "submitted",   // logical from-state (L-015: submitted→in_review)
-      to_status: "in_review",
+      from_status: "draft",
+      to_status: "submitted",
       actor_id: user.id,
-      actor_role: "system",
+      actor_role: "client",
       comment: null,
     }) as { error: { message: string } | null };
 
@@ -1170,7 +1166,7 @@ export async function submitProjectAction(
   // 3. Phase 3.1 — Seed the project_boards row via RPC.
   //    Replaces the old project_references[] INSERT path. The RPC is
   //    SECURITY DEFINER + asserts caller owns the project (K-05 LOOP 1 F1 fix)
-  //    AND project.status='in_review'. ON CONFLICT (project_id) DO UPDATE so
+  //    AND project.status IN ('submitted','in_review'). ON CONFLICT (project_id) DO UPDATE so
   //    re-submits are idempotent.
   //    K-05 HIGH-B F5 fix: server-recompute asset_index from the board document
   //    so admin queue/detail counts are accurate immediately after submit

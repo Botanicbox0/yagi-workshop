@@ -1981,12 +1981,14 @@
         "empty": "No projects at this time",
         "waiting": "Waiting",
         "processing": "Processing...",
+        "action_accept": "Accept · start review",
         "action_start": "Start",
         "action_deliver": "Mark delivered",
         "action_restart": "Restart",
         "action_archive": "Archive",
         "references": "Refs: {count}",
         "tabs": {
+          "submitted": "New requests",
           "draft": "Draft",
           "in_review": "In review",
           "in_progress": "In progress",
@@ -2457,7 +2459,11 @@
       },
       "project_submitted": {
         "title": "Project received",
-        "body": "\"{project_name}\" is now under review. We will respond within 1 business day."
+        "body": "\"{project_name}\" has landed in the YAGI review inbox. We'll check it within 1 business day."
+      },
+      "project_accepted": {
+        "title": "YAGI accepted your request",
+        "body": "\"{project_name}\" is now being reviewed. We'll confirm the direction and quote together in the intake meeting."
       }
     }
   },
@@ -2957,13 +2963,13 @@
         "archived": "This request has been archived."
       },
       "empty_state": {
-        "submitted": "Waiting for YAGI to start review",
-        "in_review": "We've received your request. After review, we'll lock the direction and quote together in the intake meeting, then start production. Meanwhile, add references or fill in the creative direction — the more detail, the faster the meeting."
+        "submitted": "We've received your request. YAGI will review it shortly, then lock the direction and quote together in the intake meeting. Meanwhile, add references or fill in the creative direction — the more detail, the faster the meeting.",
+        "in_review": "YAGI has taken on your request and is reviewing it. We'll confirm the direction and quote in the intake meeting, then start production."
       },
       "card": {
         "submitted": {
           "title": "Request submitted",
-          "body": "YAGI is reviewing your request."
+          "body": "YAGI will review your brief shortly."
         },
         "meta": {
           "expected_response": {
@@ -2972,7 +2978,7 @@
           },
           "next_step": {
             "label": "Next step",
-            "submitted": "Review → comment or meeting schedule"
+            "submitted": "YAGI accepts → direction and quote"
           },
           "team": {
             "label": "Assigned team",

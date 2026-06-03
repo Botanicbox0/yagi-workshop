@@ -31,10 +31,9 @@ type Props = {
 };
 
 function isSubmitJustNow(status: string): boolean {
-  // After a successful wizard submit, projects land at status='in_review'
-  // (L-015 auto-transition from 'submitted'). The hero card surfaces a
-  // calm reassurance line for this state -- KICKOFF section task_04
-  // "Submit 직후 진입 시 banner".
+  // After a successful submit, projects land at status='submitted' (Model B)
+  // and later move to in_review when YAGI accepts. The hero card surfaces a
+  // calm reassurance line for these pre-production states.
   return status === "in_review" || status === "submitted" || status === "draft";
 }
 

@@ -5,8 +5,8 @@
 //
 // Renders 1–2 CTAs per status per SPEC §"Next action CTA":
 //   draft         → primary [브리프 완성하기 →] (Link to /projects/new?project=...)
-//   submitted     → 0 CTA, helper text only
-//   in_review     → [자료 추가하기]  → opens MaterialAppendModal (kind selector)
+//   submitted     → helper text + [자료 추가하기] → opens MaterialAppendModal
+//   in_review     → helper text + [자료 추가하기] → opens MaterialAppendModal
 //   in_progress   → helper text only
 //   in_revision   → helper text only
 //   delivered     → primary [시안 보기 →] → "준비 중" placeholder modal (FU-Phase5-15)
@@ -19,7 +19,7 @@
 //     through the "준비 중" placeholder for delivered today (UI surface
 //     ships in Phase 6+ per SPEC). The data layer is verifiable via
 //     devtools per SPEC §"Verification" steps 10–11.
-//   - in_review append form ships here via MaterialAppendModal.
+//   - submitted/in_review append form ships here via MaterialAppendModal.
 // =============================================================================
 
 import Link from "next/link";
@@ -99,9 +99,15 @@ export function NextActionCTA({
 
   if (status === "submitted") {
     return (
-      <p className="text-sm text-muted-foreground keep-all leading-relaxed">
-        {labels.empty_state_submitted}
-      </p>
+      <>
+        <p className="mb-4 text-sm text-muted-foreground keep-all leading-relaxed">
+          {labels.empty_state_submitted}
+        </p>
+        <MaterialAppendModal
+          projectId={projectId}
+          labels={labels.modal}
+        />
+      </>
     );
   }
 

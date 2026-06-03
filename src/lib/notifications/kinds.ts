@@ -30,7 +30,9 @@ export type NotificationKind =
   | "meeting_cancelled"
   | "support_message_new"
   // Phase 3.0 task_04 — project lifecycle
-  | "project_submitted";
+  | "project_submitted"
+  // FIX-2 Model B — YAGI explicit accept gate
+  | "project_accepted";
 
 export type NotificationSeverity = "high" | "medium" | "low";
 
@@ -59,6 +61,7 @@ export const SEVERITY_BY_KIND: Record<NotificationKind, NotificationSeverity> = 
   support_message_new: "medium",
   // Phase 3.0 task_04
   project_submitted: "high",
+  project_accepted: "high",
 };
 
 export function severityOf(kind: NotificationKind): NotificationSeverity {

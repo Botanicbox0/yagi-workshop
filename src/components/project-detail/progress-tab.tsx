@@ -7,8 +7,7 @@
 // - project_status_history has its own RLS scoping by project_id; this
 //   tab never displays cross-project rows.
 // - Empty state is surfaced calmly (no rows) -- it should be unusual
-//   since submitProjectAction inserts an initial submitted->in_review
-//   row after every wizard submit.
+//   since submit paths seed the initial draft->submitted row.
 //
 // Design v1.0:
 // - vertical timeline with hairline connector (border-border/40 left)

@@ -1,9 +1,9 @@
 "use client";
 
 // =============================================================================
-// Phase 5 Wave C C_3 — Material append modal (in_review status).
+// Phase 5 Wave C C_3 — Material append modal (submitted / in_review status).
 //
-// Wires the in_review [자료 추가하기] CTA to:
+// Wires the post-submit [자료 추가하기] CTA to:
 //   1. R2 presigned PUT URL via Wave B getBriefingDocumentPutUrlAction
 //   2. Direct PUT upload from the browser
 //   3. INSERT into briefing_documents via Wave B addBriefingDocumentAction
@@ -12,10 +12,10 @@
 // source selector: upload | url
 //
 // Note (FU-Phase5-16): briefing_documents INSERT RLS (Wave A sub_5 F2)
-// currently requires parent project status='draft'. An in_review caller
+// currently requires parent project status='draft'. A submitted/in_review caller
 // hits 'forbidden' — the modal surfaces a clear toast pointing at the
 // FU. The action wiring + form structure remain shipped per SPEC, so
-// when FU-Phase5-16 extends the policy (status IN ('draft','in_review')),
+// when FU-Phase5-16 extends the policy (status IN ('draft','submitted','in_review')),
 // this modal works end-to-end without UI changes.
 // =============================================================================
 

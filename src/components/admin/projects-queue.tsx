@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/projects/status-badge';
 import { TestWorkspaceBadge } from '@/components/admin/test-data-toggle';
 import {
+  acceptProjectAction,
   startProjectAction,
   deliverProjectAction,
   archiveProjectAction,
@@ -45,6 +46,7 @@ export type ProjectsQueueProps = {
 
 type TabKey =
   | 'draft'
+  | 'submitted'
   | 'in_review'
   | 'in_progress'
   | 'in_revision'
@@ -52,6 +54,7 @@ type TabKey =
   | 'approved';
 
 const TABS: Array<{ key: TabKey; status: ProjectStatus; label: string }> = [
+  { key: 'submitted', status: 'submitted', label: 'submitted' },
   { key: 'draft', status: 'draft', label: 'draft' },
   { key: 'in_review', status: 'in_review', label: 'in_review' },
   { key: 'in_progress', status: 'in_progress', label: 'in_progress' },
@@ -60,7 +63,7 @@ const TABS: Array<{ key: TabKey; status: ProjectStatus; label: string }> = [
   { key: 'approved', status: 'approved', label: 'approved' },
 ];
 
-export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQueueProps) {
+export function ProjectsQueue({ projects, initialTab = 'submitted' }: ProjectsQueueProps) {
   const t = useTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ProjectStatus>(initialTab);
@@ -85,14 +88,16 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
   const handleActionClick = useCallback(async (
     e: React.MouseEvent<HTMLButtonElement>,
     projectId: string,
-    action: 'start' | 'deliver' | 'archive' | 'cancel'
+    action: 'accept' | 'start' | 'deliver' | 'archive' | 'cancel'
   ) => {
     e.preventDefault();
     e.stopPropagation();
 
     setLoadingId(projectId);
     try {
-      if (action === 'start') {
+      if (action === 'accept') {
+        await acceptProjectAction(projectId);
+      } else if (action === 'start') {
         await startProjectAction(projectId);
       } else if (action === 'deliver') {
         await deliverProjectAction(projectId);
@@ -110,9 +115,16 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
   }, [router]);
 
   const getActionButtons = (project: ProjectQueueRow) => {
-    const actions: Array<{ label: string; action: 'start' | 'deliver' | 'archive' | 'cancel'; variant: 'primary' | 'secondary' }> = [];
+    const actions: Array<{ label: string; action: 'accept' | 'start' | 'deliver' | 'archive' | 'cancel'; variant: 'primary' | 'secondary' }> = [];
 
     switch (project.status) {
+      case 'submitted':
+        actions.push({
+          label: t('admin.projects.queue.action_accept'),
+          action: 'accept',
+          variant: 'primary',
+        });
+        break;
       case 'in_review':
         actions.push({
           label: t('admin.projects.queue.action_start'),
@@ -148,7 +160,6 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
         });
         break;
       case 'draft':
-      case 'submitted':
       case 'cancelled':
       case 'archived':
         return null;

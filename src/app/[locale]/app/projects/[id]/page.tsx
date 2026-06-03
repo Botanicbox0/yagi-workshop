@@ -863,6 +863,7 @@ export default async function ProjectDetailPage({
             status={project.status}
             viewerRole="admin"
             locale={localeNarrow}
+            canAcceptProject={isYagiAdmin}
           />
           {isYagiAdmin && <AdminDeleteButton projectId={project.id} />}
         </div>

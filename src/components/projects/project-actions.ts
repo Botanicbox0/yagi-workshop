@@ -1,6 +1,7 @@
 'use server';
 
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { emitNotification } from '@/lib/notifications/emit';
 import { revalidatePath } from 'next/cache';
 
 async function callTransition(
@@ -27,6 +28,36 @@ function revalidateProjectPaths(id: string) {
 
 export async function startProjectAction(id: string) {
   const result = await callTransition(id, 'in_progress', null);
+  revalidateProjectPaths(id);
+  return result;
+}
+
+export async function acceptProjectAction(id: string) {
+  const result = await callTransition(id, 'in_review', null);
+  const supabase = await createSupabaseServer();
+  const { data: project, error } = await supabase
+    .from('projects')
+    .select('id, title, created_by, workspace_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[acceptProjectAction] project lookup failed:', error);
+  } else if (project?.created_by) {
+    try {
+      await emitNotification({
+        user_id: project.created_by,
+        kind: 'project_accepted',
+        project_id: project.id,
+        workspace_id: project.workspace_id ?? undefined,
+        payload: { project_name: project.title ?? 'Project' },
+        url_path: `/app/projects/${project.id}`,
+      });
+    } catch (e) {
+      console.error('[acceptProjectAction] notification failed:', e);
+    }
+  }
+
   revalidateProjectPaths(id);
   return result;
 }
