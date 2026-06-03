@@ -26,7 +26,7 @@ const COPY = {
       approved: "승인됨",
     },
     turn: {
-      client_review: "클라 검토 대기 · {round}",
+      client_review: "클라이언트 검토 대기 · {round}",
       yagi_revision: "YAGI 수정 중 · {round}",
       approved: "승인 완료",
     },

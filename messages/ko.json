@@ -2802,7 +2802,7 @@
       "round_overage": "포함 수정 라운드를 넘었습니다. 추가 범위는 안내 후 진행하세요.",
       "turn": {
         "internal": "YAGI 제작·검토 중",
-        "client_review": "클라 검토 대기 · {round}",
+        "client_review": "클라이언트 검토 대기 · {round}",
         "yagi_revision": "YAGI 수정 중 · {round}",
         "approved": "승인 완료"
       },
@@ -2877,7 +2877,7 @@
       "round_overage": "포함 수정 라운드를 넘었습니다. 추가 범위는 안내 후 진행하세요.",
       "turn": {
         "internal": "YAGI 제작·검토 중",
-        "client_review": "클라 검토 대기 · {round}",
+        "client_review": "클라이언트 검토 대기 · {round}",
         "yagi_revision": "YAGI 수정 중 · {round}",
         "approved": "승인 완료"
       },
