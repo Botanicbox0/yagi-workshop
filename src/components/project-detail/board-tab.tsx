@@ -12,6 +12,7 @@ import {
   VersionStackTab,
   type VersionStackDeliverable,
 } from "@/components/project-detail/version-stack-tab";
+import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
 
 type Props = {
   projectId: string;
@@ -27,6 +28,7 @@ type DeliverableRow = {
   note: string | null;
   storage_paths: string[];
   external_urls: string[];
+  released_at: string | null;
   created_at: string;
   submitted_by_profile:
     | { display_name: string | null; handle: string | null }
@@ -93,7 +95,7 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
     isProjectGuest = data === true;
   }
 
-  const { data: rowsRaw } = (await supabase
+  let deliverablesQuery = supabase
     .from("project_deliverables")
     .select(
       `
@@ -103,17 +105,31 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
       note,
       storage_paths,
       external_urls,
+      released_at,
       created_at,
       submitted_by_profile:profiles!project_deliverables_submitted_by_fkey(display_name, handle)
     `,
     )
-    .eq("project_id", projectId)
+    .eq("project_id", projectId);
+
+  if (!isYagiAdmin) {
+    deliverablesQuery = deliverablesQuery.not("released_at", "is", null);
+  }
+
+  const { data: rowsRaw } = (await deliverablesQuery
     .order("version", { ascending: false })
     .order("created_at", { ascending: false })) as {
     data: DeliverableRow[] | null;
   };
 
   const rows = rowsRaw ?? [];
+  const releasedRoundById = buildReleasedRoundMap(
+    rows.map((row) => ({
+      id: row.id,
+      version: row.version,
+      releasedAt: row.released_at,
+    })),
+  );
   const deliverableIds = rows.map((row) => row.id);
   const feedbackCountByDeliverable = new Map<string, number>();
   if (deliverableIds.length > 0) {
@@ -167,6 +183,8 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         version: row.version,
         status: row.status,
         note: row.note,
+        releasedAt: row.released_at,
+        releasedRound: releasedRoundById.get(row.id) ?? null,
         feedbackCount: feedbackCountByDeliverable.get(row.id) ?? 0,
         createdAt: row.created_at,
         submittedBy: profileName(row),
@@ -185,6 +203,7 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
       projectId={projectId}
       deliverables={deliverables}
       canUpload={isYagiAdmin || isProjectGuest}
+      isYagiAdmin={isYagiAdmin}
       locale={locale}
       labels={{
         title: t("title"),
@@ -212,6 +231,19 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
         feedbackCount: t("feedback_count", { count: "{count}" }),
         delivery: t("delivery"),
         final: t("final"),
+        internalDraft: t("internal_draft"),
+        release: t("release"),
+        releasing: t("releasing"),
+        releaseSuccess: t("release_success"),
+        releasedAt: t("released_at"),
+        round: t("round", { round: "{round}", included: "{included}" }),
+        roundOverage: t("round_overage"),
+        turn: {
+          internal: t("turn.internal"),
+          client_review: t("turn.client_review", { round: "{round}" }),
+          yagi_revision: t("turn.yagi_revision", { round: "{round}" }),
+          approved: t("turn.approved"),
+        },
         success: t("success"),
         errors: {
           assetRequired: t("errors.asset_required"),
@@ -219,6 +251,7 @@ export async function BoardTab({ projectId, isYagiAdmin, locale }: Props) {
           fileTooLarge: t("errors.file_too_large"),
           uploadFailed: t("errors.upload_failed"),
           forbidden: t("errors.forbidden"),
+          releaseFailed: t("errors.release_failed"),
           generic: t("errors.generic"),
         },
         status: {

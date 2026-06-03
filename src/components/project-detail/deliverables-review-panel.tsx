@@ -12,12 +12,16 @@ import {
   LinkIcon,
   Loader2,
   Pencil,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { reviewProjectDeliverableAction } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
+import {
+  releaseDeliverableToClientAction,
+  reviewProjectDeliverableAction,
+} from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import {
   AnnotatedImage,
   AnnotationPanel,
@@ -26,12 +30,18 @@ import {
   type AnnotationShape,
   type DeliverableAnnotation,
 } from "@/components/project-detail/deliverable-annotations";
+import {
+  getDeliverableTurnState,
+  INCLUDED_REVISION_ROUNDS,
+} from "@/lib/project-deliverables/release-state";
 
 export type DeliveryReviewDeliverable = {
   id: string;
   version: number;
   status: "submitted" | "changes_requested" | "approved" | string;
   note: string | null;
+  releasedAt: string | null;
+  releasedRound: number | null;
   reviewNote: string | null;
   reviewedAt: string | null;
   reviewedBy: string | null;
@@ -59,6 +69,14 @@ type Labels = {
   emptySub: string;
   version: string;
   final: string;
+  internalDraft: string;
+  release: string;
+  releasing: string;
+  releaseSuccess: string;
+  releasedAt: string;
+  round: string;
+  roundOverage: string;
+  turn: Record<string, string>;
   submittedBy: string;
   submittedAt: string;
   reviewedBy: string;
@@ -79,6 +97,7 @@ type Labels = {
   errors: {
     validation: string;
     forbidden: string;
+    releaseFailed: string;
     generic: string;
   };
   status: Record<string, string>;
@@ -230,6 +249,17 @@ function DeliverableCard({
     shape: AnnotationShape;
     coords: AnnotationCoords;
   } | null>(null);
+  const turnState = getDeliverableTurnState({
+    releasedAt: deliverable.releasedAt,
+    status: deliverable.status,
+  });
+  const turnText = labels.turn[turnState].replace(
+    "{round}",
+    String(deliverable.releasedRound ?? "-"),
+  );
+  const isOverIncludedRounds =
+    deliverable.releasedRound != null &&
+    deliverable.releasedRound > INCLUDED_REVISION_ROUNDS;
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
@@ -251,6 +281,17 @@ function DeliverableCard({
                 {labels.final}
               </span>
             ) : null}
+            {!deliverable.releasedAt ? (
+              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                {labels.internalDraft}
+              </span>
+            ) : deliverable.releasedRound ? (
+              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-foreground">
+                {labels.round
+                  .replace("{round}", String(deliverable.releasedRound))
+                  .replace("{included}", String(INCLUDED_REVISION_ROUNDS))}
+              </span>
+            ) : null}
           </div>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span>
@@ -259,11 +300,33 @@ function DeliverableCard({
             <span>
               {labels.submittedAt}: {formatDate(deliverable.createdAt, locale)}
             </span>
+            {deliverable.releasedAt ? (
+              <span>
+                {labels.releasedAt}: {formatDate(deliverable.releasedAt, locale)}
+              </span>
+            ) : null}
           </div>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground keep-all">
+            {turnText}
+          </p>
+          {isOverIncludedRounds ? (
+            <p className="mt-1 text-xs leading-5 text-amber-300 keep-all">
+              {labels.roundOverage}
+            </p>
+          ) : null}
         </div>
-        <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
-          {assets}
-        </span>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
+            {assets}
+          </span>
+          {isYagiAdmin && !deliverable.releasedAt ? (
+            <ReleaseDeliverableButton
+              projectId={projectId}
+              deliverableId={deliverable.id}
+              labels={labels}
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -327,7 +390,7 @@ function DeliverableCard({
               </div>
             ) : null}
           </div>
-          {canReview ? (
+          {canReview && deliverable.releasedAt ? (
             <ReviewControls
               projectId={projectId}
               deliverable={deliverable}
@@ -337,6 +400,56 @@ function DeliverableCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function ReleaseDeliverableButton({
+  projectId,
+  deliverableId,
+  labels,
+}: {
+  projectId: string;
+  deliverableId: string;
+  labels: Labels;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  function release() {
+    startTransition(async () => {
+      const result = await releaseDeliverableToClientAction({
+        projectId,
+        deliverableId,
+      });
+      if (!result.ok) {
+        toast.error(
+          result.error === "forbidden"
+            ? labels.errors.forbidden
+            : labels.errors.releaseFailed,
+        );
+        return;
+      }
+      toast.success(labels.releaseSuccess);
+      router.refresh();
+    });
+  }
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      disabled={isPending}
+      onClick={release}
+      className="h-8 gap-1.5"
+    >
+      {isPending ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+      ) : (
+        <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+      )}
+      {isPending ? labels.releasing : labels.release}
+    </Button>
   );
 }
 

@@ -18,6 +18,7 @@ import type {
   ThreadAuthorRole,
   ThreadMessage,
 } from "@/components/project/thread-panel";
+import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
 
 type Props = {
   projectId: string;
@@ -32,6 +33,7 @@ type DeliverableRow = {
   note: string | null;
   storage_paths: string[];
   external_urls: string[];
+  released_at: string | null;
   review_note: string | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
@@ -132,7 +134,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
     uid: user.id,
   });
 
-  const { data: rowsRaw } = (await supabase
+  let deliverablesQuery = supabase
     .from("project_deliverables")
     .select(
       `
@@ -142,6 +144,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
       note,
       storage_paths,
       external_urls,
+      released_at,
       review_note,
       reviewed_by,
       reviewed_at,
@@ -149,12 +152,25 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
       submitted_by_profile:profiles!project_deliverables_submitted_by_fkey(display_name, handle)
     `,
     )
-    .eq("project_id", projectId)
+    .eq("project_id", projectId);
+
+  if (isYagiAdmin !== true) {
+    deliverablesQuery = deliverablesQuery.not("released_at", "is", null);
+  }
+
+  const { data: rowsRaw } = (await deliverablesQuery
     .order("version", { ascending: false })
     .order("created_at", { ascending: false })) as {
     data: DeliverableRow[] | null;
   };
 
+  const releasedRoundById = buildReleasedRoundMap(
+    (rowsRaw ?? []).map((row) => ({
+      id: row.id,
+      version: row.version,
+      releasedAt: row.released_at,
+    })),
+  );
   const reviewerIds = [
     ...new Set((rowsRaw ?? []).map((row) => row.reviewed_by).filter(Boolean)),
   ] as string[];
@@ -187,7 +203,10 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
       data: AnnotationRow[] | null;
     };
 
-    const annotationRows = annotationRowsRaw ?? [];
+    const annotationRows =
+      isYagiAdmin === true
+        ? (annotationRowsRaw ?? [])
+        : (annotationRowsRaw ?? []).filter((row) => row.visibility === "client");
     const threadIds = annotationRows.map((annotation) => annotation.thread_id);
     const messagesByThread = new Map<string, ThreadMessage[]>();
     if (threadIds.length > 0) {
@@ -313,6 +332,8 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
         version: row.version,
         status: row.status,
         note: row.note,
+        releasedAt: row.released_at,
+        releasedRound: releasedRoundById.get(row.id) ?? null,
         reviewNote: row.review_note,
         reviewedAt: row.reviewed_at,
         reviewedBy: row.reviewed_by ? reviewerMap.get(row.reviewed_by) ?? null : null,
@@ -345,6 +366,19 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
         emptySub: t("empty.sub"),
         version: t("version", { version: "{version}" }),
         final: t("final"),
+        internalDraft: t("internal_draft"),
+        release: t("release"),
+        releasing: t("releasing"),
+        releaseSuccess: t("release_success"),
+        releasedAt: t("released_at"),
+        round: t("round", { round: "{round}", included: "{included}" }),
+        roundOverage: t("round_overage"),
+        turn: {
+          internal: t("turn.internal"),
+          client_review: t("turn.client_review", { round: "{round}" }),
+          yagi_revision: t("turn.yagi_revision", { round: "{round}" }),
+          approved: t("turn.approved"),
+        },
         submittedBy: t("submitted_by"),
         submittedAt: t("submitted_at"),
         reviewedBy: t("reviewed_by"),
@@ -365,6 +399,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
         errors: {
           validation: t("review.errors.validation"),
           forbidden: t("review.errors.forbidden"),
+          releaseFailed: t("review.errors.release_failed"),
           generic: t("review.errors.generic"),
         },
         status: {

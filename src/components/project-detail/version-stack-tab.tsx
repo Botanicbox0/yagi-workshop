@@ -13,6 +13,7 @@ import {
   MessageSquare,
   PackagePlus,
   SendHorizontal,
+  ShieldCheck,
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,13 +24,20 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createProjectDeliverableVersionAction,
   getDeliverableUploadPutUrlAction,
+  releaseDeliverableToClientAction,
 } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
+import {
+  getDeliverableTurnState,
+  INCLUDED_REVISION_ROUNDS,
+} from "@/lib/project-deliverables/release-state";
 
 export type VersionStackDeliverable = {
   id: string;
   version: number;
   status: "submitted" | "changes_requested" | "approved" | string;
   note: string | null;
+  releasedAt: string | null;
+  releasedRound: number | null;
   feedbackCount: number;
   createdAt: string;
   submittedBy: string | null;
@@ -72,12 +80,21 @@ type Labels = {
   feedbackCount: string;
   delivery: string;
   final: string;
+  internalDraft: string;
+  release: string;
+  releasing: string;
+  releaseSuccess: string;
+  releasedAt: string;
+  round: string;
+  roundOverage: string;
+  turn: Record<string, string>;
   errors: {
     assetRequired: string;
     invalidUrl: string;
     fileTooLarge: string;
     uploadFailed: string;
     forbidden: string;
+    releaseFailed: string;
     generic: string;
   };
   success: string;
@@ -146,12 +163,14 @@ export function VersionStackTab({
   projectId,
   deliverables,
   canUpload,
+  isYagiAdmin,
   locale,
   labels,
 }: {
   projectId: string;
   deliverables: VersionStackDeliverable[];
   canUpload: boolean;
+  isYagiAdmin: boolean;
   locale: string;
   labels: Labels;
 }) {
@@ -332,6 +351,8 @@ export function VersionStackTab({
             <VersionCard
               key={deliverable.id}
               deliverable={deliverable}
+              projectId={projectId}
+              isYagiAdmin={isYagiAdmin}
               locale={locale}
               labels={labels}
             />
@@ -343,15 +364,30 @@ export function VersionStackTab({
 }
 
 function VersionCard({
+  projectId,
   deliverable,
+  isYagiAdmin,
   locale,
   labels,
 }: {
+  projectId: string;
   deliverable: VersionStackDeliverable;
+  isYagiAdmin: boolean;
   locale: string;
   labels: Labels;
 }) {
   const assets = deliverable.storageAssets.length + deliverable.externalAssets.length;
+  const turnState = getDeliverableTurnState({
+    releasedAt: deliverable.releasedAt,
+    status: deliverable.status,
+  });
+  const turnText = labels.turn[turnState].replace(
+    "{round}",
+    String(deliverable.releasedRound ?? "-"),
+  );
+  const isOverIncludedRounds =
+    deliverable.releasedRound != null &&
+    deliverable.releasedRound > INCLUDED_REVISION_ROUNDS;
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
@@ -368,6 +404,17 @@ function VersionCard({
             >
               {labels.status[deliverable.status] ?? deliverable.status}
             </span>
+            {!deliverable.releasedAt ? (
+              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                {labels.internalDraft}
+              </span>
+            ) : deliverable.releasedRound ? (
+              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-foreground">
+                {labels.round
+                  .replace("{round}", String(deliverable.releasedRound))
+                  .replace("{included}", String(INCLUDED_REVISION_ROUNDS))}
+              </span>
+            ) : null}
           </div>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span>
@@ -376,11 +423,33 @@ function VersionCard({
             <span>
               {labels.submittedAt}: {formatDate(deliverable.createdAt, locale)}
             </span>
+            {deliverable.releasedAt ? (
+              <span>
+                {labels.releasedAt}: {formatDate(deliverable.releasedAt, locale)}
+              </span>
+            ) : null}
           </div>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground keep-all">
+            {turnText}
+          </p>
+          {isOverIncludedRounds ? (
+            <p className="mt-1 text-xs leading-5 text-amber-300 keep-all">
+              {labels.roundOverage}
+            </p>
+          ) : null}
         </div>
-        <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
-          {labels.assets.replace("{count}", String(assets))}
-        </span>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
+            {labels.assets.replace("{count}", String(assets))}
+          </span>
+          {isYagiAdmin && !deliverable.releasedAt ? (
+            <ReleaseDeliverableButton
+              projectId={projectId}
+              deliverableId={deliverable.id}
+              labels={labels}
+            />
+          ) : null}
+        </div>
         <Link
           href={`?tab=comments&feedback=${deliverable.id}`}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-brand hover:text-brand"
@@ -426,6 +495,56 @@ function VersionCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function ReleaseDeliverableButton({
+  projectId,
+  deliverableId,
+  labels,
+}: {
+  projectId: string;
+  deliverableId: string;
+  labels: Labels;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  function release() {
+    startTransition(async () => {
+      const result = await releaseDeliverableToClientAction({
+        projectId,
+        deliverableId,
+      });
+      if (!result.ok) {
+        toast.error(
+          result.error === "forbidden"
+            ? labels.errors.forbidden
+            : labels.errors.releaseFailed,
+        );
+        return;
+      }
+      toast.success(labels.releaseSuccess);
+      router.refresh();
+    });
+  }
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      disabled={isPending}
+      onClick={release}
+      className="h-8 gap-1.5"
+    >
+      {isPending ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+      ) : (
+        <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+      )}
+      {isPending ? labels.releasing : labels.release}
+    </Button>
   );
 }
 

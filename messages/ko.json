@@ -1981,6 +1981,7 @@
         "empty": "현재 프로젝트가 없습니다",
         "waiting": "대기 중",
         "processing": "처리 중...",
+        "action_accept": "수락 · 검토 시작",
         "action_start": "진행 시작",
         "action_deliver": "납품 완료",
         "action_restart": "재시작",
@@ -1988,6 +1989,7 @@
         "references": "참고: {count}",
         "tabs": {
           "draft": "초안",
+          "submitted": "새 의뢰",
           "in_review": "검토 중",
           "in_progress": "진행 중",
           "in_revision": "수정 중",
@@ -2785,6 +2787,19 @@
       "feedback_count": "{count}",
       "delivery": "납품",
       "final": "최종",
+      "internal_draft": "내부 드래프트",
+      "release": "클라이언트에 릴리즈",
+      "releasing": "릴리즈 중...",
+      "release_success": "클라이언트에 릴리즈했습니다.",
+      "released_at": "릴리즈",
+      "round": "Round {round} / {included}",
+      "round_overage": "포함 수정 라운드를 넘었습니다. 추가 범위는 안내 후 진행하세요.",
+      "turn": {
+        "internal": "YAGI 제작·검토 중",
+        "client_review": "클라 검토 대기 · Round {round}",
+        "yagi_revision": "YAGI 수정 중 · Round {round}",
+        "approved": "승인 완료"
+      },
       "success": "새 버전을 업로드했습니다.",
       "upload": {
         "title": "새 버전 업로드",
@@ -2811,6 +2826,7 @@
         "file_too_large": "파일이 너무 큽니다.",
         "upload_failed": "업로드에 실패했습니다.",
         "forbidden": "버전을 업로드할 권한이 없습니다.",
+        "release_failed": "릴리즈에 실패했습니다.",
         "generic": "버전을 만들지 못했습니다."
       }
     },
@@ -2830,6 +2846,19 @@
       "download": "다운로드",
       "open_external": "열기",
       "stored_file": "저장된 파일",
+      "internal_draft": "내부 드래프트",
+      "release": "클라이언트에 릴리즈",
+      "releasing": "릴리즈 중...",
+      "release_success": "클라이언트에 릴리즈했습니다.",
+      "released_at": "릴리즈",
+      "round": "Round {round} / {included}",
+      "round_overage": "포함 수정 라운드를 넘었습니다. 추가 범위는 안내 후 진행하세요.",
+      "turn": {
+        "internal": "YAGI 제작·검토 중",
+        "client_review": "클라 검토 대기 · Round {round}",
+        "yagi_revision": "YAGI 수정 중 · Round {round}",
+        "approved": "승인 완료"
+      },
       "empty": {
         "title": "아직 납품 버전이 없습니다",
         "sub": "작업 탭에서 제출된 버전이 최종 승인 대상으로 표시됩니다."
@@ -2850,6 +2879,7 @@
         "errors": {
           "validation": "저장 전 검수 노트를 입력해주세요.",
           "forbidden": "이 버전을 검수할 권한이 없습니다.",
+          "release_failed": "릴리즈에 실패했습니다.",
           "generic": "검수 결정을 저장하지 못했습니다."
         }
       },

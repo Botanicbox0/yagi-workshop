@@ -11,6 +11,7 @@ import { ApprovalModal } from '@/components/projects/action-modals/approval-moda
 import { RevisionRequestModal } from '@/components/projects/action-modals/revision-request-modal';
 import { CancelModal } from '@/components/projects/action-modals/cancel-modal';
 import {
+  acceptProjectAction,
   startProjectAction,
   deliverProjectAction,
   archiveProjectAction,
@@ -35,6 +36,8 @@ const COPY = {
     btn_deliver: '납품 완료',
     btn_restart: '재시작',
     btn_archive: '아카이브',
+    btn_accept: '수락 · 검토 시작',
+    success_accept: '검토 시작으로 전환되었습니다.',
     success_start: '진행 시작으로 전환되었습니다.',
     success_deliver: '납품 완료로 전환되었습니다.',
     success_archive: '아카이브되었습니다.',
@@ -48,6 +51,8 @@ const COPY = {
     btn_deliver: 'Mark delivered',
     btn_restart: 'Restart',
     btn_archive: 'Archive',
+    btn_accept: 'Accept · start review',
+    success_accept: 'Status changed to in review.',
     success_start: 'Status changed to in progress.',
     success_deliver: 'Marked as delivered.',
     success_archive: 'Project archived.',
@@ -177,6 +182,43 @@ export function ProjectActionButtons({ projectId, status, viewerRole, locale }: 
 
   // ── Admin action matrix ─────────────────────────────────────────────────────
   if (viewerRole === 'admin') {
+    // status=submitted → "수락 · 검토 시작" + "취소"
+    if (status === 'submitted') {
+      return (
+        <>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                runAction(
+                  () => acceptProjectAction(projectId),
+                  c.success_accept
+                )
+              }
+              disabled={isPending}
+              className={primary}
+            >
+              {c.btn_accept}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCancelOpen(true)}
+              disabled={isPending}
+              className={secondary}
+            >
+              {c.btn_cancel}
+            </button>
+          </div>
+          <CancelModal
+            projectId={projectId}
+            open={cancelOpen}
+            onClose={() => setCancelOpen(false)}
+            locale={locale}
+          />
+        </>
+      );
+    }
+
     // status=in_review → "진행 시작" + "취소"
     if (status === 'in_review') {
       return (

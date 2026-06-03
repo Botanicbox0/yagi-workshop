@@ -1981,6 +1981,7 @@
         "empty": "No projects at this time",
         "waiting": "Waiting",
         "processing": "Processing...",
+        "action_accept": "Accept · start review",
         "action_start": "Start",
         "action_deliver": "Mark delivered",
         "action_restart": "Restart",
@@ -1988,6 +1989,7 @@
         "references": "Refs: {count}",
         "tabs": {
           "draft": "Draft",
+          "submitted": "New requests",
           "in_review": "In review",
           "in_progress": "In progress",
           "in_revision": "Revision",
@@ -2720,6 +2722,19 @@
       "feedback_count": "{count}",
       "delivery": "Delivery",
       "final": "Final",
+      "internal_draft": "Internal draft",
+      "release": "Release to client",
+      "releasing": "Releasing...",
+      "release_success": "Released to the client.",
+      "released_at": "Released",
+      "round": "Round {round} / {included}",
+      "round_overage": "This is beyond the included revision rounds. Align on additional scope before continuing.",
+      "turn": {
+        "internal": "YAGI production review",
+        "client_review": "Client review pending · Round {round}",
+        "yagi_revision": "YAGI revising · Round {round}",
+        "approved": "Approved"
+      },
       "success": "New version uploaded.",
       "upload": {
         "title": "Upload new version",
@@ -2746,6 +2761,7 @@
         "file_too_large": "File is too large.",
         "upload_failed": "Upload failed.",
         "forbidden": "You do not have permission to upload a version.",
+        "release_failed": "Could not release this version.",
         "generic": "Could not create the version."
       }
     },
@@ -2765,6 +2781,19 @@
       "download": "Download",
       "open_external": "Open",
       "stored_file": "Stored file",
+      "internal_draft": "Internal draft",
+      "release": "Release to client",
+      "releasing": "Releasing...",
+      "release_success": "Released to the client.",
+      "released_at": "Released",
+      "round": "Round {round} / {included}",
+      "round_overage": "This is beyond the included revision rounds. Align on additional scope before continuing.",
+      "turn": {
+        "internal": "YAGI production review",
+        "client_review": "Client review pending · Round {round}",
+        "yagi_revision": "YAGI revising · Round {round}",
+        "approved": "Approved"
+      },
       "empty": {
         "title": "No deliverables yet",
         "sub": "Submitted versions from the work tab will appear here for final approval."
@@ -2785,6 +2814,7 @@
         "errors": {
           "validation": "Add a review note before saving.",
           "forbidden": "You do not have permission to review this version.",
+          "release_failed": "Could not release this version.",
           "generic": "Could not save the review decision."
         }
       },

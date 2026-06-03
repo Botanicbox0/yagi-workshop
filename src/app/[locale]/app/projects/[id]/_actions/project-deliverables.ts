@@ -146,6 +146,7 @@ export type CreateProjectDeliverableVersionResult =
         | "unauthenticated"
         | "forbidden"
         | "storage_key_not_owned"
+        | "version_failed"
         | "db";
       message?: string;
     };
@@ -176,25 +177,28 @@ export async function createProjectDeliverableVersionAction(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag schema
   const sb = supabase as any;
-  const { data: latestRow, error: latestError } = await sb
-    .from("project_deliverables")
-    .select("version")
-    .eq("project_id", projectId)
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data: nextVersionRaw, error: versionError } = await sb.rpc(
+    "next_deliverable_version",
+    { p_project_id: projectId },
+  );
 
-  if (latestError) {
-    console.error("[createProjectDeliverableVersionAction] max version error:", latestError);
-    return { ok: false, error: "db", message: latestError.message };
+  if (versionError || typeof nextVersionRaw !== "number") {
+    console.error(
+      "[createProjectDeliverableVersionAction] next version RPC error:",
+      versionError,
+    );
+    return {
+      ok: false,
+      error: "version_failed",
+      message: versionError?.message,
+    };
   }
 
-  const nextVersion = ((latestRow?.version as number | undefined) ?? 0) + 1;
   const { data: inserted, error: insertError } = await sb
     .from("project_deliverables")
     .insert({
       project_id: projectId,
-      version: nextVersion,
+      version: nextVersionRaw,
       submitted_by: user.id,
       storage_paths: storagePaths,
       external_urls: externalUrls,
@@ -251,7 +255,7 @@ export async function reviewProjectDeliverableAction(
   const sb = supabase as any;
   const { data: deliverable, error: lookupError } = await sb
     .from("project_deliverables")
-    .select("id, project_id, project:projects!inner(id, workspace_id)")
+    .select("id, project_id, released_at, project:projects!inner(id, workspace_id)")
     .eq("id", deliverableId)
     .eq("project_id", projectId)
     .maybeSingle();
@@ -261,6 +265,7 @@ export async function reviewProjectDeliverableAction(
     return { ok: false, error: "db", message: lookupError.message };
   }
   if (!deliverable) return { ok: false, error: "not_found" };
+  if (!deliverable.released_at) return { ok: false, error: "forbidden" };
 
   const project = Array.isArray(deliverable.project)
     ? deliverable.project[0]
@@ -295,4 +300,78 @@ export async function reviewProjectDeliverableAction(
 
   revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
   return { ok: true };
+}
+
+const releaseDeliverableSchema = z.object({
+  projectId: z.string().uuid(),
+  deliverableId: z.string().uuid(),
+});
+
+export type ReleaseDeliverableToClientResult =
+  | { ok: true; releasedAt: string }
+  | {
+      ok: false;
+      error: "validation" | "unauthenticated" | "forbidden" | "not_found" | "db";
+      message?: string;
+    };
+
+export async function releaseDeliverableToClientAction(
+  input: unknown,
+): Promise<ReleaseDeliverableToClientResult> {
+  const parsed = releaseDeliverableSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+
+  const { projectId, deliverableId } = parsed.data;
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
+    uid: user.id,
+  });
+  if (isYagiAdmin !== true) return { ok: false, error: "forbidden" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag released_at
+  const sb = supabase as any;
+  const { data: existing, error: lookupError } = await sb
+    .from("project_deliverables")
+    .select("id, project_id, released_at")
+    .eq("id", deliverableId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (lookupError) {
+    console.error("[releaseDeliverableToClientAction] lookup error:", lookupError);
+    return { ok: false, error: "db", message: lookupError.message };
+  }
+  if (!existing) return { ok: false, error: "not_found" };
+  if (existing.released_at) {
+    return { ok: true, releasedAt: existing.released_at as string };
+  }
+
+  const releasedAt = new Date().toISOString();
+  const { data: updated, error: updateError } = await sb
+    .from("project_deliverables")
+    .update({ released_at: releasedAt })
+    .eq("id", deliverableId)
+    .eq("project_id", projectId)
+    .is("released_at", null)
+    .select("released_at")
+    .maybeSingle();
+
+  if (updateError) {
+    console.error("[releaseDeliverableToClientAction] update error:", updateError);
+    return { ok: false, error: "db", message: updateError.message };
+  }
+
+  revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
+  revalidatePath(`/[locale]/app/admin/projects/${projectId}`, "page");
+  return {
+    ok: true,
+    releasedAt: (updated?.released_at as string | undefined) ?? releasedAt,
+  };
 }

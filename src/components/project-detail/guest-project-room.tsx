@@ -105,6 +105,7 @@ export async function GuestProjectRoom({
     .from("project_deliverables")
     .select("id, status, external_urls, storage_paths, note, version, created_at")
     .eq("project_id", project.id)
+    .not("released_at", "is", null)
     .order("created_at", { ascending: false });
 
   const deliverables: GuestDeliverable[] = (deliverablesRaw ?? []).map((row) => ({

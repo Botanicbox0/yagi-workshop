@@ -15,6 +15,7 @@ type DeliverableRow = {
   id: string;
   version: number;
   status: string;
+  released_at: string | null;
   created_at: string;
 };
 
@@ -41,13 +42,24 @@ export async function CommentsTab({
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag project_threads.deliverable_id
   const supabase = (await createSupabaseServer()) as any;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: isYagiAdmin } = user
+    ? await supabase.rpc("is_yagi_admin", { uid: user.id })
+    : { data: false };
+
+  let deliverablesQuery = supabase
+    .from("project_deliverables")
+    .select("id, version, status, released_at, created_at")
+    .eq("project_id", projectId);
+
+  if (isYagiAdmin !== true) {
+    deliverablesQuery = deliverablesQuery.not("released_at", "is", null);
+  }
 
   const [{ data: deliverablesRaw }, { data: threadsRaw }] = await Promise.all([
-    supabase
-      .from("project_deliverables")
-      .select("id, version, status, created_at")
-      .eq("project_id", projectId)
-      .order("version", { ascending: false }),
+    deliverablesQuery.order("version", { ascending: false }),
     supabase
       .from("project_threads")
       .select("id, deliverable_id")
