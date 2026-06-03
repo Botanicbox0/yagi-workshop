@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   releaseDeliverableToClientAction,
+  revertDeliverablePublicReviewAction,
   reviewProjectDeliverableAction,
 } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import {
@@ -90,6 +91,7 @@ type Labels = {
   reviewTitle: string;
   approve: string;
   requestChanges: string;
+  revertReview: string;
   noteLabel: string;
   notePlaceholder: string;
   submitting: string;
@@ -394,6 +396,7 @@ function DeliverableCard({
             <ReviewControls
               projectId={projectId}
               deliverable={deliverable}
+              isYagiAdmin={isYagiAdmin}
               labels={labels}
             />
           ) : null}
@@ -481,10 +484,12 @@ function NoteBlock({
 function ReviewControls({
   projectId,
   deliverable,
+  isYagiAdmin,
   labels,
 }: {
   projectId: string;
   deliverable: DeliveryReviewDeliverable;
+  isYagiAdmin: boolean;
   labels: Labels;
 }) {
   const router = useRouter();
@@ -511,6 +516,23 @@ function ReviewControls({
       toast.success(
         labels.success.replace("{status}", labels.status[status] ?? status),
       );
+      router.refresh();
+    });
+  }
+
+  function revert() {
+    startTransition(async () => {
+      const result = await revertDeliverablePublicReviewAction({
+        projectId,
+        deliverableId: deliverable.id,
+      });
+      if (!result.ok) {
+        toast.error(
+          result.error === "forbidden" ? labels.errors.forbidden : labels.errors.generic,
+        );
+        return;
+      }
+      toast.success(labels.success.replace("{status}", labels.status.submitted ?? "submitted"));
       router.refresh();
     });
   }
@@ -554,6 +576,16 @@ function ReviewControls({
           <Pencil className="h-4 w-4" aria-hidden="true" />
           {labels.requestChanges}
         </Button>
+        {isYagiAdmin && deliverable.status !== "submitted" ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={revert}
+            disabled={isPending}
+          >
+            {labels.revertReview}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

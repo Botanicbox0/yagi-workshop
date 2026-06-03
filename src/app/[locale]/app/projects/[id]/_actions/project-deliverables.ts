@@ -375,3 +375,46 @@ export async function releaseDeliverableToClientAction(
     releasedAt: (updated?.released_at as string | undefined) ?? releasedAt,
   };
 }
+
+export async function revertDeliverablePublicReviewAction(
+  input: unknown,
+): Promise<ReviewProjectDeliverableResult> {
+  const parsed = releaseDeliverableSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+
+  const { projectId, deliverableId } = parsed.data;
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
+    uid: user.id,
+  });
+  if (isYagiAdmin !== true) return { ok: false, error: "forbidden" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag released_at/review columns
+  const sb = supabase as any;
+  const { error } = await sb
+    .from("project_deliverables")
+    .update({
+      status: "submitted",
+      reviewed_by: null,
+      reviewed_at: null,
+      review_note: null,
+    })
+    .eq("id", deliverableId)
+    .eq("project_id", projectId)
+    .not("released_at", "is", null);
+
+  if (error) {
+    console.error("[revertDeliverablePublicReviewAction] update error:", error);
+    return { ok: false, error: "db", message: error.message };
+  }
+
+  revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
+  return { ok: true };
+}

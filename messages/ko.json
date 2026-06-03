@@ -2863,6 +2863,19 @@
         "title": "아직 납품 버전이 없습니다",
         "sub": "작업 탭에서 제출된 버전이 최종 승인 대상으로 표시됩니다."
       },
+      "share": {
+        "title": "로그인 없는 결과물 공유",
+        "description": "클라이언트는 이 링크로 로그인 없이 릴리즈된 버전만 확인합니다. 내부 드래프트와 내부 메모는 보이지 않습니다.",
+        "create": "공유 링크 만들기",
+        "copy": "복사",
+        "rotate": "링크 회전",
+        "unshare": "공유 해제",
+        "working": "처리 중...",
+        "copied": "공유 링크를 복사했습니다.",
+        "success": "공유 설정을 저장했습니다.",
+        "error": "공유 설정을 저장하지 못했습니다.",
+        "no_released": "먼저 클라이언트에 릴리즈된 버전이 필요합니다."
+      },
       "status": {
         "submitted": "제출됨",
         "changes_requested": "수정 요청",
@@ -2872,6 +2885,7 @@
         "title": "승인 결정",
         "approve": "승인",
         "request_changes": "수정 요청",
+        "revert_review": "검토 되돌리기",
         "note_label": "검수 노트",
         "note_placeholder": "승인 또는 수정 요청 내용을 기록해주세요.",
         "submitting": "저장 중...",

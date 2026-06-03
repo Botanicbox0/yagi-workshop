@@ -6,6 +6,7 @@ import {
   DeliverablesReviewPanel,
   type DeliveryReviewDeliverable,
 } from "@/components/project-detail/deliverables-review-panel";
+import { DeliverableShareControls } from "@/components/project-detail/deliverable-share-controls";
 import type {
   AnnotationCoords,
   AnnotationShape,
@@ -117,6 +118,10 @@ function profileName(
   return p?.display_name ?? p?.handle ?? null;
 }
 
+function siteUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3003";
+}
+
 export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
   const t = await getTranslations({
     locale,
@@ -133,6 +138,17 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
   const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
     uid: user.id,
   });
+
+  const { data: projectShare } = (await supabase
+    .from("projects")
+    .select("deliverable_share_token, deliverable_share_enabled")
+    .eq("id", projectId)
+    .maybeSingle()) as {
+    data: {
+      deliverable_share_token: string | null;
+      deliverable_share_enabled: boolean | null;
+    } | null;
+  };
 
   let deliverablesQuery = supabase
     .from("project_deliverables")
@@ -351,14 +367,39 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
   );
 
   return (
-    <DeliverablesReviewPanel
-      projectId={projectId}
-      deliverables={deliverables}
-      canReview={canReview}
-      currentUserId={user.id}
-      isYagiAdmin={isYagiAdmin === true}
-      locale={locale}
-      labels={{
+    <div className="space-y-5">
+      {isYagiAdmin === true ? (
+        <DeliverableShareControls
+          projectId={projectId}
+          enabled={projectShare?.deliverable_share_enabled === true}
+          initialUrl={
+            projectShare?.deliverable_share_token
+              ? `${siteUrl()}/s/d/${projectShare.deliverable_share_token}`
+              : null
+          }
+          labels={{
+            title: t("share.title"),
+            description: t("share.description"),
+            create: t("share.create"),
+            copy: t("share.copy"),
+            rotate: t("share.rotate"),
+            unshare: t("share.unshare"),
+            working: t("share.working"),
+            copied: t("share.copied"),
+            success: t("share.success"),
+            error: t("share.error"),
+            noReleased: t("share.no_released"),
+          }}
+        />
+      ) : null}
+      <DeliverablesReviewPanel
+        projectId={projectId}
+        deliverables={deliverables}
+        canReview={canReview}
+        currentUserId={user.id}
+        isYagiAdmin={isYagiAdmin === true}
+        locale={locale}
+        labels={{
         title: t("title"),
         subtitle: t("subtitle"),
         finalCount: t("final_count", { count: "{count}" }),
@@ -392,6 +433,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
         reviewTitle: t("review.title"),
         approve: t("review.approve"),
         requestChanges: t("review.request_changes"),
+        revertReview: t("review.revert_review"),
         noteLabel: t("review.note_label"),
         notePlaceholder: t("review.note_placeholder"),
         submitting: t("review.submitting"),
@@ -430,7 +472,8 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
             generic: t("annotations.errors.generic"),
           },
         },
-      }}
-    />
+        }}
+      />
+    </div>
   );
 }

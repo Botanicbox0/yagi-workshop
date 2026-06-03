@@ -2798,6 +2798,19 @@
         "title": "No deliverables yet",
         "sub": "Submitted versions from the work tab will appear here for final approval."
       },
+      "share": {
+        "title": "Accountless deliverable share",
+        "description": "Clients can use this link to review released versions without logging in. Internal drafts and internal notes stay hidden.",
+        "create": "Create share link",
+        "copy": "Copy",
+        "rotate": "Rotate link",
+        "unshare": "Unshare",
+        "working": "Working...",
+        "copied": "Share link copied.",
+        "success": "Share settings saved.",
+        "error": "Could not save share settings.",
+        "no_released": "Release at least one version to the client first."
+      },
       "status": {
         "submitted": "Submitted",
         "changes_requested": "Changes requested",
@@ -2807,6 +2820,7 @@
         "title": "Approval decision",
         "approve": "Approve",
         "request_changes": "Request changes",
+        "revert_review": "Revert review",
         "note_label": "Review note",
         "note_placeholder": "Record the approval or requested changes.",
         "submitting": "Saving...",
