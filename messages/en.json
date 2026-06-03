@@ -2862,6 +2862,11 @@
         "title": "Pinned feedback",
         "subtitle": "Click an image for a pin, or drag to mark an area. On video, pin feedback to the paused frame and timecode.",
         "hint": "Click=pin · drag=area",
+        "sort_label": "Sort",
+        "sort_by_position": "Position",
+        "sort_by_timecode": "Timecode",
+        "filter_all": "All",
+        "filter_open_only": "Open only",
         "draft_title": "Leave feedback here",
         "body_placeholder": "Describe what should change in this exact spot.",
         "timecode": "Timecode",
@@ -2885,6 +2890,10 @@
       "video": {
         "play": "Play",
         "pause": "Pause",
+        "speed": "Speed",
+        "frame_back": "Step back",
+        "frame_forward": "Step forward",
+        "edit_timecode": "Edit timecode",
         "current_time": "Current time",
         "comment_at_current_prefix": "Comment at ",
         "comment_at_current_suffix": ""

@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MessageSquare, Pause, Play } from "lucide-react";
+import { MessageSquare, Pause, Play, StepBack, StepForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatMediaTime } from "@/lib/video-timecode";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { formatMediaTime, parseMediaTime } from "@/lib/video-timecode";
 import { cn } from "@/lib/utils";
 import type {
   AnnotationCoords,
@@ -13,6 +20,10 @@ import type {
 export type TimedVideoLabels = {
   play: string;
   pause: string;
+  speed: string;
+  frameBack: string;
+  frameForward: string;
+  editTimecode: string;
   currentTime: string;
   commentAtCurrentPrefix: string;
   commentAtCurrentSuffix: string;
@@ -48,6 +59,10 @@ export type TimedVideoAnnotation = {
   timestampSec: number | null;
 };
 
+const PLAYBACK_RATES = [0.5, 1, 1.5, 2];
+// HTML5 video exposes no reliable frame-rate API, so frame stepping uses a 30fps approximation.
+const FRAME = 1 / 30;
+
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
 }
@@ -78,9 +93,13 @@ export function TimedVideoPlayer({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const pointerRef = useRef<number | null>(null);
+  const timeInputOnFocusRef = useRef(formatMediaTime(0));
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [timeInput, setTimeInput] = useState(formatMediaTime(0));
+  const [isEditingTime, setIsEditingTime] = useState(false);
   const localDraft = draft?.assetIndex === assetIndex ? draft : null;
   const timedAnnotations = useMemo(
     () =>
@@ -99,24 +118,40 @@ export function TimedVideoPlayer({
     if (Math.abs(videoRef.current.currentTime - selected.timestampSec) > 0.25) {
       videoRef.current.currentTime = selected.timestampSec;
       setCurrent(selected.timestampSec);
+      if (!isEditingTime) setTimeInput(formatMediaTime(selected.timestampSec));
       videoRef.current.pause();
       setIsPlaying(false);
     }
-  }, [annotations, selectedId]);
+  }, [annotations, isEditingTime, selectedId]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.playbackRate = playbackRate;
+  }, [playbackRate, src]);
 
   function syncFromVideo() {
     const video = videoRef.current;
     if (!video) return;
-    setCurrent(video.currentTime);
+    const nextCurrent = video.currentTime;
+    setCurrent(nextCurrent);
     setDuration(Number.isFinite(video.duration) ? video.duration : 0);
     setIsPlaying(!video.paused);
+    video.playbackRate = playbackRate;
+    if (!isEditingTime) setTimeInput(formatMediaTime(nextCurrent));
+  }
+
+  function clampTime(value: number) {
+    const maxTime = duration > 0 ? duration : Number.MAX_SAFE_INTEGER;
+    return Math.min(Math.max(value, 0), maxTime);
   }
 
   function seek(value: number) {
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime = value;
-    setCurrent(value);
+    const clamped = clampTime(value);
+    video.currentTime = clamped;
+    setCurrent(clamped);
+    if (!isEditingTime) setTimeInput(formatMediaTime(clamped));
   }
 
   function togglePlayback() {
@@ -129,6 +164,29 @@ export function TimedVideoPlayer({
       video.pause();
       setIsPlaying(false);
     }
+  }
+
+  function stepFrame(direction: -1 | 1) {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    setIsPlaying(false);
+    seek(video.currentTime + direction * FRAME);
+  }
+
+  function commitTimeInput() {
+    const changed = timeInput !== timeInputOnFocusRef.current;
+    setIsEditingTime(false);
+    if (!changed) return;
+
+    const parsed = parseMediaTime(timeInput);
+    if (parsed == null) {
+      setTimeInput(formatMediaTime(current));
+      return;
+    }
+    const clamped = clampTime(parsed);
+    seek(clamped);
+    setTimeInput(formatMediaTime(clamped));
   }
 
   function createDraftAtCurrent(coords: AnnotationCoords, shape: AnnotationShape) {
@@ -220,24 +278,68 @@ export function TimedVideoPlayer({
 
       <div className="rounded-lg border border-border/70 bg-background/70 p-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={togglePlayback}
-            className="w-full gap-2 sm:w-auto"
-          >
-            {isPlaying ? (
-              <Pause className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Play className="h-4 w-4" aria-hidden="true" />
-            )}
-            {isPlaying ? labels.pause : labels.play}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => stepFrame(-1)}
+              className="h-9 w-9"
+              aria-label={labels.frameBack}
+              disabled={duration <= 0}
+            >
+              <StepBack className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={togglePlayback}
+              className="h-9 gap-2"
+              aria-label={isPlaying ? labels.pause : labels.play}
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Play className="h-4 w-4" aria-hidden="true" />
+              )}
+              {isPlaying ? labels.pause : labels.play}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => stepFrame(1)}
+              className="h-9 w-9"
+              aria-label={labels.frameForward}
+              disabled={duration <= 0}
+            >
+              <StepForward className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="w-16 text-xs tabular-nums text-muted-foreground">
-              {formatMediaTime(current)}
-            </span>
+            <input
+              value={timeInput}
+              onChange={(event) => setTimeInput(event.currentTarget.value)}
+              onFocus={() => {
+                videoRef.current?.pause();
+                setIsPlaying(false);
+                setIsEditingTime(true);
+                timeInputOnFocusRef.current = timeInput;
+              }}
+              onBlur={commitTimeInput}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+                if (event.key === "Escape") {
+                  setIsEditingTime(false);
+                  setTimeInput(formatMediaTime(current));
+                  event.currentTarget.blur();
+                }
+              }}
+              className="h-8 w-16 rounded-md border border-transparent bg-transparent px-1 text-xs tabular-nums text-muted-foreground outline-none transition-colors focus:border-border focus:bg-surface-card focus:text-foreground focus:ring-1 focus:ring-ring"
+              aria-label={labels.editTimecode}
+              inputMode="text"
+            />
             <div className="relative flex-1">
               <input
                 type="range"
@@ -275,6 +377,24 @@ export function TimedVideoPlayer({
               {formatMediaTime(duration)}
             </span>
           </div>
+          <Select
+            value={String(playbackRate)}
+            onValueChange={(value) => setPlaybackRate(Number(value))}
+          >
+            <SelectTrigger
+              className="h-9 w-full border-border bg-surface-card text-xs tabular-nums text-muted-foreground sm:w-[92px]"
+              aria-label={labels.speed}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PLAYBACK_RATES.map((rate) => (
+                <SelectItem key={rate} value={String(rate)}>
+                  {rate}×
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         {onCaptureTime ? (
           <Button

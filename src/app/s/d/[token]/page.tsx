@@ -54,6 +54,10 @@ const COPY = {
     video: {
       play: "재생",
       pause: "일시정지",
+      speed: "속도",
+      frameBack: "뒤로 이동",
+      frameForward: "앞으로 이동",
+      editTimecode: "타임코드 편집",
       currentTime: "현재 시간",
       commentAtCurrentPrefix: "",
       commentAtCurrentSuffix: " 지점에 코멘트",
@@ -102,6 +106,10 @@ const COPY = {
     video: {
       play: "Play",
       pause: "Pause",
+      speed: "Speed",
+      frameBack: "Step back",
+      frameForward: "Step forward",
+      editTimecode: "Edit timecode",
       currentTime: "Current time",
       commentAtCurrentPrefix: "Comment at ",
       commentAtCurrentSuffix: "",

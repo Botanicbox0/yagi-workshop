@@ -47,6 +47,11 @@ export type AnnotationLabels = {
   title: string;
   subtitle: string;
   hint: string;
+  sortLabel: string;
+  sortByPosition: string;
+  sortByTimecode: string;
+  filterAll: string;
+  filterOpenOnly: string;
   draftTitle: string;
   bodyPlaceholder: string;
   timecode: string;
@@ -337,12 +342,35 @@ export function AnnotationPanel({
   const router = useRouter();
   const [body, setBody] = useState("");
   const [internal, setInternal] = useState(false);
+  const [sortMode, setSortMode] = useState<"position" | "timecode">("position");
+  const [openOnly, setOpenOnly] = useState(false);
   const [isPending, startTransition] = useTransition();
   const sorted = useMemo(
-    () => [...annotations].sort((a, b) => a.assetIndex - b.assetIndex || a.seq - b.seq),
-    [annotations],
+    () =>
+      [...annotations].sort((a, b) => {
+        if (sortMode === "timecode") {
+          const aTime = a.timestampSec;
+          const bTime = b.timestampSec;
+          if (aTime == null && bTime != null) return 1;
+          if (aTime != null && bTime == null) return -1;
+          if (aTime != null && bTime != null && aTime !== bTime) {
+            return aTime - bTime;
+          }
+          return a.seq - b.seq;
+        }
+        return a.assetIndex - b.assetIndex || a.seq - b.seq;
+      }),
+    [annotations, sortMode],
   );
-  const selected = sorted.find((annotation) => annotation.id === selectedId) ?? null;
+  // The sort/filter controls affect the list only; media markers remain unchanged.
+  const visibleAnnotations = useMemo(
+    () =>
+      openOnly
+        ? sorted.filter((annotation) => annotation.status === "open")
+        : sorted,
+    [openOnly, sorted],
+  );
+  const selected = annotations.find((annotation) => annotation.id === selectedId) ?? null;
   const openCount = sorted.filter((annotation) => annotation.status === "open").length;
 
   function saveDraft() {
@@ -392,18 +420,83 @@ export function AnnotationPanel({
   return (
     <div className="space-y-3">
       <div className="rounded-lg border border-border/70 bg-background/40 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
-              {labels.title}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground keep-all">
-              {labels.subtitle}
-            </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
+                {labels.title}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground keep-all">
+                {labels.subtitle}
+              </p>
+            </div>
+            <span className="rounded-full border border-brand/30 bg-brand-soft px-2 py-1 text-xs font-semibold text-brand">
+              {openCount}
+            </span>
           </div>
-          <span className="rounded-full border border-brand/30 bg-brand-soft px-2 py-1 text-xs font-semibold text-brand">
-            {openCount}
-          </span>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-label text-muted-foreground">
+              {labels.sortLabel}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-md border border-border bg-background/40 p-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={sortMode === "position"}
+                  onClick={() => setSortMode("position")}
+                  className={cn(
+                    "h-7 rounded px-2 text-xs text-muted-foreground",
+                    sortMode === "position" && "bg-surface-card text-foreground",
+                  )}
+                >
+                  {labels.sortByPosition}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={sortMode === "timecode"}
+                  onClick={() => setSortMode("timecode")}
+                  className={cn(
+                    "h-7 rounded px-2 text-xs text-muted-foreground",
+                    sortMode === "timecode" && "bg-surface-card text-foreground",
+                  )}
+                >
+                  {labels.sortByTimecode}
+                </Button>
+              </div>
+              <div className="inline-flex rounded-md border border-border bg-background/40 p-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={!openOnly}
+                  onClick={() => setOpenOnly(false)}
+                  className={cn(
+                    "h-7 rounded px-2 text-xs text-muted-foreground",
+                    !openOnly && "bg-surface-card text-foreground",
+                  )}
+                >
+                  {labels.filterAll}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={openOnly}
+                  onClick={() => setOpenOnly(true)}
+                  className={cn(
+                    "h-7 rounded px-2 text-xs text-muted-foreground",
+                    openOnly && "bg-surface-card text-foreground",
+                  )}
+                >
+                  {labels.filterOpenOnly}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -446,13 +539,13 @@ export function AnnotationPanel({
         </div>
       ) : null}
 
-      {sorted.length === 0 ? (
+      {visibleAnnotations.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border/70 bg-background/30 p-4 text-sm text-muted-foreground keep-all">
           {labels.listEmpty}
         </div>
       ) : (
         <div className="space-y-2">
-          {sorted.map((annotation) => (
+          {visibleAnnotations.map((annotation) => (
             <button
               key={annotation.id}
               type="button"
