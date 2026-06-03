@@ -2747,6 +2747,10 @@
       "upload": {
         "title": "Upload new version",
         "file": "File",
+        "dropzone_title": "Drag a file here or click to browse",
+        "dropzone_sub": "Images, videos, and PDFs are supported.",
+        "selected_file": "Selected file",
+        "clear_file": "Remove file",
         "url": "External video URL",
         "url_placeholder": "https://youtube.com/...",
         "note": "Version note",
@@ -2767,6 +2771,7 @@
         "asset_required": "Add a file or an external URL.",
         "invalid_url": "Enter a valid http(s) URL.",
         "file_too_large": "File is too large.",
+        "unsupported_file_type": "Unsupported file type.",
         "upload_failed": "Upload failed.",
         "forbidden": "You do not have permission to upload a version.",
         "release_failed": "Could not release this version.",

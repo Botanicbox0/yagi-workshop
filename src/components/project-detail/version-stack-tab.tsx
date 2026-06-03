@@ -7,6 +7,7 @@ import {
   Download,
   CheckCircle2,
   ExternalLink,
+  FileUp,
   FileVideo,
   ImageIcon,
   LinkIcon,
@@ -16,6 +17,7 @@ import {
   SendHorizontal,
   ShieldCheck,
   Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -77,6 +79,10 @@ type Labels = {
   subtitle: string;
   uploadTitle: string;
   uploadFile: string;
+  uploadDropzoneTitle: string;
+  uploadDropzoneSub: string;
+  uploadSelectedFile: string;
+  uploadClearFile: string;
   uploadUrl: string;
   uploadUrlPlaceholder: string;
   uploadNote: string;
@@ -118,6 +124,7 @@ type Labels = {
     assetRequired: string;
     invalidUrl: string;
     fileTooLarge: string;
+    unsupportedFileType: string;
     uploadFailed: string;
     forbidden: string;
     releaseFailed: string;
@@ -129,6 +136,12 @@ type Labels = {
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024;
 
+const chipClass =
+  "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium";
+const neutralChipClass = `${chipClass} border-border bg-surface-card text-muted-foreground`;
+const actionControlClass =
+  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-3 text-xs font-medium text-foreground transition-colors hover:border-brand hover:text-brand";
+
 function isHttpUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
@@ -136,6 +149,14 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isAllowedUploadFile(file: File) {
+  return (
+    file.type.startsWith("image/") ||
+    file.type.startsWith("video/") ||
+    file.type === "application/pdf"
+  );
 }
 
 function getYouTubeEmbedUrl(url: string): string | null {
@@ -175,6 +196,19 @@ function formatDate(value: string, locale: string) {
   }).format(new Date(value));
 }
 
+function formatFileSize(value: number) {
+  if (value >= 1024 * 1024 * 1024) {
+    return `${(value / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  }
+  if (value >= 1024 * 1024) {
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  if (value >= 1024) {
+    return `${Math.round(value / 1024)} KB`;
+  }
+  return `${value} B`;
+}
+
 function statusClass(status: string) {
   if (status === "approved") {
     return "border-green-500/30 bg-green-500/10 text-green-300";
@@ -205,9 +239,12 @@ export function VersionStackTab({
   labels: Labels;
 }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dragDepthRef = useRef(0);
   const [file, setFile] = useState<File | null>(null);
   const [externalUrl, setExternalUrl] = useState("");
   const [note, setNote] = useState("");
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const sortedDeliverables = useMemo(
@@ -221,8 +258,18 @@ export function VersionStackTab({
 
   function resetForm() {
     setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setExternalUrl("");
     setNote("");
+  }
+
+  function selectFile(nextFile: File | null) {
+    if (nextFile && !isAllowedUploadFile(nextFile)) {
+      toast.error(labels.errors.unsupportedFileType);
+      return;
+    }
+    setFile(nextFile);
+    if (!nextFile && fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function submit() {
@@ -317,52 +364,131 @@ export function VersionStackTab({
 
       {canUpload && (
         <div className="rounded-lg border border-border/70 bg-surface-card p-5">
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-5 flex items-center gap-2">
             <PackagePlus className="h-4 w-4 text-brand" aria-hidden="true" />
             <h3 className="text-base font-semibold text-foreground">
               {labels.uploadTitle}
             </h3>
           </div>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div className="space-y-2">
               <Label htmlFor="version-file">{labels.uploadFile}</Label>
-              <Input
+              <input
+                ref={fileInputRef}
                 id="version-file"
                 type="file"
                 accept="image/*,video/*,application/pdf"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
                 disabled={isPending}
+                tabIndex={-1}
+                className="sr-only"
               />
+              <div
+                role="button"
+                tabIndex={isPending ? -1 : 0}
+                aria-disabled={isPending}
+                onClick={() => {
+                  if (!isPending) fileInputRef.current?.click();
+                }}
+                onKeyDown={(event) => {
+                  if (isPending) return;
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  if (isPending) return;
+                  dragDepthRef.current += 1;
+                  setIsDraggingFile(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (!isPending) setIsDraggingFile(true);
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+                  if (dragDepthRef.current === 0) setIsDraggingFile(false);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  dragDepthRef.current = 0;
+                  setIsDraggingFile(false);
+                  if (isPending) return;
+                  selectFile(event.dataTransfer.files?.[0] ?? null);
+                }}
+                className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-5 text-center transition-colors focus:outline-none focus:ring-1 focus:ring-ring ${
+                  isDraggingFile
+                    ? "border-brand bg-brand-soft"
+                    : "border-border/70 bg-background/40 hover:border-brand/70"
+                } ${isPending ? "pointer-events-none opacity-60" : ""}`}
+              >
+                <FileUp className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                <p className="mt-3 text-sm font-medium text-foreground keep-all">
+                  {labels.uploadDropzoneTitle}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground keep-all">
+                  {labels.uploadDropzoneSub}
+                </p>
+              </div>
+              {file ? (
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-border/70 bg-surface-card p-5">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {labels.uploadSelectedFile}
+                    </p>
+                    <p className="mt-1 truncate text-sm text-foreground">{file.name}</p>
+                    <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                      {formatFileSize(file.size)}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={isPending}
+                    aria-label={labels.uploadClearFile}
+                    onClick={() => selectFile(null)}
+                    className="h-8 w-8 shrink-0 rounded-full"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Button>
+                </div>
+              ) : null}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="version-url">{labels.uploadUrl}</Label>
-              <Input
-                id="version-url"
-                type="url"
-                value={externalUrl}
-                onChange={(event) => setExternalUrl(event.target.value)}
-                placeholder={labels.uploadUrlPlaceholder}
-                disabled={isPending}
-              />
-            </div>
-            <div className="space-y-2 lg:col-span-2">
-              <Label htmlFor="version-note">{labels.uploadNote}</Label>
-              <Textarea
-                id="version-note"
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                placeholder={labels.uploadNotePlaceholder}
-                className="min-h-[88px] resize-none"
-                disabled={isPending}
-                maxLength={2000}
-              />
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="version-url">{labels.uploadUrl}</Label>
+                <Input
+                  id="version-url"
+                  type="url"
+                  value={externalUrl}
+                  onChange={(event) => setExternalUrl(event.target.value)}
+                  placeholder={labels.uploadUrlPlaceholder}
+                  disabled={isPending}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="version-note">{labels.uploadNote}</Label>
+                <Textarea
+                  id="version-note"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder={labels.uploadNotePlaceholder}
+                  className="min-h-28 resize-none"
+                  disabled={isPending}
+                  maxLength={2000}
+                />
+              </div>
             </div>
           </div>
           <Button
             type="button"
             onClick={submit}
             disabled={isPending}
-            className="mt-4 gap-2 bg-brand text-brand-on hover:bg-brand/90"
+            className="mt-5 gap-2 bg-brand text-brand-on hover:bg-brand/90"
           >
             {isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -454,35 +580,35 @@ function VersionCard({
 
   return (
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
-      <div className="flex flex-col gap-3 border-b border-border/70 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
-        <div className="min-w-0">
+      <div className="flex flex-col gap-4 border-b border-border/70 p-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-lg font-semibold text-foreground">
+            <span className={`${chipClass} border-border bg-background text-foreground`}>
               {labels.version.replace("{version}", String(deliverable.version))}
             </span>
             <span
-              className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label ${statusClass(
+              className={`${chipClass} ${statusClass(
                 deliverable.status,
               )}`}
             >
               {labels.status[deliverable.status] ?? deliverable.status}
             </span>
             {!deliverable.releasedAt ? (
-              <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+              <span className={neutralChipClass}>
                 {labels.internalDraft}
               </span>
             ) : deliverable.releasedRound ? (
-              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-foreground">
+              <span className={`${chipClass} border-border bg-surface-card text-foreground`}>
                 {roundLabel}
               </span>
             ) : null}
             {deliverable.releasedAt ? (
-              <span className="rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+              <span className={neutralChipClass}>
                 {usageLabel}
               </span>
             ) : null}
             {seenLabel ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <span className={neutralChipClass}>
                 <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                 {seenLabel}
               </span>
@@ -511,7 +637,7 @@ function VersionCard({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <span className="rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-muted-foreground">
+          <span className={neutralChipClass}>
             {labels.assets.replace("{count}", String(assets))}
           </span>
           {isYagiAdmin && !deliverable.releasedAt ? (
@@ -522,34 +648,34 @@ function VersionCard({
               labels={labels}
             />
           ) : null}
+          <Link
+            href={`?tab=comments&feedback=${deliverable.id}`}
+            className={actionControlClass}
+          >
+            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{labels.feedback}</span>
+            <span className="text-muted-foreground">
+              {labels.feedbackCount.replace(
+                "{count}",
+                String(deliverable.feedbackCount),
+              )}
+            </span>
+          </Link>
+          <Link
+            href="?tab=deliverables"
+            className={actionControlClass}
+          >
+            <SendHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{labels.delivery}</span>
+            {deliverable.status === "approved" ? (
+              <span className="text-gold">{labels.final}</span>
+            ) : null}
+          </Link>
         </div>
-        <Link
-          href={`?tab=comments&feedback=${deliverable.id}`}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-brand hover:text-brand"
-        >
-          <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{labels.feedback}</span>
-          <span className="text-muted-foreground">
-            {labels.feedbackCount.replace(
-              "{count}",
-              String(deliverable.feedbackCount),
-            )}
-          </span>
-        </Link>
-        <Link
-          href="?tab=deliverables"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-card px-2.5 py-1 text-xs text-foreground transition-colors hover:border-brand hover:text-brand"
-        >
-          <SendHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{labels.delivery}</span>
-          {deliverable.status === "approved" ? (
-            <span className="text-gold">{labels.final}</span>
-          ) : null}
-        </Link>
       </div>
 
-      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid items-start gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid max-w-5xl gap-5 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
           {deliverable.storageAssets.map((asset) => (
             <StoragePreview key={asset.key} asset={asset} labels={labels} />
           ))}
@@ -557,7 +683,7 @@ function VersionCard({
             <ExternalPreview key={asset.url} asset={asset} labels={labels} />
           ))}
         </div>
-        <div className="rounded-lg border border-border/70 bg-background/40 p-4">
+        <div className="min-h-40 rounded-lg border border-border/70 bg-background/40 p-5">
           {deliverable.note ? (
             <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground keep-all">
               {deliverable.note}
@@ -628,7 +754,7 @@ function ReleaseDeliverableButton({
         variant="outline"
         disabled={isPending}
         onClick={() => release(false)}
-        className="h-8 gap-1.5"
+        className="h-8 gap-1.5 rounded-full px-3 text-xs"
       >
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -688,14 +814,14 @@ function StoragePreview({
           <ImageIcon className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
         )}
       </div>
-      <div className="flex items-center justify-between gap-3 p-3">
+      <div className="flex items-center justify-between gap-4 p-5">
         <p className="min-w-0 truncate text-xs text-muted-foreground">
           {asset.key.split("/").at(-1) ?? labels.storedFile}
         </p>
         <a
           href={asset.url}
           download
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-1 text-xs text-foreground hover:border-brand hover:text-brand"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-foreground hover:border-brand hover:text-brand"
         >
           <Download className="h-3.5 w-3.5" aria-hidden="true" />
           {labels.download}
@@ -739,7 +865,7 @@ function ExternalPreview({
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between gap-3 p-3">
+      <div className="flex items-center justify-between gap-4 p-5">
         <p className="min-w-0 truncate text-xs text-muted-foreground">
           {asset.title ?? asset.url}
         </p>
@@ -747,7 +873,7 @@ function ExternalPreview({
           href={asset.url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-1 text-xs text-foreground hover:border-brand hover:text-brand"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium text-foreground hover:border-brand hover:text-brand"
         >
           <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           {labels.openExternal}

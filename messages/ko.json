@@ -2812,6 +2812,10 @@
       "upload": {
         "title": "새 버전 업로드",
         "file": "파일",
+        "dropzone_title": "드래그하거나 클릭해 파일 선택",
+        "dropzone_sub": "이미지, 영상, PDF를 업로드할 수 있습니다.",
+        "selected_file": "선택된 파일",
+        "clear_file": "파일 제거",
         "url": "외부 영상 URL",
         "url_placeholder": "https://youtube.com/...",
         "note": "버전 노트",
@@ -2832,6 +2836,7 @@
         "asset_required": "파일 또는 외부 URL을 추가해주세요.",
         "invalid_url": "올바른 http(s) URL을 입력해주세요.",
         "file_too_large": "파일이 너무 큽니다.",
+        "unsupported_file_type": "지원하지 않는 파일 형식입니다.",
         "upload_failed": "업로드에 실패했습니다.",
         "forbidden": "버전을 업로드할 권한이 없습니다.",
         "release_failed": "릴리즈에 실패했습니다.",
