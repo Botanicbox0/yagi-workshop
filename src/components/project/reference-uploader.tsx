@@ -18,12 +18,13 @@ import {
   readVideoMetadata,
 } from "@/lib/references/video";
 import { validatePdfFile, readPdfMetadata } from "@/lib/references/pdf";
+import { MAX_IMAGE_UPLOAD_BYTES } from "@/lib/upload-limits";
 
 interface ReferenceUploaderProps {
   projectId: string;
 }
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_IMAGE_BYTES = MAX_IMAGE_UPLOAD_BYTES;
 const MAX_VIDEO_BYTES = 500 * 1024 * 1024; // 500 MB
 const DROPZONE_MAX_BYTES = MAX_VIDEO_BYTES; // widest cap; we branch manually.
 

@@ -6,7 +6,9 @@
  * to read metadata (keeps it out of the initial bundle).
  */
 
-const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
+import { MAX_DOCUMENT_UPLOAD_BYTES } from "@/lib/upload-limits";
+
+const MAX_PDF_BYTES = MAX_DOCUMENT_UPLOAD_BYTES;
 const PDF_MIME = "application/pdf";
 
 // Hardcoded to keep the bundle deterministic — must match `pdfjs-dist` in

@@ -41,6 +41,7 @@ import {
   createBriefAssetPutUrl,
   briefObjectPublicUrl,
 } from "@/lib/r2/client";
+import { MAX_DOCUMENT_UPLOAD_BYTES } from "@/lib/upload-limits";
 
 // ---------------------------------------------------------------------------
 // Shared constants + helpers
@@ -67,7 +68,7 @@ const EXT_FOR_CONTENT_TYPE: Record<string, string> = {
   "image/gif": "gif",
 };
 
-const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = MAX_DOCUMENT_UPLOAD_BYTES;
 const URL_MAX_LEN = 2000;
 const KIND_VALUES = ["brief", "reference"] as const;
 const CATEGORY_VALUES = ["mood", "composition", "pacing", "general"] as const;

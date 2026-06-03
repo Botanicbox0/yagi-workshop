@@ -31,6 +31,7 @@ import {
   briefObjectPublicUrl,
 } from "@/lib/r2/client";
 import { fetchVideoMetadata } from "@/lib/oembed";
+import { MAX_DOCUMENT_UPLOAD_BYTES } from "@/lib/upload-limits";
 
 const VERSION_DEBOUNCE_MS = 30_000;
 const DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
@@ -530,7 +531,7 @@ export async function addPdfAttachmentAction(
   if (file.type !== "application/pdf") {
     return { ok: false, error: "not_pdf" };
   }
-  if (file.size > 20 * 1024 * 1024) {
+  if (file.size > MAX_DOCUMENT_UPLOAD_BYTES) {
     return { ok: false, error: "file_too_large" };
   }
   if (file.name.length > 200) {

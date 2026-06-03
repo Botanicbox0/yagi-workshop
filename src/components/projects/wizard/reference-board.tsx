@@ -21,6 +21,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  MAX_DOCUMENT_UPLOAD_BYTES,
+  MAX_IMAGE_UPLOAD_BYTES,
+} from "@/lib/upload-limits";
+import {
   fetchVideoMetadataAction,
   getWizardAssetPutUrlAction,
 } from "@/app/[locale]/app/projects/new/actions";
@@ -256,11 +260,11 @@ export function ReferenceBoard({ refs, onChange }: ReferenceBoardProps) {
       }
 
       // File size validation
-      if (isImage && file.size > 5 * 1024 * 1024) {
+      if (isImage && file.size > MAX_IMAGE_UPLOAD_BYTES) {
         toast.error(t("wizard.field.references.file_too_large_image"));
         return;
       }
-      if (isPdf && file.size > 10 * 1024 * 1024) {
+      if (isPdf && file.size > MAX_DOCUMENT_UPLOAD_BYTES) {
         toast.error(t("wizard.field.references.file_too_large_pdf"));
         return;
       }

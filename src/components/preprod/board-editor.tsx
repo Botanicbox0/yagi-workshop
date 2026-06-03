@@ -67,6 +67,10 @@ import { Link as NavLink } from "@/i18n/routing";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { validateVideoFile, readVideoMetadata } from "@/lib/references/video";
 import {
+  MAX_IMAGE_UPLOAD_BYTES,
+  MAX_IMAGE_UPLOAD_MB,
+} from "@/lib/upload-limits";
+import {
   addFrame,
   addFrameFromUrl,
   updateFrame,
@@ -1278,9 +1282,10 @@ export function BoardEditor({
       if (!file) return;
       e.target.value = "";
 
-      const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-      if (file.size > MAX_IMAGE_BYTES) {
-        toast.error(tFrames("file_too_large", { maxMb: "20" }));
+      if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+        toast.error(
+          tFrames("file_too_large", { maxMb: String(MAX_IMAGE_UPLOAD_MB) })
+        );
         return;
       }
 
@@ -1507,9 +1512,10 @@ export function BoardEditor({
       if (!file || !selectedFrame) return;
       e.target.value = "";
 
-      const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-      if (file.size > MAX_IMAGE_BYTES) {
-        toast.error(tFrames("file_too_large", { maxMb: "20" }));
+      if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+        toast.error(
+          tFrames("file_too_large", { maxMb: String(MAX_IMAGE_UPLOAD_MB) })
+        );
         return;
       }
 

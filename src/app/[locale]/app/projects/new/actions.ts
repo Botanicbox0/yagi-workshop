@@ -8,6 +8,7 @@ import type { Json } from "@/lib/supabase/database.types";
 import { fetchVideoMetadata, type OEmbedResult } from "@/lib/oembed";
 import { extractAssetIndex } from "@/lib/board/asset-index";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { MAX_DOCUMENT_UPLOAD_BYTES } from "@/lib/upload-limits";
 
 // -----------------------------------------------------------------------------
 // Phase 2.8.1 G_B1-B — Wizard draft mode
@@ -925,7 +926,7 @@ const PdfAttachmentSchema = z.object({
   id: z.string().uuid(),
   storage_key: z.string().regex(/^(project-(wizard|board)|board-assets)\//),
   filename: z.string().min(1).max(200),
-  size_bytes: z.number().int().positive().max(20 * 1024 * 1024),
+  size_bytes: z.number().int().positive().max(MAX_DOCUMENT_UPLOAD_BYTES),
   uploaded_at: z.string(),
   uploaded_by: z.string(),
 });

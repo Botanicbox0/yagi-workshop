@@ -42,6 +42,12 @@ import { ImageShapeUtil } from "./shapes/image-shape";
 import { UrlCardShapeUtil } from "./shapes/url-card-shape";
 import { PdfShapeUtil } from "./shapes/pdf-shape";
 import { EmptyOverlay } from "./empty-overlay";
+import {
+  MAX_DOCUMENT_UPLOAD_BYTES,
+  MAX_DOCUMENT_UPLOAD_MB,
+  MAX_IMAGE_UPLOAD_BYTES,
+  MAX_IMAGE_UPLOAD_MB,
+} from "@/lib/upload-limits";
 
 // ============================================================
 // Custom shape utils — registered with tldraw
@@ -57,8 +63,8 @@ const CUSTOM_SHAPE_UTILS: TLAnyShapeUtilConstructor[] = [
 // Image/PDF size limits (client-side validation — server validates again)
 // ============================================================
 
-const IMAGE_MAX_BYTES = 20 * 1024 * 1024; // 20 MB
-const PDF_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const IMAGE_MAX_BYTES = MAX_IMAGE_UPLOAD_BYTES;
+const PDF_MAX_BYTES = MAX_DOCUMENT_UPLOAD_BYTES;
 
 // ============================================================
 // Asset action menu state type
@@ -274,7 +280,9 @@ export function ProjectBoard({
 
           if (mime.startsWith("image/")) {
             if (file.size > IMAGE_MAX_BYTES) {
-              console.warn(`[ProjectBoard] Image too large (max 20MB): ${file.name}`);
+              console.warn(
+                `[ProjectBoard] Image too large (max ${MAX_IMAGE_UPLOAD_MB}MB): ${file.name}`
+              );
               continue;
             }
 
@@ -295,7 +303,9 @@ export function ProjectBoard({
             } as any); // eslint-disable-line @typescript-eslint/no-explicit-any -- Phase 3.1
           } else if (mime === "application/pdf") {
             if (file.size > PDF_MAX_BYTES) {
-              console.warn(`[ProjectBoard] PDF too large (max 10MB): ${file.name}`);
+              console.warn(
+                `[ProjectBoard] PDF too large (max ${MAX_DOCUMENT_UPLOAD_MB}MB): ${file.name}`
+              );
               continue;
             }
 
