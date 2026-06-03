@@ -2834,10 +2834,11 @@
       },
       "annotations": {
         "title": "Pinned feedback",
-        "subtitle": "Click the image for a pin, or drag to mark an area.",
+        "subtitle": "Click an image for a pin, or drag to mark an area. On video, pin feedback to the paused frame and timecode.",
         "hint": "Click=pin · drag=area",
         "draft_title": "Leave feedback here",
         "body_placeholder": "Describe what should change in this exact spot.",
+        "timecode": "Timecode",
         "save": "Save pin",
         "saving": "Saving...",
         "cancel": "Cancel",
@@ -2854,6 +2855,13 @@
           "forbidden": "You do not have permission to save this pin.",
           "generic": "Could not save pinned feedback."
         }
+      },
+      "video": {
+        "play": "Play",
+        "pause": "Pause",
+        "current_time": "Current time",
+        "comment_at_current_prefix": "Comment at ",
+        "comment_at_current_suffix": ""
       }
     },
     "comments": {

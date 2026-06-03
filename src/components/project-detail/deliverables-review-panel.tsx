@@ -35,6 +35,10 @@ import {
   getDeliverableTurnState,
   INCLUDED_REVISION_ROUNDS,
 } from "@/lib/project-deliverables/release-state";
+import {
+  TimedVideoPlayer,
+  type TimedVideoLabels,
+} from "@/components/project-detail/timed-video-player";
 
 export type DeliveryReviewDeliverable = {
   id: string;
@@ -102,6 +106,7 @@ type Labels = {
     releaseFailed: string;
     generic: string;
   };
+  video: TimedVideoLabels;
   status: Record<string, string>;
   annotations: AnnotationLabels;
 };
@@ -250,6 +255,7 @@ function DeliverableCard({
     assetIndex: number;
     shape: AnnotationShape;
     coords: AnnotationCoords;
+    timestampSec?: number;
   } | null>(null);
   const turnState = getDeliverableTurnState({
     releasedAt: deliverable.releasedAt,
@@ -610,6 +616,7 @@ function StoragePreview({
     assetIndex: number;
     shape: AnnotationShape;
     coords: AnnotationCoords;
+    timestampSec?: number;
   } | null;
   canAnnotate: boolean;
   onSelectAnnotation: (id: string) => void;
@@ -617,6 +624,7 @@ function StoragePreview({
     assetIndex: number;
     shape: AnnotationShape;
     coords: AnnotationCoords;
+    timestampSec?: number;
   }) => void;
   labels: Labels;
 }) {
@@ -639,7 +647,28 @@ function StoragePreview({
           // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
           <img src={asset.url} alt="" className="h-full w-full object-cover" />
         ) : asset.kind === "video" ? (
-          <video src={asset.url} className="h-full w-full object-cover" controls />
+          <TimedVideoPlayer
+            assetIndex={assetIndex}
+            src={asset.url}
+            annotations={annotations}
+            selectedId={selectedAnnotationId}
+            draft={draftAnnotation}
+            canAnnotate={canAnnotate}
+            labels={labels.video}
+            onSelectAnnotation={onSelectAnnotation}
+            onDraftAnnotation={onDraftAnnotation}
+            onCaptureTime={
+              canAnnotate
+                ? (timestampSec, index) =>
+                    onDraftAnnotation({
+                      assetIndex: index,
+                      shape: "pin",
+                      coords: { x: 0.5, y: 0.5 },
+                      timestampSec,
+                    })
+                : undefined
+            }
+          />
         ) : (
           <ImageIcon className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
         )}

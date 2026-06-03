@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
+const MAX_TIMESTAMP_SEC = 60 * 60 * 24;
+
 const pinCoordsSchema = z.object({
   x: z.number().min(0).max(1),
   y: z.number().min(0).max(1),
@@ -23,6 +25,7 @@ const createAnnotationSchema = z.discriminatedUnion("shape", [
     assetIndex: z.number().int().min(0),
     shape: z.literal("pin"),
     coords: pinCoordsSchema,
+    timestampSec: z.number().min(0).max(MAX_TIMESTAMP_SEC).optional(),
     visibility: z.enum(["client", "internal"]).default("client"),
     body: z.string().trim().min(1).max(10_000),
   }),
@@ -32,6 +35,7 @@ const createAnnotationSchema = z.discriminatedUnion("shape", [
     assetIndex: z.number().int().min(0),
     shape: z.literal("box"),
     coords: boxCoordsSchema,
+    timestampSec: z.number().min(0).max(MAX_TIMESTAMP_SEC).optional(),
     visibility: z.enum(["client", "internal"]).default("client"),
     body: z.string().trim().min(1).max(10_000),
   }),
@@ -80,6 +84,7 @@ export async function createDeliverableAnnotationAction(
       p_asset_index: data.assetIndex,
       p_shape: data.shape,
       p_coords: data.coords,
+      p_timestamp_sec: data.timestampSec ?? null,
       p_visibility: data.visibility,
       p_body: data.body,
     },

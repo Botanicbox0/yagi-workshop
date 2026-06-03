@@ -55,6 +55,7 @@ type AnnotationRow = {
   coords: unknown;
   visibility: string;
   status: string;
+  timestamp_sec: number | null;
   thread_id: string;
   created_by: string;
   created_at: string;
@@ -210,7 +211,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
     const { data: annotationRowsRaw } = (await supabase
       .from("deliverable_annotations")
       .select(
-        "id, project_id, deliverable_id, asset_index, seq, shape, coords, visibility, status, thread_id, created_by, created_at",
+        "id, project_id, deliverable_id, asset_index, seq, shape, coords, visibility, status, timestamp_sec, thread_id, created_by, created_at",
       )
       .eq("project_id", projectId)
       .in("deliverable_id", deliverableIds)
@@ -315,6 +316,8 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
         coords: row.coords as AnnotationCoords,
         visibility: row.visibility as AnnotationVisibility,
         status: row.status as AnnotationStatus,
+        timestampSec:
+          typeof row.timestamp_sec === "number" ? row.timestamp_sec : null,
         threadId: row.thread_id,
         createdAt: row.created_at,
         createdBy: row.created_by,
@@ -444,6 +447,14 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
           releaseFailed: t("review.errors.release_failed"),
           generic: t("review.errors.generic"),
         },
+        video: {
+          play: t("video.play"),
+          pause: t("video.pause"),
+          currentTime: t("video.current_time"),
+          commentAtCurrentPrefix: t("video.comment_at_current_prefix"),
+          commentAtCurrentSuffix: t("video.comment_at_current_suffix"),
+          timecode: t("annotations.timecode"),
+        },
         status: {
           submitted: t("status.submitted"),
           changes_requested: t("status.changes_requested"),
@@ -455,6 +466,7 @@ export async function DeliverablesTab({ projectId, canReview, locale }: Props) {
           hint: t("annotations.hint"),
           draftTitle: t("annotations.draft_title"),
           bodyPlaceholder: t("annotations.body_placeholder"),
+          timecode: t("annotations.timecode"),
           save: t("annotations.save"),
           saving: t("annotations.saving"),
           cancel: t("annotations.cancel"),

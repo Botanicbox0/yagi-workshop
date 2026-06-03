@@ -31,6 +31,7 @@ export type DeliverableShareAnnotation = {
   shape: "pin" | "box";
   coords: unknown;
   status: "open" | "resolved";
+  timestampSec: number | null;
   createdAt: string;
   preview: string | null;
   messages: DeliverableShareMessage[];
@@ -89,6 +90,7 @@ type AnnotationRow = {
   shape: string;
   coords: unknown;
   status: string;
+  timestamp_sec: number | null;
   thread_id: string;
   created_at: string;
 };
@@ -183,7 +185,9 @@ export async function loadDeliverableShareData(
 
   const { data: annotationRowsRaw } = (await service
     .from("deliverable_annotations")
-    .select("id, deliverable_id, asset_index, seq, shape, coords, status, thread_id, created_at")
+    .select(
+      "id, deliverable_id, asset_index, seq, shape, coords, status, timestamp_sec, thread_id, created_at",
+    )
     .eq("project_id", project.id)
     .in("deliverable_id", deliverableIds)
     .eq("visibility", "client")
@@ -232,6 +236,8 @@ export async function loadDeliverableShareData(
       shape: row.shape === "box" ? "box" : "pin",
       coords: row.coords,
       status: row.status === "resolved" ? "resolved" : "open",
+      timestampSec:
+        typeof row.timestamp_sec === "number" ? row.timestamp_sec : null,
       createdAt: row.created_at,
       preview: messages.find((message) => message.body)?.body ?? null,
       messages,

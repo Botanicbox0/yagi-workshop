@@ -14,6 +14,7 @@ import {
   setDeliverableAnnotationStatusAction,
 } from "@/app/[locale]/app/projects/[id]/annotation-actions";
 import { cn } from "@/lib/utils";
+import { formatMediaTime } from "@/lib/video-timecode";
 
 export type AnnotationShape = "pin" | "box";
 export type AnnotationStatus = "open" | "resolved";
@@ -33,6 +34,7 @@ export type DeliverableAnnotation = {
   coords: AnnotationCoords;
   visibility: AnnotationVisibility;
   status: AnnotationStatus;
+  timestampSec: number | null;
   threadId: string;
   createdAt: string;
   createdBy: string;
@@ -47,6 +49,7 @@ export type AnnotationLabels = {
   hint: string;
   draftTitle: string;
   bodyPlaceholder: string;
+  timecode: string;
   save: string;
   saving: string;
   cancel: string;
@@ -69,6 +72,7 @@ type DraftAnnotation = {
   assetIndex: number;
   shape: AnnotationShape;
   coords: AnnotationCoords;
+  timestampSec?: number;
 };
 
 type ImageAnnotationProps = {
@@ -350,6 +354,7 @@ export function AnnotationPanel({
         assetIndex: draft.assetIndex,
         shape: draft.shape,
         coords: draft.coords,
+        timestampSec: draft.timestampSec,
         visibility: isYagiAdmin && internal ? "internal" : "client",
         body,
       });
@@ -481,7 +486,19 @@ export function AnnotationPanel({
                   {annotation.status === "resolved" ? labels.resolved : labels.open}
                 </span>
               </div>
-              <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
+              {annotation.timestampSec != null ? (
+                <div className="mt-2 text-xs leading-5">
+                  <span className="font-medium tabular-nums text-foreground">
+                    {labels.timecode}: {formatMediaTime(annotation.timestampSec)}
+                  </span>
+                </div>
+              ) : null}
+              <p
+                className={cn(
+                  "line-clamp-2 text-xs leading-5 text-muted-foreground",
+                  annotation.timestampSec != null ? "mt-1" : "mt-2",
+                )}
+              >
                 {annotation.preview ?? labels.listEmpty}
               </p>
             </button>

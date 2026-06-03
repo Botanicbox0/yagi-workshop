@@ -70,6 +70,6 @@ export const config = {
     // + K-06 (design) reviews don't catch routing/middleware regressions —
     // future SPECs need an explicit routing smoke item, OR add K-04
     // routing review when introducing new locale-free public routes.
-    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|campaigns|s|.*\\..*).*)",
+    "/((?!api|_next|_vercel|auth/callback|auth/confirm|showcase|challenges|campaigns|s(?:/|$)|.*\\..*).*)",
   ],
 };

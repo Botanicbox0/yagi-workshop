@@ -5,8 +5,12 @@ import { checkRateLimit, getClientIp } from "@/lib/share/rate-limit";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { emitDebouncedNotification } from "@/lib/notifications/debounce";
 
+const MAX_TIMESTAMP_SEC = 60 * 60 * 24;
+
 const bodySchema = z.object({
   deliverable_id: z.string().uuid(),
+  asset_index: z.number().int().min(0).optional(),
+  timestamp_sec: z.number().min(0).max(MAX_TIMESTAMP_SEC).optional(),
   body: z.string().trim().min(1).max(4000),
   author_name: z.string().trim().min(1).max(100),
   author_email: z.string().trim().email().max(200),
@@ -21,6 +25,26 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function isVideoStorageKey(key: string): boolean {
+  const ext = key.split(".").pop()?.toLowerCase();
+  return Boolean(ext && ["mp4", "mov", "webm"].includes(ext));
+}
+
+function isExternalVideoUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return (
+      host === "youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "youtu.be" ||
+      host === "vimeo.com" ||
+      host.endsWith(".vimeo.com")
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function notifyYagi(args: {
@@ -121,7 +145,7 @@ export async function POST(request: Request, { params }: Props) {
 
   const { data: deliverable } = await service
     .from("project_deliverables")
-    .select("id, version, released_at")
+    .select("id, version, released_at, storage_paths, external_urls")
     .eq("id", body.deliverable_id)
     .eq("project_id", project.id)
     .not("released_at", "is", null)
@@ -131,11 +155,29 @@ export async function POST(request: Request, { params }: Props) {
     return NextResponse.json({ error: "deliverable_not_found" }, { status: 400 });
   }
 
+  const assetIndex = body.asset_index ?? 0;
+  const storagePaths = ((deliverable.storage_paths as string[] | null) ?? []);
+  const externalUrls = ((deliverable.external_urls as string[] | null) ?? []);
+  const assetCount =
+    storagePaths.length + externalUrls.length;
+  if (assetIndex < 0 || assetIndex >= assetCount) {
+    return NextResponse.json({ error: "asset_not_found" }, { status: 400 });
+  }
+  if (body.timestamp_sec != null) {
+    const isStorage = assetIndex < storagePaths.length;
+    const isVideo = isStorage
+      ? isVideoStorageKey(storagePaths[assetIndex] ?? "")
+      : isExternalVideoUrl(externalUrls[assetIndex - storagePaths.length] ?? "");
+    if (!isVideo) {
+      return NextResponse.json({ error: "timestamp_requires_video" }, { status: 400 });
+    }
+  }
+
   const { data: existingSeq } = await service
     .from("deliverable_annotations")
     .select("seq")
     .eq("deliverable_id", deliverable.id)
-    .eq("asset_index", 0)
+    .eq("asset_index", assetIndex)
     .order("seq", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -161,10 +203,11 @@ export async function POST(request: Request, { params }: Props) {
     .insert({
       project_id: project.id,
       deliverable_id: deliverable.id,
-      asset_index: 0,
+      asset_index: assetIndex,
       seq,
       shape: "pin",
       coords: { x: 0.5, y: 0.5 },
+      timestamp_sec: body.timestamp_sec ?? null,
       thread_id: thread.id,
       visibility: "client",
       status: "open",

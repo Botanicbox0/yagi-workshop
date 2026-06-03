@@ -22,6 +22,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  TimedVideoPlayer,
+  type TimedVideoLabels,
+} from "@/components/project-detail/timed-video-player";
+import type {
+  AnnotationCoords,
+  AnnotationShape,
+} from "@/components/project-detail/deliverable-annotations";
+import { formatMediaTime } from "@/lib/video-timecode";
 
 type Labels = {
   eyebrow: string;
@@ -51,6 +60,9 @@ type Labels = {
   errorRequired: string;
   download: string;
   open: string;
+  asset: string;
+  timecode: string;
+  video: TimedVideoLabels;
 };
 
 function formatDate(value: string | null, locale: "ko" | "en", fallback: string) {
@@ -147,6 +159,9 @@ function DeliverableCard({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [comment, setComment] = useState("");
+  const [commentAssetIndex, setCommentAssetIndex] = useState<number | null>(null);
+  const [commentTimestampSec, setCommentTimestampSec] = useState<number | null>(null);
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -174,6 +189,8 @@ function DeliverableCard({
           author_name: name,
           author_email: email,
           body: comment,
+          asset_index: commentAssetIndex ?? undefined,
+          timestamp_sec: commentTimestampSec ?? undefined,
         }),
       });
       if (!res.ok) {
@@ -181,6 +198,8 @@ function DeliverableCard({
         return;
       }
       setComment("");
+      setCommentAssetIndex(null);
+      setCommentTimestampSec(null);
       setMessage(labels.successComment);
     });
   }
@@ -252,7 +271,16 @@ function DeliverableCard({
                 key={`${asset.kind}-${asset.kind === "storage" ? asset.key : asset.url}`}
                 asset={asset}
                 index={index}
+                annotations={deliverable.annotations.filter(
+                  (annotation) => annotation.assetIndex === index,
+                )}
+                selectedAnnotationId={selectedAnnotationId}
                 labels={labels}
+                onSelectAnnotation={setSelectedAnnotationId}
+                onCaptureTime={(timestampSec, assetIndex) => {
+                  setCommentAssetIndex(assetIndex);
+                  setCommentTimestampSec(timestampSec);
+                }}
               />
             ))}
           </div>
@@ -277,6 +305,15 @@ function DeliverableCard({
                     <p className="text-xs font-semibold text-foreground">
                       #{annotation.seq}
                     </p>
+                    {annotation.timestampSec != null ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAnnotationId(annotation.id)}
+                        className="mt-1 rounded-full border border-border px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground hover:border-brand hover:text-brand"
+                      >
+                        {labels.timecode}: {formatMediaTime(annotation.timestampSec)}
+                      </button>
+                    ) : null}
                     {annotation.messages.map((item) => (
                       <div key={item.id} className="mt-2 border-t border-border/70 pt-2">
                         <p className="text-xs text-muted-foreground">
@@ -312,6 +349,27 @@ function DeliverableCard({
               placeholder={labels.body}
               maxLength={4000}
             />
+            {commentTimestampSec != null ? (
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-border bg-surface-card px-3 py-2 text-xs text-muted-foreground">
+                <span>
+                  {labels.asset.replace(
+                    "{index}",
+                    String((commentAssetIndex ?? 0) + 1),
+                  )}{" "}
+                  · {labels.timecode}: {formatMediaTime(commentTimestampSec)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCommentAssetIndex(null);
+                    setCommentTimestampSec(null);
+                  }}
+                  className="text-foreground hover:text-brand"
+                >
+                  {labels.unset}
+                </button>
+              </div>
+            ) : null}
             <Button
               type="button"
               onClick={submitComment}
@@ -399,11 +457,19 @@ function IdentityFields({
 function AssetPreview({
   asset,
   index,
+  annotations,
+  selectedAnnotationId,
   labels,
+  onSelectAnnotation,
+  onCaptureTime,
 }: {
   asset: DeliverableShareAsset;
   index: number;
+  annotations: DeliverableShareItem["annotations"];
+  selectedAnnotationId: string | null;
   labels: Labels;
+  onSelectAnnotation: (id: string) => void;
+  onCaptureTime: (timestampSec: number, assetIndex: number) => void;
 }) {
   if (asset.kind === "external") {
     return (
@@ -430,7 +496,23 @@ function AssetPreview({
           // eslint-disable-next-line @next/next/no-img-element -- signed R2 URL
           <img src={asset.url} alt={`Deliverable asset ${index + 1}`} className="h-full w-full object-contain" />
         ) : asset.mediaKind === "video" ? (
-          <video src={asset.url} className="h-full w-full object-contain" controls />
+          <TimedVideoPlayer
+            assetIndex={index}
+            src={asset.url}
+            annotations={annotations.map((annotation) => ({
+              id: annotation.id,
+              seq: annotation.seq,
+              shape: annotation.shape as AnnotationShape,
+              coords: annotation.coords as AnnotationCoords,
+              status: annotation.status,
+              timestampSec: annotation.timestampSec,
+            }))}
+            selectedId={selectedAnnotationId}
+            draft={null}
+            labels={labels.video}
+            onSelectAnnotation={onSelectAnnotation}
+            onCaptureTime={onCaptureTime}
+          />
         ) : (
           <FileText className="h-8 w-8 text-muted-foreground" />
         )}

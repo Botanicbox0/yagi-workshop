@@ -1,0 +1,386 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MessageSquare, Pause, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { formatMediaTime } from "@/lib/video-timecode";
+import { cn } from "@/lib/utils";
+import type {
+  AnnotationCoords,
+  AnnotationShape,
+} from "@/components/project-detail/deliverable-annotations";
+
+export type TimedVideoLabels = {
+  play: string;
+  pause: string;
+  currentTime: string;
+  commentAtCurrentPrefix: string;
+  commentAtCurrentSuffix: string;
+  timecode: string;
+};
+
+type DraftAnnotation = {
+  assetIndex: number;
+  shape: AnnotationShape;
+  coords: AnnotationCoords;
+  timestampSec?: number;
+};
+
+type TimedVideoPlayerProps = {
+  assetIndex: number;
+  src: string;
+  annotations: TimedVideoAnnotation[];
+  selectedId: string | null;
+  draft: DraftAnnotation | null;
+  canAnnotate?: boolean;
+  labels: TimedVideoLabels;
+  onSelectAnnotation?: (id: string) => void;
+  onDraftAnnotation?: (draft: DraftAnnotation) => void;
+  onCaptureTime?: (timestampSec: number, assetIndex: number) => void;
+};
+
+export type TimedVideoAnnotation = {
+  id: string;
+  seq: number;
+  shape: AnnotationShape;
+  coords: AnnotationCoords;
+  status?: string;
+  timestampSec: number | null;
+};
+
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
+function coordsFromPointer(
+  event: React.PointerEvent<HTMLElement>,
+  element: HTMLElement,
+) {
+  const rect = element.getBoundingClientRect();
+  return {
+    x: clamp01((event.clientX - rect.left) / rect.width),
+    y: clamp01((event.clientY - rect.top) / rect.height),
+  };
+}
+
+export function TimedVideoPlayer({
+  assetIndex,
+  src,
+  annotations,
+  selectedId,
+  draft,
+  canAnnotate = false,
+  labels,
+  onSelectAnnotation,
+  onDraftAnnotation,
+  onCaptureTime,
+}: TimedVideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const pointerRef = useRef<number | null>(null);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const localDraft = draft?.assetIndex === assetIndex ? draft : null;
+  const timedAnnotations = useMemo(
+    () =>
+      annotations
+        .filter((annotation) => annotation.timestampSec != null)
+        .sort(
+          (a, b) =>
+            (a.timestampSec ?? 0) - (b.timestampSec ?? 0) || a.seq - b.seq,
+        ),
+    [annotations],
+  );
+
+  useEffect(() => {
+    const selected = annotations.find((annotation) => annotation.id === selectedId);
+    if (!selected || selected.timestampSec == null || !videoRef.current) return;
+    if (Math.abs(videoRef.current.currentTime - selected.timestampSec) > 0.25) {
+      videoRef.current.currentTime = selected.timestampSec;
+      setCurrent(selected.timestampSec);
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [annotations, selectedId]);
+
+  function syncFromVideo() {
+    const video = videoRef.current;
+    if (!video) return;
+    setCurrent(video.currentTime);
+    setDuration(Number.isFinite(video.duration) ? video.duration : 0);
+    setIsPlaying(!video.paused);
+  }
+
+  function seek(value: number) {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = value;
+    setCurrent(value);
+  }
+
+  function togglePlayback() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(() => undefined);
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  }
+
+  function createDraftAtCurrent(coords: AnnotationCoords, shape: AnnotationShape) {
+    if (!canAnnotate || !onDraftAnnotation) return;
+    const video = videoRef.current;
+    if (video) video.pause();
+    setIsPlaying(false);
+    onDraftAnnotation({
+      assetIndex,
+      shape,
+      coords,
+      timestampSec: Math.max(0, video?.currentTime ?? current),
+    });
+  }
+
+  function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (!canAnnotate || event.button !== 0) return;
+    const point = coordsFromPointer(event, event.currentTarget);
+    startRef.current = point;
+    pointerRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (!canAnnotate || pointerRef.current !== event.pointerId || !startRef.current) {
+      return;
+    }
+    const start = startRef.current;
+    const end = coordsFromPointer(event, event.currentTarget);
+    startRef.current = null;
+    pointerRef.current = null;
+
+    const dx = Math.abs(end.x - start.x);
+    const dy = Math.abs(end.y - start.y);
+    if (dx < 0.012 && dy < 0.012) {
+      createDraftAtCurrent(end, "pin");
+      return;
+    }
+
+    const x = Math.min(start.x, end.x);
+    const y = Math.min(start.y, end.y);
+    createDraftAtCurrent(
+      {
+        x,
+        y,
+        w: Math.min(Math.max(dx, 0.01), 1 - x),
+        h: Math.min(Math.max(dy, 0.01), 1 - y),
+      },
+      "box",
+    );
+  }
+
+  const timelineValue = duration > 0 ? Math.min(current, duration) : 0;
+
+  return (
+    <div className="w-full space-y-3">
+      <div className="flex min-h-[220px] items-center justify-center bg-surface-card sm:min-h-[280px]">
+        <div
+          className="relative max-h-[72vh] max-w-full touch-manipulation select-none"
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+        >
+          <video
+            ref={videoRef}
+            src={src}
+            className="block max-h-[72vh] max-w-full object-contain"
+            playsInline
+            preload="metadata"
+            onLoadedMetadata={syncFromVideo}
+            onTimeUpdate={syncFromVideo}
+            onPause={syncFromVideo}
+            onPlay={syncFromVideo}
+          />
+          {annotations.map((annotation) => (
+            <VideoFrameMarker
+              key={annotation.id}
+              annotation={annotation}
+              selected={annotation.id === selectedId}
+              onSelect={(id) => {
+                onSelectAnnotation?.(id);
+                const target = annotations.find((item) => item.id === id);
+                if (target?.timestampSec != null) seek(target.timestampSec);
+              }}
+            />
+          ))}
+          {localDraft ? <VideoDraftMarker draft={localDraft} /> : null}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/70 bg-background/70 p-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={togglePlayback}
+            className="w-full gap-2 sm:w-auto"
+          >
+            {isPlaying ? (
+              <Pause className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Play className="h-4 w-4" aria-hidden="true" />
+            )}
+            {isPlaying ? labels.pause : labels.play}
+          </Button>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <span className="w-16 text-xs tabular-nums text-muted-foreground">
+              {formatMediaTime(current)}
+            </span>
+            <div className="relative flex-1">
+              <input
+                type="range"
+                min={0}
+                max={duration || 0}
+                step={0.05}
+                value={timelineValue}
+                onChange={(event) => seek(Number(event.currentTarget.value))}
+                className="h-2 w-full cursor-pointer accent-brand"
+                aria-label={labels.currentTime}
+                disabled={duration <= 0}
+              />
+              {duration > 0
+                ? timedAnnotations.map((annotation) => (
+                    <button
+                      key={annotation.id}
+                      type="button"
+                      className={cn(
+                        "absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background",
+                        annotation.id === selectedId ? "bg-gold" : "bg-brand",
+                      )}
+                      style={{
+                        left: `${Math.min(100, Math.max(0, ((annotation.timestampSec ?? 0) / duration) * 100))}%`,
+                      }}
+                      title={`#${annotation.seq} · ${formatMediaTime(annotation.timestampSec)}`}
+                      onClick={() => {
+                        onSelectAnnotation?.(annotation.id);
+                        seek(annotation.timestampSec ?? 0);
+                      }}
+                    />
+                  ))
+                : null}
+            </div>
+            <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">
+              {formatMediaTime(duration)}
+            </span>
+          </div>
+        </div>
+        {onCaptureTime ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onCaptureTime(Math.max(0, videoRef.current?.currentTime ?? current), assetIndex)}
+            className="mt-3 w-full gap-2 sm:w-auto"
+          >
+            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+            {labels.commentAtCurrentPrefix}
+            <span className="tabular-nums">{formatMediaTime(current)}</span>
+            {labels.commentAtCurrentSuffix}
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function VideoFrameMarker({
+  annotation,
+  selected,
+  onSelect,
+}: {
+  annotation: TimedVideoAnnotation;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const coords = annotation.coords;
+  const baseClass = cn(
+    "absolute z-10 border-2 text-left transition-colors",
+    annotation.status === "resolved" ? "border-muted-foreground/70" : "border-brand",
+    selected && "ring-2 ring-gold",
+  );
+
+  if (annotation.shape === "box" && "w" in coords) {
+    return (
+      <button
+        type="button"
+        className={baseClass}
+        style={{
+          left: `${coords.x * 100}%`,
+          top: `${coords.y * 100}%`,
+          width: `${coords.w * 100}%`,
+          height: `${coords.h * 100}%`,
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect(annotation.id);
+        }}
+        onPointerDown={(event) => event.stopPropagation()}
+        onPointerUp={(event) => event.stopPropagation()}
+      >
+        <span className="absolute -left-3 -top-3 flex h-7 min-w-7 items-center justify-center rounded-full border border-brand bg-brand px-2 text-xs font-bold text-brand-on">
+          {annotation.seq}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={cn(
+        "absolute z-10 flex h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border px-2 text-xs font-bold shadow-lg",
+        annotation.status === "resolved"
+          ? "border-border bg-muted text-muted-foreground"
+          : "border-brand bg-brand text-brand-on",
+        selected && "ring-2 ring-gold",
+      )}
+      style={{ left: `${coords.x * 100}%`, top: `${coords.y * 100}%` }}
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect(annotation.id);
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onPointerUp={(event) => event.stopPropagation()}
+    >
+      {annotation.seq}
+    </button>
+  );
+}
+
+function VideoDraftMarker({ draft }: { draft: DraftAnnotation }) {
+  const coords = draft.coords;
+  if (draft.shape === "box" && "w" in coords) {
+    return (
+      <div
+        className="pointer-events-none absolute z-10 border-2 border-dashed border-gold"
+        style={{
+          left: `${coords.x * 100}%`,
+          top: `${coords.y * 100}%`,
+          width: `${coords.w * 100}%`,
+          height: `${coords.h * 100}%`,
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className="pointer-events-none absolute z-10 h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold bg-gold px-2 text-center text-xs font-bold leading-7 text-gold-on"
+      style={{ left: `${coords.x * 100}%`, top: `${coords.y * 100}%` }}
+    >
+      +
+    </div>
+  );
+}

@@ -49,6 +49,16 @@ const COPY = {
     errorRequired: "이름, 이메일, 내용을 모두 입력해주세요.",
     download: "다운로드",
     open: "열기",
+    asset: "에셋 {index}",
+    timecode: "타임코드",
+    video: {
+      play: "재생",
+      pause: "일시정지",
+      currentTime: "현재 시간",
+      commentAtCurrentPrefix: "",
+      commentAtCurrentSuffix: " 지점에 코멘트",
+      timecode: "타임코드",
+    },
   },
   en: {
     missingTitle: "This share is no longer available",
@@ -88,6 +98,16 @@ const COPY = {
     errorRequired: "Enter your name, email, and note.",
     download: "Download",
     open: "Open",
+    asset: "Asset {index}",
+    timecode: "Timecode",
+    video: {
+      play: "Play",
+      pause: "Pause",
+      currentTime: "Current time",
+      commentAtCurrentPrefix: "Comment at ",
+      commentAtCurrentSuffix: "",
+      timecode: "Timecode",
+    },
   },
 } as const;
 
