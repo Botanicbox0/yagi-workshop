@@ -1987,6 +1987,7 @@
         "action_archive": "아카이브",
         "references": "참고: {count}",
         "tabs": {
+          "submitted": "새 의뢰",
           "draft": "초안",
           "in_review": "검토 중",
           "in_progress": "진행 중",
@@ -1998,7 +1999,8 @@
           "direct_commission": "일반 외주",
           "contest_brief": "콘테스트",
           "curated": "Curated"
-        }
+        },
+        "action_accept": "수락 · 검토 시작"
       },
       "curated_new": {
         "back": "← 프로젝트 관리",

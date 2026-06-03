@@ -31,6 +31,12 @@ export async function startProjectAction(id: string) {
   return result;
 }
 
+export async function acceptProjectAction(id: string) {
+  const result = await callTransition(id, 'in_review', null);
+  revalidateProjectPaths(id);
+  return result;
+}
+
 export async function deliverProjectAction(id: string) {
   const result = await callTransition(id, 'delivered', null);
   revalidateProjectPaths(id);

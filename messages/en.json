@@ -1987,6 +1987,7 @@
         "action_archive": "Archive",
         "references": "Refs: {count}",
         "tabs": {
+          "submitted": "New requests",
           "draft": "Draft",
           "in_review": "In review",
           "in_progress": "In progress",
@@ -1998,7 +1999,8 @@
           "direct_commission": "Direct",
           "contest_brief": "Contest",
           "curated": "Curated"
-        }
+        },
+        "action_accept": "Accept · Start review"
       },
       "curated_new": {
         "back": "← Project operations",

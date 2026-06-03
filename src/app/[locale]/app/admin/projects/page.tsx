@@ -40,7 +40,7 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
       boards:project_boards(asset_index)
     `
     )
-    .in("status", ["draft", "in_review", "in_progress", "in_revision", "delivered", "approved"]);
+    .in("status", ["submitted", "draft", "in_review", "in_progress", "in_revision", "delivered", "approved"]);
 
   if (!includeTest) {
     query = query.eq("workspace.is_test", false);
@@ -126,7 +126,7 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
         />
       </div>
 
-      <ProjectsQueue projects={projectRows} initialTab="draft" />
+      <ProjectsQueue projects={projectRows} initialTab="submitted" />
     </main>
   );
 }
