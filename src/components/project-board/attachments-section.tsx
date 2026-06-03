@@ -22,6 +22,7 @@ import { useTranslations } from "next-intl";
 import { PdfCard } from "./attachments/pdf-card";
 import { UrlCard } from "./attachments/url-card";
 import type { PdfAttachment, UrlAttachment } from "@/lib/board/asset-index";
+import { MAX_DOCUMENT_UPLOAD_BYTES } from "@/lib/upload-limits";
 
 // ============================================================
 // Props
@@ -118,7 +119,7 @@ export function AttachmentsSection({
   // PDF handlers
   // ============================================================
 
-  const PDF_MAX_BYTES = 20 * 1024 * 1024; // 20MB (L-042: per task_01 RPC)
+  const PDF_MAX_BYTES = MAX_DOCUMENT_UPLOAD_BYTES;
   const PDF_MAX_COUNT = 30;
 
   async function handlePdfFile(file: File) {

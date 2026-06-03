@@ -49,6 +49,7 @@ import { FileBlock } from "./blocks/file-block";
 import { EmbedBlock } from "./blocks/embed-block";
 import { YagiRequestModal } from "./yagi-request-modal";
 import { resizeImageIfNeeded } from "@/lib/brief-board/resize-image";
+import { MAX_IMAGE_UPLOAD_BYTES } from "@/lib/upload-limits";
 import {
   SlashCommandExtension,
   createSlashCommandSuggestion,
@@ -57,10 +58,10 @@ import "tippy.js/dist/tippy.css";
 
 const EMBED_URL_RE = /^\s*(https?:\/\/\S+)\s*$/i;
 
-// Per SPEC §4.B2 / §4.B3: image cap 50MB, file cap 200MB. The SQL CHECK
+// Per upload policy: image cap 60MB, file cap 200MB. The SQL CHECK
 // constraint enforces 200MB at the byte_size column; the image cap is
-// app-layer (browser resize usually keeps files well under 50MB).
-const IMAGE_MAX_BYTES = 50 * 1024 * 1024;
+// app-layer (browser resize usually keeps files well under 60MB).
+const IMAGE_MAX_BYTES = MAX_IMAGE_UPLOAD_BYTES;
 const FILE_MAX_BYTES = 200 * 1024 * 1024;
 
 const AUTOSAVE_DEBOUNCE_MS = 3000;
@@ -420,7 +421,7 @@ export function BriefBoardEditor({
       for (const original of files) {
         const isImage = original.type.startsWith("image/");
 
-        // Size guard before any upload work. Images get 50MB, others 200MB.
+        // Size guard before any upload work. Images get 60MB, others 200MB.
         if (isImage && original.size > IMAGE_MAX_BYTES) {
           toast.error(t("asset_too_large_image"));
           continue;

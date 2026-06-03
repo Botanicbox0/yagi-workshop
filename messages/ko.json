@@ -1451,8 +1451,8 @@
           "caption_placeholder": "이 자료에 대한 메모를 자유롭게 적어주세요",
           "empty": "아직 추가된 자료가 없습니다.",
           "upload_failed": "업로드에 실패했습니다. 다시 시도해 주세요.",
-          "file_too_large_image": "이미지는 5MB 이하여야 합니다.",
-          "file_too_large_pdf": "PDF는 10MB 이하여야 합니다."
+          "file_too_large_image": "이미지는 60MB 이하여야 합니다.",
+          "file_too_large_pdf": "PDF는 60MB 이하여야 합니다."
         },
         "deliverable_types": {
           "label": "결과물 유형",
@@ -1829,11 +1829,11 @@
     "ref_type_video": "비디오",
     "ref_type_pdf": "PDF",
     "ref_video_upload_ph": "비디오 파일 드래그 또는 클릭 (MP4 · MOV · WebM · 최대 500MB)",
-    "ref_pdf_upload_ph": "PDF 드래그 또는 클릭 (최대 25MB)",
+    "ref_pdf_upload_ph": "PDF 드래그 또는 클릭 (최대 60MB)",
     "ref_video_url_ph": "YouTube · Vimeo · TikTok · Instagram URL 붙여넣기",
     "ref_video_unsupported_format": "이 브라우저에서 재생되지 않을 수 있습니다 (MP4 권장)",
     "ref_size_too_large_video": "비디오 파일이 500MB를 초과합니다",
-    "ref_size_too_large_pdf": "PDF 파일이 25MB를 초과합니다",
+    "ref_size_too_large_pdf": "PDF 파일이 60MB를 초과합니다",
     "ref_duration_label": "재생 시간",
     "ref_pages_label": "페이지 수"
   },
@@ -3366,7 +3366,7 @@
     "block_embed_loading": "임베드 불러오는 중...",
     "block_embed_failed": "임베드를 불러올 수 없어요. URL 을 확인해 주세요",
     "block_embed_unsupported": "이 사이트는 아직 임베드를 지원하지 않아요. 링크로 표시됩니다",
-    "asset_too_large_image": "이미지가 50MB 제한을 초과해요",
+    "asset_too_large_image": "이미지가 60MB 제한을 초과해요",
     "asset_too_large_file": "파일이 200MB 제한을 초과해요",
     "asset_unsupported": "지원하지 않는 파일 형식이에요",
     "asset_upload_failed": "업로드 실패. 다시 시도해 주세요",
@@ -3428,7 +3428,7 @@
       "sub": "PDF로 정리된 파일은 아래에 업로드해주세요.",
       "add": "+ PDF 업로드",
       "empty": "아직 첨부된 PDF가 없습니다.",
-      "size_too_large": "파일이 너무 큽니다. 최대 20MB까지 업로드 가능합니다.",
+      "size_too_large": "파일이 너무 큽니다. 최대 60MB까지 업로드 가능합니다.",
       "count_exceeded": "PDF는 최대 30개까지 첨부할 수 있습니다.",
       "uploaded_at": "업로드됨 · {date}"
     },
