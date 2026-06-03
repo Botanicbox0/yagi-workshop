@@ -5,6 +5,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { getIsYagiAdmin } from "@/lib/app/admin";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
 import { cn } from "@/lib/utils";
+import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -185,6 +186,8 @@ export default async function BillingPage({ params }: Props) {
           </p>
         </section>
       )}
+
+      <CompanyLegalFooter compact />
     </main>
   );
 }

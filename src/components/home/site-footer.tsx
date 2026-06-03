@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { CompanyLegalFooter } from "@/components/legal/company-legal-footer";
 
 type Props = {
   locale: "ko" | "en";
@@ -24,7 +25,7 @@ export async function SiteFooter({ locale, pathname }: Props) {
   return (
     <footer
       aria-labelledby="site-footer-title"
-      className="border-t border-black/10"
+      className="border-t border-border/70"
     >
       <h2 id="site-footer-title" className="sr-only">
         {t("footer_aria_label")}
@@ -32,7 +33,7 @@ export async function SiteFooter({ locale, pathname }: Props) {
 
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-20">
         {/* Row A — wordmark + tagline */}
-        <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-4 pb-12 md:pb-16 border-b border-black/5">
+        <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-4 pb-12 md:pb-16 border-b border-border/70">
           <div className="label-caps tabular-nums tracking-[0.2em] text-foreground text-sm">
             YAGI WORKSHOP
           </div>
@@ -99,10 +100,7 @@ export async function SiteFooter({ locale, pathname }: Props) {
         </div>
 
         {/* Row C — copyright + locale toggle */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-8 border-t border-black/5">
-          <p className="label-caps text-muted-foreground/70 tabular-nums">
-            {t("footer_rights")}
-          </p>
+        <div className="flex justify-start pt-8 border-t border-border/70 md:justify-end">
           <Link
             href={toggleHref}
             locale={otherLocale}
@@ -111,6 +109,8 @@ export async function SiteFooter({ locale, pathname }: Props) {
             {otherLocaleLabel}
           </Link>
         </div>
+
+        <CompanyLegalFooter className="mt-8" compact />
       </div>
     </footer>
   );

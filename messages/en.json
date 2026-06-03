@@ -3682,5 +3682,258 @@
       "observer": "Join as creator",
       "admin": "New challenge"
     }
+  },
+  "legal": {
+    "footer": {
+      "aria_label": "Business information and legal notice",
+      "links_aria_label": "Legal documents",
+      "link_terms": "Terms of Service",
+      "link_privacy": "Privacy Policy",
+      "link_refund": "Refund Policy",
+      "label_company": "Company",
+      "label_representative": "CEO",
+      "label_biz_reg_no": "Business Reg. No.",
+      "label_address": "Address",
+      "label_phone": "Phone",
+      "label_mail_order": "Mail-order Sales",
+      "label_email": "Email",
+      "label_hosting": "Hosting",
+      "label_biz_type": "Business Type",
+      "label_biz_item": "Business Item",
+      "placeholder_phone": "Pending",
+      "placeholder_mail_order": "Registration in progress",
+      "copyright": "© {year} YAGI WORKSHOP. All rights reserved."
+    },
+    "pages": {
+      "common": {
+        "eyebrow": "LEGAL",
+        "effective_label": "Effective",
+        "updated_label": "Updated",
+        "review_note": "This document is a standard-template draft. Legal review is recommended before formal enforcement.",
+        "related_aria_label": "Related legal documents",
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "refund": "Refunds"
+      },
+      "terms": {
+        "title": "Terms of Service",
+        "description": "These terms set out the conditions for using AI visual production and collaboration services provided by YAGI WORKSHOP.",
+        "effective_date": "2026-06-03",
+        "updated_at": "2026-06-03",
+        "sections": [
+          {
+            "title": "1. Purpose",
+            "body": [
+              "These Terms define the rights, obligations, responsibilities, and conditions of use between YAGI WORKSHOP Inc. (the “Company”) and users of the Company’s website and related services."
+            ]
+          },
+          {
+            "title": "2. Definitions",
+            "list": [
+              "“Service” means AI visual production requests, project management, collaboration proposals, contests, tax invoice features, and related operational functions provided by the Company.",
+              "“User” means any member or non-member who uses the Service under these Terms.",
+              "“Member” means a user who creates an account or accepts an invitation through the procedure set by the Company.",
+              "“Content” means briefs, references, images, videos, text, files, and deliverables uploaded or submitted through the Service."
+            ]
+          },
+          {
+            "title": "3. Posting and Amendment of Terms",
+            "body": [
+              "The Company posts these Terms in the Service or on the website so users can easily review them.",
+              "The Company may amend these Terms within the scope permitted by applicable law. For material changes, the Company will announce the effective date and reason in advance."
+            ]
+          },
+          {
+            "title": "4. Service Scope",
+            "body": [
+              "The Company provides request intake, project review, production management, deliverable handoff, collaboration proposals, contest operations, billing, and tax invoice related functions.",
+              "Detailed production scope, schedule, quote, revision rounds, and rights terms are confirmed per project or agreement."
+            ]
+          },
+          {
+            "title": "5. Formation of Use Agreement",
+            "body": [
+              "The use agreement is formed when the user completes signup, invitation acceptance, or request submission and the Company approves it.",
+              "The Company may reject or restrict use where false information, rights infringement risk, or operational necessity exists."
+            ]
+          },
+          {
+            "title": "6. User Obligations",
+            "list": [
+              "Users must provide accurate information during signup and request submission.",
+              "Users must not submit materials that infringe copyrights, portrait rights, trademarks, trade secrets, or other third-party rights.",
+              "Users must not interfere with the security, operation, or network of the Service.",
+              "Users must manage account access securely and promptly notify the Company of suspected account compromise."
+            ]
+          },
+          {
+            "title": "7. Payment and Fees",
+            "body": [
+              "Service fees, payment methods, and tax invoice issuance are determined by project or contract terms.",
+              "The Company may use payment processors or tax invoice service providers. The Company does not directly store sensitive payment method information such as card numbers."
+            ]
+          },
+          {
+            "title": "8. Intellectual Property and Deliverable Use",
+            "body": [
+              "Rights in Content submitted by users remain with the original rights holder. Users grant the Company permission to review, process, store, and use such Content as necessary to provide the Service.",
+              "Usage scope, ownership, license, and secondary-use terms for deliverables are governed by project-specific or contract-specific agreements. Unless otherwise agreed, the user may use deliverables within the purpose of the applicable contract."
+            ]
+          },
+          {
+            "title": "9. Service Restriction and Suspension",
+            "body": [
+              "The Company may restrict or suspend all or part of the Service for system maintenance, failures, security needs, third-party service outages, force majeure, or other unavoidable reasons.",
+              "The Company may provide prior or subsequent notice where necessary for stable operation."
+            ]
+          },
+          {
+            "title": "10. Disclaimer",
+            "body": [
+              "The Company provides the Service on the premise that users are responsible for verifying the legality, accuracy, and completeness of materials they provide.",
+              "To the extent permitted by law, the Company is not liable for damages caused by user fault, third-party service failures, or force majeure."
+            ]
+          },
+          {
+            "title": "11. Governing Law and Dispute Resolution",
+            "body": [
+              "These Terms are governed by the laws of the Republic of Korea. Disputes related to the Service will be resolved through good-faith consultation, and if unresolved, will be subject to the competent court under Korean civil procedure or the court having jurisdiction over the Company’s head office in Guro-gu, Seoul."
+            ]
+          }
+        ]
+      },
+      "privacy": {
+        "title": "Privacy Policy",
+        "description": "This policy explains the personal information YAGI WORKSHOP processes, purposes of processing, retention periods, third-party provision, and entrusted processing.",
+        "effective_date": "2026-06-03",
+        "updated_at": "2026-06-03",
+        "sections": [
+          {
+            "title": "1. Purposes of Processing",
+            "body": [
+              "The Company processes personal information for signup and authentication, workspace operation, project requests and production management, collaboration proposals, contest operations, customer support, billing and tax invoice issuance, service security, and quality improvement."
+            ]
+          },
+          {
+            "title": "2. Personal Information Collected",
+            "list": [
+              "Signup and authentication: email address and social login authentication information",
+              "Profile: display name, handle, bio, profile image, Instagram handle, and language preference",
+              "Business workspace and tax invoice: company name, business registration number, representative name, business address, business type/item, and tax invoice recipient email",
+              "Service use: uploaded briefs, references, images, videos, files, URLs, project descriptions, feedback, and other user-submitted content",
+              "Payment: payments are processed by payment processors. The Company does not store card numbers or other card information.",
+              "Automatically generated information: access logs, service usage records, device and browser information, security logs, cookies, or similar technologies"
+            ]
+          },
+          {
+            "title": "3. Retention and Use Period",
+            "body": [
+              "The Company retains and uses personal information until the processing purpose is fulfilled. Upon membership withdrawal or contract termination, the Company deletes personal information without delay except where retention is required by law or dispute response.",
+              "Information required under e-commerce, tax, accounting, or consumer dispute laws may be separately retained for the required period."
+            ]
+          },
+          {
+            "title": "4. Third-party Provision",
+            "body": [
+              "The Company does not provide personal information to third parties except where required by law, consented to by the user, or necessary for payment processing."
+            ],
+            "list": [
+              "Possible payment-related recipients: PortOne, KG Inicis, NHN KCP, Kakao Pay",
+              "Purpose: payment approval, cancellation, settlement, transaction verification, and dispute response",
+              "Items: transaction information, order information, and contact information necessary for payment processing"
+            ]
+          },
+          {
+            "title": "5. Entrusted Processing",
+            "body": [
+              "The Company may entrust part of personal information processing to external providers for stable service operation and manages entrusted providers as required by law."
+            ],
+            "list": [
+              "Hosting and infrastructure: Vercel Inc.",
+              "Payment and transaction processing: PortOne, KG Inicis, NHN KCP, Kakao Pay",
+              "External tools required for email and notification delivery, customer support, and tax invoice issuance"
+            ]
+          },
+          {
+            "title": "6. Data Subject Rights",
+            "body": [
+              "Users may request access, correction, deletion, suspension of processing, or withdrawal of consent. Requests may be made through service settings or by email, and the Company will process them in accordance with applicable law."
+            ]
+          },
+          {
+            "title": "7. Destruction Procedure and Method",
+            "body": [
+              "The Company securely destroys personal information when the retention period expires or the processing purpose is fulfilled. Electronic files are deleted in a difficult-to-restore manner, and printed materials are shredded or destroyed by equivalent means."
+            ]
+          },
+          {
+            "title": "8. Cookies and Similar Technologies",
+            "body": [
+              "The Company may use cookies or similar technologies for login continuity, security, and service usage analysis. Users may refuse cookies through browser settings, but some functions may be limited."
+            ]
+          },
+          {
+            "title": "9. Privacy Contact",
+            "list": [
+              "Company: 야기워크숍 주식회사 / YAGI WORKSHOP",
+              "Email: hello@yagiworkshop.xyz",
+              "Phone: Pending"
+            ]
+          }
+        ]
+      },
+      "refund": {
+        "title": "Refund Policy",
+        "description": "This policy explains cancellation and refund procedures and limitations that may apply to custom production services and digital content.",
+        "effective_date": "2026-06-03",
+        "updated_at": "2026-06-03",
+        "sections": [
+          {
+            "title": "1. General Principle",
+            "body": [
+              "The Company processes payment cancellations and refunds in accordance with applicable e-commerce laws and individual contract terms. Refund eligibility may vary depending on production scope, schedule, quote, and whether work has started."
+            ]
+          },
+          {
+            "title": "2. Withdrawal and Payment Cancellation",
+            "body": [
+              "Users may request withdrawal or payment cancellation within the period and conditions set by applicable law. Requests may be submitted by email or through the Service’s inquiry function.",
+              "Cancellations processed through a payment processor may be refunded according to the processor and financial institution schedule."
+            ]
+          },
+          {
+            "title": "3. Custom Services and Digital Content",
+            "body": [
+              "AI visual production, brief-based content production, and artist or brand collaboration deliverables may constitute custom services or digital content made according to the user’s individual requirements.",
+              "Where production has started upon the user’s explicit request or agreement, refunds may be limited for completed planning, production, review, external costs, and provided deliverables."
+            ]
+          },
+          {
+            "title": "4. Refund Procedure",
+            "list": [
+              "The user provides the reason for refund, order or project identifier, and contact information.",
+              "The Company reviews project status, production start, delivered outputs, and contract terms.",
+              "If a refundable amount exists, the Company refunds via the original payment method or another agreed method.",
+              "Refund processing time may vary depending on payment method, payment processor, and financial institution policy."
+            ]
+          },
+          {
+            "title": "5. Cases Where Refunds May Be Limited",
+            "list": [
+              "Production has already started and costs were incurred upon the user’s request or approval.",
+              "Custom digital deliverables or interim outputs have been provided to the user.",
+              "Service delivery is delayed or stopped due to user-provided rights issues, inaccurate information, or delayed responses.",
+              "Applicable law or individual contract terms define a refund limitation."
+            ]
+          },
+          {
+            "title": "6. Contact",
+            "body": [
+              "Refund and payment inquiries may be sent to hello@yagiworkshop.xyz. The Company will review the request, ask for necessary materials, and provide the result."
+            ]
+          }
+        ]
+      }
+    }
   }
 }
