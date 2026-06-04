@@ -582,37 +582,39 @@ function VersionCard({
     <article className="overflow-hidden rounded-lg border border-border/70 bg-surface-raised">
       <div className="flex flex-col gap-4 border-b border-border/70 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`${chipClass} border-border bg-background text-foreground`}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <span className="shrink-0 text-lg font-semibold tabular-nums text-foreground">
               {labels.version.replace("{version}", String(deliverable.version))}
             </span>
-            <span
-              className={`${chipClass} ${statusClass(
-                deliverable.status,
-              )}`}
-            >
-              {labels.status[deliverable.status] ?? deliverable.status}
-            </span>
-            {!deliverable.releasedAt ? (
-              <span className={neutralChipClass}>
-                {labels.internalDraft}
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span
+                className={`${chipClass} ${statusClass(
+                  deliverable.status,
+                )}`}
+              >
+                {labels.status[deliverable.status] ?? deliverable.status}
               </span>
-            ) : deliverable.releasedRound ? (
-              <span className={`${chipClass} border-border bg-surface-card text-foreground`}>
-                {roundLabel}
-              </span>
-            ) : null}
-            {deliverable.releasedAt ? (
-              <span className={neutralChipClass}>
-                {usageLabel}
-              </span>
-            ) : null}
-            {seenLabel ? (
-              <span className={neutralChipClass}>
-                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
-                {seenLabel}
-              </span>
-            ) : null}
+              {!deliverable.releasedAt ? (
+                <span className={neutralChipClass}>
+                  {labels.internalDraft}
+                </span>
+              ) : deliverable.releasedRound ? (
+                <span className={`${chipClass} border-border bg-surface-card text-foreground`}>
+                  {roundLabel}
+                </span>
+              ) : null}
+              {deliverable.releasedAt ? (
+                <span className={neutralChipClass}>
+                  {usageLabel}
+                </span>
+              ) : null}
+              {seenLabel ? (
+                <span className={neutralChipClass}>
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                  {seenLabel}
+                </span>
+              ) : null}
+            </div>
           </div>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             <span>
@@ -674,7 +676,7 @@ function VersionCard({
         </div>
       </div>
 
-      <div className="grid items-start gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid items-stretch gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid max-w-5xl gap-5 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
           {deliverable.storageAssets.map((asset) => (
             <StoragePreview key={asset.key} asset={asset} labels={labels} />
@@ -683,13 +685,15 @@ function VersionCard({
             <ExternalPreview key={asset.url} asset={asset} labels={labels} />
           ))}
         </div>
-        <div className="min-h-40 rounded-lg border border-border/70 bg-background/40 p-5">
+        <div className="flex min-h-40 rounded-lg border border-border/70 bg-background/40 p-5 lg:h-full">
           {deliverable.note ? (
             <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground keep-all">
               {deliverable.note}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">{labels.noNote}</p>
+            <p className="m-auto text-center text-sm text-muted-foreground">
+              {labels.noNote}
+            </p>
           )}
         </div>
       </div>
