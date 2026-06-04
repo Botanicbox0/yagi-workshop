@@ -7,6 +7,11 @@ import {
   briefObjectPublicUrl,
   createBriefAssetPutUrl,
 } from "@/lib/r2/client";
+import {
+  copyFromUrl,
+  getVideo,
+  streamConfigured,
+} from "@/lib/stream/client";
 
 const ALLOWED_DELIVERABLE_CONTENT_TYPES = new Set([
   "image/jpeg",
@@ -39,6 +44,17 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function detectStorageKind(key: string): "image" | "video" | "file" {
+  const ext = key.split(".").pop()?.toLowerCase();
+  if (ext && ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(ext)) {
+    return "image";
+  }
+  if (ext && ["mp4", "mov", "webm"].includes(ext)) {
+    return "video";
+  }
+  return "file";
 }
 
 async function canUploadProjectDeliverable(
@@ -213,6 +229,36 @@ export async function createProjectDeliverableVersionAction(
     return { ok: false, error: "db", message: insertError?.message };
   }
 
+  // R4/R5 deliverables store one Stream UID per version, so the first uploaded
+  // video is the canonical Stream source and the R2 original remains the fallback.
+  const firstVideoPath = storagePaths.find((path) => detectStorageKind(path) === "video");
+  if (firstVideoPath && streamConfigured()) {
+    // Cloudflare Stream /copy fetches this URL server-side; the deliverable R2
+    // public URL is the agreed ingest contract for this integration.
+    const streamCopy = await copyFromUrl(
+      briefObjectPublicUrl(firstVideoPath),
+      firstVideoPath.split("/").at(-1),
+    );
+    if (streamCopy) {
+      const { error: streamUpdateError } = await sb
+        .from("project_deliverables")
+        .update({
+          stream_uid: streamCopy.uid,
+          stream_status: "pending",
+          stream_ready_at: null,
+        })
+        .eq("id", inserted.id)
+        .eq("project_id", projectId);
+
+      if (streamUpdateError) {
+        console.error(
+          "[createProjectDeliverableVersionAction] stream metadata update error:",
+          streamUpdateError,
+        );
+      }
+    }
+  }
+
   revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
   return {
     ok: true,
@@ -311,6 +357,106 @@ const releaseDeliverableSchema = z.object({
 const markDeliverableSeenSchema = z.object({
   deliverableId: z.string().uuid(),
 });
+
+const refreshDeliverableStreamStatusSchema = z.object({
+  deliverableId: z.string().uuid(),
+});
+
+export type RefreshDeliverableStreamStatusResult =
+  | {
+      ok: true;
+      streamStatus: "pending" | "ready" | "error" | null;
+      streamReadyAt?: string | null;
+    }
+  | {
+      ok: false;
+      error: "validation" | "unauthenticated" | "not_found" | "db";
+      message?: string;
+    };
+
+export async function refreshDeliverableStreamStatus(
+  input: unknown,
+): Promise<RefreshDeliverableStreamStatusResult> {
+  const parsed = refreshDeliverableStreamStatusSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "validation", message: parsed.error.message };
+  }
+
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "unauthenticated" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stream columns are applied; generated types lag
+  const sb = supabase as any;
+  const { data: deliverable, error: lookupError } = await sb
+    .from("project_deliverables")
+    .select("id, project_id, stream_uid, stream_status, stream_ready_at")
+    .eq("id", parsed.data.deliverableId)
+    .maybeSingle();
+
+  if (lookupError) {
+    console.error("[refreshDeliverableStreamStatus] lookup error:", lookupError);
+    return { ok: false, error: "db", message: lookupError.message };
+  }
+  if (!deliverable) return { ok: false, error: "not_found" };
+
+  const currentStatus =
+    deliverable.stream_status === "pending" ||
+    deliverable.stream_status === "ready" ||
+    deliverable.stream_status === "error"
+      ? deliverable.stream_status
+      : null;
+  const streamUid = typeof deliverable.stream_uid === "string"
+    ? deliverable.stream_uid
+    : null;
+  if (!streamUid || !streamConfigured()) {
+    return {
+      ok: true,
+      streamStatus: currentStatus,
+      streamReadyAt: deliverable.stream_ready_at ?? null,
+    };
+  }
+
+  const video = await getVideo(streamUid);
+  if (video == null) {
+    return {
+      ok: true,
+      streamStatus: currentStatus,
+      streamReadyAt: deliverable.stream_ready_at ?? null,
+    };
+  }
+
+  const nextStatus = video.readyToStream
+    ? "ready"
+    : video.status === "error"
+      ? "error"
+      : "pending";
+  const streamReadyAt = nextStatus === "ready"
+    ? (deliverable.stream_ready_at ?? new Date().toISOString())
+    : (deliverable.stream_ready_at ?? null);
+
+  const { error: updateError } = await sb
+    .from("project_deliverables")
+    .update({
+      stream_status: nextStatus,
+      stream_ready_at: streamReadyAt,
+    })
+    .eq("id", deliverable.id)
+    .eq("project_id", deliverable.project_id);
+
+  if (updateError) {
+    console.error("[refreshDeliverableStreamStatus] update error:", updateError);
+    return { ok: false, error: "db", message: updateError.message };
+  }
+
+  return {
+    ok: true,
+    streamStatus: nextStatus,
+    streamReadyAt,
+  };
+}
 
 export type MarkDeliverableSeenResult =
   | { ok: true }
