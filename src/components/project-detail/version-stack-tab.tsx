@@ -48,6 +48,7 @@ import {
   formatReleasedRoundLabel,
   formatRevisionUsageLabel,
 } from "@/components/project-detail/revision-round-labels";
+import { streamThumbnailUrl } from "@/lib/stream/urls";
 
 export type VersionStackDeliverable = {
   id: string;
@@ -808,6 +809,13 @@ function StoragePreview({
   asset: VersionStackDeliverable["storageAssets"][number];
   labels: Labels;
 }) {
+  const poster =
+    asset.kind === "video" &&
+    asset.streamUid &&
+    asset.streamStatus === "ready"
+      ? streamThumbnailUrl(asset.streamUid, 0)
+      : null;
+
   return (
     <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
       <div className="flex aspect-video items-center justify-center bg-surface-card">
@@ -815,7 +823,12 @@ function StoragePreview({
           // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
           <img src={asset.url} alt="" className="h-full w-full object-cover" />
         ) : asset.kind === "video" ? (
-          <video src={asset.url} className="h-full w-full object-cover" controls />
+          <video
+            src={asset.url}
+            poster={poster ?? undefined}
+            className="h-full w-full object-cover"
+            controls
+          />
         ) : (
           <ImageIcon className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
         )}

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseService } from "@/lib/supabase/service";
 import {
   briefObjectPublicUrl,
   createBriefAssetPutUrl,
@@ -362,6 +363,16 @@ const refreshDeliverableStreamStatusSchema = z.object({
   deliverableId: z.string().uuid(),
 });
 
+const STREAM_STATUS_REFRESH_CACHE_MS = 5_000;
+const streamStatusRefreshCache = new Map<
+  string,
+  {
+    checkedAt: number;
+    streamStatus: "pending" | "ready" | "error" | null;
+    streamReadyAt: string | null;
+  }
+>();
+
 export type RefreshDeliverableStreamStatusResult =
   | {
       ok: true;
@@ -419,6 +430,15 @@ export async function refreshDeliverableStreamStatus(
     };
   }
 
+  const cached = streamStatusRefreshCache.get(streamUid);
+  if (cached && Date.now() - cached.checkedAt < STREAM_STATUS_REFRESH_CACHE_MS) {
+    return {
+      ok: true,
+      streamStatus: cached.streamStatus,
+      streamReadyAt: cached.streamReadyAt,
+    };
+  }
+
   const video = await getVideo(streamUid);
   if (video == null) {
     return {
@@ -437,7 +457,12 @@ export async function refreshDeliverableStreamStatus(
     ? (deliverable.stream_ready_at ?? new Date().toISOString())
     : (deliverable.stream_ready_at ?? null);
 
-  const { error: updateError } = await sb
+  // Visibility is checked through the user's RLS-bound select above. The
+  // status write is system-owned metadata so non-admin viewers can refresh it
+  // without requiring broad project_deliverables UPDATE grants.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Stream columns are applied; generated types lag
+  const service = createSupabaseService() as any;
+  const { error: updateError } = await service
     .from("project_deliverables")
     .update({
       stream_status: nextStatus,
@@ -451,6 +476,13 @@ export async function refreshDeliverableStreamStatus(
     return { ok: false, error: "db", message: updateError.message };
   }
 
+  revalidatePath(`/[locale]/app/projects/${deliverable.project_id}`, "page");
+  revalidatePath(`/[locale]/app/admin/projects/${deliverable.project_id}`, "page");
+  streamStatusRefreshCache.set(streamUid, {
+    checkedAt: Date.now(),
+    streamStatus: nextStatus,
+    streamReadyAt,
+  });
   return {
     ok: true,
     streamStatus: nextStatus,

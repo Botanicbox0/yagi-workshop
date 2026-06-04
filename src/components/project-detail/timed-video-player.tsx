@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatMediaTime, parseMediaTime } from "@/lib/video-timecode";
-import { streamHlsUrl } from "@/lib/stream/urls";
+import { streamHlsUrl, streamThumbnailUrl } from "@/lib/stream/urls";
 import { cn } from "@/lib/utils";
 import { refreshDeliverableStreamStatus } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import type {
@@ -118,11 +118,28 @@ export function TimedVideoPlayer({
     streamStatus ?? null,
   );
   const [hlsUnavailable, setHlsUnavailable] = useState(false);
+  const [hoverPreview, setHoverPreview] = useState<{
+    time: number;
+    x: number;
+    width: number;
+  } | null>(null);
+  const [thumbnailPreviewFailed, setThumbnailPreviewFailed] = useState(false);
   const localDraft = draft?.assetIndex === assetIndex ? draft : null;
   const streamSrcCandidate =
     streamUid && effectiveStreamStatus === "ready" ? streamHlsUrl(streamUid) : null;
   const streamSrc = hlsUnavailable ? null : streamSrcCandidate;
   const playbackSrc = streamSrc ?? src;
+  const streamPoster =
+    streamUid && effectiveStreamStatus === "ready"
+      ? streamThumbnailUrl(streamUid, 0)
+      : null;
+  const hoverPreviewUrl =
+    streamUid &&
+    effectiveStreamStatus === "ready" &&
+    hoverPreview &&
+    !thumbnailPreviewFailed
+      ? streamThumbnailUrl(streamUid, hoverPreview.time)
+      : null;
   const showStreamProcessing = Boolean(
     streamUid && effectiveStreamStatus === "pending" && !streamSrc,
   );
@@ -143,6 +160,7 @@ export function TimedVideoPlayer({
 
   useEffect(() => {
     setHlsUnavailable(false);
+    setThumbnailPreviewFailed(false);
   }, [streamSrcCandidate]);
 
   useEffect(() => {
@@ -207,8 +225,6 @@ export function TimedVideoPlayer({
       video.load();
       return () => {
         video.removeEventListener("loadedmetadata", restoreAfterSourceSwap);
-        video.removeAttribute("src");
-        video.load();
       };
     }
 
@@ -235,8 +251,12 @@ export function TimedVideoPlayer({
       disposed = true;
       video.removeEventListener("loadedmetadata", restoreAfterSourceSwap);
       hls?.destroy();
+      if (video.isConnected) {
+        video.src = src;
+        video.load();
+      }
     };
-  }, [streamSrc]);
+  }, [src, streamSrc]);
 
   useEffect(() => {
     const selected = annotations.find((annotation) => annotation.id === selectedId);
@@ -278,6 +298,17 @@ export function TimedVideoPlayer({
     video.currentTime = clamped;
     setCurrent(clamped);
     if (!isEditingTime) setTimeInput(formatMediaTime(clamped));
+  }
+
+  function updateHoverPreview(event: React.PointerEvent<HTMLDivElement>) {
+    if (!streamUid || effectiveStreamStatus !== "ready" || duration <= 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = clamp01((event.clientX - rect.left) / rect.width);
+    setHoverPreview({
+      time: ratio * duration,
+      x: ratio * rect.width,
+      width: rect.width,
+    });
   }
 
   function togglePlayback() {
@@ -378,6 +409,7 @@ export function TimedVideoPlayer({
           <video
             ref={videoRef}
             src={streamSrc ? undefined : src}
+            poster={streamPoster ?? undefined}
             className="block max-h-[72vh] max-w-full object-contain"
             playsInline
             preload="metadata"
@@ -471,7 +503,11 @@ export function TimedVideoPlayer({
               aria-label={labels.editTimecode}
               inputMode="text"
             />
-            <div className="relative flex-1">
+            <div
+              className="relative flex-1"
+              onPointerMove={updateHoverPreview}
+              onPointerLeave={() => setHoverPreview(null)}
+            >
               <input
                 type="range"
                 min={0}
@@ -503,6 +539,28 @@ export function TimedVideoPlayer({
                     />
                   ))
                 : null}
+              {hoverPreview && hoverPreviewUrl ? (
+                <div
+                  className="pointer-events-none absolute bottom-6 z-10 w-36 -translate-x-1/2 overflow-hidden rounded-lg border border-border/70 bg-background shadow-lg"
+                  style={{
+                    left: `${Math.min(
+                      Math.max(hoverPreview.x, 72),
+                      Math.max(72, hoverPreview.width - 72),
+                    )}px`,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Cloudflare Stream thumbnail URL */}
+                  <img
+                    src={hoverPreviewUrl}
+                    alt=""
+                    className="aspect-video w-full object-cover"
+                    onError={() => setThumbnailPreviewFailed(true)}
+                  />
+                  <div className="border-t border-border/70 px-2 py-1 text-center text-xs tabular-nums text-muted-foreground">
+                    {formatMediaTime(hoverPreview.time)}
+                  </div>
+                </div>
+              ) : null}
             </div>
             <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">
               {formatMediaTime(duration)}
