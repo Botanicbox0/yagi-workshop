@@ -65,6 +65,8 @@ export type VersionStackDeliverable = {
     key: string;
     url: string;
     kind: "image" | "video" | "file";
+    streamUid?: string | null;
+    streamStatus?: string | null;
   }>;
   externalAssets: Array<{
     url: string;

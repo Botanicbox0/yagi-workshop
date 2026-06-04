@@ -37,6 +37,8 @@ type DeliverableRow = {
   note: string | null;
   storage_paths: string[];
   external_urls: string[];
+  stream_uid: string | null;
+  stream_status: string | null;
   released_at: string | null;
   review_note: string | null;
   reviewed_by: string | null;
@@ -170,6 +172,8 @@ export async function DeliverablesTab({
       note,
       storage_paths,
       external_urls,
+      stream_uid,
+      stream_status,
       released_at,
       review_note,
       reviewed_by,
@@ -364,6 +368,9 @@ export async function DeliverablesTab({
 
   const deliverables: DeliveryReviewDeliverable[] = await Promise.all(
     (rowsRaw ?? []).map(async (row) => {
+      const firstVideoKey = (row.storage_paths ?? []).find(
+        (key) => detectStorageKind(key) === "video",
+      );
       const externalAssets = await Promise.all(
         (row.external_urls ?? []).map(async (url) => {
           const provider = detectExternalProvider(url);
@@ -395,6 +402,8 @@ export async function DeliverablesTab({
           key,
           url: briefObjectPublicUrl(key),
           kind: detectStorageKind(key),
+          streamUid: key === firstVideoKey ? row.stream_uid : null,
+          streamStatus: key === firstVideoKey ? row.stream_status : null,
         })),
         externalAssets,
         annotations: annotationsByDeliverable.get(row.id) ?? [],
@@ -515,6 +524,7 @@ export async function DeliverablesTab({
           frameForward: t("video.frame_forward"),
           editTimecode: t("video.edit_timecode"),
           currentTime: t("video.current_time"),
+          streamProcessing: t("video.stream_processing"),
           commentAtCurrentPrefix: t("video.comment_at_current_prefix"),
           commentAtCurrentSuffix: t("video.comment_at_current_suffix"),
           timecode: t("annotations.timecode"),

@@ -2965,6 +2965,7 @@
         "frame_forward": "앞으로 이동",
         "edit_timecode": "타임코드 편집",
         "current_time": "현재 시간",
+        "stream_processing": "영상 처리 중",
         "comment_at_current_prefix": "",
         "comment_at_current_suffix": " 지점에 코멘트"
       }

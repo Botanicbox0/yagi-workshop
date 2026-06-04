@@ -2900,6 +2900,7 @@
         "frame_forward": "Step forward",
         "edit_timecode": "Edit timecode",
         "current_time": "Current time",
+        "stream_processing": "Processing video",
         "comment_at_current_prefix": "Comment at ",
         "comment_at_current_suffix": ""
       }

@@ -76,6 +76,8 @@ export type DeliveryReviewDeliverable = {
     key: string;
     url: string;
     kind: "image" | "video" | "file";
+    streamUid?: string | null;
+    streamStatus?: string | null;
   }>;
   externalAssets: Array<{
     url: string;
@@ -451,6 +453,7 @@ function DeliverableCard({
             <StoragePreview
               key={asset.key}
               asset={asset}
+              deliverableId={deliverable.id}
               assetIndex={index}
               annotations={deliverable.annotations.filter(
                 (annotation) => annotation.assetIndex === index,
@@ -879,6 +882,7 @@ function ReviewControls({
 
 function StoragePreview({
   asset,
+  deliverableId,
   assetIndex,
   annotations,
   selectedAnnotationId,
@@ -889,6 +893,7 @@ function StoragePreview({
   labels,
 }: {
   asset: DeliveryReviewDeliverable["storageAssets"][number];
+  deliverableId: string;
   assetIndex: number;
   annotations: DeliverableAnnotation[];
   selectedAnnotationId: string | null;
@@ -929,7 +934,10 @@ function StoragePreview({
         ) : asset.kind === "video" ? (
           <TimedVideoPlayer
             assetIndex={assetIndex}
+            deliverableId={asset.streamUid ? deliverableId : undefined}
             src={asset.url}
+            streamUid={asset.streamUid}
+            streamStatus={asset.streamStatus}
             annotations={annotations}
             selectedId={selectedAnnotationId}
             draft={draftAnnotation}
