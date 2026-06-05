@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useCallback, useState } from 'react';
-import { Link } from '@/i18n/routing';
+import { useCallback, useMemo, useState, type KeyboardEvent } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { Link, useRouter } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/projects/status-badge';
 import { TestWorkspaceBadge } from '@/components/admin/test-data-toggle';
@@ -13,7 +14,6 @@ import {
   archiveProjectAction,
   cancelProjectAction
 } from '@/components/projects/project-actions';
-import { useRouter } from 'next/navigation';
 
 export type ProjectStatus =
   | 'draft'
@@ -35,55 +35,79 @@ export type ProjectQueueRow = {
   created_at: string;
   dateLabel: string;
   client: { id: string; name: string } | null;
-  workspace: { id: string; name: string; isTest?: boolean } | null;
-  ref_count: number;
+  workspace: {
+    id: string;
+    name: string;
+    kind: 'brand' | 'artist' | 'creator' | string;
+    isTest?: boolean;
+  } | null;
+  deliverable_count: number;
 };
 
 export type ProjectsQueueProps = {
   projects: ProjectQueueRow[];
-  initialTab?: ProjectStatus;
+  initialTab?: TabKey;
 };
 
 type TabKey =
+  | 'all'
   | 'draft'
   | 'submitted'
   | 'in_review'
   | 'in_progress'
   | 'in_revision'
   | 'delivered'
-  | 'approved';
+  | 'approved'
+  | 'cancelled'
+  | 'archived';
 
-const TABS: Array<{ key: TabKey; status: ProjectStatus; label: string }> = [
-  { key: 'draft', status: 'draft', label: 'draft' },
+const TABS: Array<{ key: TabKey; status: ProjectStatus | null; label: string }> = [
+  { key: 'all', status: null, label: 'all' },
   { key: 'submitted', status: 'submitted', label: 'submitted' },
   { key: 'in_review', status: 'in_review', label: 'in_review' },
   { key: 'in_progress', status: 'in_progress', label: 'in_progress' },
   { key: 'in_revision', status: 'in_revision', label: 'in_revision' },
   { key: 'delivered', status: 'delivered', label: 'delivered' },
   { key: 'approved', status: 'approved', label: 'approved' },
+  { key: 'cancelled', status: 'cancelled', label: 'cancelled' },
+  { key: 'draft', status: 'draft', label: 'draft' },
+  { key: 'archived', status: 'archived', label: 'archived' },
 ];
 
-export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQueueProps) {
+const STATUS_PRIORITY: Record<ProjectStatus, number> = {
+  submitted: 0,
+  in_review: 1,
+  in_progress: 2,
+  in_revision: 3,
+  delivered: 4,
+  approved: 5,
+  draft: 6,
+  cancelled: 7,
+  archived: 8,
+};
+
+export function ProjectsQueue({ projects, initialTab = 'all' }: ProjectsQueueProps) {
   const t = useTranslations();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<ProjectStatus>(initialTab);
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const getFilteredProjects = (tabStatus: ProjectStatus): ProjectQueueRow[] => {
+  const visibleProjects = useMemo(() => {
     return projects
-      .filter(p => p.status === tabStatus)
+      .filter((p) => activeTab === 'all' || p.status === activeTab)
       .sort((a, b) => {
+        const statusDiff = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
+        if (statusDiff !== 0) return statusDiff;
         const aTime = new Date(a.submitted_at || a.created_at).getTime();
         const bTime = new Date(b.submitted_at || b.created_at).getTime();
         return bTime - aTime;
       });
-  };
+  }, [activeTab, projects]);
 
-  const getTabCount = (tabStatus: ProjectStatus): number => {
+  const getTabCount = (tabStatus: ProjectStatus | null): number => {
+    if (!tabStatus) return projects.length;
     return projects.filter(p => p.status === tabStatus).length;
   };
-
-  const filteredProjects = getFilteredProjects(activeTab);
 
   const handleActionClick = useCallback(async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -113,6 +137,20 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
       setLoadingId(null);
     }
   }, [router]);
+
+  const openProject = useCallback((projectId: string) => {
+    router.push(`/app/projects/${projectId}` as `/app/projects/${string}`);
+  }, [router]);
+
+  const handleRowKeyDown = useCallback((
+    event: KeyboardEvent<HTMLTableRowElement>,
+    projectId: string,
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openProject(projectId);
+    }
+  }, [openProject]);
 
   const getActionButtons = (project: ProjectQueueRow) => {
     const actions: Array<{ label: string; action: 'accept' | 'start' | 'deliver' | 'archive' | 'cancel'; variant: 'primary' | 'secondary' }> = [];
@@ -195,10 +233,10 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
         {TABS.map(({ key, status, label }) => (
           <button
             key={key}
-            onClick={() => setActiveTab(status)}
+            onClick={() => setActiveTab(key)}
             className={cn(
               'relative whitespace-nowrap pb-3 text-sm font-medium transition-colors',
-              activeTab === status
+              activeTab === key
                 ? 'text-foreground font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
             )}
@@ -207,7 +245,7 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
             <span className="ml-2 inline-flex items-center justify-center rounded-full bg-surface-card px-2 py-0.5 text-xs font-semibold text-muted-foreground">
               {getTabCount(status)}
             </span>
-            {activeTab === status && (
+            {activeTab === key && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand" />
             )}
           </button>
@@ -215,64 +253,117 @@ export function ProjectsQueue({ projects, initialTab = 'in_review' }: ProjectsQu
       </div>
 
       {/* Rows */}
-      <div className="space-y-4">
-        {filteredProjects.length === 0 ? (
+      <div>
+        {visibleProjects.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
             {t('admin.projects.queue.empty')}
           </div>
         ) : (
-          filteredProjects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/app/projects/${project.id}` as `/app/projects/${string}`}
-              className="block divide-y divide-border/70 rounded-lg border border-border/70 bg-surface-raised p-4 transition-colors hover:border-brand/40"
-            >
-              <div className="flex items-start justify-between pb-3">
-                <div className="flex-1">
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border border-border/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                      {t(
-                        `admin.projects.queue.project_type.${project.project_type}` as Parameters<
-                          typeof t
-                        >[0],
-                      )}
-                    </span>
-                    {project.workspace?.isTest && (
-                      <TestWorkspaceBadge label={t('admin.test_badge')} />
-                    )}
-                  </div>
-                  <h3 className="mb-1 text-sm font-semibold text-foreground">
-                    {project.title}
-                  </h3>
-                  <p className="mb-0.5 text-sm text-muted-foreground">
-                    {project.client?.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {project.workspace?.name}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 ml-4">
-                  <StatusBadge status={project.status} />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-3">
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="tabular-nums">
-                    {project.dateLabel}
-                  </span>
-                  <span>
-                    {t('admin.projects.queue.references', {
-                      count: project.ref_count,
-                    })}
-                  </span>
-                </div>
-                <div onClick={(e) => e.stopPropagation()}>
-                  {getActionButtons(project)}
-                </div>
-              </div>
-            </Link>
-          ))
+          <div className="overflow-x-auto rounded-md border border-border bg-surface-raised">
+            <table className="w-full min-w-[820px] text-sm">
+              <thead className="border-b border-border bg-surface-card/70 text-xs uppercase tracking-label text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t('admin.projects.queue.col_project')}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t('admin.projects.queue.col_workspace')}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t('admin.projects.queue.col_status')}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t('admin.projects.queue.col_requested_at')}
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold">
+                    {t('admin.projects.queue.col_deliverables')}
+                  </th>
+                  <th className="px-4 py-3 text-right font-semibold">
+                    {t('admin.projects.queue.col_actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {visibleProjects.map((project) => (
+                  <tr
+                    key={project.id}
+                    tabIndex={0}
+                    role="link"
+                    onClick={() => openProject(project.id)}
+                    onKeyDown={(event) => handleRowKeyDown(event, project.id)}
+                    className="cursor-pointer transition-colors hover:bg-accent/50 focus-visible:bg-accent/50 focus-visible:outline-none"
+                  >
+                    <td className="px-4 py-4 align-middle">
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full border border-border/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            {t(
+                              `admin.projects.queue.project_type.${project.project_type}` as Parameters<
+                                typeof t
+                              >[0],
+                            )}
+                          </span>
+                          {project.workspace?.isTest && (
+                            <TestWorkspaceBadge label={t('admin.test_badge')} />
+                          )}
+                        </div>
+                        <span className="font-semibold text-foreground keep-all">
+                          {project.title}
+                        </span>
+                        {project.client?.name && (
+                          <span className="text-xs text-muted-foreground">
+                            {project.client.name}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 align-middle">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-foreground keep-all">
+                          {project.workspace?.name ?? '-'}
+                        </span>
+                        {project.workspace?.kind && (
+                          <span className="w-fit rounded-full border border-border/70 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
+                            {t(
+                              `admin.projects.queue.workspace_kind.${project.workspace.kind}` as Parameters<
+                                typeof t
+                              >[0],
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 align-middle">
+                      <StatusBadge status={project.status} />
+                    </td>
+                    <td className="px-4 py-4 align-middle text-xs tabular-nums text-muted-foreground">
+                      {project.dateLabel}
+                    </td>
+                    <td className="px-4 py-4 align-middle text-sm text-foreground">
+                      {t('admin.projects.queue.deliverables', {
+                        count: project.deliverable_count,
+                      })}
+                    </td>
+                    <td
+                      className="px-4 py-4 align-middle"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-end gap-2">
+                        {getActionButtons(project)}
+                        <Link
+                          href={`/app/projects/${project.id}` as `/app/projects/${string}`}
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-border/70 px-3 text-xs font-semibold text-foreground transition-colors hover:border-brand/50 hover:text-brand"
+                        >
+                          {t('admin.projects.queue.action_open')}
+                          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

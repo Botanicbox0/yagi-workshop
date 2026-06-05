@@ -229,6 +229,7 @@
     "discover": "AI Twins",
     "twins": "AI Twins",
     "deals": "Deals",
+    "requests": "Requests",
     "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
@@ -1978,6 +1979,7 @@
       },
       "queue": {
         "assetCount": "{count}",
+        "error": "Could not load the project queue. Try refreshing the page.",
         "empty": "No projects at this time",
         "waiting": "Waiting",
         "processing": "Processing...",
@@ -1986,15 +1988,31 @@
         "action_deliver": "Mark delivered",
         "action_restart": "Restart",
         "action_archive": "Archive",
+        "action_open": "Open",
         "references": "Refs: {count}",
+        "deliverables": "{count} deliverable{count, plural, one {} other {s}}",
+        "col_project": "Project",
+        "col_workspace": "Requester",
+        "col_status": "Status",
+        "col_requested_at": "Requested",
+        "col_deliverables": "Deliverables",
+        "col_actions": "Actions",
         "tabs": {
+          "all": "All",
           "draft": "Draft",
           "submitted": "New requests",
           "in_review": "In review",
           "in_progress": "In progress",
           "in_revision": "Revision",
           "delivered": "Delivered",
-          "approved": "Approved"
+          "approved": "Approved",
+          "cancelled": "Cancelled",
+          "archived": "Archived"
+        },
+        "workspace_kind": {
+          "brand": "BRAND",
+          "artist": "ARTIST",
+          "creator": "CREATOR"
         },
         "project_type": {
           "direct_commission": "Direct",

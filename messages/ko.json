@@ -229,6 +229,7 @@
     "discover": "AI 트윈",
     "twins": "AI 트윈",
     "deals": "딜",
+    "requests": "요청함",
     "americano": "Americano",
     "assets": "Assets",
     "billing": "Billing",
@@ -1978,6 +1979,7 @@
       },
       "queue": {
         "assetCount": "{count}개",
+        "error": "프로젝트 큐를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.",
         "empty": "현재 프로젝트가 없습니다",
         "waiting": "대기 중",
         "processing": "처리 중...",
@@ -1986,15 +1988,31 @@
         "action_deliver": "납품 완료",
         "action_restart": "재시작",
         "action_archive": "아카이브",
+        "action_open": "열기",
         "references": "참고: {count}",
+        "deliverables": "납품 {count}개",
+        "col_project": "프로젝트명",
+        "col_workspace": "요청 워크스페이스",
+        "col_status": "상태",
+        "col_requested_at": "요청일",
+        "col_deliverables": "납품 수",
+        "col_actions": "작업",
         "tabs": {
+          "all": "전체",
           "draft": "초안",
           "submitted": "새 의뢰",
           "in_review": "검토 중",
           "in_progress": "진행 중",
           "in_revision": "수정 중",
           "delivered": "납품됨",
-          "approved": "승인 완료"
+          "approved": "승인 완료",
+          "cancelled": "취소됨",
+          "archived": "아카이브"
+        },
+        "workspace_kind": {
+          "brand": "BRAND",
+          "artist": "ARTIST",
+          "creator": "CREATOR"
         },
         "project_type": {
           "direct_commission": "일반 외주",

@@ -59,6 +59,7 @@ type TopNavItem = {
     | "twins"
     | "deals"
     | "my_submissions"
+    | "requests"
     | "billing"
     | "americano"
     | "admin";
@@ -75,6 +76,7 @@ const TOP_NAV_ITEMS: TopNavItem[] = [
   { key: "twins", href: "/app/twins", icon: UserRound },
   { key: "deals", href: "/app/deals", icon: Handshake },
   { key: "my_submissions", href: "/app/my-submissions", icon: ClipboardList },
+  { key: "requests", href: "/app/admin/projects", icon: ClipboardList },
   { key: "billing", href: "/app/billing", icon: CreditCard },
   { key: "americano", href: "/app/americano", icon: Coffee },
   { key: "admin", href: "/app/admin", icon: ShieldCheck },
@@ -90,7 +92,7 @@ const TOP_NAV_BY_ACTOR: Record<AppActorKind, TopNavItem["key"][]> = {
   ],
   artist: ["explore", "studio", "campaigns", "twins", "deals"],
   creator: ["campaigns", "my_submissions"],
-  yagi_admin: ["admin", "billing", "americano"],
+  yagi_admin: ["requests", "admin", "billing", "americano"],
 };
 
 export function TopNav({
@@ -424,6 +426,7 @@ function MobileMenu({
 }
 
 function isActive(pathname: string, href: string): boolean {
+  if (href === "/app/admin") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

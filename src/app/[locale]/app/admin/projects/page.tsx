@@ -18,9 +18,9 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
 
   const supabase = await createSupabaseServer();
 
-  // Fetch all projects with their related data.
-  // Phase 3.1 task_07: extend SELECT to also pull project_boards.asset_index
-  // for the asset-count indicator. Field is JSONB array; length used as count.
+  // Fetch cross-workspace project requests for the internal queue.
+  // The admin layout already gates this route to active kind='yagi_admin';
+  // this query excludes YAGI's own internal workspace projects.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 project_boards not in generated types
   const sb = supabase as any;
   let query = sb
@@ -31,16 +31,26 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
       title,
       status,
       project_type,
+      deliverable_types,
       submitted_at,
       created_at,
       created_by,
       client:profiles!projects_created_by_fkey(id, display_name),
-      workspace:workspaces!inner(id, name, is_test),
-      ref_count:project_references(count),
-      boards:project_boards(asset_index)
+      workspace:workspaces!inner(id, name, kind, is_test)
     `
     )
-    .in("status", ["submitted", "draft", "in_review", "in_progress", "in_revision", "delivered", "approved"]);
+    .in("workspace.kind", ["brand", "artist", "creator"])
+    .in("status", [
+      "draft",
+      "submitted",
+      "in_review",
+      "in_progress",
+      "in_revision",
+      "delivered",
+      "approved",
+      "cancelled",
+      "archived",
+    ]);
 
   if (!includeTest) {
     query = query.eq("workspace.is_test", false);
@@ -66,15 +76,9 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Database query result typing
   const projectRows = (projects ?? []).map((p: any) => {
-    // Resolve asset count from project_boards.asset_index (preferred);
-    // fall back to legacy project_references count if board is empty/missing.
-    const boardRow = Array.isArray(p.boards) ? p.boards[0] : p.boards;
-    const boardAssetCount =
-      boardRow && Array.isArray(boardRow.asset_index)
-        ? boardRow.asset_index.length
-        : 0;
-    const legacyRefCount = Array.isArray(p.ref_count) ? p.ref_count.length : 0;
-    const ref_count = boardAssetCount > 0 ? boardAssetCount : legacyRefCount;
+    const deliverableTypes = Array.isArray(p.deliverable_types)
+      ? p.deliverable_types
+      : [];
     return {
       id: p.id,
       title: p.title,
@@ -88,9 +92,14 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
         ? { id: p.client.id, name: p.client.display_name ?? "Unknown" }
         : null,
       workspace: p.workspace
-        ? { id: p.workspace.id, name: p.workspace.name, isTest: p.workspace.is_test === true }
+        ? {
+            id: p.workspace.id,
+            name: p.workspace.name,
+            kind: p.workspace.kind,
+            isTest: p.workspace.is_test === true,
+          }
         : null,
-      ref_count,
+      deliverable_count: deliverableTypes.length,
     };
   });
 
@@ -126,7 +135,13 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
         />
       </div>
 
-      <ProjectsQueue projects={projectRows} initialTab="submitted" />
+      {error && (
+        <div className="mb-6 rounded-md border border-border bg-surface-raised px-4 py-3 text-sm text-muted-foreground">
+          {tAdmin("projects.queue.error")}
+        </div>
+      )}
+
+      <ProjectsQueue projects={projectRows} initialTab="all" />
     </main>
   );
 }
