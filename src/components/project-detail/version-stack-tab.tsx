@@ -823,12 +823,18 @@ function StoragePreview({
           // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
           <img src={asset.url} alt="" className="h-full w-full object-cover" />
         ) : asset.kind === "video" ? (
-          <video
-            src={asset.url}
-            poster={poster ?? undefined}
-            className="h-full w-full object-cover"
-            controls
-          />
+          <Link
+            href="?tab=deliverables"
+            aria-label={labels.delivery}
+            className="flex h-full w-full items-center justify-center"
+          >
+            {poster ? (
+              // eslint-disable-next-line @next/next/no-img-element -- Cloudflare Stream thumbnail URL
+              <img src={poster} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <FileVideo className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            )}
+          </Link>
         ) : (
           <ImageIcon className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
         )}
