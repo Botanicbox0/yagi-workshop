@@ -236,10 +236,7 @@ export async function createProjectDeliverableVersionAction(
   if (firstVideoPath && streamConfigured()) {
     // Cloudflare Stream /copy fetches this URL server-side; the deliverable R2
     // public URL is the agreed ingest contract for this integration.
-    const streamCopy = await copyFromUrl(
-      briefObjectPublicUrl(firstVideoPath),
-      firstVideoPath.split("/").at(-1),
-    );
+    const streamCopy = await copyFromUrl(briefObjectPublicUrl(firstVideoPath));
     if (streamCopy) {
       const { error: streamUpdateError } = await sb
         .from("project_deliverables")

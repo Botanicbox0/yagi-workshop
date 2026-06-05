@@ -43,7 +43,6 @@ function timeoutSignal() {
 
 export async function copyFromUrl(
   sourceUrl: string,
-  name?: string,
 ): Promise<{ uid: string } | null> {
   if (!streamConfigured()) return null;
 
@@ -57,7 +56,6 @@ export async function copyFromUrl(
       },
       body: JSON.stringify({
         url: sourceUrl,
-        meta: name ? { name } : undefined,
       }),
     });
     if (!response.ok) {

@@ -592,6 +592,8 @@ function AssetPreview({
           <TimedVideoPlayer
             assetIndex={index}
             src={asset.url}
+            streamUid={asset.streamUid}
+            streamStatus={asset.streamStatus}
             annotations={annotations.map((annotation) => ({
               id: annotation.id,
               seq: annotation.seq,

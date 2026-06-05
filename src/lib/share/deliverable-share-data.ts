@@ -9,6 +9,8 @@ export type DeliverableShareAsset =
       key: string;
       url: string;
       mediaKind: "image" | "video" | "file";
+      streamUid: string | null;
+      streamStatus: string | null;
     }
   | {
       kind: "external";
@@ -90,6 +92,8 @@ type DeliverableRow = {
   released_at: string | null;
   storage_paths: string[];
   external_urls: string[];
+  stream_uid: string | null;
+  stream_status: string | null;
   created_at: string;
 };
 
@@ -175,7 +179,7 @@ export async function loadDeliverableShareData(
   const { data: deliverableRowsRaw } = (await service
     .from("project_deliverables")
     .select(
-      "id, version, status, note, review_note, reviewed_at, released_at, storage_paths, external_urls, created_at",
+      "id, version, status, note, review_note, reviewed_at, released_at, storage_paths, external_urls, stream_uid, stream_status, created_at",
     )
     .eq("project_id", project.id)
     .not("released_at", "is", null)
@@ -260,12 +264,17 @@ export async function loadDeliverableShareData(
 
   const deliverables = await Promise.all(
     deliverableRows.map(async (row) => {
+      const firstVideoKey = (row.storage_paths ?? []).find(
+        (key) => detectStorageKind(key) === "video",
+      );
       const storageAssets = await Promise.all(
         (row.storage_paths ?? []).map(async (key) => ({
           kind: "storage" as const,
           key,
           url: await createBriefAssetGetUrl(key, 3600),
           mediaKind: detectStorageKind(key),
+          streamUid: key === firstVideoKey ? row.stream_uid : null,
+          streamStatus: key === firstVideoKey ? row.stream_status : null,
         })),
       );
       const externalAssets = (row.external_urls ?? []).map((url) => ({

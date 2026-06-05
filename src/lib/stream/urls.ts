@@ -18,5 +18,5 @@ export function streamThumbnailUrl(uid: string, timeSec = 0): string | null {
 export function streamStoryboardUrl(uid: string): string | null {
   const customer = streamCustomer();
   if (!customer) return null;
-  return `https://customer-${customer}.cloudflarestream.com/${uid}/storyboard.vtt`;
+  return `https://customer-${customer}.cloudflarestream.com/${uid}/storyboard.json`;
 }
