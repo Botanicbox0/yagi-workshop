@@ -25,6 +25,8 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { isStudioContext } from "@/lib/workspace/studio-context";
 import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import { type TwinIntent } from "@/components/project-detail/info-rail";
@@ -159,10 +161,13 @@ export default async function ProjectDetailPage({
 
   if (projectGateErr || !projectGateRaw) notFound();
 
-  const { data: roleRows } = await supabase
-    .from("user_roles")
-    .select("role, workspace_id")
-    .eq("user_id", user.id);
+  const [{ data: roleRows }, activeWorkspace] = await Promise.all([
+    supabase
+      .from("user_roles")
+      .select("role, workspace_id")
+      .eq("user_id", user.id),
+    resolveActiveWorkspace(user.id),
+  ]);
 
   const roles = new Set(
     (roleRows ?? [])
@@ -174,6 +179,7 @@ export default async function ProjectDetailPage({
   );
 
   const isYagiAdmin = roles.has("yagi_admin");
+  const studioContext = isStudioContext(activeWorkspace, isYagiAdmin);
   const isWsAdmin = roles.has("workspace_admin");
   const isOwner = projectGateRaw.created_by === user.id;
   const { data: isWorkspaceMemberForReview } = await sb.rpc("is_ws_member", {
@@ -181,10 +187,8 @@ export default async function ProjectDetailPage({
     wsid: projectGateRaw.workspace_id,
   });
   const canReviewDeliverables =
-    isYagiAdmin || isWorkspaceMemberForReview === true;
-  const viewerRole: "admin" | "client" = isYagiAdmin || isWsAdmin
-    ? "admin"
-    : "client";
+    studioContext || isWorkspaceMemberForReview === true;
+  const viewerRole: "admin" | "client" = studioContext ? "admin" : "client";
 
   let isProjectGuest = false;
   if (!isYagiAdmin && !isWsAdmin && !isOwner) {
@@ -362,7 +366,7 @@ export default async function ProjectDetailPage({
     ratioFormat: scopeRatioFormat,
   };
 
-  if (project.project_type === "curated" && viewerRole === "admin") {
+  if (project.project_type === "curated" && studioContext) {
     const sbAdmin = createSupabaseService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_guests generated types pending
     const adminAny = sbAdmin as any;
@@ -778,7 +782,7 @@ export default async function ProjectDetailPage({
             submitted_at={project.submitted_at}
             creator_display_name={creatorDisplayName}
             canEditProductionSpec={
-              isYagiAdmin || isWsAdmin || (isOwner && project.status === "draft")
+              studioContext || (isOwner && project.status === "draft")
             }
             labels={{
               banner_draft: tDetail("brief_tab.banner_draft"),
@@ -885,7 +889,7 @@ export default async function ProjectDetailPage({
           <BoardTab
             projectId={project.id}
             revisionRoundsLimit={project.revision_rounds_limit}
-            isYagiAdmin={isYagiAdmin}
+            isYagiAdmin={studioContext}
             locale={localeNarrow}
           />
         )}
@@ -893,6 +897,7 @@ export default async function ProjectDetailPage({
           <CommentsTab
             projectId={project.id}
             selectedDeliverableId={sp.feedback ?? null}
+            isStudioContext={studioContext}
             locale={localeNarrow}
           />
         )}
@@ -902,6 +907,7 @@ export default async function ProjectDetailPage({
             revisionRoundsLimit={project.revision_rounds_limit}
             scopeSummary={deliverablesScopeSummary}
             canReview={canReviewDeliverables}
+            isStudioContext={studioContext}
             locale={localeNarrow}
           />
         )}
@@ -917,7 +923,7 @@ export default async function ProjectDetailPage({
             viewerRole="admin"
             locale={localeNarrow}
           />
-          {isYagiAdmin && <AdminDeleteButton projectId={project.id} />}
+          {studioContext && <AdminDeleteButton projectId={project.id} />}
         </div>
       )}
     </div>

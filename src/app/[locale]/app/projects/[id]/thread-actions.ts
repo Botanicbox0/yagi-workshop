@@ -6,6 +6,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { emitNotification } from "@/lib/notifications/emit";
 import { notifyNewMessage } from "@/lib/email/new-message";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const sendSchema = z.object({
   projectId: z.string().uuid(),
@@ -14,6 +15,11 @@ const sendSchema = z.object({
   body: z.string().trim().min(1).max(10_000),
   visibility: z.enum(["shared", "internal"]).default("shared"),
 });
+
+async function canUseInternalVisibility() {
+  const studio = await getStudioContext();
+  return studio.ok;
+}
 
 async function findOrCreateDefaultThread({
   supabase,
@@ -130,16 +136,10 @@ export async function sendMessage(input: unknown) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" as const };
 
-  // If visibility=internal, enforce server-side that the user has yagi_admin role.
-  // (Client hides the toggle for non-yagi users; the server must still enforce.)
+  // If visibility=internal, enforce server-side studio context. The client
+  // hides the toggle outside YAGI Internal, but the server must still enforce.
   if (parsed.data.visibility === "internal") {
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .is("workspace_id", null)
-      .eq("role", "yagi_admin");
-    if (!roles || roles.length === 0) {
+    if (!(await canUseInternalVisibility())) {
       return { error: "forbidden" as const };
     }
   }
@@ -158,13 +158,7 @@ export async function sendMessage(input: unknown) {
       : parsed.data.visibility;
 
   if (effectiveVisibility === "internal") {
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .is("workspace_id", null)
-      .eq("role", "yagi_admin");
-    if (!roles || roles.length === 0) {
+    if (!(await canUseInternalVisibility())) {
       return { error: "forbidden" as const };
     }
   }
@@ -284,15 +278,9 @@ export async function sendMessageWithAttachments(input: unknown) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "unauthenticated" as const };
 
-  // Internal-visibility yagi-admin gate (verbatim from sendMessage).
+  // Internal-visibility studio-context gate (verbatim from sendMessage).
   if (d.visibility === "internal") {
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .is("workspace_id", null)
-      .eq("role", "yagi_admin");
-    if (!roles || roles.length === 0) {
+    if (!(await canUseInternalVisibility())) {
       return { error: "forbidden" as const };
     }
   }
@@ -309,13 +297,7 @@ export async function sendMessageWithAttachments(input: unknown) {
     thread.annotationVisibility === "internal" ? "internal" : d.visibility;
 
   if (effectiveVisibility === "internal") {
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .is("workspace_id", null)
-      .eq("role", "yagi_admin");
-    if (!roles || roles.length === 0) {
+    if (!(await canUseInternalVisibility())) {
       return { error: "forbidden" as const };
     }
   }

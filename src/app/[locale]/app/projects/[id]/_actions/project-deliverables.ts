@@ -13,6 +13,7 @@ import {
   getVideo,
   streamConfigured,
 } from "@/lib/stream/client";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const ALLOWED_DELIVERABLE_CONTENT_TYPES = new Set([
   "image/jpeg",
@@ -58,23 +59,6 @@ function detectStorageKind(key: string): "image" | "video" | "file" {
   return "file";
 }
 
-async function canUploadProjectDeliverable(
-  supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
-  projectId: string,
-  userId: string,
-) {
-  const [{ data: isAdmin }, { data: isGuest }] = await Promise.all([
-    supabase.rpc("is_yagi_admin", { uid: userId }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not in generated types
-    (supabase as any).rpc("is_project_guest", {
-      p_project_id: projectId,
-      p_user_id: userId,
-    }),
-  ]);
-
-  return isAdmin === true || isGuest === true;
-}
-
 const uploadPutUrlSchema = z.object({
   projectId: z.string().uuid(),
   fileName: z.string().min(1).max(240),
@@ -112,18 +96,11 @@ export async function getDeliverableUploadPutUrlAction(
     return { ok: false, error: "content_type_not_allowed" };
   }
 
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
-
-  if (!(await canUploadProjectDeliverable(supabase, projectId, user.id))) {
-    return { ok: false, error: "forbidden" };
-  }
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
 
   const ext = EXT_FOR_CONTENT_TYPE[contentType] ?? "bin";
-  const storageKey = `project-deliverables/${projectId}/${user.id}/${crypto.randomUUID()}.${ext}`;
+  const storageKey = `project-deliverables/${projectId}/${auth.userId}/${crypto.randomUUID()}.${ext}`;
 
   try {
     const putUrl = await createBriefAssetPutUrl(storageKey, contentType, 3600);
@@ -177,17 +154,12 @@ export async function createProjectDeliverableVersionAction(
   }
 
   const { projectId, storagePaths, externalUrls, note } = parsed.data;
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
+  const userId = auth.userId;
 
-  if (!(await canUploadProjectDeliverable(supabase, projectId, user.id))) {
-    return { ok: false, error: "forbidden" };
-  }
-
-  const ownedStoragePrefix = `project-deliverables/${projectId}/${user.id}/`;
+  const ownedStoragePrefix = `project-deliverables/${projectId}/${userId}/`;
   if (storagePaths.some((path) => !path.startsWith(ownedStoragePrefix))) {
     return { ok: false, error: "storage_key_not_owned" };
   }
@@ -216,7 +188,7 @@ export async function createProjectDeliverableVersionAction(
     .insert({
       project_id: projectId,
       version: nextVersionRaw,
-      submitted_by: user.id,
+      submitted_by: userId,
       storage_paths: storagePaths,
       external_urls: externalUrls,
       note: note?.trim() || null,
@@ -554,16 +526,9 @@ export async function releaseDeliverableToClientAction(
   }
 
   const { projectId, deliverableId, extendScope } = parsed.data;
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
-
-  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (isYagiAdmin !== true) return { ok: false, error: "forbidden" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag released_at
   const sb = supabase as any;
@@ -692,16 +657,9 @@ export async function setProjectRevisionRoundsLimitAction(
   }
 
   const { projectId, limit } = parsed.data;
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
-
-  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (isYagiAdmin !== true) return { ok: false, error: "forbidden" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC added in R4, generated types lag
   const sb = supabase as any;
@@ -733,16 +691,9 @@ export async function revertDeliverablePublicReviewAction(
   }
 
   const { projectId, deliverableId } = parsed.data;
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
-
-  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (isYagiAdmin !== true) return { ok: false, error: "forbidden" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag released_at/review columns
   const sb = supabase as any;

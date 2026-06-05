@@ -48,6 +48,7 @@ import {
   resolveAppActor,
   type AppActorKind,
 } from "@/lib/app/role-routing";
+import { isStudioContext } from "@/lib/workspace/studio-context";
 
 type TopNavItem = {
   key:
@@ -115,7 +116,8 @@ export function TopNav({
     [context.workspaces],
   );
   const isYagiAdmin = context.workspaceRoles.includes("yagi_admin");
-  const actor = resolveAppActor(activeWorkspace, isYagiAdmin);
+  const studioContext = isStudioContext(activeWorkspace, isYagiAdmin);
+  const actor = resolveAppActor(activeWorkspace, studioContext);
   const isYagiAdminActor = actor === "yagi_admin";
   const homeHref = actor ? getAppLandingPath(actor) : "/app";
   const [workspaceSearchOpen, setWorkspaceSearchOpen] = useState(false);

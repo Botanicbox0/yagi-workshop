@@ -28,6 +28,7 @@ type Props = {
   revisionRoundsLimit: number;
   scopeSummary: DeliverablesScopeSummary;
   canReview: boolean;
+  isStudioContext: boolean;
   locale: "ko" | "en";
 };
 
@@ -135,6 +136,7 @@ export async function DeliverablesTab({
   revisionRoundsLimit,
   scopeSummary,
   canReview,
+  isStudioContext,
   locale,
 }: Props) {
   const t = await getTranslations({
@@ -148,10 +150,6 @@ export async function DeliverablesTab({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-
-  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
 
   const { data: projectShare } = (await supabase
     .from("projects")
@@ -187,7 +185,7 @@ export async function DeliverablesTab({
     )
     .eq("project_id", projectId);
 
-  if (isYagiAdmin !== true) {
+  if (!isStudioContext) {
     deliverablesQuery = deliverablesQuery.not("released_at", "is", null);
   }
 
@@ -215,7 +213,7 @@ export async function DeliverablesTab({
   const releasedDeliverableIds = Array.from(releasedRoundById.keys());
   if (releasedDeliverableIds.length > 0) {
     const rpcName =
-      isYagiAdmin === true ? "deliverable_seen_by_client" : "deliverable_seen_by_yagi";
+      isStudioContext ? "deliverable_seen_by_client" : "deliverable_seen_by_yagi";
     await Promise.all(
       releasedDeliverableIds.map(async (deliverableId) => {
         const { data, error } = await supabase.rpc(rpcName, {
@@ -224,7 +222,7 @@ export async function DeliverablesTab({
         if (error || data !== true) return;
         seenFlagsByDeliverable.set(
           deliverableId,
-          isYagiAdmin === true ? { seenByClient: true } : { seenByYagi: true },
+          isStudioContext ? { seenByClient: true } : { seenByYagi: true },
         );
       }),
     );
@@ -262,7 +260,7 @@ export async function DeliverablesTab({
     };
 
     const annotationRows =
-      isYagiAdmin === true
+      isStudioContext
         ? (annotationRowsRaw ?? [])
         : (annotationRowsRaw ?? []).filter((row) => row.visibility === "client");
     const threadIds = annotationRows.map((annotation) => annotation.thread_id);
@@ -421,7 +419,7 @@ export async function DeliverablesTab({
 
   return (
     <div className="space-y-5">
-      {isYagiAdmin === true ? (
+      {isStudioContext ? (
         <DeliverableShareControls
           projectId={projectId}
           enabled={projectShare?.deliverable_share_enabled === true}
@@ -453,7 +451,7 @@ export async function DeliverablesTab({
         scopeSummary={scopeSummary}
         canReview={canReview}
         currentUserId={user.id}
-        isYagiAdmin={isYagiAdmin === true}
+        isYagiAdmin={isStudioContext}
         locale={locale}
         labels={{
         title: t("title"),

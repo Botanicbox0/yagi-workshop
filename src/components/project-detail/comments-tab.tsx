@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   projectId: string;
   selectedDeliverableId: string | null;
+  isStudioContext: boolean;
   locale: "ko" | "en";
 };
 
@@ -34,6 +35,7 @@ function formatDate(value: string, locale: string) {
 export async function CommentsTab({
   projectId,
   selectedDeliverableId,
+  isStudioContext,
   locale,
 }: Props) {
   const t = await getTranslations({
@@ -45,16 +47,14 @@ export async function CommentsTab({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: isYagiAdmin } = user
-    ? await supabase.rpc("is_yagi_admin", { uid: user.id })
-    : { data: false };
+  if (!user) return null;
 
   let deliverablesQuery = supabase
     .from("project_deliverables")
     .select("id, version, status, released_at, created_at")
     .eq("project_id", projectId);
 
-  if (isYagiAdmin !== true) {
+  if (!isStudioContext) {
     deliverablesQuery = deliverablesQuery.not("released_at", "is", null);
   }
 
@@ -144,6 +144,7 @@ export async function CommentsTab({
         <ThreadPanelServer
           projectId={projectId}
           deliverableId={activeDeliverableId}
+          isStudioContext={isStudioContext}
         />
       </div>
     </section>

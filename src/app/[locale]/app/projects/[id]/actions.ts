@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 // ---------------------------------------------------------------------------
 // Phase 2.8.2 G_B2_A — admin soft delete + restore + permanent delete
@@ -15,24 +15,11 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 
 const idSchema = z.object({ projectId: z.string().uuid() });
 
-async function requireYagiAdmin() {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: "unauthenticated" as const };
-  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (!isAdmin) return { ok: false as const, error: "forbidden" as const };
-  return { ok: true as const, supabase, user };
-}
-
 export async function softDeleteProject(formData: FormData) {
   const parsed = idSchema.safeParse({ projectId: formData.get("projectId") });
   if (!parsed.success) return { error: "validation" as const };
 
-  const auth = await requireYagiAdmin();
+  const auth = await getStudioContext();
   if (!auth.ok) return { error: auth.error };
 
   const { error: updateErr } = await auth.supabase
@@ -53,7 +40,7 @@ export async function restoreProject(formData: FormData) {
   const parsed = idSchema.safeParse({ projectId: formData.get("projectId") });
   if (!parsed.success) return { error: "validation" as const };
 
-  const auth = await requireYagiAdmin();
+  const auth = await getStudioContext();
   if (!auth.ok) return { error: auth.error };
 
   const { error: updateErr } = await auth.supabase
@@ -73,7 +60,7 @@ export async function hardDeleteProject(formData: FormData) {
   const parsed = idSchema.safeParse({ projectId: formData.get("projectId") });
   if (!parsed.success) return { error: "validation" as const };
 
-  const auth = await requireYagiAdmin();
+  const auth = await getStudioContext();
   if (!auth.ok) return { error: auth.error };
 
   // Refuse to hard-delete if invoices reference the project — invoices_project_id_fkey

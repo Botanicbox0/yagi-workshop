@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const projectIdSchema = z.string().uuid();
 
@@ -41,23 +41,6 @@ function generateToken() {
   return randomBytes(32).toString("base64url");
 }
 
-async function requireYagiAdmin() {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, supabase, error: "unauthenticated" as const };
-
-  const { data: isYagiAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (isYagiAdmin !== true) {
-    return { ok: false as const, supabase, error: "forbidden" as const };
-  }
-
-  return { ok: true as const, supabase, user };
-}
-
 function revalidateProject(projectId: string) {
   revalidatePath(`/[locale]/app/projects/${projectId}`, "page");
   revalidatePath(`/[locale]/app/admin/projects/${projectId}`, "page");
@@ -67,7 +50,7 @@ export async function shareProjectDeliverables(projectId: string): Promise<Share
   const parsed = projectIdSchema.safeParse(projectId);
   if (!parsed.success) return { ok: false, error: "validation" };
 
-  const auth = await requireYagiAdmin();
+  const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
   const sb = auth.supabase as any;
@@ -130,7 +113,7 @@ export async function unshareProjectDeliverables(projectId: string): Promise<Sim
   const parsed = projectIdSchema.safeParse(projectId);
   if (!parsed.success) return { ok: false, error: "validation" };
 
-  const auth = await requireYagiAdmin();
+  const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
   const sb = auth.supabase as any;
@@ -153,7 +136,7 @@ export async function rotateProjectDeliverablesShare(projectId: string): Promise
   const parsed = projectIdSchema.safeParse(projectId);
   if (!parsed.success) return { ok: false, error: "validation" };
 
-  const auth = await requireYagiAdmin();
+  const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
   const sb = auth.supabase as any;

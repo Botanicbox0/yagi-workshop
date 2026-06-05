@@ -28,10 +28,10 @@ import { createSupabaseService } from "@/lib/supabase/service";
 import { extractAssetIndex } from "@/lib/board/asset-index";
 import {
   createBriefAssetPutUrl,
-  briefObjectPublicUrl,
 } from "@/lib/r2/client";
 import { fetchVideoMetadata } from "@/lib/oembed";
 import { MAX_DOCUMENT_UPLOAD_BYTES } from "@/lib/upload-limits";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const VERSION_DEBOUNCE_MS = 30_000;
 const DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
@@ -116,10 +116,8 @@ export async function updateProjectBoardAction(
   const isCreator = project.created_by === user.id;
   let isAuthorized = isCreator;
   if (!isAuthorized) {
-    const { data: yagiAdmin } = await supabase.rpc("is_yagi_admin", {
-      uid: user.id,
-    });
-    if (yagiAdmin) {
+    const studio = await getStudioContext();
+    if (studio.ok) {
       isAuthorized = true;
     } else {
       const { data: member } = await sb
@@ -252,13 +250,12 @@ export async function toggleLockAction(
   const parsed = ToggleLockSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "validation" };
 
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
 
-  // RPC enforces yagi_admin internally (RAISE EXCEPTION if not admin).
+  // RPC enforces yagi_admin internally; the action layer additionally
+  // requires the active workspace to be the internal studio context.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
   const { error } = await (supabase as any).rpc("toggle_project_board_lock", {
     p_board_id: parsed.data.boardId,
@@ -295,21 +292,9 @@ export async function toggleBoardLockAction(
     return { ok: false, error: "validation" };
   }
 
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
-
-  // Action-layer role check (defense-in-depth over RPC-only check)
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id);
-  const isYagiAdmin = (roles ?? []).some(
-    (r) => (r as { role: string }).role === "yagi_admin"
-  );
-  if (!isYagiAdmin) return { ok: false, error: "forbidden" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1: RPC not in generated types
   const { error } = await (supabase as any).rpc("toggle_project_board_lock", {
@@ -369,22 +354,11 @@ export async function restoreVersionAction(
   const parsed = RestoreVersionSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "validation" };
 
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
+  const auth = await getStudioContext();
+  if (!auth.ok) return { ok: false, error: auth.error };
+  const supabase = auth.supabase;
 
   // Admin-only check — restore is destructive and bypasses lock state.
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id);
-  const isAdmin = (roles ?? []).some(
-    (r) => (r as { role: string }).role === "yagi_admin"
-  );
-  if (!isAdmin) return { ok: false, error: "forbidden" };
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Phase 3.1 tables not in generated types
   const sb = supabase as any;
   const { data: snap, error: sErr } = await sb

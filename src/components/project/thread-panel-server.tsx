@@ -26,11 +26,13 @@ export async function ThreadPanelServer({
   deliverableId = null,
   annotationId = null,
   annotationVisibility = null,
+  isStudioContext = false,
 }: {
   projectId: string;
   deliverableId?: string | null;
   annotationId?: string | null;
   annotationVisibility?: "client" | "internal" | null;
+  isStudioContext?: boolean;
 }) {
   const supabase = await createSupabaseServer();
   const {
@@ -66,9 +68,12 @@ export async function ThreadPanelServer({
       .eq("thread_id", thread.id)
       .order("created_at", { ascending: true });
 
-    if (rawMessages && rawMessages.length > 0) {
+    const visibleMessages =
+      isStudioContext ? (rawMessages ?? []) : (rawMessages ?? []).filter((m) => m.visibility !== "internal");
+
+    if (visibleMessages.length > 0) {
       // Fetch author profiles in bulk
-      const authorIds = [...new Set(rawMessages.map((m) => m.author_id))];
+      const authorIds = [...new Set(visibleMessages.map((m) => m.author_id))];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, handle, display_name, avatar_url")
@@ -125,7 +130,7 @@ export async function ThreadPanelServer({
       // RLS `thread_attachments_hide_internal_from_clients` already hides
       // attachments on internal messages from non-yagi-admin users — we do
       // NOT need any client-side filter.
-      const messageIds = rawMessages.map((m) => m.id);
+      const messageIds = visibleMessages.map((m) => m.id);
       const { data: rawAttachments } = await supabase
         .from("thread_message_attachments")
         .select(
@@ -177,7 +182,7 @@ export async function ThreadPanelServer({
         }
       }
 
-      initialMessages = rawMessages.map((msg) => {
+      initialMessages = visibleMessages.map((msg) => {
         const profile = profileMap.get(msg.author_id);
         return {
           ...msg,
@@ -194,15 +199,6 @@ export async function ThreadPanelServer({
     }
   }
 
-  // Determine if the current user is yagi_admin.
-  const { data: roleRows } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .is("workspace_id", null)
-    .eq("role", "yagi_admin");
-  const isYagiAdmin = !!(roleRows && roleRows.length > 0);
-
   return (
     <ThreadPanel
       projectId={projectId}
@@ -211,7 +207,7 @@ export async function ThreadPanelServer({
       annotationVisibility={annotationVisibility}
       threadId={thread?.id ?? null}
       currentUserId={user.id}
-      isYagiAdmin={isYagiAdmin}
+      isYagiAdmin={isStudioContext}
       initialMessages={initialMessages}
     />
   );

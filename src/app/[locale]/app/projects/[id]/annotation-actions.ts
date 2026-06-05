@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const MAX_TIMESTAMP_SEC = 60 * 60 * 24;
 
@@ -75,6 +76,11 @@ export async function createDeliverableAnnotationAction(
   if (!user) return { ok: false, error: "unauthenticated" };
 
   const data = parsed.data;
+  if (data.visibility === "internal") {
+    const studio = await getStudioContext();
+    if (!studio.ok) return { ok: false, error: "forbidden" };
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC lands in this migration before generated types refresh
   const { data: rows, error } = await (supabase as any).rpc(
     "create_deliverable_annotation",

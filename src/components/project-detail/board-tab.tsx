@@ -92,19 +92,6 @@ export async function BoardTab({
     namespace: "project_detail.versions",
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let isProjectGuest = false;
-  if (user && !isYagiAdmin) {
-    const { data } = await supabase.rpc("is_project_guest", {
-      p_project_id: projectId,
-      p_user_id: user.id,
-    });
-    isProjectGuest = data === true;
-  }
-
   let deliverablesQuery = supabase
     .from("project_deliverables")
     .select(
@@ -249,7 +236,7 @@ export async function BoardTab({
       deliverables={deliverables}
       revisionRoundsLimit={revisionRoundsLimit}
       releasedCount={releasedCount}
-      canUpload={isYagiAdmin || isProjectGuest}
+      canUpload={isYagiAdmin}
       isYagiAdmin={isYagiAdmin}
       locale={locale}
       labels={{

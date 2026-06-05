@@ -17,6 +17,7 @@ import crypto from "node:crypto";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const inputSchema = z.object({
   workspaceId: z.string().uuid(),
@@ -56,26 +57,8 @@ export async function sendGuestInvitation(
     return { ok: false, error: "unauthenticated" };
   }
 
-  // Auth check: yagi_admin (global) OR workspace_admin (this workspace)
-  const { data: yagiRoles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .is("workspace_id", null)
-    .eq("role", "yagi_admin");
-  const isYagiAdmin = (yagiRoles ?? []).length > 0;
-
-  let isWsAdmin = false;
-  if (!isYagiAdmin) {
-    const { data: wmRow } = await supabase
-      .from("workspace_members")
-      .select("role")
-      .eq("workspace_id", workspaceId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    isWsAdmin = wmRow?.role === "admin";
-  }
-  if (!isYagiAdmin && !isWsAdmin) {
+  const studio = await getStudioContext();
+  if (!studio.ok) {
     return { ok: false, error: "forbidden" };
   }
 
