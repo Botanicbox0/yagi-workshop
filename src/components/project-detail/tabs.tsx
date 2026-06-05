@@ -26,6 +26,7 @@ import Link from "next/link";
 export type TabKey =
   | "status"
   | "brief"
+  | "review"
   | "board"
   | "comments"
   | "deliverables";
@@ -38,6 +39,7 @@ type Props = {
 const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
   { key: "status", disabled: false },
   { key: "brief", disabled: false },
+  { key: "review", disabled: false },
   { key: "board", disabled: false },
   { key: "comments", disabled: false },
   { key: "deliverables", disabled: false },

@@ -34,6 +34,7 @@ import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
 import { BoardTab } from "@/components/project-detail/board-tab";
 import { CommentsTab } from "@/components/project-detail/comments-tab";
 import { DeliverablesTab } from "@/components/project-detail/deliverables-tab";
+import { ReviewWorkspace } from "@/components/project-detail/review-workspace";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
 import { CancelledArchivedBanner } from "@/components/project-detail/cancelled-archived-banner";
@@ -98,6 +99,7 @@ function parseTab(value: string | undefined): TabKey {
   // (현황 tab) per SPEC §"Scope: 5 tab 구조".
   if (
     value === "brief" ||
+    value === "review" ||
     value === "board" ||
     value === "comments" ||
     value === "deliverables"
@@ -593,6 +595,7 @@ export default async function ProjectDetailPage({
           labels={{
             status: tDetail("tab.status"),
             brief: tDetail("tab.brief"),
+            review: "Review",
             board: tDetail("tab.board"),
             comments: tDetail("tab.comments"),
             deliverables: tDetail("tab.deliverables"),
@@ -883,6 +886,12 @@ export default async function ProjectDetailPage({
                 other: tDetail("brief_tab.deliverable_type.other"),
               },
             }}
+          />
+        )}
+        {activeTab === "review" && (
+          <ReviewWorkspace
+            projectTitle={project.title}
+            isStudioContext={studioContext}
           />
         )}
         {activeTab === "board" && (
