@@ -890,6 +890,7 @@ export default async function ProjectDetailPage({
         )}
         {activeTab === "review" && (
           <ReviewWorkspace
+            projectId={project.id}
             projectTitle={project.title}
             isStudioContext={studioContext}
           />

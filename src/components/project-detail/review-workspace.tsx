@@ -1,143 +1,198 @@
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { briefObjectPublicUrl } from "@/lib/r2/client";
+import { fetchVideoMetadata } from "@/lib/oembed";
 import {
-  GalleryVerticalEnd,
-  MessageSquareText,
-  MonitorPlay,
-  PanelLeft,
-  ShieldCheck,
-} from "lucide-react";
+  detectExternalProvider,
+  detectStorageKind,
+} from "@/lib/project-deliverables/assets";
+import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
+import type {
+  AnnotationCoords,
+  AnnotationShape,
+  AnnotationStatus,
+  AnnotationVisibility,
+} from "@/components/project-detail/deliverable-annotations";
+import {
+  ReviewWorkspaceClient,
+  type ReviewWorkspaceDeliverable,
+  type ReviewWorkspaceAnnotation,
+} from "@/components/project-detail/review-workspace-client";
 
 type ReviewWorkspaceProps = {
+  projectId: string;
   projectTitle: string;
   isStudioContext: boolean;
 };
 
-export function ReviewWorkspace({
+type DeliverableRow = {
+  id: string;
+  version: number;
+  status: string;
+  note: string | null;
+  storage_paths: string[];
+  external_urls: string[];
+  stream_uid: string | null;
+  stream_status: string | null;
+  stream_ready_at: string | null;
+  released_at: string | null;
+  review_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+};
+
+type AnnotationRow = {
+  id: string;
+  project_id: string;
+  deliverable_id: string;
+  asset_index: number;
+  seq: number;
+  shape: string;
+  coords: unknown;
+  visibility: string;
+  status: string;
+  timestamp_sec: number | null;
+  thread_id: string;
+  created_by: string;
+  created_at: string;
+};
+
+export async function ReviewWorkspace({
+  projectId,
   projectTitle,
   isStudioContext,
 }: ReviewWorkspaceProps) {
-  const copy = {
-    eyebrow: "Review workspace",
-    title: "Unified media review",
-    subtitle:
-      "Phase A shell: versions, media canvas, and comments will be wired in the next phases.",
-    context: isStudioContext ? "Studio context" : "Client context",
-    general: "General",
-    generalSub: "Project-level thread",
-    versions: "Versions",
-    versionsSub: "Version rail source: project_deliverables",
-    canvas: "Media canvas",
-    canvasSub: "Video, image, and PDF viewers mount here.",
-    comments: "Comments",
-    commentsSub: "Anchored and general threads share this panel.",
-    internal: "Internal",
-    client: "Client",
+  const supabase = await createSupabaseServer();
+
+  let deliverablesQuery = supabase
+    .from("project_deliverables")
+    .select(
+      `
+      id,
+      version,
+      status,
+      note,
+      storage_paths,
+      external_urls,
+      stream_uid,
+      stream_status,
+      stream_ready_at,
+      released_at,
+      review_note,
+      reviewed_by,
+      reviewed_at,
+      created_at
+    `,
+    )
+    .eq("project_id", projectId);
+
+  if (!isStudioContext) {
+    deliverablesQuery = deliverablesQuery.not("released_at", "is", null);
+  }
+
+  const { data: rowsRaw } = (await deliverablesQuery
+    .order("version", { ascending: false })
+    .order("created_at", { ascending: false })) as {
+    data: DeliverableRow[] | null;
   };
 
+  const rows = rowsRaw ?? [];
+  const refreshedStreams = await refreshReadyDeliverableStreams(rows, {
+    projectId,
+  });
+
+  const deliverableIds = rows.map((row) => row.id);
+  const annotationsByDeliverable = new Map<string, ReviewWorkspaceAnnotation[]>();
+
+  if (deliverableIds.length > 0) {
+    const { data: annotationRowsRaw } = (await supabase
+      .from("deliverable_annotations")
+      .select(
+        "id, project_id, deliverable_id, asset_index, seq, shape, coords, visibility, status, timestamp_sec, thread_id, created_by, created_at",
+      )
+      .eq("project_id", projectId)
+      .in("deliverable_id", deliverableIds)
+      .order("asset_index", { ascending: true })
+      .order("seq", { ascending: true })) as {
+      data: AnnotationRow[] | null;
+    };
+
+    const annotationRows = isStudioContext
+      ? (annotationRowsRaw ?? [])
+      : (annotationRowsRaw ?? []).filter((row) => row.visibility === "client");
+
+    for (const row of annotationRows) {
+      const annotation: ReviewWorkspaceAnnotation = {
+        id: row.id,
+        projectId: row.project_id,
+        deliverableId: row.deliverable_id,
+        assetIndex: row.asset_index,
+        seq: row.seq,
+        shape: row.shape as AnnotationShape,
+        coords: row.coords as AnnotationCoords,
+        visibility: row.visibility as AnnotationVisibility,
+        status: row.status as AnnotationStatus,
+        timestampSec:
+          typeof row.timestamp_sec === "number" ? row.timestamp_sec : null,
+        threadId: row.thread_id,
+        createdAt: row.created_at,
+        createdBy: row.created_by,
+      };
+      const list = annotationsByDeliverable.get(row.deliverable_id) ?? [];
+      list.push(annotation);
+      annotationsByDeliverable.set(row.deliverable_id, list);
+    }
+  }
+
+  const deliverables: ReviewWorkspaceDeliverable[] = await Promise.all(
+    rows.map(async (row) => {
+      const refreshedStream = refreshedStreams.get(row.id);
+      const streamStatus = refreshedStream?.streamStatus ?? row.stream_status;
+      const firstVideoKey = (row.storage_paths ?? []).find(
+        (key) => detectStorageKind(key) === "video",
+      );
+      const externalAssets = await Promise.all(
+        (row.external_urls ?? []).map(async (url) => {
+          const provider = detectExternalProvider(url);
+          const metadata =
+            provider === "generic" ? null : await fetchVideoMetadata(url);
+          return {
+            url,
+            provider,
+            title: metadata?.title ?? null,
+            thumbnailUrl: metadata?.thumbnailUrl ?? null,
+          };
+        }),
+      );
+
+      return {
+        id: row.id,
+        version: row.version,
+        status: row.status,
+        note: row.note,
+        releasedAt: row.released_at,
+        reviewNote: row.review_note,
+        reviewedAt: row.reviewed_at,
+        reviewedBy: row.reviewed_by,
+        createdAt: row.created_at,
+        storageAssets: (row.storage_paths ?? []).map((key) => ({
+          key,
+          url: briefObjectPublicUrl(key),
+          kind: detectStorageKind(key),
+          streamUid: key === firstVideoKey ? row.stream_uid : null,
+          streamStatus: key === firstVideoKey ? streamStatus : null,
+        })),
+        externalAssets,
+        annotations: annotationsByDeliverable.get(row.id) ?? [],
+      };
+    }),
+  );
+
   return (
-    <section className="overflow-hidden rounded-xl border border-border/70 bg-background">
-      <header className="flex flex-col gap-4 border-b border-border/70 bg-surface-card px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            {copy.eyebrow}
-          </p>
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="text-xl font-semibold text-foreground">
-              {copy.title}
-            </h2>
-            <span className="max-w-full truncate text-sm text-muted-foreground">
-              {projectTitle}
-            </span>
-          </div>
-          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            {copy.subtitle}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
-            {copy.context}
-          </span>
-          {isStudioContext ? (
-            <span className="rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-brand-on">
-              {copy.internal}
-            </span>
-          ) : (
-            <span className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground">
-              {copy.client}
-            </span>
-          )}
-        </div>
-      </header>
-
-      <div className="grid min-h-[640px] grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)_360px]">
-        <aside className="border-b border-border/70 bg-surface-card lg:border-b-0 lg:border-r">
-          <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            <PanelLeft className="h-4 w-4" aria-hidden />
-            Navigation
-          </div>
-          <div className="space-y-3 p-3">
-            <button
-              type="button"
-              className="w-full rounded-lg border border-brand/40 bg-brand/10 px-3 py-3 text-left"
-            >
-              <span className="block text-sm font-semibold text-foreground">
-                {copy.general}
-              </span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {copy.generalSub}
-              </span>
-            </button>
-            <div className="rounded-lg border border-border bg-background px-3 py-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <GalleryVerticalEnd className="h-4 w-4 text-muted-foreground" aria-hidden />
-                {copy.versions}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {copy.versionsSub}
-              </p>
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex min-h-[420px] flex-col bg-background">
-          <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <MonitorPlay className="h-4 w-4 text-muted-foreground" aria-hidden />
-              {copy.canvas}
-            </div>
-            <div className="h-2 w-24 rounded-full bg-border" aria-hidden />
-          </div>
-          <div className="flex flex-1 items-center justify-center p-6">
-            <div className="flex aspect-video w-full max-w-4xl items-center justify-center rounded-lg border border-border bg-surface-card">
-              <div className="max-w-sm text-center">
-                <p className="text-base font-semibold text-foreground">
-                  {copy.canvas}
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {copy.canvasSub}
-                </p>
-              </div>
-            </div>
-          </div>
-        </main>
-
-        <aside className="border-t border-border/70 bg-surface-card lg:border-l lg:border-t-0">
-          <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            <MessageSquareText className="h-4 w-4" aria-hidden />
-            {copy.comments}
-          </div>
-          <div className="p-4">
-            <div className="rounded-lg border border-border bg-background p-4">
-              <p className="text-sm font-semibold text-foreground">
-                {copy.comments}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {copy.commentsSub}
-              </p>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </section>
+    <ReviewWorkspaceClient
+      projectTitle={projectTitle}
+      isStudioContext={isStudioContext}
+      deliverables={deliverables}
+    />
   );
 }

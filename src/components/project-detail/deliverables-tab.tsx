@@ -21,6 +21,10 @@ import type {
   ThreadMessage,
 } from "@/components/project/thread-panel";
 import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
+import {
+  detectExternalProvider,
+  detectStorageKind,
+} from "@/lib/project-deliverables/assets";
 import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
 import { filterVisibleThreadMessages } from "@/lib/thread/message-visibility";
 
@@ -91,32 +95,6 @@ type RoleRow = {
   role: string;
   workspace_id: string | null;
 };
-
-function detectStorageKind(key: string): "image" | "video" | "file" {
-  const ext = key.split(".").pop()?.toLowerCase();
-  if (ext && ["jpg", "jpeg", "png", "webp", "gif", "avif"].includes(ext)) {
-    return "image";
-  }
-  if (ext && ["mp4", "mov", "webm"].includes(ext)) {
-    return "video";
-  }
-  return "file";
-}
-
-function detectExternalProvider(url: string): "youtube" | "vimeo" | "generic" {
-  try {
-    const host = new URL(url).hostname.replace(/^www\./, "");
-    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtu.be") {
-      return "youtube";
-    }
-    if (host === "vimeo.com" || host.endsWith(".vimeo.com")) {
-      return "vimeo";
-    }
-  } catch {
-    // fall through to generic
-  }
-  return "generic";
-}
 
 function profileName(
   profile:
