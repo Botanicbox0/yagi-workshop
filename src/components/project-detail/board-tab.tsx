@@ -29,6 +29,8 @@ type DeliverableRow = {
   note: string | null;
   storage_paths: string[];
   external_urls: string[];
+  stream_uid: string | null;
+  stream_status: string | null;
   released_at: string | null;
   created_at: string;
   submitted_by_profile:
@@ -111,6 +113,8 @@ export async function BoardTab({
       note,
       storage_paths,
       external_urls,
+      stream_uid,
+      stream_status,
       released_at,
       created_at,
       submitted_by_profile:profiles!project_deliverables_submitted_by_fkey(display_name, handle)
@@ -193,6 +197,9 @@ export async function BoardTab({
 
   const deliverables: VersionStackDeliverable[] = await Promise.all(
     rows.map(async (row) => {
+      const firstVideoKey = (row.storage_paths ?? []).find(
+        (key) => detectStorageKind(key) === "video",
+      );
       const externalAssets = await Promise.all(
         (row.external_urls ?? []).map(async (url) => {
           const provider = detectExternalProvider(url);
@@ -222,6 +229,8 @@ export async function BoardTab({
           key,
           url: briefObjectPublicUrl(key),
           kind: detectStorageKind(key),
+          streamUid: key === firstVideoKey ? row.stream_uid : null,
+          streamStatus: key === firstVideoKey ? row.stream_status : null,
         })),
         externalAssets,
       };

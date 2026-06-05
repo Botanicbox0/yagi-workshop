@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageSquare, Pause, Play, StepBack, StepForward } from "lucide-react";
+import type Hls from "hls.js";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,7 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatMediaTime, parseMediaTime } from "@/lib/video-timecode";
+import { streamHlsUrl, streamThumbnailUrl } from "@/lib/stream/urls";
 import { cn } from "@/lib/utils";
+import { refreshDeliverableStreamStatus } from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import type {
   AnnotationCoords,
   AnnotationShape,
@@ -25,6 +28,7 @@ export type TimedVideoLabels = {
   frameForward: string;
   editTimecode: string;
   currentTime: string;
+  streamProcessing: string;
   commentAtCurrentPrefix: string;
   commentAtCurrentSuffix: string;
   timecode: string;
@@ -39,7 +43,10 @@ type DraftAnnotation = {
 
 type TimedVideoPlayerProps = {
   assetIndex: number;
+  deliverableId?: string;
   src: string;
+  streamUid?: string | null;
+  streamStatus?: string | null;
   annotations: TimedVideoAnnotation[];
   selectedId: string | null;
   draft: DraftAnnotation | null;
@@ -80,7 +87,10 @@ function coordsFromPointer(
 
 export function TimedVideoPlayer({
   assetIndex,
+  deliverableId,
   src,
+  streamUid,
+  streamStatus,
   annotations,
   selectedId,
   draft,
@@ -91,6 +101,10 @@ export function TimedVideoPlayer({
   onCaptureTime,
 }: TimedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const restoreAfterSourceSwapRef = useRef<{
+    time: number;
+    shouldResume: boolean;
+  } | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const pointerRef = useRef<number | null>(null);
   const timeInputOnFocusRef = useRef(formatMediaTime(0));
@@ -100,7 +114,35 @@ export function TimedVideoPlayer({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [timeInput, setTimeInput] = useState(formatMediaTime(0));
   const [isEditingTime, setIsEditingTime] = useState(false);
+  const [effectiveStreamStatus, setEffectiveStreamStatus] = useState<string | null>(
+    streamStatus ?? null,
+  );
+  const [hlsUnavailable, setHlsUnavailable] = useState(false);
+  const [hoverPreview, setHoverPreview] = useState<{
+    time: number;
+    x: number;
+    width: number;
+  } | null>(null);
+  const [thumbnailPreviewFailed, setThumbnailPreviewFailed] = useState(false);
   const localDraft = draft?.assetIndex === assetIndex ? draft : null;
+  const streamSrcCandidate =
+    streamUid && effectiveStreamStatus === "ready" ? streamHlsUrl(streamUid) : null;
+  const streamSrc = hlsUnavailable ? null : streamSrcCandidate;
+  const playbackSrc = streamSrc ?? src;
+  const streamPoster =
+    streamUid && effectiveStreamStatus === "ready"
+      ? streamThumbnailUrl(streamUid, 0)
+      : null;
+  const hoverPreviewUrl =
+    streamUid &&
+    effectiveStreamStatus === "ready" &&
+    hoverPreview &&
+    !thumbnailPreviewFailed
+      ? streamThumbnailUrl(streamUid, hoverPreview.time)
+      : null;
+  const showStreamProcessing = Boolean(
+    streamUid && effectiveStreamStatus === "pending" && !streamSrc,
+  );
   const timedAnnotations = useMemo(
     () =>
       annotations
@@ -111,6 +153,110 @@ export function TimedVideoPlayer({
         ),
     [annotations],
   );
+
+  useEffect(() => {
+    setEffectiveStreamStatus(streamStatus ?? null);
+  }, [streamStatus, streamUid]);
+
+  useEffect(() => {
+    setHlsUnavailable(false);
+    setThumbnailPreviewFailed(false);
+  }, [streamSrcCandidate]);
+
+  useEffect(() => {
+    if (!deliverableId || !streamUid || effectiveStreamStatus !== "pending") return;
+
+    let disposed = false;
+    let attempts = 0;
+    const interval = window.setInterval(() => {
+      attempts += 1;
+      if (attempts > 60) {
+        window.clearInterval(interval);
+        return;
+      }
+
+      void refreshDeliverableStreamStatus({ deliverableId }).then((result) => {
+        if (disposed || !result.ok) return;
+        if (result.streamStatus) setEffectiveStreamStatus(result.streamStatus);
+        if (result.streamStatus === "ready" || result.streamStatus === "error") {
+          window.clearInterval(interval);
+        }
+      });
+    }, 5_000);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(interval);
+    };
+  }, [deliverableId, effectiveStreamStatus, streamUid]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !streamSrc) return;
+
+    let disposed = false;
+    let hls: Hls | null = null;
+    const restoreAfterSourceSwap = () => {
+      const restore = restoreAfterSourceSwapRef.current;
+      if (!restore || disposed) return;
+      if (restore.time > 0) {
+        video.currentTime = Math.min(
+          restore.time,
+          Number.isFinite(video.duration) ? video.duration : restore.time,
+        );
+      }
+      if (restore.shouldResume) {
+        video.play().catch(() => undefined);
+        setIsPlaying(true);
+      }
+      restoreAfterSourceSwapRef.current = null;
+    };
+
+    restoreAfterSourceSwapRef.current = {
+      time: video.currentTime,
+      shouldResume: !video.paused,
+    };
+    video.pause();
+    setIsPlaying(false);
+    video.addEventListener("loadedmetadata", restoreAfterSourceSwap, { once: true });
+
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = streamSrc;
+      video.load();
+      return () => {
+        video.removeEventListener("loadedmetadata", restoreAfterSourceSwap);
+      };
+    }
+
+    void import("hls.js")
+      .then(({ default: HlsConstructor }) => {
+        if (disposed) return;
+        if (!HlsConstructor.isSupported()) {
+          setHlsUnavailable(true);
+          return;
+        }
+        hls = new HlsConstructor();
+        hls.on(HlsConstructor.Events.ERROR, (_event, data) => {
+          if (data.fatal) setHlsUnavailable(true);
+        });
+        hls.loadSource(streamSrc);
+        hls.attachMedia(video);
+      })
+      .catch((error) => {
+        console.error("[TimedVideoPlayer] hls.js load failed:", error);
+        if (!disposed) setHlsUnavailable(true);
+      });
+
+    return () => {
+      disposed = true;
+      video.removeEventListener("loadedmetadata", restoreAfterSourceSwap);
+      hls?.destroy();
+      if (video.isConnected) {
+        video.src = src;
+        video.load();
+      }
+    };
+  }, [src, streamSrc]);
 
   useEffect(() => {
     const selected = annotations.find((annotation) => annotation.id === selectedId);
@@ -127,7 +273,7 @@ export function TimedVideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (video) video.playbackRate = playbackRate;
-  }, [playbackRate, src]);
+  }, [playbackRate, playbackSrc]);
 
   function syncFromVideo() {
     const video = videoRef.current;
@@ -152,6 +298,17 @@ export function TimedVideoPlayer({
     video.currentTime = clamped;
     setCurrent(clamped);
     if (!isEditingTime) setTimeInput(formatMediaTime(clamped));
+  }
+
+  function updateHoverPreview(event: React.PointerEvent<HTMLDivElement>) {
+    if (!streamUid || effectiveStreamStatus !== "ready" || duration <= 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = clamp01((event.clientX - rect.left) / rect.width);
+    setHoverPreview({
+      time: ratio * duration,
+      x: ratio * rect.width,
+      width: rect.width,
+    });
   }
 
   function togglePlayback() {
@@ -251,7 +408,8 @@ export function TimedVideoPlayer({
         >
           <video
             ref={videoRef}
-            src={src}
+            src={streamSrc ? undefined : src}
+            poster={streamPoster ?? undefined}
             className="block max-h-[72vh] max-w-full object-contain"
             playsInline
             preload="metadata"
@@ -260,6 +418,11 @@ export function TimedVideoPlayer({
             onPause={syncFromVideo}
             onPlay={syncFromVideo}
           />
+          {showStreamProcessing ? (
+            <div className="pointer-events-none absolute left-3 top-3 rounded-full border border-border/70 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+              {labels.streamProcessing}
+            </div>
+          ) : null}
           {annotations.map((annotation) => (
             <VideoFrameMarker
               key={annotation.id}
@@ -340,7 +503,11 @@ export function TimedVideoPlayer({
               aria-label={labels.editTimecode}
               inputMode="text"
             />
-            <div className="relative flex-1">
+            <div
+              className="relative flex-1"
+              onPointerMove={updateHoverPreview}
+              onPointerLeave={() => setHoverPreview(null)}
+            >
               <input
                 type="range"
                 min={0}
@@ -372,6 +539,28 @@ export function TimedVideoPlayer({
                     />
                   ))
                 : null}
+              {hoverPreview && hoverPreviewUrl ? (
+                <div
+                  className="pointer-events-none absolute bottom-6 z-10 w-36 -translate-x-1/2 overflow-hidden rounded-lg border border-border/70 bg-background shadow-lg"
+                  style={{
+                    left: `${Math.min(
+                      Math.max(hoverPreview.x, 72),
+                      Math.max(72, hoverPreview.width - 72),
+                    )}px`,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Cloudflare Stream thumbnail URL */}
+                  <img
+                    src={hoverPreviewUrl}
+                    alt=""
+                    className="aspect-video w-full object-cover"
+                    onError={() => setThumbnailPreviewFailed(true)}
+                  />
+                  <div className="border-t border-border/70 px-2 py-1 text-center text-xs tabular-nums text-muted-foreground">
+                    {formatMediaTime(hoverPreview.time)}
+                  </div>
+                </div>
+              ) : null}
             </div>
             <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">
               {formatMediaTime(duration)}
