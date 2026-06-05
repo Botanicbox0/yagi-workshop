@@ -22,6 +22,7 @@ import type {
 } from "@/components/project/thread-panel";
 import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
 import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
+import { filterVisibleThreadMessages } from "@/lib/thread/message-visibility";
 
 type Props = {
   projectId: string;
@@ -273,7 +274,11 @@ export async function DeliverablesTab({
         .order("created_at", { ascending: true })) as {
         data: MessageRow[] | null;
       };
-      const messageRows = messageRowsRaw ?? [];
+      const messageRows = filterVisibleThreadMessages(
+        messageRowsRaw ?? [],
+        isStudioContext,
+        user.id,
+      );
       const authorIds = [...new Set(messageRows.map((message) => message.author_id))];
       const [{ data: profilesRaw }, { data: roleRowsRaw }, { data: projectRow }] =
         await Promise.all([

@@ -1,4 +1,5 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { filterVisibleThreadMessages } from "@/lib/thread/message-visibility";
 import { ThreadPanel } from "./thread-panel";
 import type {
   ThreadMessage,
@@ -68,8 +69,11 @@ export async function ThreadPanelServer({
       .eq("thread_id", thread.id)
       .order("created_at", { ascending: true });
 
-    const visibleMessages =
-      isStudioContext ? (rawMessages ?? []) : (rawMessages ?? []).filter((m) => m.visibility !== "internal");
+    const visibleMessages = filterVisibleThreadMessages(
+      rawMessages ?? [],
+      isStudioContext,
+      user.id,
+    );
 
     if (visibleMessages.length > 0) {
       // Fetch author profiles in bulk
