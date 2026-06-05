@@ -83,28 +83,53 @@ type ReviewWorkspaceClientProps = {
   deliverables: ReviewWorkspaceDeliverable[];
 };
 
-type ReviewAsset =
-  | {
-      id: string;
-      source: "storage";
-      label: string;
-      assetIndex: number;
-      kind: "image" | "video" | "file";
-      url: string;
-      streamUid?: string | null;
-      streamStatus?: string | null;
-    }
-  | {
-      id: string;
-      source: "external";
-      label: string;
-      assetIndex: null;
-      kind: "external";
-      url: string;
-      provider: "youtube" | "vimeo" | "generic";
-      title: string | null;
-      thumbnailUrl: string | null;
-    };
+type StorageImageAsset = {
+  id: string;
+  source: "storage";
+  label: string;
+  assetIndex: number;
+  kind: "image";
+  url: string;
+};
+
+type StorageVideoAsset = {
+  id: string;
+  source: "storage";
+  label: string;
+  assetIndex: number;
+  kind: "video";
+  url: string;
+  streamUid?: string | null;
+  streamStatus?: string | null;
+};
+
+type StorageFileAsset = {
+  id: string;
+  source: "storage";
+  label: string;
+  assetIndex: number;
+  kind: "file";
+  url: string;
+};
+
+type ExternalReviewAsset = {
+  id: string;
+  source: "external";
+  label: string;
+  assetIndex: null;
+  kind: "external";
+  url: string;
+  provider: "youtube" | "vimeo" | "generic";
+  title: string | null;
+  thumbnailUrl: string | null;
+};
+
+type StorageReviewAsset =
+  | StorageImageAsset
+  | StorageVideoAsset
+  | StorageFileAsset;
+
+type ReviewAsset = StorageReviewAsset | ExternalReviewAsset;
 
 const VIDEO_LABELS: TimedVideoLabels = {
   play: "Play",
@@ -123,20 +148,40 @@ const VIDEO_LABELS: TimedVideoLabels = {
 function assetsForDeliverable(deliverable: ReviewWorkspaceDeliverable | null) {
   if (!deliverable) return [];
 
-  const storageAssets: ReviewAsset[] = deliverable.storageAssets.map(
-    (asset, index) => ({
-      id: `storage:${index}:${asset.key}`,
-      source: "storage",
-      label: `${asset.kind.toUpperCase()} ${index + 1}`,
-      assetIndex: index,
-      kind: asset.kind,
-      url: asset.url,
-      streamUid: asset.streamUid,
-      streamStatus: asset.streamStatus,
-    }),
+  const storageAssets: StorageReviewAsset[] = deliverable.storageAssets.map(
+    (asset, index) => {
+      const base = {
+        id: `storage:${index}:${asset.key}`,
+        source: "storage" as const,
+        label: `${asset.kind.toUpperCase()} ${index + 1}`,
+        assetIndex: index,
+        url: asset.url,
+      };
+
+      if (asset.kind === "video") {
+        return {
+          ...base,
+          kind: "video",
+          streamUid: asset.streamUid,
+          streamStatus: asset.streamStatus,
+        };
+      }
+
+      if (asset.kind === "image") {
+        return {
+          ...base,
+          kind: "image",
+        };
+      }
+
+      return {
+        ...base,
+        kind: "file",
+      };
+    },
   );
 
-  const externalAssets: ReviewAsset[] = deliverable.externalAssets.map(
+  const externalAssets: ExternalReviewAsset[] = deliverable.externalAssets.map(
     (asset, index) => ({
       id: `external:${index}:${asset.url}`,
       source: "external",
@@ -453,7 +498,7 @@ function MediaCanvas({
   return (
     <div className="flex flex-1 items-center justify-center p-4">
       <div className="w-full max-w-6xl">
-        {asset.kind === "video" ? (
+        {asset.source === "storage" && asset.kind === "video" ? (
           <TimedVideoPlayer
             assetIndex={asset.assetIndex}
             deliverableId={deliverable.id}
@@ -467,14 +512,14 @@ function MediaCanvas({
             labels={VIDEO_LABELS}
             onSelectAnnotation={onSelectAnnotation}
           />
-        ) : asset.kind === "image" ? (
+        ) : asset.source === "storage" && asset.kind === "image" ? (
           <ImageCanvas
             src={asset.url}
             annotations={annotations}
             selectedAnnotationId={selectedAnnotationId}
             onSelectAnnotation={onSelectAnnotation}
           />
-        ) : asset.kind === "external" ? (
+        ) : asset.source === "external" ? (
           <ExternalCanvas asset={asset} />
         ) : (
           <FileCanvas asset={asset} />
@@ -784,7 +829,7 @@ function EmptyCanvas({ title, body }: { title: string; body: string }) {
   );
 }
 
-function ExternalCanvas({ asset }: { asset: Extract<ReviewAsset, { source: "external" }> }) {
+function ExternalCanvas({ asset }: { asset: ExternalReviewAsset }) {
   return (
     <div className="flex aspect-video items-center justify-center rounded-lg border border-border bg-surface-card p-6 text-center">
       <div className="max-w-md">
@@ -815,7 +860,7 @@ function ExternalCanvas({ asset }: { asset: Extract<ReviewAsset, { source: "exte
   );
 }
 
-function FileCanvas({ asset }: { asset: Extract<ReviewAsset, { kind: "file" }> }) {
+function FileCanvas({ asset }: { asset: StorageFileAsset }) {
   return (
     <div className="flex aspect-video items-center justify-center rounded-lg border border-border bg-surface-card p-6 text-center">
       <div className="max-w-sm">
