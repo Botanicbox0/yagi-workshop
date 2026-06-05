@@ -21,6 +21,7 @@ import type {
   ThreadMessage,
 } from "@/components/project/thread-panel";
 import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
+import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
 
 type Props = {
   projectId: string;
@@ -39,6 +40,7 @@ type DeliverableRow = {
   external_urls: string[];
   stream_uid: string | null;
   stream_status: string | null;
+  stream_ready_at: string | null;
   released_at: string | null;
   review_note: string | null;
   reviewed_by: string | null;
@@ -174,6 +176,7 @@ export async function DeliverablesTab({
       external_urls,
       stream_uid,
       stream_status,
+      stream_ready_at,
       released_at,
       review_note,
       reviewed_by,
@@ -193,6 +196,9 @@ export async function DeliverablesTab({
     .order("created_at", { ascending: false })) as {
     data: DeliverableRow[] | null;
   };
+  const refreshedStreams = await refreshReadyDeliverableStreams(rowsRaw ?? [], {
+    projectId,
+  });
 
   const releasedRoundById = buildReleasedRoundMap(
     (rowsRaw ?? []).map((row) => ({
@@ -368,6 +374,8 @@ export async function DeliverablesTab({
 
   const deliverables: DeliveryReviewDeliverable[] = await Promise.all(
     (rowsRaw ?? []).map(async (row) => {
+      const refreshedStream = refreshedStreams.get(row.id);
+      const streamStatus = refreshedStream?.streamStatus ?? row.stream_status;
       const firstVideoKey = (row.storage_paths ?? []).find(
         (key) => detectStorageKind(key) === "video",
       );
@@ -403,7 +411,7 @@ export async function DeliverablesTab({
           url: briefObjectPublicUrl(key),
           kind: detectStorageKind(key),
           streamUid: key === firstVideoKey ? row.stream_uid : null,
-          streamStatus: key === firstVideoKey ? row.stream_status : null,
+          streamStatus: key === firstVideoKey ? streamStatus : null,
         })),
         externalAssets,
         annotations: annotationsByDeliverable.get(row.id) ?? [],

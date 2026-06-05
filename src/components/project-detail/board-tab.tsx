@@ -13,6 +13,7 @@ import {
   type VersionStackDeliverable,
 } from "@/components/project-detail/version-stack-tab";
 import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
+import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
 
 type Props = {
   projectId: string;
@@ -31,6 +32,7 @@ type DeliverableRow = {
   external_urls: string[];
   stream_uid: string | null;
   stream_status: string | null;
+  stream_ready_at: string | null;
   released_at: string | null;
   created_at: string;
   submitted_by_profile:
@@ -115,6 +117,7 @@ export async function BoardTab({
       external_urls,
       stream_uid,
       stream_status,
+      stream_ready_at,
       released_at,
       created_at,
       submitted_by_profile:profiles!project_deliverables_submitted_by_fkey(display_name, handle)
@@ -133,6 +136,7 @@ export async function BoardTab({
   };
 
   const rows = rowsRaw ?? [];
+  const refreshedStreams = await refreshReadyDeliverableStreams(rows, { projectId });
   const releasedRoundById = buildReleasedRoundMap(
     rows.map((row) => ({
       id: row.id,
@@ -197,6 +201,8 @@ export async function BoardTab({
 
   const deliverables: VersionStackDeliverable[] = await Promise.all(
     rows.map(async (row) => {
+      const refreshedStream = refreshedStreams.get(row.id);
+      const streamStatus = refreshedStream?.streamStatus ?? row.stream_status;
       const firstVideoKey = (row.storage_paths ?? []).find(
         (key) => detectStorageKind(key) === "video",
       );
@@ -230,7 +236,7 @@ export async function BoardTab({
           url: briefObjectPublicUrl(key),
           kind: detectStorageKind(key),
           streamUid: key === firstVideoKey ? row.stream_uid : null,
-          streamStatus: key === firstVideoKey ? row.stream_status : null,
+          streamStatus: key === firstVideoKey ? streamStatus : null,
         })),
         externalAssets,
       };

@@ -8,6 +8,14 @@ function requireEnv(name: string): string {
   return v;
 }
 
+function encodeObjectKeyPath(key: string): string {
+  return key.split("/").map(encodeURIComponent).join("/");
+}
+
+function trimTrailingSlashes(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
 export const BUCKET =
   process.env.CLOUDFLARE_R2_BUCKET_NAME ?? "yagi-challenge-submissions";
 
@@ -106,7 +114,7 @@ export function objectPublicUrl(key: string): string {
   const base =
     process.env.CLOUDFLARE_R2_PUBLIC_BASE ??
     `${requireEnv("CLOUDFLARE_R2_ENDPOINT")}/${BUCKET}`;
-  return `${base}/${key}`;
+  return `${trimTrailingSlashes(base)}/${encodeObjectKeyPath(key)}`;
 }
 
 /**
@@ -144,7 +152,7 @@ export function briefObjectPublicUrl(key: string): string {
   const base =
     process.env.CLOUDFLARE_R2_PUBLIC_BASE ??
     `${requireEnv("CLOUDFLARE_R2_ENDPOINT")}/${BRIEF_BUCKET}`;
-  return `${base}/${key}`;
+  return `${trimTrailingSlashes(base)}/${encodeObjectKeyPath(key)}`;
 }
 
 /**

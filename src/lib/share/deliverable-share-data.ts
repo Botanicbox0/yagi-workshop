@@ -2,6 +2,7 @@ import "server-only";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { createBriefAssetGetUrl } from "@/lib/r2/client";
 import { buildReleasedRoundMap } from "@/lib/project-deliverables/release-state";
+import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
 
 export type DeliverableShareAsset =
   | {
@@ -94,6 +95,7 @@ type DeliverableRow = {
   external_urls: string[];
   stream_uid: string | null;
   stream_status: string | null;
+  stream_ready_at: string | null;
   created_at: string;
 };
 
@@ -179,7 +181,7 @@ export async function loadDeliverableShareData(
   const { data: deliverableRowsRaw } = (await service
     .from("project_deliverables")
     .select(
-      "id, version, status, note, review_note, reviewed_at, released_at, storage_paths, external_urls, stream_uid, stream_status, created_at",
+      "id, version, status, note, review_note, reviewed_at, released_at, storage_paths, external_urls, stream_uid, stream_status, stream_ready_at, created_at",
     )
     .eq("project_id", project.id)
     .not("released_at", "is", null)
@@ -190,6 +192,9 @@ export async function loadDeliverableShareData(
     (row): row is DeliverableRow & { released_at: string } => Boolean(row.released_at),
   );
   if (deliverableRows.length === 0) return null;
+  const refreshedStreams = await refreshReadyDeliverableStreams(deliverableRows, {
+    projectId: project.id,
+  });
 
   const releasedRoundById = buildReleasedRoundMap(
     deliverableRows.map((row) => ({
@@ -264,6 +269,8 @@ export async function loadDeliverableShareData(
 
   const deliverables = await Promise.all(
     deliverableRows.map(async (row) => {
+      const refreshedStream = refreshedStreams.get(row.id);
+      const streamStatus = refreshedStream?.streamStatus ?? row.stream_status;
       const firstVideoKey = (row.storage_paths ?? []).find(
         (key) => detectStorageKind(key) === "video",
       );
@@ -274,7 +281,7 @@ export async function loadDeliverableShareData(
           url: await createBriefAssetGetUrl(key, 3600),
           mediaKind: detectStorageKind(key),
           streamUid: key === firstVideoKey ? row.stream_uid : null,
-          streamStatus: key === firstVideoKey ? row.stream_status : null,
+          streamStatus: key === firstVideoKey ? streamStatus : null,
         })),
       );
       const externalAssets = (row.external_urls ?? []).map((url) => ({
