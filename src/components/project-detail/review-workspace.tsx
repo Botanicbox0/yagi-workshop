@@ -25,6 +25,7 @@ type ReviewWorkspaceProps = {
   projectId: string;
   projectTitle: string;
   isStudioContext: boolean;
+  canReview: boolean;
 };
 
 type DeliverableRow = {
@@ -93,6 +94,7 @@ export async function ReviewWorkspace({
   projectId,
   projectTitle,
   isStudioContext,
+  canReview,
 }: ReviewWorkspaceProps) {
   const supabase = await createSupabaseServer();
   const {
@@ -301,6 +303,7 @@ export async function ReviewWorkspace({
       projectId={projectId}
       projectTitle={projectTitle}
       isStudioContext={isStudioContext}
+      canReview={canReview}
       currentUserId={user.id}
       deliverables={deliverables}
       generalThread={

@@ -31,9 +31,6 @@ import { AdminDeleteButton } from "@/components/projects/admin-delete-button";
 import { ProjectActionButtons } from "@/components/projects/project-action-buttons";
 import { type TwinIntent } from "@/components/project-detail/info-rail";
 import { DetailTabs, type TabKey } from "@/components/project-detail/tabs";
-import { BoardTab } from "@/components/project-detail/board-tab";
-import { CommentsTab } from "@/components/project-detail/comments-tab";
-import { DeliverablesTab } from "@/components/project-detail/deliverables-tab";
 import { ReviewWorkspace } from "@/components/project-detail/review-workspace";
 import { StatusTab } from "@/components/project-detail/status-tab";
 import { BriefTab } from "@/components/project-detail/brief-tab";
@@ -95,18 +92,10 @@ type ProjectGate = {
 };
 
 function parseTab(value: string | undefined): TabKey {
-  // Phase 5 Wave C C_1 — 5-tab structure. "status" is the default
-  // (현황 tab) per SPEC §"Scope: 5 tab 구조".
-  if (
-    value === "brief" ||
-    value === "review" ||
-    value === "board" ||
-    value === "comments" ||
-    value === "deliverables"
-  ) {
+  if (value === "status" || value === "brief" || value === "review") {
     return value;
   }
-  return "status";
+  return "review";
 }
 
 function narrowTwinIntent(value: string | null): TwinIntent | null {
@@ -320,54 +309,6 @@ export default async function ProjectDetailPage({
   const localeNarrow: "ko" | "en" = locale === "en" ? "en" : "ko";
   const workspaceName = project.workspace?.name ?? "—";
   const brandName = project.brand?.name ?? null;
-  const scopeDeliverableTypeOptions = {
-    image: tDetail("brief_tab.deliverable_type.image"),
-    ad_video_short: tDetail("brief_tab.deliverable_type.ad_video_short"),
-    ad_video_long: tDetail("brief_tab.deliverable_type.ad_video_long"),
-    ai_vfx_mv: tDetail("brief_tab.deliverable_type.ai_vfx_mv"),
-    branding_video: tDetail("brief_tab.deliverable_type.branding_video"),
-    ad_video: tDetail("brief_tab.deliverable_type.ad_video"),
-    ai_human: tDetail("brief_tab.deliverable_type.ai_human"),
-    motion_graphics: tDetail("brief_tab.deliverable_type.motion_graphics"),
-    vfx: tDetail("brief_tab.deliverable_type.vfx"),
-    branding: tDetail("brief_tab.deliverable_type.branding"),
-    illustration: tDetail("brief_tab.deliverable_type.illustration"),
-    other: tDetail("brief_tab.deliverable_type.other"),
-  } as Record<string, string>;
-  const scopeChannelOptions = {
-    instagram: tDetail("brief_tab.channel.instagram"),
-    youtube: tDetail("brief_tab.channel.youtube"),
-    tiktok: tDetail("brief_tab.channel.tiktok"),
-    facebook: tDetail("brief_tab.channel.facebook"),
-    website: tDetail("brief_tab.channel.website"),
-    offline: tDetail("brief_tab.channel.offline"),
-    other: tDetail("brief_tab.channel.other"),
-  } as Record<string, string>;
-  const scopeVisualRatioOptions = {
-    "1_1": tDetail("brief_tab.visual_ratio.1_1"),
-    "16_9": tDetail("brief_tab.visual_ratio.16_9"),
-    "9_16": tDetail("brief_tab.visual_ratio.9_16"),
-    "4_5": tDetail("brief_tab.visual_ratio.4_5"),
-    "239_1": tDetail("brief_tab.visual_ratio.239_1"),
-    custom: tDetail("brief_tab.visual_ratio.custom"),
-  } as Record<string, string>;
-  const scopeRatioFormat = project.visual_ratio
-    ? project.visual_ratio === "custom"
-      ? project.visual_ratio_custom
-        ? `${scopeVisualRatioOptions.custom} (${project.visual_ratio_custom})`
-        : scopeVisualRatioOptions.custom
-      : (scopeVisualRatioOptions[project.visual_ratio] ?? project.visual_ratio)
-    : null;
-  const deliverablesScopeSummary = {
-    deliverableTypes: project.deliverable_types.map(
-      (kind) => scopeDeliverableTypeOptions[kind] ?? kind,
-    ),
-    channels: project.channels.map(
-      (channel) => scopeChannelOptions[channel] ?? channel,
-    ),
-    ratioFormat: scopeRatioFormat,
-  };
-
   if (project.project_type === "curated" && studioContext) {
     const sbAdmin = createSupabaseService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- project_guests generated types pending
@@ -588,7 +529,7 @@ export default async function ProjectDetailPage({
           InfoRail col-3) is the single home for these elements per
           PRODUCT-MASTER §C.4 v1.2 + H2D1 / H2D2 / H2D3. */}
 
-      {/* L4 Tabs — Wave C C_1: 5-tab structure (status default). */}
+      {/* L4 Tabs - Phase E: status, brief, review. */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <DetailTabs
           active={activeTab}
@@ -596,9 +537,6 @@ export default async function ProjectDetailPage({
             status: tDetail("tab.status"),
             brief: tDetail("tab.brief"),
             review: "Review",
-            board: tDetail("tab.board"),
-            comments: tDetail("tab.comments"),
-            deliverables: tDetail("tab.deliverables"),
           }}
         />
         <DuplicateProjectButton
@@ -893,32 +831,7 @@ export default async function ProjectDetailPage({
             projectId={project.id}
             projectTitle={project.title}
             isStudioContext={studioContext}
-          />
-        )}
-        {activeTab === "board" && (
-          <BoardTab
-            projectId={project.id}
-            revisionRoundsLimit={project.revision_rounds_limit}
-            isYagiAdmin={studioContext}
-            locale={localeNarrow}
-          />
-        )}
-        {activeTab === "comments" && (
-          <CommentsTab
-            projectId={project.id}
-            selectedDeliverableId={sp.feedback ?? null}
-            isStudioContext={studioContext}
-            locale={localeNarrow}
-          />
-        )}
-        {activeTab === "deliverables" && (
-          <DeliverablesTab
-            projectId={project.id}
-            revisionRoundsLimit={project.revision_rounds_limit}
-            scopeSummary={deliverablesScopeSummary}
             canReview={canReviewDeliverables}
-            isStudioContext={studioContext}
-            locale={localeNarrow}
           />
         )}
       </div>

@@ -30,8 +30,22 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ThreadPanel, type ThreadMessage } from "@/components/project/thread-panel";
 import { createDeliverableAnnotationAction } from "@/app/[locale]/app/projects/[id]/annotation-actions";
+import {
+  releaseDeliverableToClientAction,
+  reviewProjectDeliverableAction,
+} from "@/app/[locale]/app/projects/[id]/_actions/project-deliverables";
 import {
   TimedVideoPlayer,
   type TimedVideoLabels,
@@ -99,6 +113,7 @@ type ReviewWorkspaceClientProps = {
   projectId: string;
   projectTitle: string;
   isStudioContext: boolean;
+  canReview: boolean;
   currentUserId: string;
   deliverables: ReviewWorkspaceDeliverable[];
   generalThread: ReviewWorkspaceThread;
@@ -290,12 +305,14 @@ export function ReviewWorkspaceClient({
   projectId,
   projectTitle,
   isStudioContext,
+  canReview,
   currentUserId,
   deliverables,
   generalThread,
 }: ReviewWorkspaceClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isLifecyclePending, startLifecycleTransition] = useTransition();
   const [selectedDeliverableId, setSelectedDeliverableId] = useState(
     deliverables[0]?.id ?? "general",
   );
@@ -327,6 +344,12 @@ export function ReviewWorkspaceClient({
     deliverables[1]?.id ?? deliverables[0]?.id ?? "",
   );
   const [compareRightId, setCompareRightId] = useState(deliverables[0]?.id ?? "");
+  const [reviewNote, setReviewNote] = useState("");
+  const [releaseConfirmOpen, setReleaseConfirmOpen] = useState(false);
+  const [releaseConfirmScope, setReleaseConfirmScope] = useState({
+    limit: 0,
+    limitPlusOne: 1,
+  });
   const annotationsForAsset =
     selectedDeliverable && selectedAsset?.source === "storage"
       ? selectedDeliverable.annotations.filter(
@@ -401,6 +424,55 @@ export function ReviewWorkspaceClient({
     });
   }
 
+  function releaseSelectedDeliverable(extendScope = false) {
+    if (!selectedDeliverable || !isStudioContext) return;
+    startLifecycleTransition(async () => {
+      const result = await releaseDeliverableToClientAction({
+        projectId,
+        deliverableId: selectedDeliverable.id,
+        extendScope,
+      });
+      if (!result.ok) {
+        if (result.error === "round_limit") {
+          const resultLimit = result.revisionsLimit ?? 0;
+          const resultReleasedCount = (result.revisionsUsed ?? resultLimit) + 1;
+          setReleaseConfirmScope({
+            limit: resultLimit,
+            limitPlusOne: Math.max(resultLimit + 1, resultReleasedCount),
+          });
+          setReleaseConfirmOpen(true);
+          return;
+        }
+        toast.error(
+          result.message ?? "Failed to release deliverable",
+        );
+        return;
+      }
+      toast.success("Released to client");
+      setReleaseConfirmOpen(false);
+      router.refresh();
+    });
+  }
+
+  function reviewSelectedDeliverable(status: "approved" | "changes_requested") {
+    if (!selectedDeliverable || reviewNote.trim().length === 0) return;
+    startLifecycleTransition(async () => {
+      const result = await reviewProjectDeliverableAction({
+        projectId,
+        deliverableId: selectedDeliverable.id,
+        status,
+        reviewNote: reviewNote.trim(),
+      });
+      if (!result.ok) {
+        toast.error(result.message ?? "Failed to submit review");
+        return;
+      }
+      toast.success(status === "approved" ? "Approved" : "Changes requested");
+      setReviewNote("");
+      router.refresh();
+    });
+  }
+
   const selectAdjacentVersion = (direction: -1 | 1) => {
     if (selectedDeliverableIndex < 0) return;
     const next = deliverables[selectedDeliverableIndex + direction];
@@ -430,42 +502,58 @@ export function ReviewWorkspaceClient({
             </span>
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => selectAdjacentVersion(1)}
-            disabled={selectedDeliverableIndex < 0 || selectedDeliverableIndex >= deliverables.length - 1}
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-            Prev
-          </button>
-          <button
-            type="button"
-            onClick={() => selectAdjacentVersion(-1)}
-            disabled={selectedDeliverableIndex <= 0}
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Next
-            <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-          </button>
-          <span className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
-            {isStudioContext ? "Studio context" : "Client context"}
-          </span>
-          <button
-            type="button"
-            onClick={toggleCompareMode}
-            disabled={deliverables.length < 2}
-            className={cn(
-              "inline-flex h-9 items-center rounded-full border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40",
-              compareMode
-                ? "border-brand/60 bg-brand/10 text-foreground"
-                : "border-border bg-background text-muted-foreground",
-            )}
-          >
-            Compare
-          </button>
+        <div className="flex shrink-0 flex-col items-start gap-3 lg:items-end">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => selectAdjacentVersion(1)}
+              disabled={selectedDeliverableIndex < 0 || selectedDeliverableIndex >= deliverables.length - 1}
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => selectAdjacentVersion(-1)}
+              disabled={selectedDeliverableIndex <= 0}
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+            </button>
+            <span className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
+              {isStudioContext ? "Studio context" : "Client context"}
+            </span>
+            <button
+              type="button"
+              onClick={toggleCompareMode}
+              disabled={deliverables.length < 2}
+              className={cn(
+                "inline-flex h-9 items-center rounded-full border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40",
+                compareMode
+                  ? "border-brand/60 bg-brand/10 text-foreground"
+                  : "border-border bg-background text-muted-foreground",
+              )}
+            >
+              Compare
+            </button>
+          </div>
+          <LifecycleHeaderActions
+            deliverable={selectedDeliverable}
+            isStudioContext={isStudioContext}
+            canReview={canReview}
+            reviewNote={reviewNote}
+            isPending={isLifecyclePending}
+            releaseConfirmOpen={releaseConfirmOpen}
+            releaseConfirmScope={releaseConfirmScope}
+            onReviewNoteChange={setReviewNote}
+            onRelease={() => releaseSelectedDeliverable(false)}
+            onConfirmRelease={() => releaseSelectedDeliverable(true)}
+            onReleaseConfirmOpenChange={setReleaseConfirmOpen}
+            onReview={reviewSelectedDeliverable}
+          />
         </div>
       </header>
 
@@ -543,6 +631,126 @@ export function ReviewWorkspaceClient({
         />
       </div>
     </section>
+  );
+}
+
+function LifecycleHeaderActions({
+  deliverable,
+  isStudioContext,
+  canReview,
+  reviewNote,
+  isPending,
+  releaseConfirmOpen,
+  releaseConfirmScope,
+  onReviewNoteChange,
+  onRelease,
+  onConfirmRelease,
+  onReleaseConfirmOpenChange,
+  onReview,
+}: {
+  deliverable: ReviewWorkspaceDeliverable | null;
+  isStudioContext: boolean;
+  canReview: boolean;
+  reviewNote: string;
+  isPending: boolean;
+  releaseConfirmOpen: boolean;
+  releaseConfirmScope: { limit: number; limitPlusOne: number };
+  onReviewNoteChange: (value: string) => void;
+  onRelease: () => void;
+  onConfirmRelease: () => void;
+  onReleaseConfirmOpenChange: (open: boolean) => void;
+  onReview: (status: "approved" | "changes_requested") => void;
+}) {
+  if (!deliverable) return null;
+
+  const isReleased = deliverable.releasedAt !== null;
+  const canSubmitReview = canReview && isReleased && reviewNote.trim().length > 0;
+
+  return (
+    <div className="flex w-full max-w-[560px] flex-col gap-2 rounded-lg border border-border bg-background p-3 lg:w-[560px]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            Lifecycle
+          </p>
+          <p className="truncate text-sm text-foreground">
+            {formatVersion(deliverable.version)} - {deliverable.status}
+            {isReleased ? " - Released" : " - Not released"}
+          </p>
+        </div>
+        {isStudioContext && (
+          <AlertDialog
+            open={releaseConfirmOpen}
+            onOpenChange={onReleaseConfirmOpenChange}
+          >
+            <button
+              type="button"
+              onClick={onRelease}
+              disabled={isPending || isReleased}
+              className="inline-flex h-8 items-center rounded-full bg-brand px-3 text-xs font-medium text-brand-on disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isReleased ? "Released" : "Release"}
+            </button>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Extend revision scope?</AlertDialogTitle>
+                <AlertDialogDescription className="leading-relaxed">
+                  This release exceeds the included revision rounds. Extend from{" "}
+                  {releaseConfirmScope.limit} to{" "}
+                  {releaseConfirmScope.limitPlusOne} and release this version.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isPending}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isPending}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onConfirmRelease();
+                  }}
+                  className="bg-brand text-brand-on hover:bg-brand/90"
+                >
+                  Extend and release
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+      {canReview && (
+        <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <Textarea
+            value={reviewNote}
+            onChange={(event) => onReviewNoteChange(event.target.value)}
+            placeholder={
+              isReleased ? "Review note" : "Release required before review"
+            }
+            disabled={isPending || !isReleased}
+            className="min-h-[68px] resize-none bg-surface text-sm"
+          />
+          <div className="flex flex-wrap gap-2 md:flex-col">
+            <button
+              type="button"
+              onClick={() => onReview("approved")}
+              disabled={isPending || !canSubmitReview}
+              className="inline-flex h-8 items-center justify-center rounded-full bg-brand px-3 text-xs font-medium text-brand-on disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Approve
+            </button>
+            <button
+              type="button"
+              onClick={() => onReview("changes_requested")}
+              disabled={isPending || !canSubmitReview}
+              className="inline-flex h-8 items-center justify-center rounded-full border border-border bg-surface px-3 text-xs font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Request changes
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
