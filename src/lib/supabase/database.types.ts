@@ -1450,6 +1450,60 @@ export type Database = {
           },
         ]
       }
+      deliverable_annotations: {
+        Row: {
+          id: string
+          project_id: string
+          deliverable_id: string
+          asset_index: number
+          seq: number
+          shape: string
+          coords: Json
+          timestamp_sec: number | null
+          thread_id: string
+          visibility: string
+          status: string
+          created_by: string
+          created_at: string
+          resolved_by: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          deliverable_id: string
+          asset_index?: number
+          seq: number
+          shape?: string
+          coords: Json
+          timestamp_sec?: number | null
+          thread_id: string
+          visibility?: string
+          status?: string
+          created_by: string
+          created_at?: string
+          resolved_by?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          deliverable_id?: string
+          asset_index?: number
+          seq?: number
+          shape?: string
+          coords?: Json
+          timestamp_sec?: number | null
+          thread_id?: string
+          visibility?: string
+          status?: string
+          created_by?: string
+          created_at?: string
+          resolved_by?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       project_brief_assets: {
         Row: {
           byte_size: number
