@@ -2705,6 +2705,7 @@
     "tab": {
       "status": "Status",
       "brief": "Planning",
+      "review": "Review",
       "board": "Versions",
       "comments": "Comments",
       "deliverables": "Deliverables"
@@ -2931,6 +2932,129 @@
       "version_title": "V{version} feedback",
       "version_subtitle": "Keep revision notes and approvals for this version in one thread.",
       "count": "{count}"
+    },
+    "review_workspace": {
+      "header": {
+        "eyebrow": "Review workspace",
+        "title": "Unified media review"
+      },
+      "context": {
+        "studio": "Studio context",
+        "client": "Client context"
+      },
+      "nav": {
+        "prev": "Prev",
+        "next": "Next",
+        "compare": "Compare"
+      },
+      "status": {
+        "submitted": "Draft arrived",
+        "changes_requested": "Changes requested",
+        "approved": "Approved",
+        "released": "Released",
+        "unreleased": "Unreleased",
+        "unknown": "Unknown"
+      },
+      "lifecycle": {
+        "title": "Lifecycle",
+        "summary": "{version} - {status} - {release}",
+        "release": "Release",
+        "approve": "Approve",
+        "request_changes": "Request changes",
+        "review_note": "Review note",
+        "release_required": "Release required before review",
+        "extend_title": "Extend revision scope?",
+        "extend_body": "This release exceeds the included revision rounds. Extend from {limit} to {limitPlusOne} and release this version.",
+        "extend_confirm": "Extend and release"
+      },
+      "versions": {
+        "title": "Versions",
+        "general": "General",
+        "general_subtitle": "Project-level thread",
+        "latest": "Latest",
+        "asset_status": "{count} assets - {status}",
+        "empty": "No versions yet"
+      },
+      "assets": {
+        "empty": "No assets",
+        "stored_file": "Stored file",
+        "open_external": "Open external",
+        "open_file": "Open file"
+      },
+      "asset_kind": {
+        "image": "Image",
+        "video": "Video",
+        "file": "File",
+        "youtube": "YouTube",
+        "vimeo": "Vimeo",
+        "generic": "External"
+      },
+      "asset_type": {
+        "image": "Image",
+        "video": "Video"
+      },
+      "compare": {
+        "title": "Compare",
+        "read_only": "Read-only side-by-side review. Pin authoring is disabled.",
+        "left": "Left",
+        "right": "Right",
+        "none": "None"
+      },
+      "canvas": {
+        "image": "Image canvas",
+        "minimap": "Mini-map",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "reset_view": "Reset view"
+      },
+      "pins": {
+        "title": "Pins",
+        "project_context": "Project-level context",
+        "add_pin": "Add pin",
+        "pin_mode_on": "Pin mode on",
+        "comment_placeholder": "Write pin comment",
+        "save": "Save pin",
+        "pin_label": "Pin {seq}",
+        "shape_pin": "Pin",
+        "shape_box": "Area",
+        "empty": "No pins on this asset"
+      },
+      "visibility": {
+        "client": "Client",
+        "internal": "Internal"
+      },
+      "actions": {
+        "cancel": "Cancel"
+      },
+      "empty": {
+        "no_version_title": "No version",
+        "no_version_body": "Select a version to compare.",
+        "no_comparable": "No comparable image or video asset.",
+        "general_body": "Project-level comments appear here.",
+        "no_assets_in_version": "No assets in this version."
+      },
+      "video": {
+        "play": "Play",
+        "pause": "Pause",
+        "speed": "Speed",
+        "frame_back": "Frame back",
+        "frame_forward": "Frame forward",
+        "edit_timecode": "Edit timecode",
+        "current_time": "Current time",
+        "stream_processing": "Processing video",
+        "comment_at_current_prefix": "Comment at",
+        "comment_at_current_suffix": "",
+        "timecode": "Timecode"
+      },
+      "toast": {
+        "forbidden": "You do not have permission.",
+        "pin_failed": "Failed to save pin.",
+        "release_failed": "Failed to release deliverable.",
+        "release_success": "Released to client.",
+        "review_failed": "Failed to submit review.",
+        "approved": "Approved.",
+        "changes_requested": "Changes requested."
+      }
     },
     "banner": {
       "cancelled": "This request was cancelled. To start a new one,",

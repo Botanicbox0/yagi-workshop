@@ -536,7 +536,7 @@ export default async function ProjectDetailPage({
           labels={{
             status: tDetail("tab.status"),
             brief: tDetail("tab.brief"),
-            review: "Review",
+            review: tDetail("tab.review"),
           }}
         />
         <DuplicateProjectButton

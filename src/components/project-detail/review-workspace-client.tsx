@@ -25,6 +25,7 @@ import {
   type WheelEvent,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -176,21 +177,33 @@ type DraftAnnotation = {
   timestampSec?: number;
 };
 
-const VIDEO_LABELS: TimedVideoLabels = {
-  play: "Play",
-  pause: "Pause",
-  speed: "Speed",
-  frameBack: "Frame back",
-  frameForward: "Frame forward",
-  editTimecode: "Edit timecode",
-  currentTime: "Current time",
-  streamProcessing: "Stream processing",
-  commentAtCurrentPrefix: "Comment at",
-  commentAtCurrentSuffix: "",
-  timecode: "Timecode",
+type AssetKindLabels = {
+  image: string;
+  video: string;
+  file: string;
+  youtube: string;
+  vimeo: string;
+  generic: string;
 };
 
-function assetsForDeliverable(deliverable: ReviewWorkspaceDeliverable | null) {
+type StatusLabels = {
+  submitted: string;
+  changesRequested: string;
+  approved: string;
+  fallback: string;
+};
+
+function formatReviewStatus(status: string, labels: StatusLabels) {
+  if (status === "submitted") return labels.submitted;
+  if (status === "changes_requested") return labels.changesRequested;
+  if (status === "approved") return labels.approved;
+  return status || labels.fallback;
+}
+
+function assetsForDeliverable(
+  deliverable: ReviewWorkspaceDeliverable | null,
+  labels: AssetKindLabels,
+) {
   if (!deliverable) return [];
 
   const storageAssets: StorageReviewAsset[] = deliverable.storageAssets.map(
@@ -198,7 +211,7 @@ function assetsForDeliverable(deliverable: ReviewWorkspaceDeliverable | null) {
       const base = {
         id: `storage:${index}:${asset.key}`,
         source: "storage" as const,
-        label: `${asset.kind.toUpperCase()} ${index + 1}`,
+        label: `${labels[asset.kind]} ${index + 1}`,
         assetIndex: index,
         url: asset.url,
       };
@@ -230,7 +243,7 @@ function assetsForDeliverable(deliverable: ReviewWorkspaceDeliverable | null) {
     (asset, index) => ({
       id: `external:${index}:${asset.url}`,
       source: "external",
-      label: `${asset.provider.toUpperCase()} ${index + 1}`,
+      label: `${labels[asset.provider]} ${index + 1}`,
       assetIndex: null,
       kind: "external",
       url: asset.url,
@@ -245,8 +258,9 @@ function assetsForDeliverable(deliverable: ReviewWorkspaceDeliverable | null) {
 
 function comparableAssetsForDeliverable(
   deliverable: ReviewWorkspaceDeliverable | null,
+  labels: AssetKindLabels,
 ) {
-  return assetsForDeliverable(deliverable).filter(
+  return assetsForDeliverable(deliverable, labels).filter(
     (asset): asset is ComparableAsset =>
       asset.source === "storage" &&
       (asset.kind === "image" || asset.kind === "video"),
@@ -256,8 +270,9 @@ function comparableAssetsForDeliverable(
 function getComparableAsset(
   deliverable: ReviewWorkspaceDeliverable | null,
   preferredKind: ComparableKind,
+  labels: AssetKindLabels,
 ) {
-  const comparable = comparableAssetsForDeliverable(deliverable);
+  const comparable = comparableAssetsForDeliverable(deliverable, labels);
   return (
     comparable.find((asset) => asset.kind === preferredKind) ??
     comparable[0] ??
@@ -293,7 +308,7 @@ function formatVersion(version: number) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
     hour: "2-digit",
@@ -321,6 +336,18 @@ export function ReviewWorkspaceClient({
   generalThread,
 }: ReviewWorkspaceClientProps) {
   const router = useRouter();
+  const t = useTranslations("project_detail.review_workspace");
+  const assetKindLabels = useMemo<AssetKindLabels>(
+    () => ({
+      image: t("asset_kind.image"),
+      video: t("asset_kind.video"),
+      file: t("asset_kind.file"),
+      youtube: t("asset_kind.youtube"),
+      vimeo: t("asset_kind.vimeo"),
+      generic: t("asset_kind.generic"),
+    }),
+    [t],
+  );
   const [isPending, startTransition] = useTransition();
   const [isLifecyclePending, startLifecycleTransition] = useTransition();
   const [localDeliverables, setLocalDeliverables] = useState(deliverables);
@@ -336,8 +363,8 @@ export function ReviewWorkspaceClient({
     ? localDeliverables.findIndex((item) => item.id === selectedDeliverable.id)
     : -1;
   const assets = useMemo(
-    () => assetsForDeliverable(selectedDeliverable),
-    [selectedDeliverable],
+    () => assetsForDeliverable(selectedDeliverable, assetKindLabels),
+    [assetKindLabels, selectedDeliverable],
   );
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const selectedAsset =
@@ -442,7 +469,11 @@ export function ReviewWorkspaceClient({
         body,
       });
       if (!result.ok) {
-        toast.error(result.error === "forbidden" ? "Forbidden" : "Failed to save pin");
+        toast.error(
+          result.error === "forbidden"
+            ? t("toast.forbidden")
+            : t("toast.pin_failed"),
+        );
         return;
       }
       const optimisticAnnotation: ReviewWorkspaceAnnotation = {
@@ -513,12 +544,10 @@ export function ReviewWorkspaceClient({
           setReleaseConfirmOpen(true);
           return;
         }
-        toast.error(
-          result.message ?? "Failed to release deliverable",
-        );
+        toast.error(result.message ?? t("toast.release_failed"));
         return;
       }
-      toast.success("Released to client");
+      toast.success(t("toast.release_success"));
       const releasedAt = result.releasedAt;
       setLocalDeliverables((current) =>
         current.map((deliverable) =>
@@ -544,10 +573,14 @@ export function ReviewWorkspaceClient({
         reviewNote: submittedReviewNote,
       });
       if (!result.ok) {
-        toast.error(result.message ?? "Failed to submit review");
+        toast.error(result.message ?? t("toast.review_failed"));
         return;
       }
-      toast.success(status === "approved" ? "Approved" : "Changes requested");
+      toast.success(
+        status === "approved"
+          ? t("toast.approved")
+          : t("toast.changes_requested"),
+      );
       setLocalDeliverables((current) =>
         current.map((deliverable) =>
           deliverable.id === selectedDeliverable.id
@@ -584,11 +617,11 @@ export function ReviewWorkspaceClient({
       <header className="flex flex-col gap-4 border-b border-border/70 bg-surface-card px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Review workspace
+            {t("header.eyebrow")}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h2 className="text-xl font-semibold text-foreground">
-              Unified media review
+              {t("header.title")}
             </h2>
             <span className="max-w-full truncate text-sm text-muted-foreground">
               {projectTitle}
@@ -607,7 +640,7 @@ export function ReviewWorkspaceClient({
               className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-              Prev
+              {t("nav.prev")}
             </button>
             <button
               type="button"
@@ -615,12 +648,12 @@ export function ReviewWorkspaceClient({
               disabled={selectedDeliverableIndex <= 0}
               className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Next
+              {t("nav.next")}
               <ChevronRight className="h-3.5 w-3.5" aria-hidden />
             </button>
             <span className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
-              {isStudioContext ? "Studio context" : "Client context"}
+              {isStudioContext ? t("context.studio") : t("context.client")}
             </span>
             <button
               type="button"
@@ -633,7 +666,7 @@ export function ReviewWorkspaceClient({
                   : "border-border bg-background text-muted-foreground",
               )}
             >
-              Compare
+              {t("nav.compare")}
             </button>
           </div>
           <LifecycleHeaderActions
@@ -757,21 +790,34 @@ function LifecycleHeaderActions({
   onReleaseConfirmOpenChange: (open: boolean) => void;
   onReview: (status: "approved" | "changes_requested") => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
+  const statusLabels: StatusLabels = {
+    submitted: t("status.submitted"),
+    changesRequested: t("status.changes_requested"),
+    approved: t("status.approved"),
+    fallback: t("status.unknown"),
+  };
   if (!deliverable) return null;
 
   const isReleased = deliverable.releasedAt !== null;
   const canSubmitReview = canReview && isReleased && reviewNote.trim().length > 0;
+  const statusLabel = formatReviewStatus(deliverable.status, statusLabels);
 
   return (
     <div className="flex w-full max-w-[560px] flex-col gap-2 rounded-lg border border-border bg-background p-3 lg:w-[560px]">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Lifecycle
+            {t("lifecycle.title")}
           </p>
           <p className="truncate text-sm text-foreground">
-            {formatVersion(deliverable.version)} - {deliverable.status}
-            {isReleased ? " - Released" : " - Not released"}
+            {t("lifecycle.summary", {
+              version: formatVersion(deliverable.version),
+              status: statusLabel,
+              release: isReleased
+                ? t("status.released")
+                : t("status.unreleased"),
+            })}
           </p>
         </div>
         {isStudioContext && (
@@ -785,20 +831,21 @@ function LifecycleHeaderActions({
               disabled={isPending || isReleased}
               className="inline-flex h-8 items-center rounded-full bg-brand px-3 text-xs font-medium text-brand-on disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {isReleased ? "Released" : "Release"}
+              {isReleased ? t("status.released") : t("lifecycle.release")}
             </button>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Extend revision scope?</AlertDialogTitle>
+                <AlertDialogTitle>{t("lifecycle.extend_title")}</AlertDialogTitle>
                 <AlertDialogDescription className="leading-relaxed">
-                  This release exceeds the included revision rounds. Extend from{" "}
-                  {releaseConfirmScope.limit} to{" "}
-                  {releaseConfirmScope.limitPlusOne} and release this version.
+                  {t("lifecycle.extend_body", {
+                    limit: releaseConfirmScope.limit,
+                    limitPlusOne: releaseConfirmScope.limitPlusOne,
+                  })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isPending}>
-                  Cancel
+                  {t("actions.cancel")}
                 </AlertDialogCancel>
                 <AlertDialogAction
                   disabled={isPending}
@@ -808,7 +855,7 @@ function LifecycleHeaderActions({
                   }}
                   className="bg-brand text-brand-on hover:bg-brand/90"
                 >
-                  Extend and release
+                  {t("lifecycle.extend_confirm")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -821,7 +868,9 @@ function LifecycleHeaderActions({
             value={reviewNote}
             onChange={(event) => onReviewNoteChange(event.target.value)}
             placeholder={
-              isReleased ? "Review note" : "Release required before review"
+              isReleased
+                ? t("lifecycle.review_note")
+                : t("lifecycle.release_required")
             }
             disabled={isPending || !isReleased}
             className="min-h-[68px] resize-none bg-surface text-sm"
@@ -833,7 +882,7 @@ function LifecycleHeaderActions({
               disabled={isPending || !canSubmitReview}
               className="inline-flex h-8 items-center justify-center rounded-full bg-brand px-3 text-xs font-medium text-brand-on disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Approve
+              {t("lifecycle.approve")}
             </button>
             <button
               type="button"
@@ -841,7 +890,7 @@ function LifecycleHeaderActions({
               disabled={isPending || !canSubmitReview}
               className="inline-flex h-8 items-center justify-center rounded-full border border-border bg-surface px-3 text-xs font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Request changes
+              {t("lifecycle.request_changes")}
             </button>
           </div>
         </div>
@@ -859,11 +908,18 @@ function VersionRail({
   selectedDeliverableId: string;
   onSelectDeliverable: (id: string) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
+  const statusLabels: StatusLabels = {
+    submitted: t("status.submitted"),
+    changesRequested: t("status.changes_requested"),
+    approved: t("status.approved"),
+    fallback: t("status.unknown"),
+  };
   return (
     <aside className="border-b border-border/70 bg-surface-card lg:border-b-0 lg:border-r">
       <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
         <GalleryVerticalEnd className="h-4 w-4" aria-hidden />
-        Versions
+        {t("versions.title")}
       </div>
       <div className="space-y-3 p-3">
         <button
@@ -877,10 +933,10 @@ function VersionRail({
           )}
         >
           <span className="block text-sm font-semibold text-foreground">
-            General
+            {t("versions.general")}
           </span>
           <span className="mt-1 block text-xs text-muted-foreground">
-            Project-level thread
+            {t("versions.general_subtitle")}
           </span>
         </button>
         {deliverables.map((deliverable, index) => {
@@ -905,15 +961,20 @@ function VersionRail({
                 </span>
                 {index === 0 ? (
                   <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-medium text-gold">
-                    Latest
+                    {t("versions.latest")}
                   </span>
                 ) : null}
               </span>
               <span className="mt-2 block text-xs text-muted-foreground">
-                {assetCount} assets - {deliverable.status}
+                {t("versions.asset_status", {
+                  count: assetCount,
+                  status: formatReviewStatus(deliverable.status, statusLabels),
+                })}
               </span>
               <span className="mt-1 block text-xs text-muted-foreground">
-                {deliverable.releasedAt ? "Released" : "Unreleased"} -{" "}
+                {deliverable.releasedAt
+                  ? t("status.released")
+                  : t("status.unreleased")}{" - "}
                 {formatDate(deliverable.createdAt)}
               </span>
             </button>
@@ -921,7 +982,7 @@ function VersionRail({
         })}
         {deliverables.length === 0 ? (
           <div className="rounded-lg border border-border bg-background px-3 py-8 text-center text-sm text-muted-foreground">
-            No versions yet
+            {t("versions.empty")}
           </div>
         ) : null}
       </div>
@@ -938,6 +999,7 @@ function AssetStrip({
   selectedAssetId: string | null;
   onSelectAsset: (id: string) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
   return (
     <div className="border-b border-border/70 bg-background px-4 py-3">
       <div className="flex gap-2 overflow-x-auto">
@@ -967,7 +1029,7 @@ function AssetStrip({
         ))}
         {assets.length === 0 ? (
           <div className="rounded-lg border border-border bg-surface-card px-3 py-2 text-xs text-muted-foreground">
-            No assets
+            {t("assets.empty")}
           </div>
         ) : null}
       </div>
@@ -988,26 +1050,27 @@ function CompareControls({
   onLeftChange: (id: string) => void;
   onRightChange: (id: string) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
   return (
     <div className="border-b border-border/70 bg-background px-4 py-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Compare
+            {t("compare.title")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Read-only side-by-side review. Pin authoring is disabled.
+            {t("compare.read_only")}
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
           <VersionSelect
-            label="Left"
+            label={t("compare.left")}
             value={leftId}
             deliverables={deliverables}
             onChange={onLeftChange}
           />
           <VersionSelect
-            label="Right"
+            label={t("compare.right")}
             value={rightId}
             deliverables={deliverables}
             onChange={onRightChange}
@@ -1062,25 +1125,45 @@ function CompareView({
   selectedAnnotationId: string | null;
   onSelectAnnotation: (id: string) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
+  const assetKindLabels = useMemo<AssetKindLabels>(
+    () => ({
+      image: t("asset_kind.image"),
+      video: t("asset_kind.video"),
+      file: t("asset_kind.file"),
+      youtube: t("asset_kind.youtube"),
+      vimeo: t("asset_kind.vimeo"),
+      generic: t("asset_kind.generic"),
+    }),
+    [t],
+  );
   const leftDeliverable =
     deliverables.find((deliverable) => deliverable.id === leftId) ?? null;
   const rightDeliverable =
     deliverables.find((deliverable) => deliverable.id === rightId) ?? null;
-  const leftAsset = getComparableAsset(leftDeliverable, preferredKind);
-  const rightAsset = getComparableAsset(rightDeliverable, preferredKind);
+  const leftAsset = getComparableAsset(
+    leftDeliverable,
+    preferredKind,
+    assetKindLabels,
+  );
+  const rightAsset = getComparableAsset(
+    rightDeliverable,
+    preferredKind,
+    assetKindLabels,
+  );
 
   return (
     <div className="flex flex-1 items-center justify-center p-4">
       <div className="grid w-full max-w-7xl gap-4 xl:grid-cols-2">
         <ComparePane
-          side="Left"
+          side={t("compare.left")}
           deliverable={leftDeliverable}
           asset={leftAsset}
           selectedAnnotationId={selectedAnnotationId}
           onSelectAnnotation={onSelectAnnotation}
         />
         <ComparePane
-          side="Right"
+          side={t("compare.right")}
           deliverable={rightDeliverable}
           asset={rightAsset}
           selectedAnnotationId={selectedAnnotationId}
@@ -1104,7 +1187,27 @@ function ComparePane({
   selectedAnnotationId: string | null;
   onSelectAnnotation: (id: string) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
+  const videoT = useTranslations("project_detail.review_workspace.video");
+  const videoLabels: TimedVideoLabels = {
+    play: videoT("play"),
+    pause: videoT("pause"),
+    speed: videoT("speed"),
+    frameBack: videoT("frame_back"),
+    frameForward: videoT("frame_forward"),
+    editTimecode: videoT("edit_timecode"),
+    currentTime: videoT("current_time"),
+    streamProcessing: videoT("stream_processing"),
+    commentAtCurrentPrefix: videoT("comment_at_current_prefix"),
+    commentAtCurrentSuffix: videoT("comment_at_current_suffix"),
+    timecode: videoT("timecode"),
+  };
   const annotations = annotationsForAsset(deliverable, asset);
+  const assetTypeLabel = !asset
+    ? t("compare.none")
+    : asset.kind === "image"
+      ? t("asset_type.image")
+      : t("asset_type.video");
 
   return (
     <div className="min-w-0 rounded-lg border border-border bg-surface-card p-3">
@@ -1114,19 +1217,24 @@ function ComparePane({
             {side}
           </p>
           <p className="truncate text-sm font-semibold text-foreground">
-            {deliverable ? formatVersion(deliverable.version) : "No version"}
+            {deliverable
+              ? formatVersion(deliverable.version)
+              : t("empty.no_version_title")}
           </p>
         </div>
         <span className="rounded-full border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground">
-          {asset?.kind ?? "none"}
+          {assetTypeLabel}
         </span>
       </div>
       {!deliverable ? (
-        <EmptyCanvas title="No version" body="Select a version to compare." />
+        <EmptyCanvas
+          title={t("empty.no_version_title")}
+          body={t("empty.no_version_body")}
+        />
       ) : !asset ? (
         <EmptyCanvas
           title={formatVersion(deliverable.version)}
-          body="No comparable image or video asset."
+          body={t("empty.no_comparable")}
         />
       ) : asset.kind === "video" ? (
         <TimedVideoPlayer
@@ -1139,7 +1247,7 @@ function ComparePane({
           selectedId={selectedAnnotationId}
           draft={null}
           canAnnotate={false}
-          labels={VIDEO_LABELS}
+          labels={videoLabels}
           onSelectAnnotation={onSelectAnnotation}
         />
       ) : (
@@ -1177,10 +1285,28 @@ function MediaCanvas({
   onSelectAnnotation: (id: string) => void;
   onDraftAnnotation: (draft: DraftAnnotation) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
+  const videoT = useTranslations("project_detail.review_workspace.video");
+  const videoLabels: TimedVideoLabels = {
+    play: videoT("play"),
+    pause: videoT("pause"),
+    speed: videoT("speed"),
+    frameBack: videoT("frame_back"),
+    frameForward: videoT("frame_forward"),
+    editTimecode: videoT("edit_timecode"),
+    currentTime: videoT("current_time"),
+    streamProcessing: videoT("stream_processing"),
+    commentAtCurrentPrefix: videoT("comment_at_current_prefix"),
+    commentAtCurrentSuffix: videoT("comment_at_current_suffix"),
+    timecode: videoT("timecode"),
+  };
   if (!deliverable) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyCanvas title="General" body="Project-level comments will appear in Phase C." />
+        <EmptyCanvas
+          title={t("versions.general")}
+          body={t("empty.general_body")}
+        />
       </div>
     );
   }
@@ -1188,7 +1314,10 @@ function MediaCanvas({
   if (!asset) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
-        <EmptyCanvas title={formatVersion(deliverable.version)} body="No assets in this version." />
+        <EmptyCanvas
+          title={formatVersion(deliverable.version)}
+          body={t("empty.no_assets_in_version")}
+        />
       </div>
     );
   }
@@ -1207,7 +1336,7 @@ function MediaCanvas({
             selectedId={selectedAnnotationId}
             draft={draftAnnotation}
             canAnnotate={pinMode}
-            labels={VIDEO_LABELS}
+            labels={videoLabels}
             onSelectAnnotation={onSelectAnnotation}
             onDraftAnnotation={onDraftAnnotation}
           />
@@ -1251,6 +1380,7 @@ function ImageCanvas({
   onSelectAnnotation: (id: string) => void;
   onDraftAnnotation: (draft: DraftAnnotation) => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(
@@ -1298,20 +1428,20 @@ function ImageCanvas({
       <div className="flex items-center justify-between border-b border-border/70 px-3 py-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <ImageIcon className="h-4 w-4" aria-hidden />
-          Image canvas
+          {t("canvas.image")}
         </div>
         <div className="flex items-center gap-1">
-          <IconButton label="Zoom out" onClick={() => zoom(scale - 0.2)}>
+          <IconButton label={t("canvas.zoom_out")} onClick={() => zoom(scale - 0.2)}>
             <ZoomOut className="h-4 w-4" aria-hidden />
           </IconButton>
           <span className="w-14 text-center text-xs text-muted-foreground">
             {Math.round(scale * 100)}%
           </span>
-          <IconButton label="Zoom in" onClick={() => zoom(scale + 0.2)}>
+          <IconButton label={t("canvas.zoom_in")} onClick={() => zoom(scale + 0.2)}>
             <ZoomIn className="h-4 w-4" aria-hidden />
           </IconButton>
           <IconButton
-            label="Reset view"
+            label={t("canvas.reset_view")}
             onClick={() => {
               setScale(1);
               setOffset({ x: 0, y: 0 });
@@ -1365,6 +1495,7 @@ function ImageCanvas({
           annotations={annotations}
           scale={scale}
           selectedAnnotationId={selectedAnnotationId}
+          label={t("canvas.minimap")}
         />
       </div>
     </div>
@@ -1436,11 +1567,13 @@ function MiniMap({
   annotations,
   scale,
   selectedAnnotationId,
+  label,
 }: {
   src: string;
   annotations: ReviewWorkspaceAnnotation[];
   scale: number;
   selectedAnnotationId: string | null;
+  label: string;
 }) {
   return (
     <div className="absolute bottom-3 right-3 w-40 rounded-lg border border-border bg-background/90 p-2 shadow-sm">
@@ -1463,7 +1596,7 @@ function MiniMap({
         ))}
       </div>
       <div className="mt-1 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-        <span>Mini-map</span>
+        <span>{label}</span>
         <span>{Math.round(scale * 100)}%</span>
       </div>
     </div>
@@ -1515,6 +1648,7 @@ function CommentsPanel({
   onCancelDraft: () => void;
   onSaveDraft: () => void;
 }) {
+  const t = useTranslations("project_detail.review_workspace");
   const threadId = selectedAnnotation
     ? selectedAnnotation.threadId
     : deliverable
@@ -1530,25 +1664,25 @@ function CommentsPanel({
     <aside className="border-t border-border/70 bg-surface-card lg:border-l lg:border-t-0">
       <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
         <MessageSquareText className="h-4 w-4" aria-hidden />
-        Pins
+        {t("pins.title")}
       </div>
       <div className="space-y-3 p-4">
         <div className="rounded-lg border border-border bg-background p-3">
           <p className="text-sm font-semibold text-foreground">
-            {deliverable ? formatVersion(deliverable.version) : "General"}
+            {deliverable ? formatVersion(deliverable.version) : t("versions.general")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {asset ? asset.label : "Project-level context"}
+            {asset ? asset.label : t("pins.project_context")}
           </p>
         </div>
         <div className="flex items-center gap-3 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-brand" aria-hidden />
-            Client
+            {t("visibility.client")}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-gold" aria-hidden />
-            Internal
+            {t("visibility.internal")}
           </span>
         </div>
         <div className="rounded-lg border border-border bg-background p-3">
@@ -1560,20 +1694,22 @@ function CommentsPanel({
             onClick={onTogglePinMode}
             className="w-full rounded-full text-xs uppercase tracking-[0.12em]"
           >
-            {pinMode ? "Pin mode on" : "Add pin"}
+            {pinMode ? t("pins.pin_mode_on") : t("pins.add_pin")}
           </Button>
           {draftAnnotation ? (
             <div className="mt-3 space-y-3">
               <Textarea
                 value={draftBody}
                 onChange={(event) => onDraftBodyChange(event.target.value)}
-                placeholder="Write pin comment"
+                placeholder={t("pins.comment_placeholder")}
                 className="min-h-24 resize-none"
               />
               {isStudioContext ? (
                 <div className="flex items-center justify-between gap-3">
                   <Label htmlFor="review-workspace-pin-internal" className="text-xs">
-                    {draftInternal ? "Internal" : "Client"}
+                    {draftInternal
+                      ? t("visibility.internal")
+                      : t("visibility.client")}
                   </Label>
                   <Switch
                     id="review-workspace-pin-internal"
@@ -1590,7 +1726,7 @@ function CommentsPanel({
                   onClick={onSaveDraft}
                   className="rounded-full text-xs uppercase tracking-[0.12em]"
                 >
-                  Save pin
+                  {t("pins.save")}
                 </Button>
                 <Button
                   type="button"
@@ -1599,7 +1735,7 @@ function CommentsPanel({
                   onClick={onCancelDraft}
                   className="rounded-full text-xs uppercase tracking-[0.12em]"
                 >
-                  Cancel
+                  {t("actions.cancel")}
                 </Button>
               </div>
             </div>
@@ -1619,7 +1755,7 @@ function CommentsPanel({
           >
             <span className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-foreground">
-                Pin {annotation.seq}
+                {t("pins.pin_label", { seq: annotation.seq })}
               </span>
               <span
                 className={cn(
@@ -1627,11 +1763,13 @@ function CommentsPanel({
                   annotationTone(annotation),
                 )}
               >
-                {annotation.visibility}
+                {annotation.visibility === "internal"
+                  ? t("visibility.internal")
+                  : t("visibility.client")}
               </span>
             </span>
             <span className="mt-2 block text-xs text-muted-foreground">
-              {annotation.shape}
+              {annotation.shape === "box" ? t("pins.shape_box") : t("pins.shape_pin")}
               {annotation.timestampSec !== null
                 ? ` - ${annotation.timestampSec.toFixed(1)}s`
                 : ""}
@@ -1640,7 +1778,7 @@ function CommentsPanel({
         ))}
         {annotations.length === 0 ? (
           <div className="rounded-lg border border-border bg-background p-6 text-center text-sm text-muted-foreground">
-            No pins on this asset
+            {t("pins.empty")}
           </div>
         ) : null}
         <ThreadPanel
@@ -1671,6 +1809,7 @@ function EmptyCanvas({ title, body }: { title: string; body: string }) {
 }
 
 function ExternalCanvas({ asset }: { asset: ExternalReviewAsset }) {
+  const t = useTranslations("project_detail.review_workspace");
   return (
     <div className="flex aspect-video items-center justify-center rounded-lg border border-border bg-surface-card p-6 text-center">
       <div className="max-w-md">
@@ -1693,7 +1832,7 @@ function ExternalCanvas({ asset }: { asset: ExternalReviewAsset }) {
           rel="noreferrer"
           className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          Open external
+          {t("assets.open_external")}
           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         </a>
       </div>
@@ -1702,18 +1841,21 @@ function ExternalCanvas({ asset }: { asset: ExternalReviewAsset }) {
 }
 
 function FileCanvas({ asset }: { asset: StorageFileAsset }) {
+  const t = useTranslations("project_detail.review_workspace");
   return (
     <div className="flex aspect-video items-center justify-center rounded-lg border border-border bg-surface-card p-6 text-center">
       <div className="max-w-sm">
         <FileText className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden />
-        <p className="mt-3 text-base font-semibold text-foreground">Stored file</p>
+        <p className="mt-3 text-base font-semibold text-foreground">
+          {t("assets.stored_file")}
+        </p>
         <a
           href={asset.url}
           target="_blank"
           rel="noreferrer"
           className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          Open file
+          {t("assets.open_file")}
           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         </a>
       </div>

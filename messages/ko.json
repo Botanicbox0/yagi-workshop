@@ -2770,6 +2770,7 @@
     "tab": {
       "status": "현황",
       "brief": "브리프",
+      "review": "리뷰",
       "board": "작업",
       "comments": "코멘트",
       "deliverables": "결과물"
@@ -2996,6 +2997,129 @@
       "version_title": "V{version} 피드백",
       "version_subtitle": "이 버전에 대한 수정 요청과 확인 사항만 모읍니다.",
       "count": "{count}개"
+    },
+    "review_workspace": {
+      "header": {
+        "eyebrow": "리뷰 워크스페이스",
+        "title": "통합 미디어 리뷰"
+      },
+      "context": {
+        "studio": "스튜디오 모드",
+        "client": "고객 모드"
+      },
+      "nav": {
+        "prev": "이전",
+        "next": "다음",
+        "compare": "비교"
+      },
+      "status": {
+        "submitted": "시안 도착",
+        "changes_requested": "수정 요청",
+        "approved": "승인 완료",
+        "released": "고객공개",
+        "unreleased": "팀전용",
+        "unknown": "상태 미확인"
+      },
+      "lifecycle": {
+        "title": "진행 상태",
+        "summary": "{version} - {status} - {release}",
+        "release": "고객에게 공개",
+        "approve": "승인",
+        "request_changes": "수정 요청",
+        "review_note": "검수 메모",
+        "release_required": "고객공개 후 검수할 수 있습니다",
+        "extend_title": "수정 범위를 확장할까요?",
+        "extend_body": "포함된 수정 라운드를 초과했습니다. 범위를 {limit}회에서 {limitPlusOne}회로 확장하고 이 버전을 고객에게 공개합니다.",
+        "extend_confirm": "확장하고 공개"
+      },
+      "versions": {
+        "title": "버전",
+        "general": "전체",
+        "general_subtitle": "프로젝트 전체 코멘트",
+        "latest": "최신",
+        "asset_status": "작업물 {count}개 - {status}",
+        "empty": "아직 버전이 없습니다"
+      },
+      "assets": {
+        "empty": "작업물이 없습니다",
+        "stored_file": "저장된 파일",
+        "open_external": "외부 링크 열기",
+        "open_file": "파일 열기"
+      },
+      "asset_kind": {
+        "image": "이미지",
+        "video": "영상",
+        "file": "파일",
+        "youtube": "YouTube",
+        "vimeo": "Vimeo",
+        "generic": "외부 링크"
+      },
+      "asset_type": {
+        "image": "이미지",
+        "video": "영상"
+      },
+      "compare": {
+        "title": "비교",
+        "read_only": "두 버전을 나란히 보는 읽기 전용 화면입니다. 비교 중에는 핀을 추가할 수 없습니다.",
+        "left": "좌측",
+        "right": "우측",
+        "none": "없음"
+      },
+      "canvas": {
+        "image": "이미지 캔버스",
+        "minimap": "미니맵",
+        "zoom_in": "확대",
+        "zoom_out": "축소",
+        "reset_view": "보기 초기화"
+      },
+      "pins": {
+        "title": "핀",
+        "project_context": "프로젝트 전체 맥락",
+        "add_pin": "핀 추가",
+        "pin_mode_on": "핀 모드 켜짐",
+        "comment_placeholder": "핀 코멘트를 입력해 주세요",
+        "save": "핀 저장",
+        "pin_label": "핀 {seq}",
+        "shape_pin": "핀",
+        "shape_box": "영역",
+        "empty": "이 작업물에는 아직 핀이 없습니다"
+      },
+      "visibility": {
+        "client": "고객공개",
+        "internal": "팀전용"
+      },
+      "actions": {
+        "cancel": "취소"
+      },
+      "empty": {
+        "no_version_title": "버전 없음",
+        "no_version_body": "비교할 버전을 선택해 주세요.",
+        "no_comparable": "비교할 이미지 또는 영상 작업물이 없습니다.",
+        "general_body": "프로젝트 전체 코멘트가 여기에 표시됩니다.",
+        "no_assets_in_version": "이 버전에는 작업물이 없습니다."
+      },
+      "video": {
+        "play": "재생",
+        "pause": "일시정지",
+        "speed": "속도",
+        "frame_back": "이전 프레임",
+        "frame_forward": "다음 프레임",
+        "edit_timecode": "타임코드 편집",
+        "current_time": "현재 시간",
+        "stream_processing": "영상 처리 중",
+        "comment_at_current_prefix": "",
+        "comment_at_current_suffix": " 지점에 코멘트",
+        "timecode": "타임코드"
+      },
+      "toast": {
+        "forbidden": "권한이 없습니다.",
+        "pin_failed": "핀을 저장하지 못했습니다.",
+        "release_failed": "고객공개에 실패했습니다.",
+        "release_success": "고객에게 공개했습니다.",
+        "review_failed": "검수 결과를 저장하지 못했습니다.",
+        "approved": "승인했습니다.",
+        "changes_requested": "수정 요청을 저장했습니다."
+      }
     },
     "banner": {
       "cancelled": "이 의뢰는 취소되었어요. 새 의뢰를 작성하려면",
