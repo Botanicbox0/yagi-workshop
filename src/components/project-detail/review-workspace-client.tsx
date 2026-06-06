@@ -19,10 +19,19 @@ import {
   useMemo,
   useRef,
   useState,
+  useTransition,
   type ReactNode,
   type PointerEvent,
   type WheelEvent,
 } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { ThreadPanel, type ThreadMessage } from "@/components/project/thread-panel";
+import { createDeliverableAnnotationAction } from "@/app/[locale]/app/projects/[id]/annotation-actions";
 import {
   TimedVideoPlayer,
   type TimedVideoLabels,
@@ -49,6 +58,14 @@ export type ReviewWorkspaceAnnotation = {
   threadId: string;
   createdAt: string;
   createdBy: string;
+  messages: ThreadMessage[];
+};
+
+export type ReviewWorkspaceThread = {
+  id: string | null;
+  deliverableId: string | null;
+  annotationId: string | null;
+  messages: ThreadMessage[];
 };
 
 export type ReviewWorkspaceDeliverable = {
@@ -75,12 +92,16 @@ export type ReviewWorkspaceDeliverable = {
     thumbnailUrl: string | null;
   }>;
   annotations: ReviewWorkspaceAnnotation[];
+  thread: ReviewWorkspaceThread;
 };
 
 type ReviewWorkspaceClientProps = {
+  projectId: string;
   projectTitle: string;
   isStudioContext: boolean;
+  currentUserId: string;
   deliverables: ReviewWorkspaceDeliverable[];
+  generalThread: ReviewWorkspaceThread;
 };
 
 type StorageImageAsset = {
@@ -130,6 +151,13 @@ type StorageReviewAsset =
   | StorageFileAsset;
 
 type ReviewAsset = StorageReviewAsset | ExternalReviewAsset;
+
+type DraftAnnotation = {
+  assetIndex: number;
+  shape: AnnotationShape;
+  coords: AnnotationCoords;
+  timestampSec?: number;
+};
 
 const VIDEO_LABELS: TimedVideoLabels = {
   play: "Play",
@@ -225,10 +253,15 @@ function formatDate(value: string) {
 }
 
 export function ReviewWorkspaceClient({
+  projectId,
   projectTitle,
   isStudioContext,
+  currentUserId,
   deliverables,
+  generalThread,
 }: ReviewWorkspaceClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [selectedDeliverableId, setSelectedDeliverableId] = useState(
     deliverables[0]?.id ?? "general",
   );
@@ -249,6 +282,12 @@ export function ReviewWorkspaceClient({
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(
     null,
   );
+  const [pinMode, setPinMode] = useState(false);
+  const [draftAnnotation, setDraftAnnotation] = useState<DraftAnnotation | null>(
+    null,
+  );
+  const [draftBody, setDraftBody] = useState("");
+  const [draftInternal, setDraftInternal] = useState(false);
   const annotationsForAsset =
     selectedDeliverable && selectedAsset?.source === "storage"
       ? selectedDeliverable.annotations.filter(
@@ -259,7 +298,45 @@ export function ReviewWorkspaceClient({
   useEffect(() => {
     setSelectedAssetId(assets[0]?.id ?? null);
     setSelectedAnnotationId(null);
+    setDraftAnnotation(null);
+    setDraftBody("");
   }, [selectedDeliverable?.id, assets]);
+
+  const selectedAnnotation =
+    annotationsForAsset.find((annotation) => annotation.id === selectedAnnotationId) ??
+    null;
+  const canPin =
+    selectedDeliverable !== null &&
+    selectedAsset?.source === "storage" &&
+    (selectedAsset.kind === "image" || selectedAsset.kind === "video");
+
+  function saveDraftAnnotation() {
+    if (!selectedDeliverable || !draftAnnotation || draftBody.trim().length === 0) {
+      return;
+    }
+    startTransition(async () => {
+      const result = await createDeliverableAnnotationAction({
+        projectId,
+        deliverableId: selectedDeliverable.id,
+        assetIndex: draftAnnotation.assetIndex,
+        shape: draftAnnotation.shape,
+        coords: draftAnnotation.coords,
+        timestampSec: draftAnnotation.timestampSec,
+        visibility: isStudioContext && draftInternal ? "internal" : "client",
+        body: draftBody,
+      });
+      if (!result.ok) {
+        toast.error(result.error === "forbidden" ? "Forbidden" : "Failed to save pin");
+        return;
+      }
+      setDraftAnnotation(null);
+      setDraftBody("");
+      setDraftInternal(false);
+      setPinMode(false);
+      setSelectedAnnotationId(result.annotationId);
+      router.refresh();
+    });
+  }
 
   const selectAdjacentVersion = (direction: -1 | 1) => {
     if (selectedDeliverableIndex < 0) return;
@@ -326,15 +403,38 @@ export function ReviewWorkspaceClient({
             asset={selectedAsset}
             annotations={annotationsForAsset}
             selectedAnnotationId={selectedAnnotationId}
+            draftAnnotation={draftAnnotation}
+            pinMode={pinMode && canPin}
             onSelectAnnotation={setSelectedAnnotationId}
+            onDraftAnnotation={setDraftAnnotation}
           />
         </main>
-        <ReadOnlyCommentPanel
+        <CommentsPanel
+          projectId={projectId}
+          currentUserId={currentUserId}
+          isStudioContext={isStudioContext}
+          generalThread={generalThread}
           deliverable={selectedDeliverable}
           asset={selectedAsset}
           annotations={annotationsForAsset}
+          selectedAnnotation={selectedAnnotation}
           selectedAnnotationId={selectedAnnotationId}
           onSelectAnnotation={setSelectedAnnotationId}
+          pinMode={pinMode}
+          canPin={canPin}
+          onTogglePinMode={() => setPinMode((value) => !value)}
+          draftAnnotation={draftAnnotation}
+          draftBody={draftBody}
+          draftInternal={draftInternal}
+          isPending={isPending}
+          onDraftBodyChange={setDraftBody}
+          onDraftInternalChange={setDraftInternal}
+          onCancelDraft={() => {
+            setDraftAnnotation(null);
+            setDraftBody("");
+            setDraftInternal(false);
+          }}
+          onSaveDraft={saveDraftAnnotation}
         />
       </div>
     </section>
@@ -471,13 +571,19 @@ function MediaCanvas({
   asset,
   annotations,
   selectedAnnotationId,
+  draftAnnotation,
+  pinMode,
   onSelectAnnotation,
+  onDraftAnnotation,
 }: {
   deliverable: ReviewWorkspaceDeliverable | null;
   asset: ReviewAsset | null;
   annotations: ReviewWorkspaceAnnotation[];
   selectedAnnotationId: string | null;
+  draftAnnotation: DraftAnnotation | null;
+  pinMode: boolean;
   onSelectAnnotation: (id: string) => void;
+  onDraftAnnotation: (draft: DraftAnnotation) => void;
 }) {
   if (!deliverable) {
     return (
@@ -507,17 +613,22 @@ function MediaCanvas({
             streamStatus={asset.streamStatus}
             annotations={annotations}
             selectedId={selectedAnnotationId}
-            draft={null}
-            canAnnotate={false}
+            draft={draftAnnotation}
+            canAnnotate={pinMode}
             labels={VIDEO_LABELS}
             onSelectAnnotation={onSelectAnnotation}
+            onDraftAnnotation={onDraftAnnotation}
           />
         ) : asset.source === "storage" && asset.kind === "image" ? (
           <ImageCanvas
+            assetIndex={asset.assetIndex}
             src={asset.url}
             annotations={annotations}
             selectedAnnotationId={selectedAnnotationId}
+            draftAnnotation={draftAnnotation}
+            pinMode={pinMode}
             onSelectAnnotation={onSelectAnnotation}
+            onDraftAnnotation={onDraftAnnotation}
           />
         ) : asset.source === "external" ? (
           <ExternalCanvas asset={asset} />
@@ -530,15 +641,23 @@ function MediaCanvas({
 }
 
 function ImageCanvas({
+  assetIndex,
   src,
   annotations,
   selectedAnnotationId,
+  draftAnnotation,
+  pinMode,
   onSelectAnnotation,
+  onDraftAnnotation,
 }: {
+  assetIndex: number;
   src: string;
   annotations: ReviewWorkspaceAnnotation[];
   selectedAnnotationId: string | null;
+  draftAnnotation: DraftAnnotation | null;
+  pinMode: boolean;
   onSelectAnnotation: (id: string) => void;
+  onDraftAnnotation: (draft: DraftAnnotation) => void;
 }) {
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -552,6 +671,17 @@ function ImageCanvas({
     zoom(scale + (event.deltaY > 0 ? -0.1 : 0.1));
   };
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (pinMode) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+      const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+      onDraftAnnotation({
+        assetIndex,
+        shape: "pin",
+        coords: { x, y },
+      });
+      return;
+    }
     dragRef.current = {
       x: event.clientX,
       y: event.clientY,
@@ -625,6 +755,17 @@ function ImageCanvas({
                 onSelect={onSelectAnnotation}
               />
             ))}
+            {draftAnnotation?.assetIndex === assetIndex ? (
+              <span
+                className="absolute flex h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-brand bg-brand-soft text-xs font-semibold text-brand"
+                style={{
+                  left: `${draftAnnotation.coords.x * 100}%`,
+                  top: `${draftAnnotation.coords.y * 100}%`,
+                }}
+              >
+                +
+              </span>
+            ) : null}
           </div>
         </div>
         <MiniMap
@@ -737,19 +878,62 @@ function MiniMap({
   );
 }
 
-function ReadOnlyCommentPanel({
+function CommentsPanel({
+  projectId,
+  currentUserId,
+  isStudioContext,
+  generalThread,
   deliverable,
   asset,
   annotations,
+  selectedAnnotation,
   selectedAnnotationId,
   onSelectAnnotation,
+  pinMode,
+  canPin,
+  onTogglePinMode,
+  draftAnnotation,
+  draftBody,
+  draftInternal,
+  isPending,
+  onDraftBodyChange,
+  onDraftInternalChange,
+  onCancelDraft,
+  onSaveDraft,
 }: {
+  projectId: string;
+  currentUserId: string;
+  isStudioContext: boolean;
+  generalThread: ReviewWorkspaceThread;
   deliverable: ReviewWorkspaceDeliverable | null;
   asset: ReviewAsset | null;
   annotations: ReviewWorkspaceAnnotation[];
+  selectedAnnotation: ReviewWorkspaceAnnotation | null;
   selectedAnnotationId: string | null;
   onSelectAnnotation: (id: string) => void;
+  pinMode: boolean;
+  canPin: boolean;
+  onTogglePinMode: () => void;
+  draftAnnotation: DraftAnnotation | null;
+  draftBody: string;
+  draftInternal: boolean;
+  isPending: boolean;
+  onDraftBodyChange: (value: string) => void;
+  onDraftInternalChange: (value: boolean) => void;
+  onCancelDraft: () => void;
+  onSaveDraft: () => void;
 }) {
+  const threadId = selectedAnnotation
+    ? selectedAnnotation.threadId
+    : deliverable
+      ? deliverable.thread.id
+      : generalThread.id;
+  const initialMessages = selectedAnnotation
+    ? selectedAnnotation.messages
+    : deliverable
+      ? deliverable.thread.messages
+      : generalThread.messages;
+
   return (
     <aside className="border-t border-border/70 bg-surface-card lg:border-l lg:border-t-0">
       <div className="flex items-center gap-2 border-b border-border/70 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
@@ -774,6 +958,60 @@ function ReadOnlyCommentPanel({
             <span className="h-2 w-2 rounded-full bg-gold" aria-hidden />
             Internal
           </span>
+        </div>
+        <div className="rounded-lg border border-border bg-background p-3">
+          <Button
+            type="button"
+            variant={pinMode ? "default" : "outline"}
+            size="sm"
+            disabled={!canPin}
+            onClick={onTogglePinMode}
+            className="w-full rounded-full text-xs uppercase tracking-[0.12em]"
+          >
+            {pinMode ? "Pin mode on" : "Add pin"}
+          </Button>
+          {draftAnnotation ? (
+            <div className="mt-3 space-y-3">
+              <Textarea
+                value={draftBody}
+                onChange={(event) => onDraftBodyChange(event.target.value)}
+                placeholder="Write pin comment"
+                className="min-h-24 resize-none"
+              />
+              {isStudioContext ? (
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="review-workspace-pin-internal" className="text-xs">
+                    {draftInternal ? "Internal" : "Client"}
+                  </Label>
+                  <Switch
+                    id="review-workspace-pin-internal"
+                    checked={draftInternal}
+                    onCheckedChange={onDraftInternalChange}
+                  />
+                </div>
+              ) : null}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isPending || draftBody.trim().length === 0}
+                  onClick={onSaveDraft}
+                  className="rounded-full text-xs uppercase tracking-[0.12em]"
+                >
+                  Save pin
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={onCancelDraft}
+                  className="rounded-full text-xs uppercase tracking-[0.12em]"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
         {annotations.map((annotation) => (
           <button
@@ -813,6 +1051,17 @@ function ReadOnlyCommentPanel({
             No pins on this asset
           </div>
         ) : null}
+        <ThreadPanel
+          key={selectedAnnotation?.id ?? deliverable?.id ?? "general"}
+          projectId={projectId}
+          deliverableId={selectedAnnotation ? selectedAnnotation.deliverableId : deliverable?.id ?? null}
+          annotationId={selectedAnnotation?.id ?? null}
+          annotationVisibility={selectedAnnotation?.visibility ?? null}
+          threadId={threadId}
+          currentUserId={currentUserId}
+          isYagiAdmin={isStudioContext}
+          initialMessages={initialMessages}
+        />
       </div>
     </aside>
   );

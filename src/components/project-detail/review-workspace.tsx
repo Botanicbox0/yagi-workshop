@@ -6,16 +6,19 @@ import {
   detectStorageKind,
 } from "@/lib/project-deliverables/assets";
 import { refreshReadyDeliverableStreams } from "@/lib/stream/deliverable-status";
+import { filterVisibleThreadMessages } from "@/lib/thread/message-visibility";
 import type {
   AnnotationCoords,
   AnnotationShape,
   AnnotationStatus,
   AnnotationVisibility,
 } from "@/components/project-detail/deliverable-annotations";
+import type { ThreadMessage } from "@/components/project/thread-panel";
 import {
   ReviewWorkspaceClient,
   type ReviewWorkspaceDeliverable,
   type ReviewWorkspaceAnnotation,
+  type ReviewWorkspaceThread,
 } from "@/components/project-detail/review-workspace-client";
 
 type ReviewWorkspaceProps = {
@@ -57,12 +60,45 @@ type AnnotationRow = {
   created_at: string;
 };
 
+type ThreadRow = {
+  id: string;
+  project_id: string;
+  title: string | null;
+  created_by: string;
+  created_at: string;
+  deliverable_id: string | null;
+  annotation_id: string | null;
+};
+
+type MessageRow = {
+  id: string;
+  thread_id: string;
+  author_id: string;
+  body: string | null;
+  visibility: string;
+  created_at: string;
+};
+
+type ProjectThreadQuery = {
+  select(columns: string): {
+    eq(column: string, value: string): Promise<{ data: ThreadRow[] | null }>;
+  };
+};
+
+type ProjectThreadClient = {
+  from(table: "project_threads"): ProjectThreadQuery;
+};
+
 export async function ReviewWorkspace({
   projectId,
   projectTitle,
   isStudioContext,
 }: ReviewWorkspaceProps) {
   const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
 
   let deliverablesQuery = supabase
     .from("project_deliverables")
@@ -103,6 +139,9 @@ export async function ReviewWorkspace({
 
   const deliverableIds = rows.map((row) => row.id);
   const annotationsByDeliverable = new Map<string, ReviewWorkspaceAnnotation[]>();
+  const threadsByAnnotation = new Map<string, ReviewWorkspaceThread>();
+  const threadsByDeliverable = new Map<string, ReviewWorkspaceThread>();
+  let generalThread: ReviewWorkspaceThread | null = null;
 
   if (deliverableIds.length > 0) {
     const { data: annotationRowsRaw } = (await supabase
@@ -137,10 +176,72 @@ export async function ReviewWorkspace({
         threadId: row.thread_id,
         createdAt: row.created_at,
         createdBy: row.created_by,
+        messages: [],
       };
       const list = annotationsByDeliverable.get(row.deliverable_id) ?? [];
       list.push(annotation);
       annotationsByDeliverable.set(row.deliverable_id, list);
+    }
+  }
+
+  const threadClient = supabase as unknown as ProjectThreadClient;
+  const { data: threadRowsRaw } = await threadClient
+    .from("project_threads")
+    .select(
+      "id, project_id, title, created_by, created_at, deliverable_id, annotation_id",
+    )
+    .eq("project_id", projectId);
+  const threadRows = threadRowsRaw ?? [];
+  const threadIds = threadRows.map((thread) => thread.id);
+  const messagesByThread = new Map<string, ThreadMessage[]>();
+
+  if (threadIds.length > 0) {
+    const { data: messageRowsRaw } = (await supabase
+      .from("thread_messages")
+      .select("id, thread_id, author_id, body, visibility, created_at")
+      .in("thread_id", threadIds)
+      .order("created_at", { ascending: true })) as {
+      data: MessageRow[] | null;
+    };
+    const messageRows = filterVisibleThreadMessages(
+      messageRowsRaw ?? [],
+      isStudioContext,
+      user.id,
+    );
+
+    for (const message of messageRows) {
+      const threadMessages = messagesByThread.get(message.thread_id) ?? [];
+      threadMessages.push({
+        ...message,
+        author: null,
+        attachments: [],
+      });
+      messagesByThread.set(message.thread_id, threadMessages);
+    }
+  }
+
+  for (const thread of threadRows) {
+    const context: ReviewWorkspaceThread = {
+      id: thread.id,
+      deliverableId: thread.deliverable_id,
+      annotationId: thread.annotation_id,
+      messages: messagesByThread.get(thread.id) ?? [],
+    };
+    if (thread.annotation_id) {
+      threadsByAnnotation.set(thread.annotation_id, context);
+    } else if (thread.deliverable_id) {
+      threadsByDeliverable.set(thread.deliverable_id, context);
+    } else {
+      generalThread = context;
+    }
+  }
+
+  for (const annotations of annotationsByDeliverable.values()) {
+    for (const annotation of annotations) {
+      const thread = threadsByAnnotation.get(annotation.id);
+      if (thread) {
+        annotation.messages = thread.messages;
+      }
     }
   }
 
@@ -184,15 +285,32 @@ export async function ReviewWorkspace({
         })),
         externalAssets,
         annotations: annotationsByDeliverable.get(row.id) ?? [],
+        thread:
+          threadsByDeliverable.get(row.id) ?? {
+            id: null,
+            deliverableId: row.id,
+            annotationId: null,
+            messages: [],
+          },
       };
     }),
   );
 
   return (
     <ReviewWorkspaceClient
+      projectId={projectId}
       projectTitle={projectTitle}
       isStudioContext={isStudioContext}
+      currentUserId={user.id}
       deliverables={deliverables}
+      generalThread={
+        generalThread ?? {
+          id: null,
+          deliverableId: null,
+          annotationId: null,
+          messages: [],
+        }
+      }
     />
   );
 }
