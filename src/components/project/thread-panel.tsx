@@ -170,6 +170,47 @@ function formatBytes(n: number): string {
   return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+function isOptimisticMessage(message: ThreadMessage): boolean {
+  return message.id.startsWith("optimistic:");
+}
+
+function messageFingerprint(message: ThreadMessage): string {
+  return [
+    message.thread_id,
+    message.author_id,
+    message.visibility,
+    message.body ?? "",
+  ].join("\u001f");
+}
+
+function dedupeThreadMessages(messages: ThreadMessage[]): ThreadMessage[] {
+  const realFingerprints = new Set(
+    messages
+      .filter((message) => !isOptimisticMessage(message))
+      .map(messageFingerprint),
+  );
+  const seenIds = new Set<string>();
+  return messages.filter((message) => {
+    if (seenIds.has(message.id)) return false;
+    seenIds.add(message.id);
+    if (
+      isOptimisticMessage(message) &&
+      realFingerprints.has(messageFingerprint(message))
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function appendThreadMessage(
+  messages: ThreadMessage[],
+  next: ThreadMessage,
+): ThreadMessage[] {
+  if (messages.some((message) => message.id === next.id)) return messages;
+  return dedupeThreadMessages([...messages, next]);
+}
+
 export function ThreadPanel({
   projectId,
   deliverableId = null,
@@ -182,7 +223,9 @@ export function ThreadPanel({
 }: Props) {
   const t = useTranslations("threads");
   const tErrors = useTranslations("errors");
-  const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ThreadMessage[]>(() =>
+    dedupeThreadMessages(initialMessages),
+  );
   const [body, setBody] = useState("");
   const [isInternal, setIsInternal] = useState(annotationVisibility === "internal");
   const [sending, setSending] = useState(false);
@@ -236,9 +279,7 @@ export function ThreadPanel({
           const row = payload.new as ThreadMessage;
           // Filter client-side: only rows whose thread belongs to this project.
           if (threadId && row.thread_id === threadId) {
-            setMessages((prev) =>
-              prev.some((m) => m.id === row.id) ? prev : [...prev, row]
-            );
+            setMessages((prev) => appendThreadMessage(prev, row));
             return;
           }
           // Phase 2.8.2 K-05 LOOP 1 — when threadId is unknown locally,
@@ -259,9 +300,7 @@ export function ThreadPanel({
             if ((t.deliverable_id ?? null) !== (deliverableId ?? null)) return;
             if ((t.annotation_id ?? null) !== (annotationId ?? null)) return;
             setThreadId(t.id);
-            setMessages((prev) =>
-              prev.some((m) => m.id === row.id) ? prev : [...prev, row]
-            );
+            setMessages((prev) => appendThreadMessage(prev, row));
           }
         }
       )

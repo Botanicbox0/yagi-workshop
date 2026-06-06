@@ -301,6 +301,16 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function appendAnnotation(
+  annotations: ReviewWorkspaceAnnotation[],
+  next: ReviewWorkspaceAnnotation,
+) {
+  if (annotations.some((annotation) => annotation.id === next.id)) {
+    return annotations;
+  }
+  return [...annotations, next].sort((a, b) => a.seq - b.seq);
+}
+
 export function ReviewWorkspaceClient({
   projectId,
   projectTitle,
@@ -467,10 +477,10 @@ export function ReviewWorkspaceClient({
           deliverable.id === selectedDeliverable.id
             ? {
                 ...deliverable,
-                annotations: [
-                  ...deliverable.annotations,
+                annotations: appendAnnotation(
+                  deliverable.annotations,
                   optimisticAnnotation,
-                ].sort((a, b) => a.seq - b.seq),
+                ),
               }
             : deliverable,
         ),
