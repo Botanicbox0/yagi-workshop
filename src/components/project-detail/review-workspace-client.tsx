@@ -151,6 +151,8 @@ type StorageReviewAsset =
   | StorageFileAsset;
 
 type ReviewAsset = StorageReviewAsset | ExternalReviewAsset;
+type ComparableAsset = StorageImageAsset | StorageVideoAsset;
+type ComparableKind = ComparableAsset["kind"];
 
 type DraftAnnotation = {
   assetIndex: number;
@@ -226,6 +228,38 @@ function assetsForDeliverable(deliverable: ReviewWorkspaceDeliverable | null) {
   return [...storageAssets, ...externalAssets];
 }
 
+function comparableAssetsForDeliverable(
+  deliverable: ReviewWorkspaceDeliverable | null,
+) {
+  return assetsForDeliverable(deliverable).filter(
+    (asset): asset is ComparableAsset =>
+      asset.source === "storage" &&
+      (asset.kind === "image" || asset.kind === "video"),
+  );
+}
+
+function getComparableAsset(
+  deliverable: ReviewWorkspaceDeliverable | null,
+  preferredKind: ComparableKind,
+) {
+  const comparable = comparableAssetsForDeliverable(deliverable);
+  return (
+    comparable.find((asset) => asset.kind === preferredKind) ??
+    comparable[0] ??
+    null
+  );
+}
+
+function annotationsForAsset(
+  deliverable: ReviewWorkspaceDeliverable | null,
+  asset: ComparableAsset | null,
+) {
+  if (!deliverable || !asset) return [];
+  return deliverable.annotations.filter(
+    (annotation) => annotation.assetIndex === asset.assetIndex,
+  );
+}
+
 function annotationTone(annotation: ReviewWorkspaceAnnotation) {
   return annotation.visibility === "internal"
     ? "border-gold bg-gold-soft text-gold"
@@ -288,12 +322,21 @@ export function ReviewWorkspaceClient({
   );
   const [draftBody, setDraftBody] = useState("");
   const [draftInternal, setDraftInternal] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareLeftId, setCompareLeftId] = useState(
+    deliverables[1]?.id ?? deliverables[0]?.id ?? "",
+  );
+  const [compareRightId, setCompareRightId] = useState(deliverables[0]?.id ?? "");
   const annotationsForAsset =
     selectedDeliverable && selectedAsset?.source === "storage"
       ? selectedDeliverable.annotations.filter(
           (annotation) => annotation.assetIndex === selectedAsset.assetIndex,
         )
       : [];
+  const allAnnotations = useMemo(
+    () => deliverables.flatMap((deliverable) => deliverable.annotations),
+    [deliverables],
+  );
 
   useEffect(() => {
     setSelectedAssetId(assets[0]?.id ?? null);
@@ -302,13 +345,33 @@ export function ReviewWorkspaceClient({
     setDraftBody("");
   }, [selectedDeliverable?.id, assets]);
 
+  useEffect(() => {
+    setCompareLeftId((current) =>
+      deliverables.some((deliverable) => deliverable.id === current)
+        ? current
+        : deliverables[1]?.id ?? deliverables[0]?.id ?? "",
+    );
+    setCompareRightId((current) =>
+      deliverables.some((deliverable) => deliverable.id === current)
+        ? current
+        : deliverables[0]?.id ?? "",
+    );
+  }, [deliverables]);
+
   const selectedAnnotation =
-    annotationsForAsset.find((annotation) => annotation.id === selectedAnnotationId) ??
+    (compareMode ? allAnnotations : annotationsForAsset).find(
+      (annotation) => annotation.id === selectedAnnotationId,
+    ) ??
     null;
   const canPin =
     selectedDeliverable !== null &&
     selectedAsset?.source === "storage" &&
     (selectedAsset.kind === "image" || selectedAsset.kind === "video");
+  const compareKind =
+    selectedAsset?.source === "storage" &&
+    (selectedAsset.kind === "image" || selectedAsset.kind === "video")
+      ? selectedAsset.kind
+      : "image";
 
   function saveDraftAnnotation() {
     if (!selectedDeliverable || !draftAnnotation || draftBody.trim().length === 0) {
@@ -342,6 +405,13 @@ export function ReviewWorkspaceClient({
     if (selectedDeliverableIndex < 0) return;
     const next = deliverables[selectedDeliverableIndex + direction];
     if (next) setSelectedDeliverableId(next.id);
+  };
+
+  const toggleCompareMode = () => {
+    setCompareMode((value) => !value);
+    setPinMode(false);
+    setDraftAnnotation(null);
+    setDraftBody("");
   };
 
   return (
@@ -383,6 +453,19 @@ export function ReviewWorkspaceClient({
             <ShieldCheck className="h-3.5 w-3.5 text-brand" aria-hidden />
             {isStudioContext ? "Studio context" : "Client context"}
           </span>
+          <button
+            type="button"
+            onClick={toggleCompareMode}
+            disabled={deliverables.length < 2}
+            className={cn(
+              "inline-flex h-9 items-center rounded-full border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40",
+              compareMode
+                ? "border-brand/60 bg-brand/10 text-foreground"
+                : "border-border bg-background text-muted-foreground",
+            )}
+          >
+            Compare
+          </button>
         </div>
       </header>
 
@@ -393,21 +476,43 @@ export function ReviewWorkspaceClient({
           onSelectDeliverable={setSelectedDeliverableId}
         />
         <main className="flex min-h-[480px] flex-col bg-background">
-          <AssetStrip
-            assets={assets}
-            selectedAssetId={selectedAsset?.id ?? null}
-            onSelectAsset={setSelectedAssetId}
-          />
-          <MediaCanvas
-            deliverable={selectedDeliverable}
-            asset={selectedAsset}
-            annotations={annotationsForAsset}
-            selectedAnnotationId={selectedAnnotationId}
-            draftAnnotation={draftAnnotation}
-            pinMode={pinMode && canPin}
-            onSelectAnnotation={setSelectedAnnotationId}
-            onDraftAnnotation={setDraftAnnotation}
-          />
+          {compareMode ? (
+            <>
+              <CompareControls
+                deliverables={deliverables}
+                leftId={compareLeftId}
+                rightId={compareRightId}
+                onLeftChange={setCompareLeftId}
+                onRightChange={setCompareRightId}
+              />
+              <CompareView
+                deliverables={deliverables}
+                leftId={compareLeftId}
+                rightId={compareRightId}
+                preferredKind={compareKind}
+                selectedAnnotationId={selectedAnnotationId}
+                onSelectAnnotation={setSelectedAnnotationId}
+              />
+            </>
+          ) : (
+            <>
+              <AssetStrip
+                assets={assets}
+                selectedAssetId={selectedAsset?.id ?? null}
+                onSelectAsset={setSelectedAssetId}
+              />
+              <MediaCanvas
+                deliverable={selectedDeliverable}
+                asset={selectedAsset}
+                annotations={annotationsForAsset}
+                selectedAnnotationId={selectedAnnotationId}
+                draftAnnotation={draftAnnotation}
+                pinMode={pinMode && canPin}
+                onSelectAnnotation={setSelectedAnnotationId}
+                onDraftAnnotation={setDraftAnnotation}
+              />
+            </>
+          )}
         </main>
         <CommentsPanel
           projectId={projectId}
@@ -420,8 +525,8 @@ export function ReviewWorkspaceClient({
           selectedAnnotation={selectedAnnotation}
           selectedAnnotationId={selectedAnnotationId}
           onSelectAnnotation={setSelectedAnnotationId}
-          pinMode={pinMode}
-          canPin={canPin}
+          pinMode={compareMode ? false : pinMode}
+          canPin={compareMode ? false : canPin}
           onTogglePinMode={() => setPinMode((value) => !value)}
           draftAnnotation={draftAnnotation}
           draftBody={draftBody}
@@ -562,6 +667,189 @@ function AssetStrip({
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function CompareControls({
+  deliverables,
+  leftId,
+  rightId,
+  onLeftChange,
+  onRightChange,
+}: {
+  deliverables: ReviewWorkspaceDeliverable[];
+  leftId: string;
+  rightId: string;
+  onLeftChange: (id: string) => void;
+  onRightChange: (id: string) => void;
+}) {
+  return (
+    <div className="border-b border-border/70 bg-background px-4 py-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            Compare
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Read-only side-by-side review. Pin authoring is disabled.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <VersionSelect
+            label="Left"
+            value={leftId}
+            deliverables={deliverables}
+            onChange={onLeftChange}
+          />
+          <VersionSelect
+            label="Right"
+            value={rightId}
+            deliverables={deliverables}
+            onChange={onRightChange}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VersionSelect({
+  label,
+  value,
+  deliverables,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  deliverables: ReviewWorkspaceDeliverable[];
+  onChange: (id: string) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 rounded-lg border border-border bg-surface-card px-3 py-2 text-xs text-muted-foreground">
+      <span>{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-w-32 bg-background px-2 py-1 text-foreground outline-none"
+      >
+        {deliverables.map((deliverable) => (
+          <option key={deliverable.id} value={deliverable.id}>
+            {formatVersion(deliverable.version)}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function CompareView({
+  deliverables,
+  leftId,
+  rightId,
+  preferredKind,
+  selectedAnnotationId,
+  onSelectAnnotation,
+}: {
+  deliverables: ReviewWorkspaceDeliverable[];
+  leftId: string;
+  rightId: string;
+  preferredKind: ComparableKind;
+  selectedAnnotationId: string | null;
+  onSelectAnnotation: (id: string) => void;
+}) {
+  const leftDeliverable =
+    deliverables.find((deliverable) => deliverable.id === leftId) ?? null;
+  const rightDeliverable =
+    deliverables.find((deliverable) => deliverable.id === rightId) ?? null;
+  const leftAsset = getComparableAsset(leftDeliverable, preferredKind);
+  const rightAsset = getComparableAsset(rightDeliverable, preferredKind);
+
+  return (
+    <div className="flex flex-1 items-center justify-center p-4">
+      <div className="grid w-full max-w-7xl gap-4 xl:grid-cols-2">
+        <ComparePane
+          side="Left"
+          deliverable={leftDeliverable}
+          asset={leftAsset}
+          selectedAnnotationId={selectedAnnotationId}
+          onSelectAnnotation={onSelectAnnotation}
+        />
+        <ComparePane
+          side="Right"
+          deliverable={rightDeliverable}
+          asset={rightAsset}
+          selectedAnnotationId={selectedAnnotationId}
+          onSelectAnnotation={onSelectAnnotation}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ComparePane({
+  side,
+  deliverable,
+  asset,
+  selectedAnnotationId,
+  onSelectAnnotation,
+}: {
+  side: string;
+  deliverable: ReviewWorkspaceDeliverable | null;
+  asset: ComparableAsset | null;
+  selectedAnnotationId: string | null;
+  onSelectAnnotation: (id: string) => void;
+}) {
+  const annotations = annotationsForAsset(deliverable, asset);
+
+  return (
+    <div className="min-w-0 rounded-lg border border-border bg-surface-card p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            {side}
+          </p>
+          <p className="truncate text-sm font-semibold text-foreground">
+            {deliverable ? formatVersion(deliverable.version) : "No version"}
+          </p>
+        </div>
+        <span className="rounded-full border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground">
+          {asset?.kind ?? "none"}
+        </span>
+      </div>
+      {!deliverable ? (
+        <EmptyCanvas title="No version" body="Select a version to compare." />
+      ) : !asset ? (
+        <EmptyCanvas
+          title={formatVersion(deliverable.version)}
+          body="No comparable image or video asset."
+        />
+      ) : asset.kind === "video" ? (
+        <TimedVideoPlayer
+          assetIndex={asset.assetIndex}
+          deliverableId={deliverable.id}
+          src={asset.url}
+          streamUid={asset.streamUid}
+          streamStatus={asset.streamStatus}
+          annotations={annotations}
+          selectedId={selectedAnnotationId}
+          draft={null}
+          canAnnotate={false}
+          labels={VIDEO_LABELS}
+          onSelectAnnotation={onSelectAnnotation}
+        />
+      ) : (
+        <ImageCanvas
+          assetIndex={asset.assetIndex}
+          src={asset.url}
+          annotations={annotations}
+          selectedAnnotationId={selectedAnnotationId}
+          draftAnnotation={null}
+          pinMode={false}
+          onSelectAnnotation={onSelectAnnotation}
+          onDraftAnnotation={() => undefined}
+        />
+      )}
     </div>
   );
 }
