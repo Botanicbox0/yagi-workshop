@@ -313,15 +313,17 @@ export function ReviewWorkspaceClient({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isLifecyclePending, startLifecycleTransition] = useTransition();
+  const [localDeliverables, setLocalDeliverables] = useState(deliverables);
   const [selectedDeliverableId, setSelectedDeliverableId] = useState(
     deliverables[0]?.id ?? "general",
   );
   const selectedDeliverable =
     selectedDeliverableId === "general"
       ? null
-      : deliverables.find((item) => item.id === selectedDeliverableId) ?? null;
+      : localDeliverables.find((item) => item.id === selectedDeliverableId) ??
+        null;
   const selectedDeliverableIndex = selectedDeliverable
-    ? deliverables.findIndex((item) => item.id === selectedDeliverable.id)
+    ? localDeliverables.findIndex((item) => item.id === selectedDeliverable.id)
     : -1;
   const assets = useMemo(
     () => assetsForDeliverable(selectedDeliverable),
@@ -341,9 +343,11 @@ export function ReviewWorkspaceClient({
   const [draftInternal, setDraftInternal] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [compareLeftId, setCompareLeftId] = useState(
-    deliverables[1]?.id ?? deliverables[0]?.id ?? "",
+    localDeliverables[1]?.id ?? localDeliverables[0]?.id ?? "",
   );
-  const [compareRightId, setCompareRightId] = useState(deliverables[0]?.id ?? "");
+  const [compareRightId, setCompareRightId] = useState(
+    localDeliverables[0]?.id ?? "",
+  );
   const [reviewNote, setReviewNote] = useState("");
   const [releaseConfirmOpen, setReleaseConfirmOpen] = useState(false);
   const [releaseConfirmScope, setReleaseConfirmScope] = useState({
@@ -357,29 +361,42 @@ export function ReviewWorkspaceClient({
         )
       : [];
   const allAnnotations = useMemo(
-    () => deliverables.flatMap((deliverable) => deliverable.annotations),
-    [deliverables],
+    () => localDeliverables.flatMap((deliverable) => deliverable.annotations),
+    [localDeliverables],
   );
 
   useEffect(() => {
-    setSelectedAssetId(assets[0]?.id ?? null);
+    setLocalDeliverables(deliverables);
+  }, [deliverables]);
+
+  useEffect(() => {
+    if (
+      selectedDeliverableId !== "general" &&
+      !localDeliverables.some((deliverable) => deliverable.id === selectedDeliverableId)
+    ) {
+      setSelectedDeliverableId(localDeliverables[0]?.id ?? "general");
+    }
+  }, [localDeliverables, selectedDeliverableId]);
+
+  useEffect(() => {
+    setSelectedAssetId(null);
     setSelectedAnnotationId(null);
     setDraftAnnotation(null);
     setDraftBody("");
-  }, [selectedDeliverable?.id, assets]);
+  }, [selectedDeliverableId]);
 
   useEffect(() => {
     setCompareLeftId((current) =>
-      deliverables.some((deliverable) => deliverable.id === current)
+      localDeliverables.some((deliverable) => deliverable.id === current)
         ? current
-        : deliverables[1]?.id ?? deliverables[0]?.id ?? "",
+        : localDeliverables[1]?.id ?? localDeliverables[0]?.id ?? "",
     );
     setCompareRightId((current) =>
-      deliverables.some((deliverable) => deliverable.id === current)
+      localDeliverables.some((deliverable) => deliverable.id === current)
         ? current
-        : deliverables[0]?.id ?? "",
+        : localDeliverables[0]?.id ?? "",
     );
-  }, [deliverables]);
+  }, [localDeliverables]);
 
   const selectedAnnotation =
     (compareMode ? allAnnotations : annotationsForAsset).find(
@@ -400,6 +417,9 @@ export function ReviewWorkspaceClient({
     if (!selectedDeliverable || !draftAnnotation || draftBody.trim().length === 0) {
       return;
     }
+    const body = draftBody.trim();
+    const visibility = isStudioContext && draftInternal ? "internal" : "client";
+    const createdAt = new Date().toISOString();
     startTransition(async () => {
       const result = await createDeliverableAnnotationAction({
         projectId,
@@ -408,13 +428,53 @@ export function ReviewWorkspaceClient({
         shape: draftAnnotation.shape,
         coords: draftAnnotation.coords,
         timestampSec: draftAnnotation.timestampSec,
-        visibility: isStudioContext && draftInternal ? "internal" : "client",
-        body: draftBody,
+        visibility,
+        body,
       });
       if (!result.ok) {
         toast.error(result.error === "forbidden" ? "Forbidden" : "Failed to save pin");
         return;
       }
+      const optimisticAnnotation: ReviewWorkspaceAnnotation = {
+        id: result.annotationId,
+        projectId,
+        deliverableId: selectedDeliverable.id,
+        assetIndex: draftAnnotation.assetIndex,
+        seq: result.seq,
+        shape: draftAnnotation.shape,
+        coords: draftAnnotation.coords,
+        visibility,
+        status: "open",
+        timestampSec: draftAnnotation.timestampSec ?? null,
+        threadId: result.threadId,
+        createdAt,
+        createdBy: currentUserId,
+        messages: [
+          {
+            id: `optimistic:${result.threadId}`,
+            thread_id: result.threadId,
+            author_id: currentUserId,
+            body,
+            visibility: visibility === "internal" ? "internal" : "shared",
+            created_at: createdAt,
+            author: null,
+            attachments: [],
+          },
+        ],
+      };
+      setLocalDeliverables((current) =>
+        current.map((deliverable) =>
+          deliverable.id === selectedDeliverable.id
+            ? {
+                ...deliverable,
+                annotations: [
+                  ...deliverable.annotations,
+                  optimisticAnnotation,
+                ].sort((a, b) => a.seq - b.seq),
+              }
+            : deliverable,
+        ),
+      );
       setDraftAnnotation(null);
       setDraftBody("");
       setDraftInternal(false);
@@ -449,6 +509,14 @@ export function ReviewWorkspaceClient({
         return;
       }
       toast.success("Released to client");
+      const releasedAt = result.releasedAt;
+      setLocalDeliverables((current) =>
+        current.map((deliverable) =>
+          deliverable.id === selectedDeliverable.id
+            ? { ...deliverable, releasedAt }
+            : deliverable,
+        ),
+      );
       setReleaseConfirmOpen(false);
       router.refresh();
     });
@@ -456,18 +524,33 @@ export function ReviewWorkspaceClient({
 
   function reviewSelectedDeliverable(status: "approved" | "changes_requested") {
     if (!selectedDeliverable || reviewNote.trim().length === 0) return;
+    const submittedReviewNote = reviewNote.trim();
+    const reviewedAt = new Date().toISOString();
     startLifecycleTransition(async () => {
       const result = await reviewProjectDeliverableAction({
         projectId,
         deliverableId: selectedDeliverable.id,
         status,
-        reviewNote: reviewNote.trim(),
+        reviewNote: submittedReviewNote,
       });
       if (!result.ok) {
         toast.error(result.message ?? "Failed to submit review");
         return;
       }
       toast.success(status === "approved" ? "Approved" : "Changes requested");
+      setLocalDeliverables((current) =>
+        current.map((deliverable) =>
+          deliverable.id === selectedDeliverable.id
+            ? {
+                ...deliverable,
+                status,
+                reviewNote: submittedReviewNote,
+                reviewedAt,
+                reviewedBy: currentUserId,
+              }
+            : deliverable,
+        ),
+      );
       setReviewNote("");
       router.refresh();
     });
@@ -475,7 +558,7 @@ export function ReviewWorkspaceClient({
 
   const selectAdjacentVersion = (direction: -1 | 1) => {
     if (selectedDeliverableIndex < 0) return;
-    const next = deliverables[selectedDeliverableIndex + direction];
+    const next = localDeliverables[selectedDeliverableIndex + direction];
     if (next) setSelectedDeliverableId(next.id);
   };
 
@@ -507,7 +590,10 @@ export function ReviewWorkspaceClient({
             <button
               type="button"
               onClick={() => selectAdjacentVersion(1)}
-              disabled={selectedDeliverableIndex < 0 || selectedDeliverableIndex >= deliverables.length - 1}
+              disabled={
+                selectedDeliverableIndex < 0 ||
+                selectedDeliverableIndex >= localDeliverables.length - 1
+              }
               className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-background px-3 text-xs font-medium text-muted-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
@@ -529,7 +615,7 @@ export function ReviewWorkspaceClient({
             <button
               type="button"
               onClick={toggleCompareMode}
-              disabled={deliverables.length < 2}
+              disabled={localDeliverables.length < 2}
               className={cn(
                 "inline-flex h-9 items-center rounded-full border px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40",
                 compareMode
@@ -559,7 +645,7 @@ export function ReviewWorkspaceClient({
 
       <div className="grid min-h-[720px] grid-cols-1 lg:grid-cols-[248px_minmax(0,1fr)_360px]">
         <VersionRail
-          deliverables={deliverables}
+          deliverables={localDeliverables}
           selectedDeliverableId={selectedDeliverable?.id ?? "general"}
           onSelectDeliverable={setSelectedDeliverableId}
         />
@@ -567,14 +653,14 @@ export function ReviewWorkspaceClient({
           {compareMode ? (
             <>
               <CompareControls
-                deliverables={deliverables}
+                deliverables={localDeliverables}
                 leftId={compareLeftId}
                 rightId={compareRightId}
                 onLeftChange={setCompareLeftId}
                 onRightChange={setCompareRightId}
               />
               <CompareView
-                deliverables={deliverables}
+                deliverables={localDeliverables}
                 leftId={compareLeftId}
                 rightId={compareRightId}
                 preferredKind={compareKind}
