@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const amountSchema = z.object({
   dealId: z.string().uuid(),
@@ -48,16 +48,9 @@ type CreateDealInvoiceResult =
     };
 
 async function getAdminSupabase() {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, error: "unauthenticated" as const };
-  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (!isAdmin) return { ok: false as const, error: "forbidden" as const };
-  return { ok: true as const, supabase };
+  const studio = await getStudioContext();
+  if (!studio.ok) return { ok: false as const, error: studio.error };
+  return { ok: true as const, supabase: studio.supabase };
 }
 
 export async function offerDealAction(input: unknown): Promise<AdminDealResult> {

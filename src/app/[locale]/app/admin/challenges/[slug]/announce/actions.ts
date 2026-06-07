@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { emitNotification } from "@/lib/notifications/emit";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 // MVP best-effort fan-out: notification_events INSERTs may partially succeed
 // if a mid-sequence failure occurs. announceWinnersAction is safe to retry
@@ -21,16 +21,9 @@ export async function announceWinnersAction(
   winners: WinnerInput[],
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   // ── Auth + admin guard ────────────────────────────────────────────────────
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthorized" };
-
-  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (!isAdmin) return { ok: false, error: "forbidden" };
+  const studio = await getStudioContext();
+  if (!studio.ok) return { ok: false, error: studio.error };
+  const userId = studio.userId;
 
   // ── Validate input ────────────────────────────────────────────────────────
   if (!challengeId) return { ok: false, error: "invalid_input" };
@@ -86,7 +79,7 @@ export async function announceWinnersAction(
     submission_id: w.submissionId,
     challenge_id: challengeId,
     rank: w.rank,
-    announced_by: user.id,
+    announced_by: userId,
     announced_at: new Date().toISOString(),
   }));
 
