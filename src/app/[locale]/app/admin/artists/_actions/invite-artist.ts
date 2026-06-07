@@ -19,8 +19,8 @@
 // =============================================================================
 
 import { z } from "zod";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const inviteArtistInput = z.object({
   email: z.string().email(),
@@ -51,32 +51,12 @@ export async function inviteArtistAction(
   }
   const { email, displayName, shortBio } = parsed.data;
 
-  // 2. Authenticate caller via user-scoped client
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-  if (authErr || !user) {
-    return { ok: false, error: "unauthenticated" };
+  // 2. Require active YAGI Internal studio context, not merely global admin.
+  const studio = await getStudioContext();
+  if (!studio.ok) {
+    return { ok: false, error: studio.error };
   }
-
-  // 3. yagi_admin gate — query user_roles for global yagi_admin role
-  //    (workspace_id IS NULL = global role, not workspace-scoped)
-  const { data: adminRoles, error: roleErr } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .is("workspace_id", null)
-    .eq("role", "yagi_admin");
-
-  if (roleErr) {
-    console.error("[inviteArtistAction] role check error:", roleErr);
-    return { ok: false, error: "db", message: roleErr.message };
-  }
-  if (!adminRoles || adminRoles.length === 0) {
-    return { ok: false, error: "forbidden" };
-  }
+  const inviterUserId = studio.userId;
 
   // 4. Service-role client for RLS-bypass operations
   //    (Supabase auth admin API + workspace/member/profile inserts)
@@ -182,7 +162,7 @@ export async function inviteArtistAction(
     workspace_id: workspaceId,
     user_id: invitedUserId,
     role: "admin",
-    invited_by: user.id,
+    invited_by: inviterUserId,
     invited_at: new Date().toISOString(),
   });
 

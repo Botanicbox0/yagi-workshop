@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const inviteAgencyInput = z.object({
   email: z.string().email(),
@@ -42,31 +43,11 @@ export type RosterActionResult =
     };
 
 async function requireYagiAdmin() {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-  if (authErr || !user) {
-    return { ok: false as const, error: "unauthenticated" as const };
+  const studio = await getStudioContext();
+  if (!studio.ok) {
+    return { ok: false as const, error: studio.error };
   }
-
-  const { data: roles, error: roleErr } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .is("workspace_id", null)
-    .eq("role", "yagi_admin");
-
-  if (roleErr) {
-    console.error("[requireYagiAdmin] role check error:", roleErr);
-    return { ok: false as const, error: "db" as const, message: roleErr.message };
-  }
-  if (!roles || roles.length === 0) {
-    return { ok: false as const, error: "forbidden" as const };
-  }
-
-  return { ok: true as const, userId: user.id };
+  return { ok: true as const, userId: studio.userId };
 }
 
 function agencySlug(agencyName: string, invitedUserId: string) {

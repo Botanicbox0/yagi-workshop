@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { createSupabaseService } from "@/lib/supabase/service";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const CampaignDecisionSchema = z.enum([
   "approved",
@@ -72,22 +73,14 @@ export type CampaignWorkflowResult =
     };
 
 async function requireYagiAdmin(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
 ): Promise<
   | { ok: true; userId: string }
   | Extract<CampaignWorkflowResult, { ok: false }>
 > {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "unauthenticated" };
-
-  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", {
-    uid: user.id,
-  });
-  if (!isAdmin) return { ok: false, error: "forbidden" };
-
-  return { ok: true, userId: user.id };
+  const studio = await getStudioContext();
+  if (!studio.ok) return { ok: false, error: studio.error };
+  return { ok: true, userId: studio.userId };
 }
 
 function statusForDecision(

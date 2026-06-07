@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { isValidTransition } from "@/lib/challenges/state-machine";
 import { submissionRequirementsSchema, judgingConfigSchema } from "@/lib/challenges/config-schemas";
 import type { ChallengeState, SubmissionRequirements, JudgingConfig } from "@/lib/challenges/types";
 import type { Json, Database } from "@/lib/supabase/database.types";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 type ChallengeUpdate = Database["public"]["Tables"]["challenges"]["Update"];
 
@@ -62,12 +62,20 @@ export async function listSponsorCandidatesAction(): Promise<
 }
 
 async function getAuthenticatedAdmin() {
-  const supabase = await createSupabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { supabase, user: null, ok: false as const, error: "unauthorized" as const };
-  const { data: isAdmin } = await supabase.rpc("is_yagi_admin", { uid: user.id });
-  if (!isAdmin) return { supabase, user, ok: false as const, error: "not_admin" as const };
-  return { supabase, user, ok: true as const };
+  const studio = await getStudioContext();
+  if (!studio.ok) {
+    return {
+      supabase: studio.supabase,
+      user: null,
+      ok: false as const,
+      error: studio.error,
+    };
+  }
+  return {
+    supabase: studio.supabase,
+    user: { id: studio.userId },
+    ok: true as const,
+  };
 }
 
 export async function createChallengeAction(

@@ -12,6 +12,7 @@ import {
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { resolveActiveWorkspace } from "@/lib/workspace/active";
+import { getStudioContext } from "@/lib/workspace/studio-context.server";
 
 const MAX_TWIN_ASSET_BYTES = 750 * 1024 * 1024;
 
@@ -139,12 +140,10 @@ async function resolveArtistWorkspace(
   | { ok: false; error: "forbidden" | "no_artist_workspace" | "db"; message?: string }
 > {
   const supabase = await createSupabaseServer();
-  const { data: isAdmin, error: adminErr } = await supabase.rpc("is_yagi_admin", {
-    uid: userId,
-  });
-  if (adminErr) return { ok: false, error: "db", message: adminErr.message };
+  const studio = await getStudioContext();
+  const isAdmin = studio.ok;
 
-  if (artistWorkspaceId && isAdmin === true) {
+  if (artistWorkspaceId && isAdmin) {
     const { data: profile, error } = await (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- workspaces.kind generated type may lag
       supabase as any
