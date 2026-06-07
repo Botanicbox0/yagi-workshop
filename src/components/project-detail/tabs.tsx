@@ -1,17 +1,15 @@
 "use client";
 
-// Phase 5 Wave C HF1_0 — Detail page 5-tab structure.
+// Phase E - Detail page status/brief/review structure.
 //
 // Now a client component (was server). The "use client" was added in
 // HF1_0 so the tab Link can attach an onClick handler that scrolls
 // to the top of the viewport on tab switch.
 //
-// Tab order per SPEC §"Scope: 5 tab 구조":
-//   현황 (status) — DEFAULT, full ship in C_2/C_3
-//   브리프 (brief) — read-only Stage 1/2/3 view, ships in C_4
-//   작업 (board) — version stack gallery backed by project_deliverables
-//   코멘트 (comments) — deliverable-scoped feedback threads
-//   결과물 (deliverables) — final approval / written sign-off
+// Tab order:
+//   status
+//   brief
+//   review - unified board/comments/deliverables workspace
 //
 // Routing: ?tab= query param. Next.js Link `scroll` prop is left at
 // `false` because Next.js's path-change scroll heuristic treats
@@ -23,12 +21,7 @@
 
 import Link from "next/link";
 
-export type TabKey =
-  | "status"
-  | "brief"
-  | "board"
-  | "comments"
-  | "deliverables";
+export type TabKey = "status" | "brief" | "review";
 
 type Props = {
   active: TabKey;
@@ -38,9 +31,7 @@ type Props = {
 const TAB_ORDER: { key: TabKey; disabled: boolean }[] = [
   { key: "status", disabled: false },
   { key: "brief", disabled: false },
-  { key: "board", disabled: false },
-  { key: "comments", disabled: false },
-  { key: "deliverables", disabled: false },
+  { key: "review", disabled: false },
 ];
 
 // Tabs scroll to top on switch so users land at the section heading rather
