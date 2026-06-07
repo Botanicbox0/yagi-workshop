@@ -2859,7 +2859,10 @@
         "copied": "Share link copied.",
         "success": "Share settings saved.",
         "error": "Could not save share settings.",
-        "no_released": "Release at least one version to the client first."
+        "no_released": "Release at least one version to the client first.",
+        "recipient_label": "Recipient email",
+        "recipient_placeholder": "client@company.com",
+        "recipient_invalid": "Enter a valid email address."
       },
       "status": {
         "submitted": "Submitted",

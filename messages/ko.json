@@ -2924,7 +2924,10 @@
         "copied": "공유 링크를 복사했습니다.",
         "success": "공유 설정을 저장했습니다.",
         "error": "공유 설정을 저장하지 못했습니다.",
-        "no_released": "먼저 클라이언트에 릴리즈된 버전이 필요합니다."
+        "no_released": "먼저 클라이언트에 릴리즈된 버전이 필요합니다.",
+        "recipient_label": "공유받을 분 이메일",
+        "recipient_placeholder": "client@company.com",
+        "recipient_invalid": "올바른 이메일을 입력하세요."
       },
       "status": {
         "submitted": "제출됨",
