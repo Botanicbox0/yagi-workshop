@@ -4,6 +4,7 @@ import { createSupabaseService } from "@/lib/supabase/service";
 import { checkRateLimit, getClientIp } from "@/lib/share/rate-limit";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { emitDebouncedNotification } from "@/lib/notifications/debounce";
+import { evaluateRecipientBinding, recordShareAction } from "@/lib/share/audit";
 
 const bodySchema = z.object({
   deliverable_id: z.string().uuid(),
@@ -117,7 +118,7 @@ export async function POST(request: Request, { params }: Props) {
   const service = svc as any;
   const { data: project } = await service
     .from("projects")
-    .select("id, title, status, workspace_id")
+    .select("id, title, status, workspace_id, deliverable_share_recipient_email")
     .eq("deliverable_share_token", token)
     .eq("deliverable_share_enabled", true)
     .is("deleted_at", null)
@@ -136,6 +137,28 @@ export async function POST(request: Request, { params }: Props) {
     .maybeSingle();
   if (!deliverable) {
     return NextResponse.json({ error: "deliverable_not_found" }, { status: 400 });
+  }
+
+  const binding = evaluateRecipientBinding(
+    body.reviewer_email,
+    project.deliverable_share_recipient_email ?? null,
+  );
+  if (!binding.allowed) {
+    await recordShareAction(service, {
+      surface: "deliverable",
+      action: "review",
+      targetId: project.id,
+      deliverableId: deliverable.id,
+      token,
+      decision: body.decision,
+      claimedEmail: body.reviewer_email,
+      recipientEmail: project.deliverable_share_recipient_email ?? null,
+      recipientMatched: false,
+      accepted: false,
+      request,
+      ip,
+    });
+    return NextResponse.json({ error: "email_mismatch" }, { status: 403 });
   }
 
   const reviewNote = [
@@ -160,6 +183,21 @@ export async function POST(request: Request, { params }: Props) {
     console.error("[deliverable-share/review] update", updateError);
     return NextResponse.json({ error: "internal" }, { status: 500 });
   }
+
+  await recordShareAction(service, {
+    surface: "deliverable",
+    action: "review",
+    targetId: project.id,
+    deliverableId: deliverable.id,
+    token,
+    decision: body.decision,
+    claimedEmail: body.reviewer_email,
+    recipientEmail: project.deliverable_share_recipient_email ?? null,
+    recipientMatched: binding.matched,
+    accepted: true,
+    request,
+    ip,
+  });
 
   await notifyYagi({
     request,
