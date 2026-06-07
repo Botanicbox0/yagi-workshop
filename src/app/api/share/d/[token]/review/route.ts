@@ -113,9 +113,7 @@ export async function POST(request: Request, { params }: Props) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  const svc = createSupabaseService();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
-  const service = svc as any;
+  const service = createSupabaseService();
   const { data: project } = await service
     .from("projects")
     .select("id, title, status, workspace_id, deliverable_share_recipient_email")

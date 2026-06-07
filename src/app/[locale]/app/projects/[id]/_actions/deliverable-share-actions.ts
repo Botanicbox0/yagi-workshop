@@ -60,8 +60,7 @@ export async function shareProjectDeliverables(
 
   const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
-  const sb = auth.supabase as any;
+  const sb = auth.supabase;
 
   const { data: project, error: projectError } = await sb
     .from("projects")
@@ -130,8 +129,7 @@ export async function unshareProjectDeliverables(projectId: string): Promise<Sim
 
   const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
-  const sb = auth.supabase as any;
+  const sb = auth.supabase;
 
   const { error } = await sb
     .from("projects")
@@ -153,8 +151,7 @@ export async function rotateProjectDeliverablesShare(projectId: string): Promise
 
   const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag deliverable share columns
-  const sb = auth.supabase as any;
+  const sb = auth.supabase;
 
   const { count, error: countError } = await sb
     .from("project_deliverables")

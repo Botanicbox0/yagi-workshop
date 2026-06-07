@@ -42,8 +42,7 @@ export async function POST(request: Request, { params }: Props) {
   }
 
   const svc = createSupabaseService();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- share_recipient_email is newer than generated types (P0-2 migration)
-  const service = svc as any;
+  const service = svc;
 
   // Load board — must be share_enabled AND status='shared'
   const { data: board } = await service

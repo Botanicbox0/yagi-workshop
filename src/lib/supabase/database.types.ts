@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      agency_artist_roster: {
+        Row: {
+          agency_workspace_id: string
+          artist_workspace_id: string
+          created_at: string
+          id: string
+          linked_by: string | null
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_workspace_id: string
+          artist_workspace_id: string
+          created_at?: string
+          id?: string
+          linked_by?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_workspace_id?: string
+          artist_workspace_id?: string
+          created_at?: string
+          id?: string
+          linked_by?: string | null
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_artist_roster_agency_workspace_id_fkey"
+            columns: ["agency_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_artist_roster_artist_profile_fk"
+            columns: ["artist_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "artist_profile"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "agency_artist_roster_artist_workspace_id_fkey"
+            columns: ["artist_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_artist_roster_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       artist_profile: {
         Row: {
           activated_at: string | null
@@ -185,6 +244,345 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_categories: {
+        Row: {
+          campaign_id: string
+          description: string | null
+          display_order: number
+          format_spec: Json | null
+          id: string
+          name: string
+        }
+        Insert: {
+          campaign_id: string
+          description?: string | null
+          display_order?: number
+          format_spec?: Json | null
+          id?: string
+          name: string
+        }
+        Update: {
+          campaign_id?: string
+          description?: string | null
+          display_order?: number
+          format_spec?: Json | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_categories_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_distributions: {
+        Row: {
+          added_by: string | null
+          channel: string
+          comment_count: number | null
+          created_at: string
+          id: string
+          like_count: number | null
+          metric_log_notes: string | null
+          metric_logged_at: string | null
+          notes: string | null
+          posted_at: string
+          submission_id: string
+          updated_at: string
+          url: string
+          view_count: number | null
+        }
+        Insert: {
+          added_by?: string | null
+          channel: string
+          comment_count?: number | null
+          created_at?: string
+          id?: string
+          like_count?: number | null
+          metric_log_notes?: string | null
+          metric_logged_at?: string | null
+          notes?: string | null
+          posted_at?: string
+          submission_id: string
+          updated_at?: string
+          url: string
+          view_count?: number | null
+        }
+        Update: {
+          added_by?: string | null
+          channel?: string
+          comment_count?: number | null
+          created_at?: string
+          id?: string
+          like_count?: number | null
+          metric_log_notes?: string | null
+          metric_logged_at?: string | null
+          notes?: string | null
+          posted_at?: string
+          submission_id?: string
+          updated_at?: string
+          url?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_distributions_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_distributions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_review_decisions: {
+        Row: {
+          comment: string | null
+          decided_at: string
+          decision: string
+          id: string
+          reviewer_user_id: string
+          submission_id: string
+        }
+        Insert: {
+          comment?: string | null
+          decided_at?: string
+          decision: string
+          id?: string
+          reviewer_user_id: string
+          submission_id: string
+        }
+        Update: {
+          comment?: string | null
+          decided_at?: string
+          decision?: string
+          id?: string
+          reviewer_user_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_review_decisions_reviewer_user_id_fkey"
+            columns: ["reviewer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_review_decisions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_submissions: {
+        Row: {
+          applicant_email: string
+          applicant_name: string
+          applicant_phone: string | null
+          applicant_workspace_id: string | null
+          approved_at: string | null
+          campaign_id: string
+          category_id: string
+          content_mime: string | null
+          content_r2_key: string | null
+          created_at: string
+          declined_at: string | null
+          description: string | null
+          distributed_at: string | null
+          duration_seconds: number | null
+          external_url: string | null
+          id: string
+          status: string
+          submitted_at: string
+          team_name: string | null
+          thumbnail_r2_key: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_email: string
+          applicant_name: string
+          applicant_phone?: string | null
+          applicant_workspace_id?: string | null
+          approved_at?: string | null
+          campaign_id: string
+          category_id: string
+          content_mime?: string | null
+          content_r2_key?: string | null
+          created_at?: string
+          declined_at?: string | null
+          description?: string | null
+          distributed_at?: string | null
+          duration_seconds?: number | null
+          external_url?: string | null
+          id?: string
+          status?: string
+          submitted_at?: string
+          team_name?: string | null
+          thumbnail_r2_key?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_email?: string
+          applicant_name?: string
+          applicant_phone?: string | null
+          applicant_workspace_id?: string | null
+          approved_at?: string | null
+          campaign_id?: string
+          category_id?: string
+          content_mime?: string | null
+          content_r2_key?: string | null
+          created_at?: string
+          declined_at?: string | null
+          description?: string | null
+          distributed_at?: string | null
+          duration_seconds?: number | null
+          external_url?: string | null
+          id?: string
+          status?: string
+          submitted_at?: string
+          team_name?: string | null
+          thumbnail_r2_key?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_submissions_applicant_workspace_id_fkey"
+            columns: ["applicant_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_submissions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          allow_external_url: boolean
+          allow_r2_upload: boolean
+          brief: string | null
+          compensation_metadata: Json | null
+          compensation_model: string | null
+          created_at: string
+          created_by: string
+          decision_metadata: Json | null
+          description: string | null
+          distribution_starts_at: string | null
+          external_sponsor_name: string | null
+          has_external_sponsor: boolean
+          id: string
+          prize_pool_krw: number | null
+          prize_tiers: Json | null
+          recruit_target: number | null
+          reference_assets: Json | null
+          request_metadata: Json | null
+          slug: string
+          sponsor_workspace_id: string | null
+          status: string
+          submission_close_at: string | null
+          submission_open_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_external_url?: boolean
+          allow_r2_upload?: boolean
+          brief?: string | null
+          compensation_metadata?: Json | null
+          compensation_model?: string | null
+          created_at?: string
+          created_by: string
+          decision_metadata?: Json | null
+          description?: string | null
+          distribution_starts_at?: string | null
+          external_sponsor_name?: string | null
+          has_external_sponsor?: boolean
+          id?: string
+          prize_pool_krw?: number | null
+          prize_tiers?: Json | null
+          recruit_target?: number | null
+          reference_assets?: Json | null
+          request_metadata?: Json | null
+          slug: string
+          sponsor_workspace_id?: string | null
+          status?: string
+          submission_close_at?: string | null
+          submission_open_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_external_url?: boolean
+          allow_r2_upload?: boolean
+          brief?: string | null
+          compensation_metadata?: Json | null
+          compensation_model?: string | null
+          created_at?: string
+          created_by?: string
+          decision_metadata?: Json | null
+          description?: string | null
+          distribution_starts_at?: string | null
+          external_sponsor_name?: string | null
+          has_external_sponsor?: boolean
+          id?: string
+          prize_pool_krw?: number | null
+          prize_tiers?: Json | null
+          recruit_target?: number | null
+          reference_assets?: Json | null
+          request_metadata?: Json | null
+          slug?: string
+          sponsor_workspace_id?: string | null
+          status?: string
+          submission_close_at?: string | null
+          submission_open_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_sponsor_workspace_id_fkey"
+            columns: ["sponsor_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -561,6 +959,326 @@ export type Database = {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_payment_events: {
+        Row: {
+          amount: number | null
+          deal_id: string
+          event_type: string
+          id: string
+          invoice_ref: string | null
+          note: string | null
+          occurred_at: string
+          recorded_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          deal_id: string
+          event_type: string
+          id?: string
+          invoice_ref?: string | null
+          note?: string | null
+          occurred_at?: string
+          recorded_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          deal_id?: string
+          event_type?: string
+          id?: string
+          invoice_ref?: string | null
+          note?: string | null
+          occurred_at?: string
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_payment_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_payment_events_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_status_history: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          comment: string | null
+          deal_id: string
+          from_status: string | null
+          id: string
+          to_status: string
+          transitioned_at: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: string
+          comment?: string | null
+          deal_id: string
+          from_status?: string | null
+          id?: string
+          to_status: string
+          transitioned_at?: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          comment?: string | null
+          deal_id?: string
+          from_status?: string | null
+          id?: string
+          to_status?: string
+          transitioned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_status_history_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_status_history_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          artist_payout_amount: number | null
+          artist_workspace_id: string
+          brand_amount: number | null
+          brand_workspace_id: string
+          brief: string | null
+          commission_rate: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          payment_status: string
+          persona_id: string
+          persona_name_snapshot: string | null
+          project_id: string | null
+          proposed_budget: number | null
+          settlement_recipient_type: string | null
+          settlement_recipient_workspace_id: string | null
+          status: string
+          updated_at: string
+          usage_types: string[]
+          yagi_commission_amount: number | null
+        }
+        Insert: {
+          artist_payout_amount?: number | null
+          artist_workspace_id: string
+          brand_amount?: number | null
+          brand_workspace_id: string
+          brief?: string | null
+          commission_rate?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          payment_status?: string
+          persona_id: string
+          persona_name_snapshot?: string | null
+          project_id?: string | null
+          proposed_budget?: number | null
+          settlement_recipient_type?: string | null
+          settlement_recipient_workspace_id?: string | null
+          status?: string
+          updated_at?: string
+          usage_types?: string[]
+          yagi_commission_amount?: number | null
+        }
+        Update: {
+          artist_payout_amount?: number | null
+          artist_workspace_id?: string
+          brand_amount?: number | null
+          brand_workspace_id?: string
+          brief?: string | null
+          commission_rate?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          payment_status?: string
+          persona_id?: string
+          persona_name_snapshot?: string | null
+          project_id?: string | null
+          proposed_budget?: number | null
+          settlement_recipient_type?: string | null
+          settlement_recipient_workspace_id?: string | null
+          status?: string
+          updated_at?: string
+          usage_types?: string[]
+          yagi_commission_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_artist_workspace_id_fkey"
+            columns: ["artist_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_brand_workspace_id_fkey"
+            columns: ["brand_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "twin_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_settlement_recipient_workspace_id_fkey"
+            columns: ["settlement_recipient_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_annotations: {
+        Row: {
+          asset_index: number
+          coords: Json
+          created_at: string
+          created_by: string
+          deliverable_id: string
+          id: string
+          project_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          seq: number
+          shape: string
+          status: string
+          thread_id: string
+          timestamp_sec: number | null
+          visibility: string
+        }
+        Insert: {
+          asset_index?: number
+          coords: Json
+          created_at?: string
+          created_by: string
+          deliverable_id: string
+          id?: string
+          project_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          seq: number
+          shape?: string
+          status?: string
+          thread_id: string
+          timestamp_sec?: number | null
+          visibility?: string
+        }
+        Update: {
+          asset_index?: number
+          coords?: Json
+          created_at?: string
+          created_by?: string
+          deliverable_id?: string
+          id?: string
+          project_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          seq?: number
+          shape?: string
+          status?: string
+          thread_id?: string
+          timestamp_sec?: number | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_annotations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_annotations_project_deliverable_fkey"
+            columns: ["project_id", "deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "project_deliverables"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
+            foreignKeyName: "deliverable_annotations_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_annotations_thread_fkey"
+            columns: ["thread_id"]
+            isOneToOne: true
+            referencedRelation: "project_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_views: {
+        Row: {
+          deliverable_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          deliverable_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          deliverable_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_views_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "project_deliverables"
             referencedColumns: ["id"]
           },
         ]
@@ -1063,6 +1781,7 @@ export type Database = {
           project_id: string
           share_enabled: boolean
           share_password_hash: string | null
+          share_recipient_email: string | null
           share_token: string | null
           status: string
           title: string
@@ -1080,6 +1799,7 @@ export type Database = {
           project_id: string
           share_enabled?: boolean
           share_password_hash?: string | null
+          share_recipient_email?: string | null
           share_token?: string | null
           status?: string
           title: string
@@ -1097,6 +1817,7 @@ export type Database = {
           project_id?: string
           share_enabled?: boolean
           share_password_hash?: string | null
+          share_recipient_email?: string | null
           share_token?: string | null
           status?: string
           title?: string
@@ -1450,60 +2171,6 @@ export type Database = {
           },
         ]
       }
-      deliverable_annotations: {
-        Row: {
-          id: string
-          project_id: string
-          deliverable_id: string
-          asset_index: number
-          seq: number
-          shape: string
-          coords: Json
-          timestamp_sec: number | null
-          thread_id: string
-          visibility: string
-          status: string
-          created_by: string
-          created_at: string
-          resolved_by: string | null
-          resolved_at: string | null
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          deliverable_id: string
-          asset_index?: number
-          seq: number
-          shape?: string
-          coords: Json
-          timestamp_sec?: number | null
-          thread_id: string
-          visibility?: string
-          status?: string
-          created_by: string
-          created_at?: string
-          resolved_by?: string | null
-          resolved_at?: string | null
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          deliverable_id?: string
-          asset_index?: number
-          seq?: number
-          shape?: string
-          coords?: Json
-          timestamp_sec?: number | null
-          thread_id?: string
-          visibility?: string
-          status?: string
-          created_by?: string
-          created_at?: string
-          resolved_by?: string | null
-          resolved_at?: string | null
-        }
-        Relationships: []
-      }
       project_brief_assets: {
         Row: {
           byte_size: number
@@ -1628,11 +2295,15 @@ export type Database = {
           id: string
           note: string | null
           project_id: string
+          released_at: string | null
           review_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
           storage_paths: string[]
+          stream_ready_at: string | null
+          stream_status: string | null
+          stream_uid: string | null
           submitted_by: string
           version: number
         }
@@ -1642,11 +2313,15 @@ export type Database = {
           id?: string
           note?: string | null
           project_id: string
+          released_at?: string | null
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           storage_paths?: string[]
+          stream_ready_at?: string | null
+          stream_status?: string | null
+          stream_uid?: string | null
           submitted_by: string
           version?: number
         }
@@ -1656,11 +2331,15 @@ export type Database = {
           id?: string
           note?: string | null
           project_id?: string
+          released_at?: string | null
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           storage_paths?: string[]
+          stream_ready_at?: string | null
+          stream_status?: string | null
+          stream_uid?: string | null
           submitted_by?: string
           version?: number
         }
@@ -1684,6 +2363,52 @@ export type Database = {
             columns: ["submitted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_guests: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          project_id: string
+          workspace_member_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          project_id: string
+          workspace_member_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          project_id?: string
+          workspace_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_guests_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_guests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_guests_workspace_member_id_fkey"
+            columns: ["workspace_member_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_members"
             referencedColumns: ["id"]
           },
         ]
@@ -1925,33 +2650,53 @@ export type Database = {
       }
       project_threads: {
         Row: {
+          annotation_id: string | null
           created_at: string
           created_by: string
+          deliverable_id: string | null
           id: string
           project_id: string
           title: string | null
         }
         Insert: {
+          annotation_id?: string | null
           created_at?: string
           created_by: string
+          deliverable_id?: string | null
           id?: string
           project_id: string
           title?: string | null
         }
         Update: {
+          annotation_id?: string | null
           created_at?: string
           created_by?: string
+          deliverable_id?: string | null
           id?: string
           project_id?: string
           title?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "project_threads_annotation_fkey"
+            columns: ["annotation_id"]
+            isOneToOne: false
+            referencedRelation: "deliverable_annotations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "project_threads_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_threads_deliverable_project_fkey"
+            columns: ["project_id", "deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "project_deliverables"
+            referencedColumns: ["project_id", "id"]
           },
           {
             foreignKeyName: "project_threads_project_id_fkey"
@@ -1972,6 +2717,9 @@ export type Database = {
           created_at: string
           created_by: string
           deleted_at: string | null
+          deliverable_share_enabled: boolean
+          deliverable_share_recipient_email: string | null
+          deliverable_share_token: string | null
           deliverable_types: string[]
           estimated_budget_range: string | null
           has_external_brand_party: boolean
@@ -1989,6 +2737,7 @@ export type Database = {
           proposal_goal: string | null
           proposal_timeline: string | null
           purpose: string[]
+          revision_rounds_limit: number
           status: string
           submitted_at: string | null
           target_audience: string | null
@@ -2009,6 +2758,9 @@ export type Database = {
           created_at?: string
           created_by: string
           deleted_at?: string | null
+          deliverable_share_enabled?: boolean
+          deliverable_share_recipient_email?: string | null
+          deliverable_share_token?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
           has_external_brand_party?: boolean
@@ -2026,6 +2778,7 @@ export type Database = {
           proposal_goal?: string | null
           proposal_timeline?: string | null
           purpose?: string[]
+          revision_rounds_limit?: number
           status?: string
           submitted_at?: string | null
           target_audience?: string | null
@@ -2046,6 +2799,9 @@ export type Database = {
           created_at?: string
           created_by?: string
           deleted_at?: string | null
+          deliverable_share_enabled?: boolean
+          deliverable_share_recipient_email?: string | null
+          deliverable_share_token?: string | null
           deliverable_types?: string[]
           estimated_budget_range?: string | null
           has_external_brand_party?: boolean
@@ -2063,6 +2819,7 @@ export type Database = {
           proposal_goal?: string | null
           proposal_timeline?: string | null
           purpose?: string[]
+          revision_rounds_limit?: number
           status?: string
           submitted_at?: string | null
           target_audience?: string | null
@@ -2097,6 +2854,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      share_action_audit: {
+        Row: {
+          accepted: boolean
+          action: string
+          claimed_email: string | null
+          created_at: string
+          decision: string | null
+          deliverable_id: string | null
+          id: string
+          ip: string | null
+          recipient_email: string | null
+          recipient_matched: boolean
+          surface: string
+          target_id: string
+          token_hash: string
+          user_agent: string | null
+        }
+        Insert: {
+          accepted: boolean
+          action: string
+          claimed_email?: string | null
+          created_at?: string
+          decision?: string | null
+          deliverable_id?: string | null
+          id?: string
+          ip?: string | null
+          recipient_email?: string | null
+          recipient_matched: boolean
+          surface: string
+          target_id: string
+          token_hash: string
+          user_agent?: string | null
+        }
+        Update: {
+          accepted?: boolean
+          action?: string
+          claimed_email?: string | null
+          created_at?: string
+          decision?: string | null
+          deliverable_id?: string | null
+          id?: string
+          ip?: string | null
+          recipient_email?: string | null
+          recipient_matched?: boolean
+          surface?: string
+          target_id?: string
+          token_hash?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       showcase_challenge_winners: {
         Row: {
@@ -2692,6 +3500,111 @@ export type Database = {
           },
         ]
       }
+      twin_persona_assets: {
+        Row: {
+          asset_type: string | null
+          created_at: string
+          file_name: string | null
+          id: string
+          note: string | null
+          persona_id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          asset_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          note?: string | null
+          persona_id: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          asset_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          note?: string | null
+          persona_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "twin_persona_assets_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "twin_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "twin_persona_assets_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      twin_personas: {
+        Row: {
+          artist_workspace_id: string
+          cover_asset_path: string | null
+          created_at: string
+          description: string | null
+          id: string
+          min_fee: number | null
+          min_fee_public: boolean
+          name: string | null
+          persona_type: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          artist_workspace_id: string
+          cover_asset_path?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_fee?: number | null
+          min_fee_public?: boolean
+          name?: string | null
+          persona_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          artist_workspace_id?: string
+          cover_asset_path?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_fee?: number | null
+          min_fee_public?: boolean
+          name?: string | null
+          persona_type?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "twin_personas_artist_profile_fkey"
+            columns: ["artist_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "artist_profile"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "twin_personas_artist_workspace_id_fkey"
+            columns: ["artist_workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2856,6 +3769,7 @@ export type Database = {
           business_type: string | null
           created_at: string
           id: string
+          is_test: boolean
           kind: string
           logo_url: string | null
           name: string
@@ -2874,6 +3788,7 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           id?: string
+          is_test?: boolean
           kind?: string
           logo_url?: string | null
           name: string
@@ -2892,6 +3807,7 @@ export type Database = {
           business_type?: string | null
           created_at?: string
           id?: string
+          is_test?: boolean
           kind?: string
           logo_url?: string | null
           name?: string
@@ -2909,6 +3825,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_guest_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          project_id: string
+          workspace_id: string
+        }[]
+      }
       add_project_board_pdf: {
         Args: {
           p_board_id: string
@@ -2938,14 +3861,38 @@ export type Database = {
         Returns: string
       }
       change_handle: { Args: { new_handle_input: string }; Returns: undefined }
-      create_invoice_from_deal: {
-        Args: { p_deal_id: string }
-        Returns: string
-      }
       convert_commission_to_project: {
         Args: { p_commission_id: string }
         Returns: Json
       }
+      create_deal: {
+        Args: {
+          p_brand_workspace_id: string
+          p_brief?: string
+          p_persona_id: string
+          p_proposed_budget?: number
+          p_usage_types?: string[]
+        }
+        Returns: string
+      }
+      create_deliverable_annotation: {
+        Args: {
+          p_asset_index: number
+          p_body?: string
+          p_coords: Json
+          p_deliverable_id: string
+          p_project_id: string
+          p_shape: string
+          p_timestamp_sec?: number
+          p_visibility?: string
+        }
+        Returns: {
+          annotation_id: string
+          annotation_seq: number
+          annotation_thread_id: string
+        }[]
+      }
+      create_invoice_from_deal: { Args: { p_deal_id: string }; Returns: string }
       create_meeting_with_attendees: {
         Args: {
           p_attendees: Json
@@ -2959,6 +3906,36 @@ export type Database = {
         }
         Returns: string
       }
+      deliverable_annotation_coords_valid: {
+        Args: { p_coords: Json; p_shape: string }
+        Returns: boolean
+      }
+      deliverable_seen_by_client: {
+        Args: { p_deliverable_id: string }
+        Returns: boolean
+      }
+      deliverable_seen_by_yagi: {
+        Args: { p_deliverable_id: string }
+        Returns: boolean
+      }
+      find_user_by_email: { Args: { p_email: string }; Returns: string }
+      get_admin_invoice_sandbox_metrics: {
+        Args: {
+          p_include_test?: boolean
+          p_month_start?: string
+          p_today?: string
+          p_year_start?: string
+        }
+        Returns: {
+          mock_count: number
+          mock_total_krw: number
+          mtd_total_krw: number
+          overdue_count: number
+          overdue_total_krw: number
+          status_counts: Json
+          ytd_total_krw: number
+        }[]
+      }
       get_submission_vote_counts: {
         Args: { p_challenge_id: string }
         Returns: {
@@ -2968,7 +3945,19 @@ export type Database = {
       }
       increment_showcase_view: { Args: { sid: string }; Returns: number }
       init_project_board: { Args: { p_project_id: string }; Returns: string }
+      is_artist_workspace_member: {
+        Args: { uid: string; wsid: string }
+        Returns: boolean
+      }
       is_handle_available: { Args: { candidate: string }; Returns: boolean }
+      is_project_guest: {
+        Args: { p_project_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_valid_deal_transition: {
+        Args: { p_from: string; p_role: string; p_to: string }
+        Returns: boolean
+      }
       is_valid_transition: {
         Args: { actor_role: string; from_status: string; to_status: string }
         Returns: boolean
@@ -2977,7 +3966,33 @@ export type Database = {
       is_ws_member: { Args: { uid: string; wsid: string }; Returns: boolean }
       is_yagi_admin: { Args: { uid: string }; Returns: boolean }
       is_yagi_internal_ws: { Args: { ws_id: string }; Returns: boolean }
+      list_discoverable_personas: {
+        Args: never
+        Returns: {
+          cover_asset_path: string
+          description: string
+          id: string
+          min_fee: number
+          name: string
+          persona_type: string
+          status: string
+        }[]
+      }
       mark_invoice_paid: { Args: { p_invoice_id: string }; Returns: undefined }
+      next_deliverable_version: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
+      record_deal_payment: {
+        Args: {
+          p_amount?: number
+          p_deal_id: string
+          p_event_type: string
+          p_invoice_ref?: string
+          p_note?: string
+        }
+        Returns: undefined
+      }
       remove_project_board_attachment: {
         Args: { p_attachment_id: string; p_board_id: string; p_kind: string }
         Returns: boolean
@@ -3003,8 +4018,25 @@ export type Database = {
         }
         Returns: string
       }
+      set_deliverable_annotation_status: {
+        Args: { p_annotation_id: string; p_status: string }
+        Returns: {
+          annotation_id: string
+          resolved_at: string
+          resolved_by: string
+          status: string
+        }[]
+      }
+      set_project_revision_rounds_limit: {
+        Args: { p_limit: number; p_project_id: string }
+        Returns: undefined
+      }
       toggle_project_board_lock: {
         Args: { p_board_id: string; p_locked: boolean }
+        Returns: undefined
+      }
+      transition_deal_status: {
+        Args: { p_comment?: string; p_deal_id: string; p_to_status: string }
         Returns: undefined
       }
       transition_project_status: {

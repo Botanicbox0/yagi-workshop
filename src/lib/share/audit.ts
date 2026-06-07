@@ -52,8 +52,7 @@ export async function recordShareAction(
 ): Promise<void> {
   const userAgent = input.request.headers.get("user-agent") ?? null;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated types lag share_action_audit (P0-2 migration)
-    const { error } = await (svc as any).from("share_action_audit").insert({
+    const { error } = await svc.from("share_action_audit").insert({
       surface: input.surface,
       action: input.action,
       target_id: input.targetId,
