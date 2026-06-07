@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseService } from "@/lib/supabase/service";
 import { checkRateLimit, getClientIp } from "@/lib/share/rate-limit";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
+import { evaluateRecipientBinding, recordShareAction } from "@/lib/share/audit";
 
 function escapeHtml(s: string): string {
   return s
@@ -41,11 +42,13 @@ export async function POST(request: Request, { params }: Props) {
   }
 
   const svc = createSupabaseService();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- share_recipient_email is newer than generated types (P0-2 migration)
+  const service = svc as any;
 
   // Load board — must be share_enabled AND status='shared'
-  const { data: board } = await svc
+  const { data: board } = await service
     .from("preprod_boards")
-    .select("id, title, status")
+    .select("id, title, status, share_recipient_email")
     .eq("share_token", token)
     .eq("share_enabled", true)
     .maybeSingle();
@@ -59,6 +62,27 @@ export async function POST(request: Request, { params }: Props) {
       { error: "not_approvable", status: board.status },
       { status: 409 },
     );
+  }
+
+  const binding = evaluateRecipientBinding(
+    body.client_email,
+    board.share_recipient_email ?? null,
+  );
+  if (!binding.allowed) {
+    await recordShareAction(service, {
+      surface: "board",
+      action: "approve",
+      targetId: board.id,
+      token,
+      decision: null,
+      claimedEmail: body.client_email,
+      recipientEmail: board.share_recipient_email ?? null,
+      recipientMatched: false,
+      accepted: false,
+      request,
+      ip,
+    });
+    return NextResponse.json({ error: "email_mismatch" }, { status: 403 });
   }
 
   // Race-guarded update: only update if still 'shared'
@@ -86,6 +110,20 @@ export async function POST(request: Request, { params }: Props) {
       { status: 409 },
     );
   }
+
+  await recordShareAction(service, {
+    surface: "board",
+    action: "approve",
+    targetId: board.id,
+    token,
+    decision: null,
+    claimedEmail: body.client_email,
+    recipientEmail: board.share_recipient_email ?? null,
+    recipientMatched: binding.matched,
+    accepted: true,
+    request,
+    ip,
+  });
 
   // Notify YAGI via Resend — include IP + UA so YAGI can spot spoofed
   // approver identity (the public endpoint cannot verify the email claim,

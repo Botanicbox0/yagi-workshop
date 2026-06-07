@@ -423,6 +423,9 @@ export async function DeliverablesTab({
             success: t("share.success"),
             error: t("share.error"),
             noReleased: t("share.no_released"),
+            recipientLabel: t("share.recipient_label"),
+            recipientPlaceholder: t("share.recipient_placeholder"),
+            recipientInvalid: t("share.recipient_invalid"),
           }}
         />
       ) : null}

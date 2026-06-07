@@ -46,9 +46,17 @@ function revalidateProject(projectId: string) {
   revalidatePath(`/[locale]/app/admin/projects/${projectId}`, "page");
 }
 
-export async function shareProjectDeliverables(projectId: string): Promise<ShareResult> {
+export async function shareProjectDeliverables(
+  projectId: string,
+  recipientEmail?: string,
+): Promise<ShareResult> {
   const parsed = projectIdSchema.safeParse(projectId);
   if (!parsed.success) return { ok: false, error: "validation" };
+
+  const recipient = recipientEmail?.trim() || null;
+  if (recipient && !z.string().email().safeParse(recipient).success) {
+    return { ok: false, error: "validation", message: "invalid_recipient_email" };
+  }
 
   const auth = await getStudioContext();
   if (!auth.ok) return { ok: false, error: auth.error };
@@ -83,6 +91,12 @@ export async function shareProjectDeliverables(projectId: string): Promise<Share
   if (!count || count < 1) return { ok: false, error: "no_released_deliverables" };
 
   if (project.deliverable_share_enabled === true && project.deliverable_share_token) {
+    if (recipient) {
+      await sb
+        .from("projects")
+        .update({ deliverable_share_recipient_email: recipient })
+        .eq("id", parsed.data);
+    }
     return {
       ok: true,
       token: project.deliverable_share_token as string,
@@ -96,6 +110,7 @@ export async function shareProjectDeliverables(projectId: string): Promise<Share
     .update({
       deliverable_share_enabled: true,
       deliverable_share_token: token,
+      deliverable_share_recipient_email: recipient,
     })
     .eq("id", parsed.data)
     .select("id");

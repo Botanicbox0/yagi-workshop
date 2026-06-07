@@ -22,6 +22,9 @@ type Labels = {
   success: string;
   error: string;
   noReleased: string;
+  recipientLabel: string;
+  recipientPlaceholder: string;
+  recipientInvalid: string;
 };
 
 export function DeliverableShareControls({
@@ -37,8 +40,12 @@ export function DeliverableShareControls({
 }) {
   const [url, setUrl] = useState(initialUrl);
   const [isEnabled, setIsEnabled] = useState(enabled);
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [isPending, startTransition] = useTransition();
   const visibleUrl = isEnabled ? url : null;
+  const recipientValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(
+    recipientEmail.trim(),
+  );
 
   function handleResult(result: Awaited<ReturnType<typeof shareProjectDeliverables>>) {
     if (!result.ok) {
@@ -56,7 +63,7 @@ export function DeliverableShareControls({
 
   function create() {
     startTransition(async () => {
-      handleResult(await shareProjectDeliverables(projectId));
+      handleResult(await shareProjectDeliverables(projectId, recipientEmail.trim()));
     });
   }
 
@@ -127,20 +134,44 @@ export function DeliverableShareControls({
               </Button>
             </>
           ) : (
-            <Button
-              type="button"
-              size="sm"
-              disabled={isPending}
-              onClick={create}
-              className="bg-brand text-brand-on hover:bg-brand/90"
-            >
-              {isPending ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Link2 className="mr-1.5 h-3.5 w-3.5" />
-              )}
-              {isPending ? labels.working : labels.create}
-            </Button>
+            <>
+              <div className="flex min-w-[240px] flex-col gap-1">
+                <label
+                  htmlFor="deliverable-share-recipient"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  {labels.recipientLabel}
+                </label>
+                <input
+                  id="deliverable-share-recipient"
+                  type="email"
+                  value={recipientEmail}
+                  onChange={(event) => setRecipientEmail(event.target.value)}
+                  placeholder={labels.recipientPlaceholder}
+                  aria-invalid={recipientEmail.trim() !== "" && !recipientValid}
+                  className="rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+                />
+                {recipientEmail.trim() !== "" && !recipientValid ? (
+                  <p className="text-xs text-destructive">
+                    {labels.recipientInvalid}
+                  </p>
+                ) : null}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isPending || !recipientValid}
+                onClick={create}
+                className="bg-brand text-brand-on hover:bg-brand/90"
+              >
+                {isPending ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Link2 className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                {isPending ? labels.working : labels.create}
+              </Button>
+            </>
           )}
         </div>
       </div>
