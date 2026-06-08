@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { NextIntlClientProvider } from "next-intl";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
@@ -48,6 +49,7 @@ export default async function ShareLayout({
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <Analytics />
           <Toaster position="top-center" />
         </NextIntlClientProvider>
       </body>

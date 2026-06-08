@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { NextIntlClientProvider } from "next-intl";
 import { Toaster } from "sonner";
 import { headers } from "next/headers";
@@ -38,6 +39,7 @@ export default async function CampaignsLayout({
       <body className="bg-background text-foreground antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <Analytics />
           <Toaster position="top-center" />
         </NextIntlClientProvider>
       </body>

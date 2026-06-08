@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { NextIntlClientProvider } from "next-intl";
 import { Toaster } from "sonner";
 import { inter } from "../../fonts";
@@ -43,6 +44,7 @@ export default async function ShowcaseLayout({
       <body className="bg-white text-black antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          <Analytics />
           <Toaster position="top-center" />
         </NextIntlClientProvider>
       </body>

@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { NextIntlClientProvider } from "next-intl";
 import { Toaster } from "sonner";
 import { inter } from "../fonts";
@@ -31,6 +32,7 @@ export default async function ChallengesLayout({
       <body className="bg-background text-foreground antialiased">
         <NextIntlClientProvider locale="ko" messages={messages}>
           <PublicChrome>{children}</PublicChrome>
+          <Analytics />
           <Toaster position="top-center" />
         </NextIntlClientProvider>
       </body>
