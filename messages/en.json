@@ -1534,61 +1534,114 @@
     "briefing": {
       "step1": {
         "header": {
-          "eyebrow": "STEP 1 / 3 — START",
-          "title": "What kind of project?",
-          "description": "Just the basics for now. We'll fill in the rest together."
+                "eyebrow": "Light intake",
+                "returning_eyebrow": "Quick re-request ? {count} prior projects",
+                "title": "Start with the signal.\nWe can shape the rest together.",
+                "returning_title": "Use the last project as context.\nTell us only what changed.",
+                "description": "Send the goal, content type, and one reference link. Detailed shot lists, ratios, legal notes, and schedules can move into the kickoff conversation.",
+                "returning_description": "We will reuse the context from your previous work. Add the new delta, a fresh reference, or the next batch you want to produce."
+        },
+        "light_rule": {
+                "title": "Keep it light",
+                "body": "The in-app form is only the starting point. YAGI will turn this into a deeper brief through the project room and kickoff meeting."
+        },
+        "visual_slot": {
+                "eyebrow": "Reference-first workflow",
+                "body": "A link, a product folder, or a rough example is often enough for us to start asking the right questions."
+        },
+        "returning": {
+                "default_name": "Follow-up ? {name}",
+                "previous_label": "Previous project context",
+                "updated_at": "Updated {date}",
+                "no_deliverables": "No saved content type",
+                "no_brief": "No brief summary saved on the previous project.",
+                "status": {
+                        "submitted": "Submitted",
+                        "in_review": "In review",
+                        "in_progress": "In production",
+                        "delivered": "Delivered",
+                        "approved": "Approved",
+                        "changes_requested": "Changes requested"
+                }
         },
         "field": {
-          "name": {
-            "label": "Project name",
-            "placeholder": "e.g., Spring season campaign"
-          },
-          "deliverable_types": {
-            "label": "What kind of content?",
-            "options": {
-              "image": "Image",
-              "ad_video_short": "Short Ad Video (~30s)",
-              "ad_video_long": "Long Ad Video (30s+)",
-              "ai_vfx_mv": "AI VFX (Music Video)",
-              "branding_video": "Branding Video",
-              "ad_video": "Ad video",
-              "ai_human": "AI human",
-              "motion_graphics": "Motion graphics",
-              "vfx": "VFX",
-              "branding": "Branding",
-              "illustration": "Illustration",
-              "other": "Other"
-            },
-            "descriptions": {
-              "image": "Product shots, lookbooks, SNS cards, etc.",
-              "ad_video_short": "Instagram Reels, YouTube Shorts, etc.",
-              "ad_video_long": "YouTube ads, TVCFs, brand films, etc.",
-              "ai_vfx_mv": "Music videos, concept videos, visual sequences, etc.",
-              "branding_video": "Company intros, product launches, making videos, etc."
-            }
-          },
-          "description": {
-            "label": "Objective / direction",
-            "helper": "Tell us what this project should achieve.",
-            "optional": "",
-            "placeholder": "e.g., We want the new product to land with younger customers and need a more cinematic AI visual direction than our usual ads."
-          }
+                "name": {
+                        "label": "Project name",
+                        "placeholder": "e.g., Summer product launch visuals",
+                        "returning_placeholder": "e.g., Next batch for the summer launch"
+                },
+                "planning": {
+                        "label": "How should we start?",
+                        "helper": "Pick the closest state. This only helps us decide the first conversation.",
+                        "options": {
+                                "want_proposal": "Please propose the direction",
+                                "have": "We already have a direction"
+                        },
+                        "descriptions": {
+                                "want_proposal": "Share the product, goal, and references; YAGI will suggest the creative route.",
+                                "have": "Paste your concept, script, or campaign idea and we will refine it."
+                        }
+                },
+                "deliverable_types": {
+                        "label": "What are we making?",
+                        "helper": "A rough selection is enough. Pick more than one if needed.",
+                        "options": {
+                                "image": "Images",
+                                "ad_video_short": "Short ad video (~30s)",
+                                "ad_video_long": "Long ad video (30s+)",
+                                "ai_vfx_mv": "AI VFX / music video",
+                                "branding_video": "Brand film",
+                                "ad_video": "Ad video",
+                                "ai_human": "AI human",
+                                "motion_graphics": "Motion graphics",
+                                "vfx": "VFX",
+                                "branding": "Branding",
+                                "illustration": "Illustration",
+                                "other": "Other"
+                        },
+                        "descriptions": {
+                                "image": "Product cuts, lookbook scenes, SNS cards, ecommerce assets.",
+                                "ad_video_short": "Reels, Shorts, TikTok, or a quick campaign hook.",
+                                "ad_video_long": "YouTube ads, brand films, launch videos, longer narratives.",
+                                "ai_vfx_mv": "Music video sequences, concept visuals, AI-native scenes.",
+                                "branding_video": "Product stories, company intros, making films, brand mood pieces."
+                        }
+                },
+                "description": {
+                        "label": "Describe the outcome in one paragraph",
+                        "helper": "Goal, product, audience, must-avoid tone, or the scene you already imagine ? anything is fine.",
+                        "returning_label": "What changes this time?",
+                        "returning_helper": "Tell us what to keep from the last project and what should be different in this round.",
+                        "optional": "",
+                        "placeholder": "e.g., We need cinematic product images and a short vertical video for the new SKU. The product should feel premium, not like a typical AI render.",
+                        "returning_placeholder": "e.g., Keep the last mood, but this time add three more SKUs and make the first batch more ecommerce-ready."
+                },
+                "reference": {
+                        "label": "Reference link",
+                        "helper": "Drive, Instagram, YouTube, Pinterest, Notion, or any page that shows the mood. One link is enough to start.",
+                        "placeholder": "https://..."
+                }
         },
         "cta": {
-          "next": "Next →"
+                "next": "Add details",
+                "details": "Add details",
+                "submit": "Submit request"
         },
         "error": {
-          "name_required": "Please enter a project name",
-          "deliverable_types_required": "Pick at least one content type",
-          "description_required": "Enter the objective and direction"
+                "name_required": "Please enter a project name",
+                "deliverable_types_required": "Pick at least one content type",
+                "description_required": "Tell us the goal or what changed",
+                "reference_url_invalid": "Enter a valid http:// or https:// link"
         },
         "toast": {
-          "unauthenticated": "You need to be signed in. Please sign in and try again.",
-          "no_workspace": "Workspace not found.",
-          "draft_failed": "Couldn't create the draft. Please try again in a moment."
+                "unauthenticated": "You need to be signed in. Please sign in and try again.",
+                "no_workspace": "Workspace not found.",
+                "draft_failed": "Couldn't create the draft. Please try again in a moment.",
+                "reference_failed": "Couldn't save the reference link. Please check the link and try again.",
+                "submit_success": "Request submitted. We will continue in the project room."
         },
-        "cancel_to_list": "← Back to project list"
-      },
+        "cancel_to_list": "Back to project list"
+},
       "step2": {
         "header": {
           "eyebrow": "STEP 2 / 3 — WORKSPACE",

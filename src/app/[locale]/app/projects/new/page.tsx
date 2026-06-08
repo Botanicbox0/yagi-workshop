@@ -13,6 +13,15 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+type LatestProjectSeed = {
+  id: string;
+  title: string;
+  brief: string | null;
+  deliverable_types: string[];
+  status: string;
+  updated_at: string;
+};
+
 export default async function NewProjectPage({ params }: Props) {
   const { locale } = await params;
 
@@ -46,6 +55,8 @@ export default async function NewProjectPage({ params }: Props) {
 
   // Fetch brands for the workspace (empty list is fine — wizard shows "None" option)
   const brands: { id: string; name: string }[] = [];
+  let priorProjectCount = 0;
+  let latestProject: LatestProjectSeed | null = null;
   if (workspaceId) {
     const { data: brandsData } = await supabase
       .from("brands")
@@ -53,6 +64,35 @@ export default async function NewProjectPage({ params }: Props) {
       .eq("workspace_id", workspaceId)
       .order("name", { ascending: true });
     brands.push(...(brandsData ?? []));
+
+    const [{ count }, { data: latest }] = await Promise.all([
+      supabase
+        .from("projects")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId)
+        .neq("status", "draft")
+        .is("deleted_at", null),
+      supabase
+        .from("projects")
+        .select("id, title, brief, deliverable_types, status, updated_at")
+        .eq("workspace_id", workspaceId)
+        .neq("status", "draft")
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    priorProjectCount = count ?? 0;
+    latestProject = latest
+      ? {
+          id: latest.id,
+          title: latest.title,
+          brief: latest.brief,
+          deliverable_types: latest.deliverable_types ?? [],
+          status: latest.status,
+          updated_at: latest.updated_at,
+        }
+      : null;
   }
 
   // Phase 5 Wave B task_04 — paradigm shift from form-only wizard to
@@ -65,6 +105,11 @@ export default async function NewProjectPage({ params }: Props) {
   // consumer here).
   void t;
   return (
-    <BriefingCanvas brands={brands} activeWorkspaceId={workspaceId} />
+    <BriefingCanvas
+      brands={brands}
+      activeWorkspaceId={workspaceId}
+      priorProjectCount={priorProjectCount}
+      latestProject={latestProject}
+    />
   );
 }

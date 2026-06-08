@@ -6,12 +6,9 @@
 // Production spec fields moved out of the intake form. Step 2 keeps only
 // target_audience because audience/objective is essential upfront.
 //
-// The remaining 6 fields (has_plan, additional_notes, budget_band,
-// target_delivery_at, meeting_preferred_at, interested_in_twin) move
-// to Step 3 (지원 정보 + 마지막 한 마디 + commit) and land there in
-// task_06 v3. The DB columns are unchanged; updateProjectMetadataAction
-// keeps the full 12-field schema (every field optional / partial-update
-// safe) so Step 3 can reuse it.
+// has_plan is now owned by the Step 1 light intake path. The remaining
+// commit fields (additional_notes, budget_band, target_delivery_at,
+// meeting_preferred_at, interested_in_twin) live in Step 3.
 //
 // Local form state debounces 5 seconds then commits via
 // updateProjectMetadataAction. Visible status indicator in the sticky

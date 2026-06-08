@@ -533,8 +533,8 @@ export async function updateBriefingDocumentNoteAction(
 // additional_notes) live in updateProjectCommitAction in
 // briefing-step3-actions.ts — kept on a separate action so each surface
 // is responsible for exactly its own write set, no cross-step partials.
-// has_plan was deleted entirely in hotfix-5; the DB column stays but is
-// never touched by the briefing canvas anymore.
+// has_plan is owned by the Step 1 light intake path; Step 2 no longer
+// autosaves that field.
 const metadataInput = z.object({
   projectId: z.string().uuid(),
   mood_keywords: z.array(z.string().trim().min(1).max(60)).max(20).optional(),

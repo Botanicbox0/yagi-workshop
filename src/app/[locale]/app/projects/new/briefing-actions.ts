@@ -47,6 +47,10 @@ const ensureBriefingDraftInput = z.object({
     .min(1)
     .max(15),
   description: z.string().trim().min(1).max(1000),
+  planning_mode: z
+    .enum(["want_proposal", "have"])
+    .optional()
+    .nullable(),
 });
 
 export type EnsureBriefingDraftInput = z.input<typeof ensureBriefingDraftInput>;
@@ -160,6 +164,7 @@ export async function ensureBriefingDraftProject(
           title: data.name,
           deliverable_types: data.deliverable_types,
           brief: data.description ?? null,
+          has_plan: data.planning_mode ?? null,
         })
         .eq("id", data.projectId)
         .eq("created_by", user.id)
@@ -243,6 +248,7 @@ export async function ensureBriefingDraftProject(
       title: data.name,
       deliverable_types: data.deliverable_types,
       brief: data.description ?? null,
+      has_plan: data.planning_mode ?? null,
     })
     .select("id")
     .single();
