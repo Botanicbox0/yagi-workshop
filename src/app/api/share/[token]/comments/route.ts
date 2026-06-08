@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: Props) {
 
   // Rate limit: 10 comments / hr / IP
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`${ip}:comments`, 10);
+  const rl = await checkRateLimit(`${ip}:comments`, 10);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "rate_limit_exceeded" },

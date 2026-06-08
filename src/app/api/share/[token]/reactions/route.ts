@@ -18,7 +18,7 @@ export async function POST(request: Request, { params }: Props) {
 
   // Rate limit: 20 reactions / hr / IP
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`${ip}:reactions`, 20);
+  const rl = await checkRateLimit(`${ip}:reactions`, 20);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "rate_limit_exceeded" },

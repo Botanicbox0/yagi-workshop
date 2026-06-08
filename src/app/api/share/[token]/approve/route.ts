@@ -25,7 +25,7 @@ export async function POST(request: Request, { params }: Props) {
 
   // Generous rate limit: 5 approvals / hr / IP
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`${ip}:approve`, 5);
+  const rl = await checkRateLimit(`${ip}:approve`, 5);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "rate_limit_exceeded" },

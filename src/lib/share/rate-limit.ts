@@ -1,55 +1,57 @@
+import "server-only";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
 /**
- * In-memory rate limiter for public share endpoints.
- *
- * Uses a simple sliding-window-per-hour approach keyed by
- * `${ip}:${action}` (e.g. `"1.2.3.4:reactions"`).
- *
- * NOTE: This is per-instance only — a horizontally scaled deployment
- * (Vercel Edge with multiple regions) will not deduplicate across instances.
- * Replace buckets with a Redis INCR + EXPIRE call when cross-region dedup
- * is required.
+ * Distributed rate limiter for public share endpoints, backed by Upstash Redis.
+ * Replaces the previous per-instance in-memory map. Fixed 1-hour window,
+ * keyed by `${ip}:${action}`. Fail-open on Redis errors so a transient outage
+ * cannot lock out legitimate share traffic.
  */
 
-type Window = { count: number; resetAt: number };
-
-const buckets = new Map<string, Window>();
-
-export function checkRateLimit(
-  key: string,
-  limitPerHour: number,
-): { ok: boolean; remaining: number } {
-  const now = Date.now();
-  const w = buckets.get(key);
-
-  if (!w || w.resetAt < now) {
-    buckets.set(key, { count: 1, resetAt: now + 3_600_000 });
-    return { ok: true, remaining: limitPerHour - 1 };
+let redisClient: Redis | null = null;
+function getRedis(): Redis {
+  if (!redisClient) {
+    redisClient = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    });
   }
-
-  if (w.count >= limitPerHour) {
-    return { ok: false, remaining: 0 };
-  }
-
-  w.count++;
-  return { ok: true, remaining: limitPerHour - w.count };
+  return redisClient;
 }
 
-/**
- * Extract the client IP from an incoming Next.js Request.
- *
- * Prefers Vercel's platform-set `x-vercel-forwarded-for` header (the only
- * value the runtime guarantees is set by the edge and not user-controlled).
- * On non-Vercel hosts, falls back to the platform's first-hop x-real-ip.
- *
- * IMPORTANT: Caller-supplied `x-forwarded-for` is intentionally NOT consulted
- * — clients can spoof it, which would let attackers rotate the rate-limit key.
- */
+const limiters = new Map<number, Ratelimit>();
+function limiterFor(limitPerHour: number): Ratelimit {
+  let limiter = limiters.get(limitPerHour);
+  if (!limiter) {
+    limiter = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.fixedWindow(limitPerHour, "1 h"),
+      prefix: "share-ratelimit",
+      analytics: false,
+    });
+    limiters.set(limitPerHour, limiter);
+  }
+  return limiter;
+}
+
+export async function checkRateLimit(
+  key: string,
+  limitPerHour: number,
+): Promise<{ ok: boolean; remaining: number }> {
+  try {
+    const { success, remaining } = await limiterFor(limitPerHour).limit(key);
+    return { ok: success, remaining };
+  } catch (err) {
+    console.error("[rate-limit] upstash unreachable, allowing request:", err);
+    return { ok: true, remaining: limitPerHour };
+  }
+}
+
 export function getClientIp(request: Request): string {
   const vercelIp = request.headers.get("x-vercel-forwarded-for");
   if (vercelIp) return vercelIp.split(",")[0]?.trim() || "unknown";
-
   const realIp = request.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
-
   return "unknown";
 }

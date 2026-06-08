@@ -116,7 +116,7 @@ async function notifyYagi(args: {
 export async function POST(request: Request, { params }: Props) {
   const { token } = await params;
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`${ip}:deliverable-comment`, 10);
+  const rl = await checkRateLimit(`${ip}:deliverable-comment`, 10);
   if (!rl.ok) {
     return NextResponse.json({ error: "rate_limit_exceeded" }, { status: 429 });
   }
