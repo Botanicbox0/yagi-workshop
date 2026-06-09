@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import {
@@ -232,8 +233,15 @@ export function BriefingCanvasStep1({
               />
             ) : (
               <div className="relative overflow-hidden rounded-lg border border-border/70 bg-surface-card-deep p-5">
-                {/* GPT image slot: public/brief/intake-hero.png. Prompt: Cinematic abstract studio atmosphere, near-black charcoal background, single diagonal sweep of deep crimson volumetric light, fine film grain, soft bokeh, premium editorial, large empty negative space on the left for text, 16:9, photoreal light study, no text. */}
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-soft via-surface-card-deep to-brand-deep" />
+                <Image
+                  src="/brief/brief-hero.webp"
+                  alt=""
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 42vw, 100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-soft via-surface-card-deep to-brand-deep opacity-80" />
                 <div className="absolute right-8 top-6 h-24 w-24 rounded-full bg-brand/20 blur-3xl" />
                 <div className="relative flex items-end justify-between gap-6">
                   <div>
@@ -439,13 +447,20 @@ function LatestProjectCard({
 }) {
   const t = useTranslations("projects");
   return (
-    <div className="rounded-lg border border-border/70 bg-surface-card-deep p-5">
-      {/* GPT image slot: public/brief/returning-welcome.png. Prompt: Minimal dark scene, matte black, small warm red glow like a distant signal light, subtle haze, calm confident mood, lots of empty space, vertical 4:5, no text. */}
-      <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-label text-brand">
+    <div className="relative overflow-hidden rounded-lg border border-border/70 bg-surface-card-deep p-5">
+      <Image
+        src="/brief/brief-welcome.webp"
+        alt=""
+        fill
+        sizes="(min-width: 1024px) 38vw, 100vw"
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-card-deep via-surface-card-deep to-brand-deep opacity-80" />
+      <div className="relative mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-label text-brand">
         <History className="h-3.5 w-3.5" aria-hidden />
         {t("briefing.step1.returning.previous_label")}
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="relative flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-semibold tracking-tight keep-all">
             {latestProject.title}
