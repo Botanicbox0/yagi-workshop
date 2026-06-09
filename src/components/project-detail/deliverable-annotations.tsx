@@ -212,7 +212,7 @@ function AnnotationMarker({
         isResolved
           ? "border-border bg-muted text-muted-foreground"
           : "border-brand bg-brand text-brand-on",
-        selected && "scale-110 ring-2 ring-gold",
+        selected && "scale-110 ring-2 ring-foreground",
       )}
     >
       {isResolved ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : annotation.seq}
@@ -226,7 +226,7 @@ function AnnotationMarker({
         className={cn(
           "group/marker absolute border-2 text-left transition-colors",
           isResolved ? "border-muted-foreground/70" : "border-brand",
-          selected && "ring-2 ring-gold",
+          selected && "ring-2 ring-foreground",
         )}
         style={{
           left: `${coords.x * 100}%`,
@@ -293,7 +293,7 @@ function DraftMarker({ draft }: { draft: DraftAnnotation }) {
   if (draft.shape === "box" && "w" in coords) {
     return (
       <div
-        className="pointer-events-none absolute border-2 border-dashed border-gold"
+        className="pointer-events-none absolute border-2 border-dashed border-foreground/80"
         data-testid="annotation-draft"
         style={{
           left: `${coords.x * 100}%`,
@@ -307,7 +307,7 @@ function DraftMarker({ draft }: { draft: DraftAnnotation }) {
 
   return (
     <div
-      className="pointer-events-none absolute h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold bg-gold px-2 text-center text-xs font-bold leading-7 text-gold-on"
+      className="pointer-events-none absolute h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-foreground bg-foreground px-2 text-center text-xs font-bold leading-7 text-background"
       style={{ left: `${coords.x * 100}%`, top: `${coords.y * 100}%` }}
       data-testid="annotation-draft"
     >
@@ -501,7 +501,7 @@ export function AnnotationPanel({
       </div>
 
       {draft ? (
-        <div className="rounded-lg border border-gold/40 bg-gold/10 p-4">
+        <div className="rounded-lg border border-foreground/25 bg-foreground/[0.05] p-4">
           <p className="text-sm font-semibold text-foreground">{labels.draftTitle}</p>
           <Textarea
             value={body}

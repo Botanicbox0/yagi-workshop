@@ -253,7 +253,7 @@ function CampaignCard({
         <span
           className={cn(
             "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-            isLive ? "bg-gold-soft text-gold" : "bg-brand-soft text-brand",
+            isLive ? "bg-brand-soft text-brand-ink" : "border border-edge-subtle bg-transparent text-muted-foreground",
           )}
         >
           {statusLabel}
@@ -265,12 +265,12 @@ function CampaignCard({
       <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2">
           {prizeLabel ? (
-            <p className="inline-flex items-center gap-2 text-xs font-semibold text-gold">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold text-brand-ink">
               {prizeLabel}
             </p>
           ) : null}
           <p className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <CalendarClock className="h-4 w-4 text-gold" aria-hidden="true" />
+            <CalendarClock className="h-4 w-4 text-brand-ink" aria-hidden="true" />
             {closeLabel}
           </p>
         </div>

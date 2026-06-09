@@ -24,17 +24,17 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       case 'draft':
         return 'bg-surface-card text-muted-foreground';
       case 'submitted':
-        return 'bg-surface-card text-foreground';
+        return 'border border-edge-subtle bg-transparent text-foreground/85';
       case 'in_review':
-        return 'bg-brand-soft text-brand';
+        return 'bg-brand-soft text-brand-ink';
       case 'in_progress':
         return 'bg-foreground text-background';
       case 'in_revision':
-        return 'bg-warning text-warning-foreground border border-dashed border-warning-foreground/40';
+        return 'bg-warning text-warning-foreground';
       case 'delivered':
         return 'bg-info text-info-foreground';
       case 'approved':
-        return 'bg-gold text-gold-on';
+        return 'bg-success text-success-foreground';
       case 'cancelled':
         return 'bg-muted text-muted-foreground line-through';
       case 'archived':

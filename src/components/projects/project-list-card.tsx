@@ -68,7 +68,7 @@ export function ProjectListCard({
     >
       <div className="flex items-start justify-between gap-4">
         <h3
-          className="min-w-0 flex-1 truncate text-[22px] font-semibold text-foreground keep-all"
+          className="min-w-0 flex-1 line-clamp-2 text-[22px] font-semibold text-foreground keep-all"
           style={{ letterSpacing: "-0.02em", lineHeight: 1.2 }}
         >
           {title}

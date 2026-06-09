@@ -91,7 +91,7 @@ export function DealProposalForm({ personaId }: Props) {
                 className={cn(
                   "flex min-h-11 items-center gap-3 rounded-lg border px-3 text-left text-sm transition-colors",
                   checked
-                    ? "border-gold bg-gold-soft text-foreground"
+                    ? "border-brand bg-brand-soft text-foreground"
                     : "border-border/70 bg-surface-card text-muted-foreground hover:border-border hover:text-foreground",
                 )}
               >

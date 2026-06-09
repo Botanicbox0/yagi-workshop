@@ -74,7 +74,7 @@ export default async function AdminAnnounceChallengePage({
   }
 
   return (
-    <div className="max-w-5xl space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-semibold tracking-display-ko text-2xl font-semibold">결과 발표</h1>

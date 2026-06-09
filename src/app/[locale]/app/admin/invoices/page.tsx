@@ -281,7 +281,7 @@ export default async function AdminInvoicesPage({ params, searchParams }: Props)
   ];
 
   return (
-    <div className="px-10 py-12 max-w-5xl">
+    <div className="mx-auto px-10 py-12 max-w-5xl">
       {/* Header */}
       <div className="mb-10">
         <h1 className="font-semibold tracking-display-ko text-3xl tracking-tight mb-1">

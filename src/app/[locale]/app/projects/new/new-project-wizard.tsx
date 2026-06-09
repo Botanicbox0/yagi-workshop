@@ -285,7 +285,6 @@ function DeliverableChips({
 // ---------------------------------------------------------------------------
 
 export function NewProjectWizard({
-  brands: _brands = [],
   activeWorkspaceId = null,
 }: NewProjectWizardProps) {
   const t = useTranslations("projects");

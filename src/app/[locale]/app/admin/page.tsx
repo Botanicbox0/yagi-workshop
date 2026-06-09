@@ -4,6 +4,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { GoogleIntegrationStatus } from "@/components/admin/google-integration-status";
 import { cn } from "@/lib/utils";
+import { Link } from "@/i18n/routing";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -25,11 +26,11 @@ type MeetingRow = {
 function syncBadgeClass(status: string): string {
   switch (status) {
     case "synced":
-      return "border-transparent bg-green-100 text-green-700";
+      return "border-transparent bg-success text-success-foreground";
     case "failed":
-      return "border-transparent bg-red-100 text-red-700";
+      return "border-transparent bg-brand-soft text-brand-ink";
     case "fallback_ics":
-      return "border-transparent bg-amber-100 text-amber-700";
+      return "border-transparent bg-warning text-warning-foreground";
     case "pending":
     default:
       return "border-transparent bg-muted text-muted-foreground";
@@ -118,14 +119,79 @@ export default async function AdminDashboardPage({ params }: Props) {
     (meeting) => meeting.project?.workspace?.is_test !== true,
   );
 
+  // Queue snapshot — same scope as the 요청함 (external workspaces, real
+  // data only) so these numbers always match what the queue page shows.
+  const { data: kpiRaw, error: kpiError } = await sb
+    .from("projects")
+    .select("status, workspace:workspaces!inner(kind, is_test)")
+    .in("workspace.kind", ["brand", "artist", "creator"])
+    .eq("workspace.is_test", false)
+    .in("status", ["submitted", "in_review", "in_progress", "in_revision", "delivered"]);
+
+  if (kpiError) {
+    console.error("[AdminDashboardPage] queue snapshot error:", kpiError);
+  }
+
+  const kpiRows = (kpiRaw ?? []) as { status: string }[];
+  const countOf = (statuses: string[]) =>
+    kpiRows.filter((r) => statuses.includes(r.status)).length;
+
+  const kpis = [
+    { key: "kpi_submitted", count: countOf(["submitted"]), tab: "submitted", hot: true },
+    { key: "kpi_in_review", count: countOf(["in_review"]), tab: "in_review", hot: false },
+    { key: "kpi_in_progress", count: countOf(["in_progress", "in_revision"]), tab: "in_progress", hot: false },
+    { key: "kpi_delivered", count: countOf(["delivered"]), tab: "delivered", hot: false },
+  ] as const;
+
   return (
-    <div className="px-10 py-12 max-w-5xl">
+    <div className="mx-auto w-full max-w-content px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl tracking-tight leading-[1.05] mb-1">
+        <h1 className="font-semibold tracking-display-ko text-4xl md:text-5xl leading-[1.05] mb-1">
           {t("title")}
         </h1>
       </div>
+
+      {/* Queue snapshot — KPI cards deep-linking into the 요청함 */}
+      <section className="mb-12">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("dashboard_queue_title")}
+          </h2>
+          <Link
+            href="/app/admin/projects"
+            className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t("dashboard_queue_open")} →
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {kpis.map(({ key, count, tab, hot }) => (
+            <Link
+              key={key}
+              href={`/app/admin/projects?tab=${tab}`}
+              className={cn(
+                "group rounded-xl border bg-surface-card p-5 transition-colors",
+                hot && count > 0
+                  ? "border-brand/45 hover:border-brand hover:bg-brand-soft"
+                  : "border-border/70 hover:border-border hover:bg-accent/50",
+              )}
+            >
+              <p
+                className={cn(
+                  "text-4xl font-semibold tabular-nums leading-none",
+                  hot && count > 0 ? "text-brand-ink" : "text-foreground",
+                )}
+              >
+                {count}
+              </p>
+              <p className="mt-2.5 text-xs font-medium uppercase tracking-label text-muted-foreground transition-colors group-hover:text-foreground/80 keep-all">
+                {t(key)}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Integrations */}
       <section className="mb-12">

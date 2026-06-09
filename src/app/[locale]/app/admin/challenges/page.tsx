@@ -66,7 +66,7 @@ export default async function AdminChallengesListPage({
   const rows = (data ?? []) as ChallengeRow[];
 
   return (
-    <div className="max-w-6xl space-y-6 p-6">
+    <div className="mx-auto max-w-6xl space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="font-semibold tracking-display-ko text-2xl font-semibold">챌린지 관리</h1>
         <Button size="pill" asChild>

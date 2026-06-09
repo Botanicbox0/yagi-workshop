@@ -252,7 +252,7 @@ export function DeliverablesReviewPanel({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-medium text-gold">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-success-foreground/30 bg-success px-3 py-1 text-xs font-medium text-success-foreground">
               <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
               {labels.finalCount.replace("{count}", String(finalCount))}
             </div>
@@ -385,7 +385,7 @@ function DeliverableCard({
               {labels.status[deliverable.status] ?? deliverable.status}
             </span>
             {deliverable.status === "approved" ? (
-              <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-gold">
+              <span className="rounded-full border border-success-foreground/30 bg-success px-2 py-0.5 text-[11px] font-semibold uppercase tracking-label text-success-foreground">
                 {labels.final}
               </span>
             ) : null}

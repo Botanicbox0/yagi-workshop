@@ -80,7 +80,7 @@ export default async function DiscoverDetailPage({ params }: Props) {
             </div>
             <div className="space-y-5 p-5 sm:p-6 lg:p-8">
               <div className="space-y-3">
-                <span className="inline-flex h-6 items-center rounded px-2 text-[11px] font-medium uppercase tracking-label bg-gold-soft text-gold">
+                <span className="inline-flex h-6 items-center rounded px-2 text-[11px] font-medium uppercase tracking-label bg-brand-soft text-brand-ink">
                   {persona.persona_type ?? t("default_type")}
                 </span>
                 <h1 className="font-sans text-3xl font-bold leading-tight tracking-normal text-foreground sm:text-4xl lg:text-5xl keep-all">

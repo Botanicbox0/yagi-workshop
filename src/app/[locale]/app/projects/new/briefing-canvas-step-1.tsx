@@ -216,7 +216,7 @@ export function BriefingCanvasStep1({
 
           <div className="grid gap-4">
             <div className="rounded-lg border border-border/70 bg-surface-raised p-5">
-              <p className="text-xs font-semibold uppercase tracking-label text-gold">
+              <p className="text-xs font-semibold uppercase tracking-label text-brand-ink">
                 {t("briefing.step1.light_rule.title")}
               </p>
               <p className="mt-3 text-sm leading-6 text-foreground keep-all">
@@ -233,7 +233,7 @@ export function BriefingCanvasStep1({
             ) : (
               <div className="relative overflow-hidden rounded-lg border border-border/70 bg-surface-card-deep p-5">
                 {/* GPT image slot: public/brief/intake-hero.png. Prompt: Cinematic abstract studio atmosphere, near-black charcoal background, single diagonal sweep of deep crimson volumetric light, fine film grain, soft bokeh, premium editorial, large empty negative space on the left for text, 16:9, photoreal light study, no text. */}
-                <div className="absolute inset-0 bg-gradient-to-br from-brand/20 via-surface-card-deep to-gold/10" />
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-soft via-surface-card-deep to-brand-deep" />
                 <div className="absolute right-8 top-6 h-24 w-24 rounded-full bg-brand/20 blur-3xl" />
                 <div className="relative flex items-end justify-between gap-6">
                   <div>

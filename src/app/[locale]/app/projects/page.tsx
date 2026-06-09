@@ -91,7 +91,6 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
-  if (sp.status) query = query.eq("status", sp.status);
   if (sp.brand_id) query = query.eq("brand_id", sp.brand_id);
 
   const { data, error } = await query;
@@ -99,15 +98,52 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     console.error("[ProjectsPage] Supabase error:", error);
   }
 
-  const projects = (data ?? []) as ProjectRow[];
+  // All direct-commission projects for the active workspace. brand_id is
+  // filtered server-side; status is filtered client-side below so (a) the
+  // status facet can be derived from the full set, and (b) the empty-state
+  // hero only fires on a truly empty list, never on an empty filter result.
+  const allProjects = (data ?? []) as ProjectRow[];
 
   const primaryWorkspaceId: string | null = activeWorkspaceId;
 
+  // Status facet — only statuses actually present, in workflow order.
+  const STATUS_ORDER = [
+    "in_review",
+    "in_progress",
+    "in_revision",
+    "submitted",
+    "delivered",
+    "approved",
+    "draft",
+    "cancelled",
+    "archived",
+  ];
+  const presentStatuses = Array.from(
+    new Set(allProjects.map((p) => p.status)),
+  ).sort((a, b) => {
+    const ia = STATUS_ORDER.indexOf(a);
+    const ib = STATUS_ORDER.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  const filteredProjects = sp.status
+    ? allProjects.filter((p) => p.status === sp.status)
+    : allProjects;
+
   // Resolve brand name for active brand_id filter chip
   const activeBrand =
-    sp.brand_id && projects.length > 0
-      ? (projects.find((p) => p.brand?.id === sp.brand_id)?.brand ?? null)
+    sp.brand_id && allProjects.length > 0
+      ? (allProjects.find((p) => p.brand?.id === sp.brand_id)?.brand ?? null)
       : null;
+
+  // URL helper: set/clear the status facet while preserving brand_id.
+  const statusHref = (status: string | null) => {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (sp.brand_id) params.set("brand_id", sp.brand_id);
+    const qs = params.toString();
+    return `/app/projects${qs ? `?${qs}` : ""}`;
+  };
 
   // Build URL helper for filter removal
   const removeFilter = (key: "status" | "brand_id") => {
@@ -119,7 +155,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
   };
 
   return (
-    <div className="px-10 py-10 max-w-5xl">
+    <div className="mx-auto w-full max-w-content px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
       {/* Header — Phase 2.9 hotfix-2 Task 1: Pretendard bold, larger size,
           tighter tracking. Reads as a real section title rather than a
           tab label. CTA pairing with "프로젝트 의뢰하기" preserved. */}
@@ -140,27 +176,50 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           contest_tab i18n key is preserved for the Phase 3.0+
           re-introduction (per DECISIONS_CACHE Q-086). */}
 
-      {/* Active filter chips */}
-      {(sp.status || (sp.brand_id && activeBrand)) && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {sp.status && (
+      {/* Status facet — quick filter by the statuses present in this
+          list. URL-based (shareable); "전체" clears the status filter and
+          preserves any brand_id. Only shown when there is something to
+          filter (2+ distinct statuses). */}
+      {allProjects.length > 0 && presentStatuses.length >= 2 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <Link
+            href={statusHref(null)}
+            aria-current={!sp.status ? "true" : undefined}
+            className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              !sp.status
+                ? "border-brand bg-brand text-brand-on"
+                : "border-border/70 text-muted-foreground hover:border-border hover:text-foreground"
+            }`}
+          >
+            {t("filter_all")}
+          </Link>
+          {presentStatuses.map((s) => (
             <Link
-              href={removeFilter("status")}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              key={s}
+              href={statusHref(s)}
+              aria-current={sp.status === s ? "true" : undefined}
+              className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                sp.status === s
+                  ? "border-brand bg-brand text-brand-on"
+                  : "border-border/70 text-muted-foreground hover:border-border hover:text-foreground"
+              }`}
             >
-              {t(`status_${sp.status}` as Parameters<typeof t>[0])}
-              <span aria-hidden>×</span>
+              {t(`status_${s}` as Parameters<typeof t>[0])}
             </Link>
-          )}
-          {sp.brand_id && activeBrand && (
-            <Link
-              href={removeFilter("brand_id")}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {activeBrand.name}
-              <span aria-hidden>×</span>
-            </Link>
-          )}
+          ))}
+        </div>
+      )}
+
+      {/* Active brand filter chip (status now lives in the facet above) */}
+      {sp.brand_id && activeBrand && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Link
+            href={removeFilter("brand_id")}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {activeBrand.name}
+            <span aria-hidden>×</span>
+          </Link>
         </div>
       )}
 
@@ -170,23 +229,14 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
           are preserved for the dashboard's compact empty state and any
           future re-introduction; key names are non-negotiable per the
           phase kickoff §7. */}
-      {projects.length === 0 && <ProjectsHubHero locale={locale} />}
+      {allProjects.length === 0 && <ProjectsHubHero locale={locale} />}
 
-      {/* Phase 2.8.6 — meeting request card is permanent (yagi: "첫
-          프로젝트 진행 이후에도 남아있으면 좋을듯"). Renders below the
-          hero on empty state and below the grid header on populated
-          state. The card disables itself if the user has no workspace
-          yet (edge case during onboarding). */}
-      <MeetingRequestCard workspaceId={primaryWorkspaceId} />
-
-      {/* Direct tab — project grid (Wave C.5a sub_06: vertical card v1.0).
-          Title top-left + status pill top-right + date bottom-right.
-          Sage accent gated to in_review only. Brand chip moved out of
-          this surface — Phase 4 has no real brand-mixed list view yet,
-          and the v1.0 grammar wants the title to carry the card. */}
-      {projects.length > 0 && (
+      {/* Project grid (Wave C.5a sub_06: vertical card v1.0). Title
+          top-left + status pill top-right + date bottom-right. Sage
+          accent gated to in_review only. Renders the status-filtered set. */}
+      {filteredProjects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <ProjectListCard
               key={project.id}
               href={`/app/projects/${project.id}`}
@@ -202,12 +252,32 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
         </div>
       )}
 
+      {/* Empty filter result (has projects, but none match the active
+          status facet) — distinct from the newcomer hero above. */}
+      {allProjects.length > 0 && filteredProjects.length === 0 && (
+        <div className="rounded-2xl border border-border/60 bg-foreground/[0.02] py-12 text-center text-sm text-muted-foreground keep-all">
+          {t("filter_empty")}
+        </div>
+      )}
+
+      {/* Phase 2.8.6 — meeting request card is permanent (yagi: "첫
+          프로젝트 진행 이후에도 남아있으면 좋을듯"). For users with active
+          projects it sits below the grid so the list stays projects-first;
+          on the empty state it follows the hero. */}
+      <div className="mt-6">
+        <MeetingRequestCard workspaceId={primaryWorkspaceId} />
+      </div>
+
       {/* Phase 2.9 G_B9_E + G_B9_F — workflow strip + bottom CTA banner.
-          Both render unconditionally so the hub feels editorial even
-          for users with active projects. The hero block above is still
-          empty-state-only (kickoff §6). */}
-      <ProjectsHubWorkflowStrip locale={locale} />
-      <ProjectsHubCtaBanner locale={locale} />
+          Gated to the empty state only: for returning users with active
+          projects these editorial bands were just bottom clutter under a
+          long, scrolling list. Newcomers still get the full onboarding. */}
+      {allProjects.length === 0 && (
+        <>
+          <ProjectsHubWorkflowStrip locale={locale} />
+          <ProjectsHubCtaBanner locale={locale} />
+        </>
+      )}
     </div>
   );
 }

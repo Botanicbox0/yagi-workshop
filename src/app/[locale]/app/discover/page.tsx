@@ -90,7 +90,7 @@ export default async function DiscoverPage({ params }: Props) {
       ) : (
         <section className="rounded-lg border border-dashed border-border/70 bg-surface-card-deep p-8">
           <div className="max-w-xl">
-            <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-md bg-gold-soft text-gold">
+            <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-md bg-brand-soft text-brand-ink">
               <ImageIcon className="h-5 w-5" aria-hidden="true" />
             </div>
             <h2 className="text-xl font-semibold text-foreground keep-all">

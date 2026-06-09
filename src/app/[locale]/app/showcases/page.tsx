@@ -200,7 +200,7 @@ export default async function ShowcasesListPage({ params }: Props) {
   }
 
   return (
-    <div className="px-10 py-12 max-w-5xl">
+    <div className="mx-auto px-10 py-12 max-w-5xl">
       {/* Header */}
       <div className="flex items-start justify-between mb-3 gap-6">
         <div>

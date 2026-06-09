@@ -16,7 +16,7 @@ type TwinCardProps = {
 };
 
 const toneClass: Record<TwinCardTone, string> = {
-  fashion: "border-gold/35",
+  fashion: "border-foreground/30",
   beauty: "border-border/80",
   music: "border-border/80",
   product: "border-border/80",
@@ -72,7 +72,7 @@ export function TwinCard({
         <div className="absolute inset-x-0 bottom-0 space-y-3 p-4">
           <div className="flex flex-wrap items-center gap-2">
             {label && (
-              <span className="inline-flex h-6 items-center rounded bg-gold-soft px-2 text-[11px] font-medium uppercase tracking-label text-gold">
+              <span className="inline-flex h-6 items-center rounded bg-brand-soft px-2 text-[11px] font-medium uppercase tracking-label text-brand-ink">
                 {label}
               </span>
             )}

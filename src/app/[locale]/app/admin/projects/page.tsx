@@ -2,18 +2,30 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { Plus } from "lucide-react";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { ProjectsQueue } from "@/components/admin/projects-queue";
+import { ProjectsQueue, type TabKey } from "@/components/admin/projects-queue";
 import { TestDataToggle } from "@/components/admin/test-data-toggle";
 import { shouldIncludeTestData } from "@/lib/admin/test-data";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ includeTest?: string | string[] }>;
+  searchParams: Promise<{ includeTest?: string | string[]; tab?: string | string[] }>;
 };
 
 export default async function AdminProjectsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const includeTest = shouldIncludeTestData(await searchParams);
+  const sp = await searchParams;
+  const includeTest = shouldIncludeTestData(sp);
+
+  // Deep-linkable queue tab (?tab=submitted …) — used by the dashboard
+  // KPI cards. Falls back to 'all' on anything unknown.
+  const VALID_TABS: readonly TabKey[] = [
+    "all", "draft", "submitted", "in_review", "in_progress",
+    "in_revision", "delivered", "approved", "cancelled", "archived",
+  ];
+  const rawTab = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
+  const initialTab: TabKey = VALID_TABS.includes(rawTab as TabKey)
+    ? (rawTab as TabKey)
+    : "all";
   const tAdmin = await getTranslations({ locale, namespace: "admin" });
 
   const supabase = await createSupabaseServer();
@@ -141,7 +153,7 @@ export default async function AdminProjectsPage({ params, searchParams }: Props)
         </div>
       )}
 
-      <ProjectsQueue projects={projectRows} initialTab="all" />
+      <ProjectsQueue projects={projectRows} initialTab={initialTab} />
     </main>
   );
 }

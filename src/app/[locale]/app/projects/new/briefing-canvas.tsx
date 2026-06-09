@@ -131,7 +131,7 @@ export function BriefingCanvas({
     if (initialState.projectId) setProjectId(initialState.projectId);
   }, [initialState.projectId]);
 
-  const methods = useForm<Step1FormData>({
+  const methods = useForm<z.input<typeof step1Schema>, unknown, Step1FormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
       name: initialState.name,

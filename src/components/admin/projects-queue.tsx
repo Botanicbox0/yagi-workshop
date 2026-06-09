@@ -49,7 +49,7 @@ export type ProjectsQueueProps = {
   initialTab?: TabKey;
 };
 
-type TabKey =
+export type TabKey =
   | 'all'
   | 'draft'
   | 'submitted'
@@ -86,15 +86,29 @@ const STATUS_PRIORITY: Record<ProjectStatus, number> = {
   archived: 8,
 };
 
+type KindFilter = 'all' | 'brand' | 'artist' | 'creator';
+
+const KIND_FILTERS: Array<{ key: KindFilter; labelKey: string }> = [
+  { key: 'all', labelKey: 'admin.projects.queue.tabs.all' },
+  { key: 'brand', labelKey: 'admin.projects.queue.workspace_kind.brand' },
+  { key: 'artist', labelKey: 'admin.projects.queue.workspace_kind.artist' },
+  { key: 'creator', labelKey: 'admin.projects.queue.workspace_kind.creator' },
+];
+
 export function ProjectsQueue({ projects, initialTab = 'all' }: ProjectsQueueProps) {
   const t = useTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+  const [activeKind, setActiveKind] = useState<KindFilter>('all');
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const visibleProjects = useMemo(() => {
     return projects
-      .filter((p) => activeTab === 'all' || p.status === activeTab)
+      .filter(
+        (p) =>
+          (activeTab === 'all' || p.status === activeTab) &&
+          (activeKind === 'all' || p.workspace?.kind === activeKind),
+      )
       .sort((a, b) => {
         const statusDiff = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
         if (statusDiff !== 0) return statusDiff;
@@ -102,11 +116,14 @@ export function ProjectsQueue({ projects, initialTab = 'all' }: ProjectsQueuePro
         const bTime = new Date(b.submitted_at || b.created_at).getTime();
         return bTime - aTime;
       });
-  }, [activeTab, projects]);
+  }, [activeTab, activeKind, projects]);
 
   const getTabCount = (tabStatus: ProjectStatus | null): number => {
-    if (!tabStatus) return projects.length;
-    return projects.filter(p => p.status === tabStatus).length;
+    const scoped = projects.filter(
+      (p) => activeKind === 'all' || p.workspace?.kind === activeKind,
+    );
+    if (!tabStatus) return scoped.length;
+    return scoped.filter((p) => p.status === tabStatus).length;
   };
 
   const handleActionClick = useCallback(async (
@@ -228,8 +245,28 @@ export function ProjectsQueue({ projects, initialTab = 'all' }: ProjectsQueuePro
 
   return (
     <div>
+      {/* Workspace-kind filter — 전체 / BRAND / ARTIST / CREATOR */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {KIND_FILTERS.map(({ key, labelKey }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setActiveKind(key)}
+            aria-pressed={activeKind === key}
+            className={cn(
+              'rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-label transition-colors',
+              activeKind === key
+                ? 'border-brand bg-brand text-brand-on'
+                : 'border-border/70 bg-surface-raised text-muted-foreground hover:border-border hover:text-foreground',
+            )}
+          >
+            {t(labelKey as Parameters<typeof t>[0])}
+          </button>
+        ))}
+      </div>
+
       {/* Tab strip */}
-      <div className="mb-6 flex gap-3 overflow-x-auto border-b border-border/70">
+      <div className="mb-6 flex gap-x-6 overflow-x-auto border-b border-border/70">
         {TABS.map(({ key, status, label }) => (
           <button
             key={key}

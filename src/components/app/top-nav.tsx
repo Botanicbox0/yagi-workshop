@@ -241,7 +241,7 @@ function DesktopNav({
     <nav
       className={cn(
         "hidden min-w-0 flex-1 items-center gap-1 px-2 lg:flex",
-        actor === "yagi_admin" ? "justify-start" : "justify-center",
+        "justify-center",
       )}
       aria-label="Primary"
     >
@@ -304,7 +304,7 @@ function CreditBalance({
         className,
       )}
     >
-      <WalletCards className="h-4 w-4 text-gold" aria-hidden="true" />
+      <WalletCards className="h-4 w-4 text-foreground/70" aria-hidden="true" />
       <span className="whitespace-nowrap keep-all">{label}</span>
     </div>
   );

@@ -40,7 +40,7 @@ export function CancelledArchivedBanner({ variant, locale, labels }: Props) {
             {labels.cancelled}{" "}
             <Link
               href={`/${locale}/app/projects/new`}
-              className="inline font-medium text-foreground underline underline-offset-2 hover:opacity-70 transition-opacity duration-[400ms]"
+              className="inline font-medium text-foreground underline underline-offset-2 hover:opacity-70 transition-opacity"
             >
               {labels.cancelledLinkText ?? "새 의뢰 시작"}
             </Link>

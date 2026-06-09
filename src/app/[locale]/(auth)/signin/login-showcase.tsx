@@ -101,7 +101,7 @@ export function LoginShowcase() {
                 }}
                 className={cn(
                   "relative h-2 w-8 overflow-hidden rounded-full transition-colors",
-                  active ? "bg-gold/35" : "bg-foreground/30",
+                  active ? "bg-brand/40" : "bg-foreground/25",
                 )}
                 aria-label={t(`categories.${category.labelKey}`)}
                 aria-pressed={active}
@@ -110,7 +110,7 @@ export function LoginShowcase() {
                 <span
                   key={`${category.key}-${activeIndex}-${paused}-${reduceMotion}`}
                   className={cn(
-                    "absolute inset-y-0 left-0 w-full origin-left rounded-full bg-gold",
+                    "absolute inset-y-0 left-0 w-full origin-left rounded-full bg-brand",
                     active
                       ? "scale-x-100 opacity-100"
                       : "scale-x-0 opacity-0",

@@ -128,7 +128,7 @@ export default async function MeetingDetailPage({ params }: Props) {
   };
 
   return (
-    <div className="px-6 md:px-10 py-10 max-w-5xl">
+    <div className="mx-auto px-6 md:px-10 py-10 max-w-5xl">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 flex-wrap">
         <Link href="/app/meetings" className="hover:text-foreground transition-colors">

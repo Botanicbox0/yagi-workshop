@@ -392,7 +392,7 @@ export default async function CampaignDetailPage({ params }: Props) {
                         <span className="font-medium text-foreground">
                           {t("detail.prize_rank", { rank: tier.rank })}
                         </span>
-                        <span className="font-semibold text-gold">
+                        <span className="font-semibold text-brand-ink">
                           {formatKrwPrize(locale, tier.amount)}
                         </span>
                       </li>
@@ -404,7 +404,7 @@ export default async function CampaignDetailPage({ params }: Props) {
                   </p>
                 )}
               </div>
-              <p className="rounded-lg border border-gold/25 bg-gold/10 p-3 text-sm leading-6 text-muted-foreground keep-all">
+              <p className="rounded-lg border border-brand/25 bg-brand-soft p-3 text-sm leading-6 text-muted-foreground keep-all">
                 {t("detail.prize_notice")}
               </p>
             </div>
@@ -475,7 +475,7 @@ function StatusPill({ label, live }: { label: string; live: boolean }) {
     <span
       className={cn(
         "inline-flex rounded-full px-3 py-1.5 text-xs font-semibold",
-        live ? "bg-gold-soft text-gold" : "bg-brand-soft text-brand",
+        live ? "bg-brand-soft text-brand-ink" : "border border-edge-subtle bg-transparent text-muted-foreground",
       )}
     >
       {label}
@@ -495,7 +495,7 @@ function SummaryTile({
   return (
     <div className="rounded-lg border border-border/70 bg-surface-card p-4">
       <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-label text-muted-foreground">
-        <span className="text-gold">{icon}</span>
+        <span className="text-brand-ink">{icon}</span>
         {label}
       </p>
       <p className="mt-2 text-sm font-semibold leading-6 text-foreground keep-all">

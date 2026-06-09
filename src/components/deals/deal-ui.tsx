@@ -13,10 +13,10 @@ export function DealStatusBadge({
     <span
       className={cn(
         "inline-flex h-6 items-center rounded px-2 text-[11px] font-medium uppercase tracking-label",
-        tone === "pending" && "bg-gold-soft text-gold",
+        tone === "pending" && "bg-warning text-warning-foreground",
         tone === "neutral" && "bg-surface-card text-muted-foreground",
-        tone === "done" && "bg-emerald-500/15 text-emerald-300",
-        tone === "negative" && "bg-brand-soft text-brand",
+        tone === "done" && "bg-success text-success-foreground",
+        tone === "negative" && "bg-brand-soft text-brand-ink",
       )}
     >
       {label}

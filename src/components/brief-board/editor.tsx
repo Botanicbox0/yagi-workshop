@@ -553,7 +553,7 @@ export function BriefBoardEditor({
     dragDepthRef.current += 1;
     setDragOver(true);
   }
-  function onContainerDragLeave(_e: React.DragEvent<HTMLDivElement>) {
+  function onContainerDragLeave() {
     if (!editable) return;
     dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
     if (dragDepthRef.current === 0) setDragOver(false);
@@ -564,7 +564,7 @@ export function BriefBoardEditor({
       e.preventDefault();
     }
   }
-  function onContainerDrop(_e: React.DragEvent<HTMLDivElement>) {
+  function onContainerDrop() {
     // ProseMirror's handleDrop has already done the work; just reset
     // the overlay state. We don't preventDefault here because PM owns
     // the drop semantics; we only own the visual cue.

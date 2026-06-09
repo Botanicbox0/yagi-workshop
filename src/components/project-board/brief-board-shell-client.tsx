@@ -68,7 +68,6 @@ export function BriefBoardShellClient({
   // Non-admin client viewers: canvas readonly when board is locked.
   // Admin always retains edit access (cascade L-043 only affects non-admin).
   const isClientView = viewerRole !== "yagi_admin";
-  const canvasReadOnly = isLocked && isClientView;
   const attachmentsReadOnly = isLocked && isClientView;
 
   // ============================================================

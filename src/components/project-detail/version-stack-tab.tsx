@@ -673,7 +673,7 @@ function VersionCard({
             <SendHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{labels.delivery}</span>
             {deliverable.status === "approved" ? (
-              <span className="text-gold">{labels.final}</span>
+              <span className="text-success-foreground">{labels.final}</span>
             ) : null}
           </Link>
         </div>

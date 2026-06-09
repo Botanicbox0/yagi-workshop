@@ -52,7 +52,7 @@
     --accent: 0 0% 12%;
     --accent-foreground: 0 0% 94%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 358 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
     /* Phase 2.5 launchpad X1 CRITICAL #7 — semantic status tokens.
@@ -67,7 +67,7 @@
     /* v1.2 hairline border #2A2A2A on the dark canvas. */
     --border: 0 0% 16%;
     --input: 0 0% 16%;
-    --ring: 0 0% 94%;
+    --ring: 358 75% 59%;
 
     --radius: 0.5rem;
 
@@ -97,20 +97,37 @@
     --ds-neutral-ink-muted: #888888;
     --ds-neutral-border:    #2A2A2A;
 
-    /* Brand primary — Red #ED1E1E (~10%). On the saturated fill, text is
-       white (--ds-red-on-fill). As text on the dark canvas, the brighter
-       --ds-red-ink #FF453A reads at ~5.8:1 (AA). Gold #FAD204 reads ~13:1
-       as text on dark; on the gold fill, text is near-black. */
-    --ds-red:         #ED1E1E;
-    --ds-red-hover:   #FF3B30;
-    --ds-red-soft:    rgba(237, 30, 30, 0.16);
-    --ds-red-ink:     #FF453A;
+    /* Brand primary — v1.3 Crimson Editorial. #ED1E1E (pure signal red)
+       vibrated against the dark canvas and doubled as the error color;
+       the crimson scale below keeps the heat but reads premium. Fills use
+       --ds-red (AA with white text); red TEXT on the dark canvas must use
+       --ds-red-ink (#FF9592, ~8.2:1) — never the fill value. --ds-red-deep
+       is the wine surface for emphasis bands/hero washes. */
+    --ds-red:         #E5484D;
+    --ds-red-hover:   #EC5D64;
+    --ds-red-pressed: #DC3E44;
+    --ds-red-soft:    rgba(229, 72, 77, 0.15);
+    --ds-red-ink:     #FF9592;
     --ds-red-on-fill: #FFFFFF;
-    --ds-gold:        #FAD204;
-    --ds-gold-hover:  #FFDE2E;
-    --ds-gold-soft:   rgba(250, 210, 4, 0.16);
-    --ds-gold-ink:    #FAD204;
+    --ds-red-deep:    #641723;
+
+    /* v1.3 — brand gold RETIRED as a system color (red is the only brand
+       accent). Vars kept as neutral-gray fallbacks so any stray bg-gold/
+       text-gold class fails soft instead of flashing #FAD204. Do not use
+       in new code. */
+    --ds-gold:        #6E6E76;
+    --ds-gold-hover:  #7C7C84;
+    --ds-gold-soft:   rgba(150, 150, 160, 0.14);
+    --ds-gold-ink:    #B7B7BF;
     --ds-gold-on-fill:#0A0A0A;
+
+    /* Functional amber — INTERNAL/team-only marking (annotation pins,
+       팀전용 badges). Scoped semantic color, not a brand secondary;
+       follows the frame.io convention of yellow = internal notes. */
+    --ds-internal:        #E2A33C;
+    --ds-internal-soft:   rgba(226, 163, 60, 0.16);
+    --ds-internal-ink:    #F2C063;
+    --ds-internal-on-fill:#1A1206;
 
     --ds-font-sans-ko:    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --ds-font-sans-en:    'Geist Variable', Geist, system-ui, sans-serif;
@@ -154,7 +171,7 @@
     --accent: 0 0% 12%;
     --accent-foreground: 0 0% 94%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 358 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
     --success: 142 30% 18%;
@@ -166,7 +183,7 @@
 
     --border: 0 0% 16%;
     --input: 0 0% 16%;
-    --ring: 0 0% 94%;
+    --ring: 358 75% 59%;
   }
 
   /* Opt-in light mode — tidied secondary palette (clean neutral, same brand

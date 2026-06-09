@@ -72,6 +72,7 @@ function isValidUrl(raw: string): { valid: boolean; reason?: string } {
   return { valid: true };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- provider chips planned (URL attachment phase 2)
 function detectProvider(url: string): UrlAttachment["provider"] {
   try {
     const parsed = new URL(url);

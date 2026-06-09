@@ -292,7 +292,7 @@ function annotationsForAsset(
 
 function annotationTone(annotation: ReviewWorkspaceAnnotation) {
   return annotation.visibility === "internal"
-    ? "border-gold bg-gold-soft text-gold"
+    ? "border-internal bg-internal-soft text-internal-ink"
     : "border-brand bg-brand-soft text-brand";
 }
 
@@ -960,7 +960,7 @@ function VersionRail({
                   {formatVersion(deliverable.version)}
                 </span>
                 {index === 0 ? (
-                  <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-medium text-gold">
+                  <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-ink">
                     {t("versions.latest")}
                   </span>
                 ) : null}
@@ -1585,7 +1585,7 @@ function MiniMap({
             key={annotation.id}
             className={cn(
               "absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
-              annotation.visibility === "internal" ? "bg-gold" : "bg-brand",
+              annotation.visibility === "internal" ? "bg-internal" : "bg-brand",
               annotation.id === selectedAnnotationId ? "ring-2 ring-ring" : "",
             )}
             style={{
@@ -1681,7 +1681,7 @@ function CommentsPanel({
             {t("visibility.client")}
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-gold" aria-hidden />
+            <span className="h-2 w-2 rounded-full bg-internal" aria-hidden />
             {t("visibility.internal")}
           </span>
         </div>

@@ -526,7 +526,7 @@ export function TimedVideoPlayer({
                       type="button"
                       className={cn(
                         "absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background",
-                        annotation.id === selectedId ? "bg-gold" : "bg-brand",
+                        annotation.id === selectedId ? "bg-foreground" : "bg-brand",
                       )}
                       style={{
                         left: `${Math.min(100, Math.max(0, ((annotation.timestampSec ?? 0) / duration) * 100))}%`,
@@ -617,7 +617,7 @@ function VideoFrameMarker({
   const baseClass = cn(
     "absolute z-10 border-2 text-left transition-colors",
     annotation.status === "resolved" ? "border-muted-foreground/70" : "border-brand",
-    selected && "ring-2 ring-gold",
+    selected && "ring-2 ring-foreground",
   );
 
   if (annotation.shape === "box" && "w" in coords) {
@@ -653,7 +653,7 @@ function VideoFrameMarker({
         annotation.status === "resolved"
           ? "border-border bg-muted text-muted-foreground"
           : "border-brand bg-brand text-brand-on",
-        selected && "ring-2 ring-gold",
+        selected && "ring-2 ring-foreground",
       )}
       style={{ left: `${coords.x * 100}%`, top: `${coords.y * 100}%` }}
       onClick={(event) => {
@@ -673,7 +673,7 @@ function VideoDraftMarker({ draft }: { draft: DraftAnnotation }) {
   if (draft.shape === "box" && "w" in coords) {
     return (
       <div
-        className="pointer-events-none absolute z-10 border-2 border-dashed border-gold"
+        className="pointer-events-none absolute z-10 border-2 border-dashed border-foreground/80"
         style={{
           left: `${coords.x * 100}%`,
           top: `${coords.y * 100}%`,
@@ -686,7 +686,7 @@ function VideoDraftMarker({ draft }: { draft: DraftAnnotation }) {
 
   return (
     <div
-      className="pointer-events-none absolute z-10 h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold bg-gold px-2 text-center text-xs font-bold leading-7 text-gold-on"
+      className="pointer-events-none absolute z-10 h-7 min-w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-foreground bg-foreground px-2 text-center text-xs font-bold leading-7 text-background"
       style={{ left: `${coords.x * 100}%`, top: `${coords.y * 100}%` }}
     >
       +

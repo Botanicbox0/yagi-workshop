@@ -275,9 +275,9 @@
     "preprod": "Pre-production",
     "invoices": "Invoices",
     "billing_group": "Billing",
-    "challenges": "Challenges",
+    "challenges": "Contests",
     "challenges_all": "All",
-    "challenges_new": "New challenge",
+    "challenges_new": "New contest",
     "challenges_open": "Open now",
     "admin_commissions": "Commission queue",
     "admin_trash": "Trash",
@@ -1306,6 +1306,8 @@
   },
   "projects": {
     "list_title": "PROJECT",
+    "filter_all": "All",
+    "filter_empty": "No projects match this filter.",
     "direct_tab": "Request a project",
     "contest_tab": "Campaign request",
     "new": "Request a project",
@@ -1950,6 +1952,12 @@
   "admin": {
     "label": "Admin",
     "title": "Admin dashboard",
+    "dashboard_queue_title": "Queue snapshot",
+    "dashboard_queue_open": "Open full queue",
+    "kpi_submitted": "New requests",
+    "kpi_in_review": "In review",
+    "kpi_in_progress": "In progress",
+    "kpi_delivered": "Delivered",
     "context_switch": {
       "eyebrow": "Context switch",
       "title": "Switch to YAGI Internal",
@@ -2669,8 +2677,8 @@
     "help": {
       "label": "Page guide",
       "routes": {
-        "challengeCreation": "Challenge creation guide",
-        "challengeManagement": "Challenge management guide",
+        "challengeCreation": "Contest creation guide",
+        "challengeManagement": "Contest management guide",
         "projectSetup": "Project setup guide",
         "showcasePublishing": "Showcase publishing guide"
       }
@@ -3911,14 +3919,14 @@
   },
   "challenges": {
     "list": {
-      "headline": "Featured AI challenges right now",
+      "headline": "Featured AI contests right now",
       "sections": {
         "open": "Open now",
         "announced": "Results announced",
-        "archived": "Past challenges"
+        "archived": "Past contests"
       },
       "expand_cta": "View more",
-      "empty_all": "No challenges yet"
+      "empty_all": "No contests yet"
     },
     "detail": {
       "status_banner": {
@@ -3927,7 +3935,7 @@
         "open_h1": "⚠️ Closing soon — upload your work now",
         "closed_judging": "Judging in progress · Results expected: {announceAt}",
         "closed_announced": "Results announced — see the featured works",
-        "archived": "Past challenge"
+        "archived": "Past contest"
       },
       "primary_cta": {
         "submit": "Upload work",
@@ -3942,7 +3950,7 @@
       },
       "empty": {
         "no_open": "No submitted works yet",
-        "no_open_sub": "Waiting for the first work\nBe the first featured creator in this challenge",
+        "no_open_sub": "Waiting for the first work\nBe the first featured creator in this contest",
         "no_closed": "No submitted works yet"
       },
       "share_copied": "Link copied",
@@ -3953,7 +3961,7 @@
       }
     },
     "gallery": {
-      "winners_title": "Featured works in this challenge",
+      "winners_title": "Featured works in this contest",
       "winners_subtitle": "Where creators and support meet",
       "submitted_ago": "Submitted {days} days ago",
       "vote": {
@@ -3964,14 +3972,14 @@
         "auth_required": "Only participants can cheer",
         "auth_action": "Start participating",
         "already_voted": "Already cheered",
-        "vote_closed": "This challenge is closed"
+        "vote_closed": "This contest is closed"
       }
     },
     "header_cta": {
       "no_auth": "Start participating",
       "creator_studio": "Upload work",
       "observer": "Join as creator",
-      "admin": "New challenge"
+      "admin": "New contest"
     }
   }
 }

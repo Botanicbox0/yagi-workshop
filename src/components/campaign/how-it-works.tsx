@@ -191,14 +191,14 @@ export async function CampaignHowItWorks({
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-gold-soft px-2 text-xs font-semibold tabular-nums text-gold">
+                  <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-brand-soft px-2 text-xs font-semibold tabular-nums text-brand-ink">
                     {step.number}
                   </span>
                   <span className="text-[11px] font-semibold uppercase tracking-label text-muted-foreground">
                     {step.eyebrow}
                   </span>
                 </div>
-                <p className="mt-6 text-xs font-semibold uppercase tracking-label text-gold">
+                <p className="mt-6 text-xs font-semibold uppercase tracking-label text-brand-ink">
                   {step.title}
                 </p>
                 <h4 className="mt-3 max-w-xl text-2xl font-medium leading-tight text-muted-foreground keep-all sm:text-3xl">
@@ -240,7 +240,7 @@ function MockShell({
       <div className="relative rounded-lg border border-border/70 bg-surface-card p-4">
         <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-3">
           <div className="flex items-center gap-1.5" aria-hidden="true">
-            <span className="h-2 w-2 rounded-full bg-gold/70" />
+            <span className="h-2 w-2 rounded-full bg-brand/70" />
             <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
             <span className="h-2 w-2 rounded-full bg-muted-foreground/25" />
           </div>
@@ -257,8 +257,8 @@ function MockShell({
 function BrandUploadMock() {
   return (
     <MockShell label="Campaign setup">
-      <div className="rounded-lg border border-dashed border-gold/35 bg-gold/5 p-5 text-center">
-        <Upload className="mx-auto h-6 w-6 text-gold" aria-hidden="true" />
+      <div className="rounded-lg border border-dashed border-brand/35 bg-brand/5 p-5 text-center">
+        <Upload className="mx-auto h-6 w-6 text-brand-ink" aria-hidden="true" />
         <p className="mt-3 text-sm font-medium text-foreground">소재 업로드</p>
         <p className="mt-1 text-xs text-muted-foreground">
           파일, 링크, 참고 채널을 한곳에
@@ -297,15 +297,15 @@ function BrandGridMock() {
               className={[
                 "aspect-[4/3] bg-gradient-to-br",
                 index % 2 === 0
-                  ? "from-gold/20 via-surface-card to-muted-foreground/10"
-                  : "from-muted-foreground/20 via-surface-card to-gold/10",
+                  ? "from-brand/20 via-surface-card to-muted-foreground/10"
+                  : "from-muted-foreground/20 via-surface-card to-brand/10",
               ].join(" ")}
             />
             <div className="flex items-center justify-between gap-2 px-3 py-2">
               <span className="truncate text-xs font-medium text-foreground">
                 {handle}
               </span>
-              <Sparkles className="h-3.5 w-3.5 text-gold" aria-hidden="true" />
+              <Sparkles className="h-3.5 w-3.5 text-brand-ink" aria-hidden="true" />
             </div>
           </div>
         ))}
@@ -319,19 +319,19 @@ function BrandFeedMock() {
     <MockShell label="Creator channel">
       <div className="mx-auto max-w-[280px] rounded-xl border border-border/70 bg-surface-raised p-3">
         <div className="flex items-center gap-2">
-          <span className="h-8 w-8 rounded-full bg-gradient-to-br from-gold/30 to-muted-foreground/20" />
+          <span className="h-8 w-8 rounded-full bg-gradient-to-br from-brand/30 to-muted-foreground/20" />
           <div className="min-w-0">
             <p className="text-xs font-medium text-foreground">@creator.studio</p>
             <p className="text-[11px] text-muted-foreground">new campaign post</p>
           </div>
         </div>
-        <div className="relative mt-3 aspect-square overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-surface-card-deep via-muted-foreground/10 to-gold/20">
+        <div className="relative mt-3 aspect-square overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-surface-card-deep via-muted-foreground/10 to-brand/20">
           <div
             className="absolute inset-0 bg-[radial-gradient(circle_at_25%_18%,rgba(250,210,4,0.22),transparent_28%),linear-gradient(135deg,rgba(240,240,240,0.14),transparent_42%)]"
             aria-hidden="true"
           />
           <div className="absolute left-4 top-4 flex h-12 w-12 items-center justify-center rounded-full border border-border/70 bg-surface-card">
-            <Sparkles className="h-5 w-5 text-gold" aria-hidden="true" />
+            <Sparkles className="h-5 w-5 text-brand-ink" aria-hidden="true" />
           </div>
           <div className="absolute bottom-4 left-4 right-4 rounded-lg border border-border/70 bg-surface-raised p-3">
             <div className="flex items-center justify-between gap-3">
@@ -343,7 +343,7 @@ function BrandFeedMock() {
                   creator channel reach
                 </p>
               </div>
-              <span className="rounded-full bg-gold-soft px-2 py-1 text-[11px] font-semibold text-gold">
+              <span className="rounded-full bg-brand-soft px-2 py-1 text-[11px] font-semibold text-brand-ink">
                 LIVE
               </span>
             </div>
@@ -374,8 +374,8 @@ function BrandFeedMock() {
 function ArtistMusicMock() {
   return (
     <MockShell label="Artist brief">
-      <div className="rounded-lg border border-dashed border-gold/35 bg-gold/5 p-5 text-center">
-        <Music className="mx-auto h-6 w-6 text-gold" aria-hidden="true" />
+      <div className="rounded-lg border border-dashed border-brand/35 bg-brand/5 p-5 text-center">
+        <Music className="mx-auto h-6 w-6 text-brand-ink" aria-hidden="true" />
         <p className="mt-3 text-sm font-medium text-foreground">신곡 / IP</p>
         <p className="mt-1 text-xs text-muted-foreground">
           콘셉트와 상금을 함께 설정
@@ -400,7 +400,7 @@ function ArtistRemixMock() {
             key={version}
             className="rounded-lg border border-border/70 bg-surface-raised p-3"
           >
-            <Wand2 className="h-4 w-4 text-gold" aria-hidden="true" />
+            <Wand2 className="h-4 w-4 text-brand-ink" aria-hidden="true" />
             <p className="mt-3 text-sm font-medium text-foreground">{version}</p>
             <SkeletonBar className="mt-2 w-3/4" />
           </div>
@@ -415,7 +415,7 @@ function ArtistReachMock() {
     <MockShell label="Fan reach">
       <div className="rounded-xl border border-border/70 bg-surface-raised p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold-soft text-gold">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand-ink">
             <Users className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -429,7 +429,7 @@ function ArtistReachMock() {
           {["TikTok", "Shorts", "IG"].map((channel) => (
             <span
               key={channel}
-              className="rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-center text-[11px] text-gold"
+              className="rounded-full border border-brand/25 bg-brand/10 px-2 py-1 text-center text-[11px] text-brand-ink"
             >
               {channel}
             </span>
@@ -455,7 +455,7 @@ function CreatorCampaignListMock() {
             key={title}
             className="flex items-center gap-3 rounded-lg border border-border/70 bg-surface-raised p-3"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold/10 text-gold">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand-ink">
               <Icon className="h-4 w-4" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
@@ -464,7 +464,7 @@ function CreatorCampaignListMock() {
               </p>
               <p className="text-xs text-muted-foreground">AI content campaign</p>
             </div>
-            <span className="rounded-full border border-gold/25 bg-gold/10 px-2 py-1 text-[11px] text-gold">
+            <span className="rounded-full border border-brand/25 bg-brand/10 px-2 py-1 text-[11px] text-brand-ink">
               {status}
             </span>
           </div>
@@ -484,7 +484,7 @@ function CreatorCreateMock() {
         <div className="space-y-3">
           <div className="rounded-lg border border-border/70 bg-surface-raised p-3">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground">
-              <Wand2 className="h-4 w-4 text-gold" aria-hidden="true" />
+              <Wand2 className="h-4 w-4 text-brand-ink" aria-hidden="true" />
               내 스타일 프롬프트
             </div>
             <div className="mt-3 space-y-1.5">
@@ -492,7 +492,7 @@ function CreatorCreateMock() {
               <SkeletonBar className="w-3/4" />
             </div>
           </div>
-          <div className="rounded-lg border border-dashed border-gold/35 bg-gold/5 p-3 text-xs text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-brand/35 bg-brand/5 p-3 text-xs text-muted-foreground">
             결과물 업로드 준비 완료
           </div>
         </div>
@@ -504,9 +504,9 @@ function CreatorCreateMock() {
 function CreatorRewardMock() {
   return (
     <MockShell label="Reward update">
-      <div className="rounded-xl border border-gold/30 bg-gold/10 p-4">
+      <div className="rounded-xl border border-brand/30 bg-brand/10 p-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold text-gold-on">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-brand-on">
             <Coins className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -548,7 +548,7 @@ function MockRow({
       <span className="min-w-0 flex-1 truncate text-xs text-foreground">
         {label}
       </span>
-      <span className="text-[11px] uppercase tracking-label text-gold">
+      <span className="text-[11px] uppercase tracking-label text-brand-ink">
         {value}
       </span>
     </div>

@@ -146,7 +146,7 @@ export default async function ExplorePage({ params }: Props) {
                 href="/app/americano"
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-surface-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent/60"
               >
-                <Coffee className="h-4 w-4 text-gold" aria-hidden="true" />
+                <Coffee className="h-4 w-4 text-foreground/70" aria-hidden="true" />
                 {t("actions.americano")}
               </Link>
             )}
@@ -266,7 +266,7 @@ export default async function ExplorePage({ params }: Props) {
                 icon={<Coffee className="h-4 w-4" aria-hidden="true" />}
                 title={t("quick_actions.americano_title")}
                 description={t("quick_actions.americano_description")}
-                accent="gold"
+                accent="neutral"
               />
             )}
           </div>
@@ -283,7 +283,7 @@ export default async function ExplorePage({ params }: Props) {
                 className="min-h-36 rounded-lg border border-border/70 bg-surface-card p-4"
               >
                 <div className="mb-4 h-16 rounded-md border border-edge-subtle bg-surface-card-deep" />
-                <p className="text-xs font-semibold uppercase tracking-label text-gold">
+                <p className="text-xs font-semibold uppercase tracking-label text-brand-ink">
                   {t(`references.items.${key}.tag`)}
                 </p>
                 <h3 className="mt-2 text-sm font-semibold text-foreground keep-all">
@@ -376,7 +376,7 @@ function CreditPanel({
     <section className="rounded-lg border border-border/70 bg-surface-raised p-5">
       <div className="flex h-full flex-col justify-between gap-6">
         <div>
-          <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md bg-gold-soft text-gold">
+          <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md bg-brand-soft text-brand-ink">
             <WalletCards className="h-5 w-5" aria-hidden="true" />
           </div>
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -438,7 +438,7 @@ function QuickAction({
   icon: ReactNode;
   title: string;
   description: string;
-  accent: "brand" | "gold";
+  accent: "brand" | "neutral";
 }) {
   return (
     <Link
@@ -448,7 +448,7 @@ function QuickAction({
       <div
         className={cn(
           "mb-4 inline-flex h-9 w-9 items-center justify-center rounded-md",
-          accent === "brand" ? "bg-brand-soft text-brand" : "bg-gold-soft text-gold",
+          accent === "brand" ? "bg-brand-soft text-brand-ink" : "bg-surface-card text-foreground/75",
         )}
       >
         {icon}
